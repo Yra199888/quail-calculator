@@ -638,6 +638,81 @@
   </p>
   <textarea id="backupArea" rows="6" style="width:100%;"></textarea>
 
+    <!-- 11. Інкубація партій яєць -->
+  <h2>11. Інкубація</h2>
+  <p class="small">
+    Тут можна вести облік партій в інкубаторі: коли заклали, скільки яєць, 
+    скільки виявилось незапліднених при овоскопії, скільки вилупилося, 
+    скільки померло в інкубаторі та в брудері.
+  </p>
+
+  <h3>10.1. Додати нову партію</h3>
+  <p>
+    Назва / номер партії:
+    <input type="text" id="incBatchName" style="width:160px;" placeholder="Партія №3">
+  </p>
+  <p>
+    Дата закладки:
+    <input type="date" id="incStartDate">
+  </p>
+  <p>
+    Кількість закладених яєць:
+    <input type="number" id="incEggsSet" value="0" step="1" style="width:80px;">
+  </p>
+  <p>
+    Нотатка (інкубатор, режим, порода тощо):
+    <br>
+    <textarea id="incNote" rows="2" style="width:100%;"></textarea>
+  </p>
+  <button class="btn" id="addIncubation">Додати партію</button>
+
+  <h3>10.2. Список партій</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Партія</th>
+          <th>Дата закладки</th>
+          <th>Днів від закладки</th>
+          <th>Закладено яєць</th>
+          <th>Незапліднені (овоскопія)</th>
+          <th>Вилупилося</th>
+          <th>Померли в інкубаторі</th>
+          <th>Померли в брудері</th>
+          <th>Живі зараз</th>
+          <th>Нотатка</th>
+          <th>Дії</th>
+        </tr>
+      </thead>
+      <tbody id="incubationBody">
+      </tbody>
+    </table>
+  </div>
+
+    <!-- 12. Клієнти (зведена інформація) -->
+  <h2>12. Клієнти</h2>
+  <p class="small">
+    Зведення по всіх замовленнях: скільки лотків та яєць купив кожен клієнт 
+    і на яку суму.
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Клієнт</th>
+          <th>К-сть замовлень</th>
+          <th>Лотків (20 яєць)</th>
+          <th>Яєць</th>
+          <th>Сума, грн</th>
+          <th>Останнє замовлення</th>
+        </tr>
+      </thead>
+      <tbody id="clientsBody">
+      </tbody>
+    </table>
+  </div>
+
 
   <script>
     // --- РОЗРАХУНОК КОРМУ ---
@@ -1276,8 +1351,273 @@
       });
 
       updateTrayStats();
+      renderClientsSummary();
     }
 
+    // --- ЗВЕДЕННЯ ПО КЛІЄНТАХ ---
+    function renderClientsSummary() {
+      const tbody = document.getElementById('clientsBody');
+      if (!tbody) return;
+
+      const orders = loadOrders();
+      const map = {};
+
+      orders.forEach(order => {
+        const name = (order.customer || 'Без імені').trim() || 'Без імені';
+        if (!map[name]) {
+          map[name] = {
+            ordersCount: 0,
+            trays: 0,
+            eggs: 0,
+            amount: 0,
+            lastDate: ''
+          };
+        }
+        const rec = map[name];
+        rec.ordersCount += 1;
+        const trays = order.trays || 0;
+        const eggs = order.eggs || (trays * 20);
+        rec.trays += trays;
+        rec.eggs += eggs;
+        rec.amount += (order.amount || 0);
+
+        if (order.date) {
+          if (!rec.lastDate) {
+            rec.lastDate = order.date;
+          } else {
+            // просте порівняння рядків YYYY-MM-DD
+            if (order.date > rec.lastDate) {
+              rec.lastDate = order.date;
+            }
+          }
+        }
+      });
+
+      tbody.innerHTML = '';
+
+      Object.keys(map).forEach(name => {
+        const rec = map[name];
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        tdName.textContent = name;
+        tr.appendChild(tdName);
+
+        const tdCnt = document.createElement('td');
+        tdCnt.textContent = rec.ordersCount;
+        tr.appendChild(tdCnt);
+
+        const tdTrays = document.createElement('td');
+        tdTrays.textContent = rec.trays;
+        tr.appendChild(tdTrays);
+
+        const tdEggs = document.createElement('td');
+        tdEggs.textContent = rec.eggs;
+        tr.appendChild(tdEggs);
+
+        const tdAmount = document.createElement('td');
+        tdAmount.textContent = rec.amount.toFixed(2);
+        tr.appendChild(tdAmount);
+
+        const tdLast = document.createElement('td');
+        tdLast.textContent = rec.lastDate || '';
+        tr.appendChild(tdLast);
+
+        tbody.appendChild(tr);
+      });
+    }
+    
+        // --- ІНКУБАЦІЯ ---
+    function loadIncubations() {
+      const raw = localStorage.getItem('quailIncubations');
+      if (!raw) return [];
+      try {
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) {
+        console.error('Помилка читання інкубацій', e);
+        return [];
+      }
+    }
+
+    function saveIncubations(list) {
+      localStorage.setItem('quailIncubations', JSON.stringify(list));
+    }
+
+    function addIncubation() {
+      const nameEl = document.getElementById('incBatchName');
+      const dateEl = document.getElementById('incStartDate');
+      const eggsEl = document.getElementById('incEggsSet');
+      const noteEl = document.getElementById('incNote');
+
+      if (!nameEl || !dateEl || !eggsEl) return;
+
+      const name = (nameEl.value || '').trim() || 'Без назви';
+      const startDate = dateEl.value || new Date().toISOString().slice(0, 10);
+      const eggsSet = parseInt(eggsEl.value) || 0;
+      const note = noteEl ? noteEl.value : '';
+
+      const list = loadIncubations();
+      list.push({
+        id: Date.now(),
+        name,
+        startDate,
+        eggsSet,
+        infertile: 0,
+        hatched: 0,
+        diedIncubator: 0,
+        diedBrooder: 0,
+        note
+      });
+
+      saveIncubations(list);
+      renderIncubations();
+
+      // очистити форму
+      nameEl.value = '';
+      eggsEl.value = '0';
+      if (noteEl) noteEl.value = '';
+    }
+
+    function renderIncubations() {
+      const tbody = document.getElementById('incubationBody');
+      if (!tbody) return;
+
+      const list = loadIncubations();
+      tbody.innerHTML = '';
+      const today = new Date();
+
+      list.forEach((batch, index) => {
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        tdName.textContent = batch.name || '';
+        tr.appendChild(tdName);
+
+        const tdDate = document.createElement('td');
+        tdDate.textContent = batch.startDate || '';
+        tr.appendChild(tdDate);
+
+        const tdDays = document.createElement('td');
+        let daysStr = '';
+        if (batch.startDate) {
+          const d = new Date(batch.startDate);
+          if (!isNaN(d)) {
+            const diffMs = today - d;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+            daysStr = diffDays.toString();
+          }
+        }
+        tdDays.textContent = daysStr;
+        tr.appendChild(tdDays);
+
+        const tdEggsSet = document.createElement('td');
+        tdEggsSet.textContent = batch.eggsSet != null ? batch.eggsSet : '';
+        tr.appendChild(tdEggsSet);
+
+        // Незапліднені
+        const tdInf = document.createElement('td');
+        const infInput = document.createElement('input');
+        infInput.type = 'number';
+        infInput.step = '1';
+        infInput.style.width = '70px';
+        infInput.value = batch.infertile != null ? batch.infertile : 0;
+        infInput.addEventListener('input', function () {
+          const list2 = loadIncubations();
+          if (list2[index]) {
+            list2[index].infertile = parseInt(this.value) || 0;
+            saveIncubations(list2);
+            renderIncubations();
+          }
+        });
+        tdInf.appendChild(infInput);
+        tr.appendChild(tdInf);
+
+        // Вилупилося
+        const tdHatch = document.createElement('td');
+        const hatchInput = document.createElement('input');
+        hatchInput.type = 'number';
+        hatchInput.step = '1';
+        hatchInput.style.width = '70px';
+        hatchInput.value = batch.hatched != null ? batch.hatched : 0;
+        hatchInput.addEventListener('input', function () {
+          const list2 = loadIncubations();
+          if (list2[index]) {
+            list2[index].hatched = parseInt(this.value) || 0;
+            saveIncubations(list2);
+            renderIncubations();
+          }
+        });
+        tdHatch.appendChild(hatchInput);
+        tr.appendChild(tdHatch);
+
+        // Померли в інкубаторі
+        const tdDeadInc = document.createElement('td');
+        const deadIncInput = document.createElement('input');
+        deadIncInput.type = 'number';
+        deadIncInput.step = '1';
+        deadIncInput.style.width = '70px';
+        deadIncInput.value = batch.diedIncubator != null ? batch.diedIncubator : 0;
+        deadIncInput.addEventListener('input', function () {
+          const list2 = loadIncubations();
+          if (list2[index]) {
+            list2[index].diedIncubator = parseInt(this.value) || 0;
+            saveIncubations(list2);
+            renderIncubations();
+          }
+        });
+        tdDeadInc.appendChild(deadIncInput);
+        tr.appendChild(tdDeadInc);
+
+        // Померли в брудері
+        const tdDeadBr = document.createElement('td');
+        const deadBrInput = document.createElement('input');
+        deadBrInput.type = 'number';
+        deadBrInput.step = '1';
+        deadBrInput.style.width = '70px';
+        deadBrInput.value = batch.diedBrooder != null ? batch.diedBrooder : 0;
+        deadBrInput.addEventListener('input', function () {
+          const list2 = loadIncubations();
+          if (list2[index]) {
+            list2[index].diedBrooder = parseInt(this.value) || 0;
+            saveIncubations(list2);
+            renderIncubations();
+          }
+        });
+        tdDeadBr.appendChild(deadBrInput);
+        tr.appendChild(tdDeadBr);
+
+        // Живі зараз = вилупилось - померли в інкубаторі - в брудері
+        const tdAlive = document.createElement('td');
+        const hatched = batch.hatched || 0;
+        const dInc = batch.diedIncubator || 0;
+        const dBr = batch.diedBrooder || 0;
+        const alive = Math.max(hatched - dInc - dBr, 0);
+        tdAlive.textContent = alive.toString();
+        tr.appendChild(tdAlive);
+
+        const tdNote = document.createElement('td');
+        tdNote.textContent = batch.note || '';
+        tr.appendChild(tdNote);
+
+        const tdActions = document.createElement('td');
+        const btnDel = document.createElement('button');
+        btnDel.textContent = '×';
+        btnDel.className = 'btn btn-danger btn-small';
+        btnDel.onclick = function () {
+          const list2 = loadIncubations();
+          list2.splice(index, 1);
+          saveIncubations(list2);
+          renderIncubations();
+        };
+        tdActions.appendChild(btnDel);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    
     function addOrder() {
       const customer = document.getElementById('orderCustomer').value.trim();
       const trays = parseInt(document.getElementById('orderTrays').value) || 0;
@@ -1377,12 +1717,21 @@
         });
       }
 
+      // Інкубація
+      const addIncBtn = document.getElementById('addIncubation');
+      if (addIncBtn) {
+        addIncBtn.addEventListener('click', () => {
+          addIncubation();
+        });
+      }
+      
       // Кнопки бекапу
       const backupExportBtn = document.getElementById('backupExport');
       if (backupExportBtn) {
         backupExportBtn.addEventListener('click', backupExport);
       }
 
+      
       const backupImportBtn = document.getElementById('backupImport');
       if (backupImportBtn) {
         backupImportBtn.addEventListener('click', backupImport);
@@ -1398,15 +1747,19 @@
       }
 
 
-    // Запуск
+       // Запуск
     loadState();
     attachEvents();
     recalcAll();
     renderLog();
     renderOrders();
+    renderIncubations();
+    renderClientsSummary();
+
   </script>
 </body>
 </html>
+
 
 
 
