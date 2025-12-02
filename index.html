@@ -137,6 +137,15 @@
 
   <!-- 1. Склад корму -->
   <h2>1. Склад універсального корму (25 кг)</h2>
+   <p>
+    Рецепт:
+    <select id="recipePreset">
+      <option value="universal" selected>Універсальний (25 кг)</option>
+      <option value="high_protein">Для несучок (більш білковий)</option>
+      <option value="economy">Економний варіант</option>
+    </select>
+    <button class="btn btn-small" id="applyPreset">Застосувати</button>
+  </p>
   <div class="table-wrapper">
     <table>
       <thead>
@@ -355,6 +364,12 @@
     </select>
   </p>
 
+  <p>
+    Інші постійні витрати (на місяць), грн:
+    <input type="number" id="otherCostsMonthly" value="0" step="1" style="width:100px;">
+    <span class="small">Електрика, підстилка, амортизація тощо</span>
+  </p>
+  
   <div class="table-wrapper">
     <table>
       <tr>
@@ -396,6 +411,18 @@
       <tr>
         <td>Прибуток з 1 самки за період, грн</td>
         <td class="right"><span id="repProfitPerHen">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Інші витрати за період, грн</td>
+        <td class="right"><span id="repOtherCost">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Повна собівартість 1 яйця (корм + інші), грн</td>
+        <td class="right"><span id="repFullCostPerEgg">0.000</span></td>
+      </tr>
+      <tr>
+        <td>Прибуток з 1 яйця з урахуванням всіх витрат, грн</td>
+        <td class="right"><span id="repProfitPerEggFull">0.000</span></td>
       </tr>
     </table>
   </div>
@@ -715,6 +742,70 @@
 
 
   <script>
+       // --- ПРЕСЕТИ РЕЦЕПТІВ КОРМУ ---
+    const recipePresets = {
+      // Поточний універсальний рецепт (25 кг)
+      universal: {
+        corn: 10.0,
+        wheat: 5.0,
+        barley: 1.5,
+        soy: 3.0,
+        sunflower: 2.5,
+        fishmeal: 1.0,
+        yeast: 0.7,
+        tcp: 0.5,
+        dolfos: 0.7,
+        salt: 0.05
+      },
+      // Трохи більш білковий варіант (для несучок)
+      high_protein: {
+        corn: 9.0,
+        wheat: 4.0,
+        barley: 1.0,
+        soy: 4.0,
+        sunflower: 3.0,
+        fishmeal: 1.2,
+        yeast: 0.8,
+        tcp: 0.5,
+        dolfos: 0.7,
+        salt: 0.05
+      },
+      // Економний варіант (менше білка, більше зерна)
+      economy: {
+        corn: 11.0,
+        wheat: 6.0,
+        barley: 2.0,
+        soy: 2.0,
+        sunflower: 2.0,
+        fishmeal: 0.5,
+        yeast: 0.5,
+        tcp: 0.5,
+        dolfos: 0.7,
+        salt: 0.05
+      }
+    };
+
+    function applyRecipePreset(name) {
+      const preset = recipePresets[name];
+      if (!preset) return;
+
+      const rows = document.querySelectorAll('#rows tr');
+      rows.forEach(row => {
+        const priceInput = row.querySelector('.price');
+        const qtyCell = row.querySelector('.qty');
+        if (!priceInput || !qtyCell) return;
+
+        const key = priceInput.dataset.key; // corn, wheat, barley, soy...
+        if (preset[key] !== undefined) {
+          qtyCell.textContent = preset[key].toString();
+        }
+      });
+
+      recalcAll();
+      saveState();
+    }
+
+    
     // --- РОЗРАХУНОК КОРМУ ---
     function recalcFeed() {
       const rows = document.querySelectorAll('#rows tr');
@@ -876,6 +967,16 @@
       const prodAvg = prodCount ? (prodSum / prodCount) : 0;
       const costPerEgg = eggs > 0 ? (feedCost / eggs) : 0;
       const profitPerEgg = eggs > 0 ? (profit / eggs) : 0;
+      const otherInput = document.getElementById('otherCostsMonthly');
+      const otherMonthly = otherInput ? (parseFloat(otherInput.value) || 0) : 0;
+      let otherCostPeriod = 0;
+      if (daysCount > 0 && otherMonthly > 0) {
+      otherCostPeriod = otherMonthly * (daysCount / 30);
+      }
+
+      const fullCostPerEgg = eggs > 0 ? ((feedCost + otherCostPeriod) / eggs) : 0;
+      const profitPerEggFull = eggs > 0 ? ((income - feedCost - otherCostPeriod) / eggs) : 0;
+
 
       const hens1El = document.getElementById('hens1');
       const hens2El = document.getElementById('hens2');
@@ -893,6 +994,10 @@
       document.getElementById('repCostPerEgg').textContent = costPerEgg.toFixed(3);
       document.getElementById('repProfitPerEgg').textContent = profitPerEgg.toFixed(3);
       document.getElementById('repProfitPerHen').textContent = profitPerHen.toFixed(2);
+      document.getElementById('repOtherCost').textContent = otherCostPeriod.toFixed(2);
+      document.getElementById('repFullCostPerEgg').textContent = fullCostPerEgg.toFixed(3);
+      document.getElementById('repProfitPerEggFull').textContent = profitPerEggFull.toFixed(3);
+
     }
 
 
@@ -987,7 +1092,10 @@
         hens1: document.getElementById('hens1') ? document.getElementById('hens1').value : '',
         hens2: document.getElementById('hens2') ? document.getElementById('hens2').value : '',
         eggsCarry: document.getElementById('eggsCarry') ? document.getElementById('eggsCarry').value : '',
-        reportPeriod: document.getElementById('reportPeriod') ? document.getElementById('reportPeriod').value : '30'
+        reportPeriod: document.getElementById('reportPeriod') ? document.getElementById('reportPeriod').value : '30',
+        recipePreset: document.getElementById('recipePreset') ? document.getElementById('recipePreset').value : 'universal',
+        otherCostsMonthly: document.getElementById('otherCostsMonthly').value
+
       };
 
 
@@ -1051,9 +1159,12 @@
         if (state.logNote !== undefined) document.getElementById('logNote').value = state.logNote;
         if (state.orderCustomer !== undefined) document.getElementById('orderCustomer').value = state.orderCustomer;
         if (state.orderTrays !== undefined) document.getElementById('orderTrays').value = state.orderTrays;
-        if (state.orderNote !== undefined) document.getElementById('orderNote').value = state.orderNote;        
+        if (state.orderNote !== undefined) document.getElementById('orderNote').value = state.orderNote;   
+        if (state.otherCostsMonthly) {
+        document.getElementById('otherCostsMonthly').value = state.otherCostsMonthly;
+        }
         if (state.reportPeriod !== undefined && document.getElementById('reportPeriod')) {
-          document.getElementById('reportPeriod').value = state.reportPeriod;
+        document.getElementById('reportPeriod').value = state.reportPeriod;
         }
       } catch (e) {
         console.error('Помилка читання стану', e);
@@ -1745,6 +1856,25 @@
       saveState();
         });
       }
+
+      // Пресети рецепту
+      const presetSelect = document.getElementById('recipePreset');
+      const presetBtn = document.getElementById('applyPreset');
+      if (presetSelect && presetBtn) {
+        presetBtn.addEventListener('click', () => {
+          applyRecipePreset(presetSelect.value);
+        });
+      }
+      
+      const otherInput = document.getElementById('otherCostsMonthly');
+      if (otherInput) {
+      otherInput.addEventListener('input', () => {
+      recalcReport();
+      saveState();
+      });
+      }
+
+
       
       // Кнопки бекапу
       const backupExportBtn = document.getElementById('backupExport');
@@ -1772,6 +1902,7 @@
   </script>
 </body>
 </html>
+
 
 
 
