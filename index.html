@@ -569,6 +569,18 @@
     </table>
   </div>
 
+  <!-- 10. Резервне копіювання (експорт / імпорт) -->
+  <h2>10. Резервне копіювання (експорт / імпорт)</h2>
+  <p class="small">
+    Тут можна зробити бекап усіх даних (стан, щоденник, замовлення) у вигляді тексту.
+    Потім цей текст можна вставити на іншому пристрої або після скидання браузера.
+  </p>
+  <p>
+    <button class="btn" id="backupExport">Експорт даних у текст</button>
+    <button class="btn" id="backupImport">Імпорт із тексту</button>
+  </p>
+  <textarea id="backupArea" rows="6" style="width:100%;"></textarea>
+
 
   <script>
     // --- РОЗРАХУНОК КОРМУ ---
@@ -615,7 +627,7 @@
       const dailyNorm = parseFloat(document.getElementById('dailyNorm').value) || 0;
 
       // добова потреба в кормі, кг
-      const dailyFeedKg = (birds * dailyNorm) / 1000; // норма в грамах
+      const dailyFeedKg = birds * dailyNorm; // норма в грамах
 
       const days = 30;
       const totalFeedNeeded = dailyFeedKg * days; // скільки кг комбікорму треба на 30 днів
@@ -773,9 +785,6 @@
       localStorage.setItem('quailCalcState', JSON.stringify(state));
     }
 
-
-      localStorage.setItem('quailCalcState', JSON.stringify(state));
-    }
 
        function loadState() {
       const raw = localStorage.getItem('quailCalcState');
@@ -1146,8 +1155,9 @@
       renderOrders();
     }
 
-    // --- ІНІЦІАЛІЗАЦІЯ ---
+       // --- ІНІЦІАЛІЗАЦІЯ ---
     function attachEvents() {
+      // Ціни
       document.querySelectorAll('.price').forEach(input => {
         input.addEventListener('input', () => {
           recalcAll();
@@ -1155,7 +1165,7 @@
         });
       });
 
-            // Запаси компонентів
+      // Запаси компонентів
       document.querySelectorAll('.stock').forEach(input => {
         input.addEventListener('input', () => {
           recalcStocks();
@@ -1163,50 +1173,67 @@
         });
       });
 
-
-           ['birds', 'dailyNorm',
-       'hens1', 'hens2',
-       'eggsTotal', 'eggsBad', 'eggsOwn', 'eggsCarry',
-       'trayPrice',
-       'logDate', 'logNote',
-       'orderCustomer', 'orderTrays', 'orderNote'
+      // Основні поля, що впливають на розрахунки
+      [
+        'birds', 'dailyNorm',
+        'hens1', 'hens2',
+        'eggsTotal', 'eggsBad', 'eggsOwn', 'eggsCarry',
+        'trayPrice',
+        'logDate', 'logNote',
+        'orderCustomer', 'orderTrays', 'orderNote'
       ].forEach(id => {
-        ...
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', () => {
+            recalcAll();
+            saveState();
+          });
+        }
       });
-          const el = document.getElementById(id);
-          if (el) {
-            el.addEventListener('input', () => {
-              recalcAll();
-              saveState();
-            });
-          }
+
+      // Кнопки щоденника
+      const addToLogBtn = document.getElementById('addToLog');
+      if (addToLogBtn) {
+        addToLogBtn.addEventListener('click', () => {
+          addToLog();
+          saveState();
         });
+      }
 
-      document.getElementById('addToLog').addEventListener('click', () => {
-        addToLog();
-        saveState();
-      });
+      const clearLogBtn = document.getElementById('clearLog');
+      if (clearLogBtn) {
+        clearLogBtn.addEventListener('click', () => {
+          clearLog();
+        });
+      }
 
-      document.getElementById('clearLog').addEventListener('click', () => {
-        clearLog();
-      });
+      // Кнопки замовлень
+      const addOrderBtn = document.getElementById('addOrder');
+      if (addOrderBtn) {
+        addOrderBtn.addEventListener('click', () => {
+          addOrder();
+        });
+      }
 
-      document.getElementById('addOrder').addEventListener('click', () => {
-        addOrder();
-      });
+      const clearOrdersBtn = document.getElementById('clearOrders');
+      if (clearOrdersBtn) {
+        clearOrdersBtn.addEventListener('click', () => {
+          clearOrders();
+        });
+      }
 
-      document.getElementById('clearOrders').addEventListener('click', () => {
-        clearOrders();
-      });
-          const backupExportBtn = document.getElementById('backupExport');
+      // Кнопки бекапу
+      const backupExportBtn = document.getElementById('backupExport');
       if (backupExportBtn) {
         backupExportBtn.addEventListener('click', backupExport);
       }
+
       const backupImportBtn = document.getElementById('backupImport');
       if (backupImportBtn) {
         backupImportBtn.addEventListener('click', backupImport);
       }
     }
+
 
     // Запуск
     loadState();
@@ -1215,19 +1242,9 @@
     renderLog();
     renderOrders();
   </script>
-    <!-- 8. Резервне копіювання (експорт / імпорт) -->
-  <h2>8. Резервне копіювання (експорт / імпорт)</h2>
-  <p class="small">
-    Тут можна зробити бекап усіх даних (стан, щоденник, замовлення) у вигляді тексту.
-    Потім цей текст можна вставити на іншому пристрої або після скидання браузера.
-  </p>
-  <p>
-    <button class="btn" id="backupExport">Експорт даних у текст</button>
-    <button class="btn" id="backupImport">Імпорт із тексту</button>
-  </p>
-  <textarea id="backupArea" rows="6" style="width:100%;"></textarea>
 </body>
 </html>
+
 
 
 
