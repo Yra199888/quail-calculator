@@ -466,6 +466,110 @@
     </table>
   </div>
 
+    <!-- 9. Запаси компонентів і план закупівлі -->
+  <h2>9. Запаси компонентів і план закупівлі</h2>
+  <p class="small">
+    Вкажи, скільки кг кожного компонента є зараз на складі. 
+    Програма порахує, скільки потрібно на 30 днів, 
+    і скільки потрібно докупити, виходячи з норми годівлі та кількості птахів.
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>Запас, кг (є зараз)</th>
+          <th>Потрібно на 30 днів, кг</th>
+          <th>Докупити, кг</th>
+        </tr>
+      </thead>
+      <tbody id="stockRows">
+        <tr data-key="corn">
+          <td>Кукурудза</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="corn" id="stock_corn" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="wheat">
+          <td>Пшениця</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="wheat" id="stock_wheat" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="barley">
+          <td>Ячмінь</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="barley" id="stock_barley" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="soy">
+          <td>Соєва макуха</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="soy" id="stock_soy" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="sunflower">
+          <td>Соняшникова макуха</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="sunflower" id="stock_sunflower" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="fishmeal">
+          <td>Рибне борошно / м'ясокісткове</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="fishmeal" id="stock_fishmeal" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="yeast">
+          <td>Кормові дріжджі</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="yeast" id="stock_yeast" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="tcp">
+          <td>Трикальційфосфат</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="tcp" id="stock_tcp" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="dolfos">
+          <td>Дольфос D</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="dolfos" id="stock_dolfos" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+        <tr data-key="salt">
+          <td>Сіль</td>
+          <td class="right">
+            <input type="number" class="stock" data-key="salt" id="stock_salt" step="0.1" value="0" style="width:80px;">
+          </td>
+          <td class="right"><span class="need">0.0</span></td>
+          <td class="right"><span class="buy">0.0</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
   <script>
     // --- РОЗРАХУНОК КОРМУ ---
     function recalcFeed() {
@@ -504,6 +608,60 @@
       const daysFromBag = dailyFeedKg > 0 ? totalQty / dailyFeedKg : 0;
       document.getElementById('daysFromBag').textContent = daysFromBag.toFixed(1);
     }
+
+        // --- ЗАПАСИ КОМПОНЕНТІВ І ПЛАН ЗАКУПІВЛІ ---
+    function recalcStocks() {
+      const birds = parseFloat(document.getElementById('birds').value) || 0;
+      const dailyNorm = parseFloat(document.getElementById('dailyNorm').value) || 0;
+
+      // добова потреба в кормі, кг
+      const dailyFeedKg = (birds * dailyNorm) / 1000; // норма в грамах
+
+      const days = 30;
+      const totalFeedNeeded = dailyFeedKg * days; // скільки кг комбікорму треба на 30 днів
+
+      // читаємо рецепт (скільки кг кожного компонента в 25 кг)
+      const rows = document.querySelectorAll('#rows tr');
+      const recipe = {};
+      let totalQty = 0;
+
+      rows.forEach(row => {
+        const qtyCell = row.querySelector('.qty');
+        const priceInput = row.querySelector('.price');
+        if (!qtyCell || !priceInput) return;
+
+        const qty = parseFloat(qtyCell.textContent) || 0;
+        const key = priceInput.dataset.key || '';
+        if (!key) return;
+
+        recipe[key] = qty;
+        totalQty += qty;
+      });
+
+      const stockRows = document.querySelectorAll('#stockRows tr');
+      stockRows.forEach(row => {
+        const key = row.dataset.key;
+        const needSpan = row.querySelector('.need');
+        const buySpan = row.querySelector('.buy');
+        const stockInput = row.querySelector('.stock');
+
+        if (!key || !needSpan || !buySpan || !stockInput) return;
+
+        const haveKg = parseFloat(stockInput.value) || 0;
+
+        let needKg = 0;
+        if (totalFeedNeeded > 0 && totalQty > 0 && recipe[key] !== undefined) {
+          const ratio = recipe[key] / totalQty; // частка компонента в рецепті
+          needKg = totalFeedNeeded * ratio;
+        }
+
+        const toBuy = Math.max(needKg - haveKg, 0);
+
+        needSpan.textContent = needKg.toFixed(1);
+        buySpan.textContent = toBuy.toFixed(1);
+      });
+    }
+
 
     // --- РОЗРАХУНОК ЯЄЦЬ ---
     function recalcEggs() {
@@ -566,17 +724,20 @@
       document.getElementById('freeTrays').textContent = free;
     }
 
-    function recalcAll() {
+      function recalcAll() {
       recalcFeed();
       recalcEggs();
       recalcSummary();
       updateTrayStats();
+      recalcStocks();
     }
 
-    // --- АВТОЗБЕРЕЖЕННЯ ---
+
+       // --- АВТОЗБЕРЕЖЕННЯ ---
     function saveState() {
       const state = {
         prices: {},
+        stocks: {},
         birds: document.getElementById('birds').value,
         dailyNorm: document.getElementById('dailyNorm').value,
         eggsTotal: document.getElementById('eggsTotal').value,
@@ -587,12 +748,13 @@
         logNote: document.getElementById('logNote').value,
         orderCustomer: document.getElementById('orderCustomer').value,
         orderTrays: document.getElementById('orderTrays').value,
-        orderNote: document.getElementById('orderNote').value
-        hens1: document.getElementById('hens1').value,
-        hens2: document.getElementById('hens2').value,
-        eggsCarry: document.getElementById('eggsCarry').value
+        orderNote: document.getElementById('orderNote').value,
+        hens1: document.getElementById('hens1') ? document.getElementById('hens1').value : '',
+        hens2: document.getElementById('hens2') ? document.getElementById('hens2').value : '',
+        eggsCarry: document.getElementById('eggsCarry') ? document.getElementById('eggsCarry').value : ''
       };
 
+      // ціни
       document.querySelectorAll('.price').forEach(input => {
         const key = input.dataset.key || '';
         if (key) {
@@ -600,14 +762,28 @@
         }
       });
 
+      // запаси
+      document.querySelectorAll('.stock').forEach(input => {
+        const key = input.dataset.key || '';
+        if (key) {
+          state.stocks[key] = input.value;
+        }
+      });
+
       localStorage.setItem('quailCalcState', JSON.stringify(state));
     }
 
-    function loadState() {
+
+      localStorage.setItem('quailCalcState', JSON.stringify(state));
+    }
+
+       function loadState() {
       const raw = localStorage.getItem('quailCalcState');
       if (!raw) return;
       try {
         const state = JSON.parse(raw);
+
+        // ціни
         if (state.prices) {
           document.querySelectorAll('.price').forEach(input => {
             const key = input.dataset.key || '';
@@ -616,17 +792,27 @@
             }
           });
         }
+
+        // ЗАПАСИ
+        if (state.stocks) {
+          document.querySelectorAll('.stock').forEach(input => {
+            const key = input.dataset.key || '';
+            if (key && state.stocks[key] !== undefined) {
+              input.value = state.stocks[key];
+            }
+          });
+        }
+
         if (state.birds !== undefined) document.getElementById('birds').value = state.birds;
         if (state.dailyNorm !== undefined) document.getElementById('dailyNorm').value = state.dailyNorm;
         if (state.eggsTotal !== undefined) document.getElementById('eggsTotal').value = state.eggsTotal;
         if (state.eggsBad !== undefined) document.getElementById('eggsBad').value = state.eggsBad;
         if (state.eggsOwn !== undefined) document.getElementById('eggsOwn').value = state.eggsOwn;
         if (state.trayPrice !== undefined) document.getElementById('trayPrice').value = state.trayPrice;
-        if (state.hens1 !== undefined) document.getElementById('hens1').value = state.hens1;
-        if (state.hens2 !== undefined) document.getElementById('hens2').value = state.hens2;
-        if (state.eggsCarry !== undefined) document.getElementById('eggsCarry').value = state.eggsCarry;
+        if (state.hens1 !== undefined && document.getElementById('hens1')) document.getElementById('hens1').value = state.hens1;
+        if (state.hens2 !== undefined && document.getElementById('hens2')) document.getElementById('hens2').value = state.hens2;
+        if (state.eggsCarry !== undefined && document.getElementById('eggsCarry')) document.getElementById('eggsCarry').value = state.eggsCarry;
 
-        if (state.logDate !== undefined) document.getElementById('logDate').value = state.logDate;
         if (state.logDate !== undefined) document.getElementById('logDate').value = state.logDate;
         if (state.logNote !== undefined) document.getElementById('logNote').value = state.logNote;
         if (state.orderCustomer !== undefined) document.getElementById('orderCustomer').value = state.orderCustomer;
@@ -636,6 +822,7 @@
         console.error('Помилка читання стану', e);
       }
     }
+
 
     // --- ЩОДЕННИК ---
     function loadLog() {
@@ -968,6 +1155,15 @@
         });
       });
 
+            // Запаси компонентів
+      document.querySelectorAll('.stock').forEach(input => {
+        input.addEventListener('input', () => {
+          recalcStocks();
+          saveState();
+        });
+      });
+
+
            ['birds', 'dailyNorm',
        'hens1', 'hens2',
        'eggsTotal', 'eggsBad', 'eggsOwn', 'eggsCarry',
@@ -1032,6 +1228,7 @@
   <textarea id="backupArea" rows="6" style="width:100%;"></textarea>
 </body>
 </html>
+
 
 
 
