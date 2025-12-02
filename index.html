@@ -344,6 +344,63 @@
     </table>
   </div>
 
+    <!-- 5.1. Фінансовий звіт за період -->
+  <h2>5.1. Фінансовий звіт за період</h2>
+  <p>
+    Період:
+    <select id="reportPeriod">
+      <option value="7">Останні 7 днів</option>
+      <option value="30" selected>Останні 30 днів</option>
+      <option value="all">За весь час</option>
+    </select>
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <tr>
+        <td>Днів у звіті</td>
+        <td class="right"><span id="repDays">0</span></td>
+      </tr>
+      <tr>
+        <td>Зібрано яєць, шт</td>
+        <td class="right"><span id="repEggs">0</span></td>
+      </tr>
+      <tr>
+        <td>Продано лотків (по 20 шт)</td>
+        <td class="right"><span id="repTrays">0</span></td>
+      </tr>
+      <tr>
+        <td>Виручка, грн</td>
+        <td class="right"><span id="repIncome">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Витрати на корм, грн</td>
+        <td class="right"><span id="repFeedCost">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Чистий результат (прибуток), грн</td>
+        <td class="right"><span id="repProfit">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Середня продуктивність, %</td>
+        <td class="right"><span id="repProdAvg">0.0</span></td>
+      </tr>
+      <tr>
+        <td>Собівартість 1 яйця (корм), грн</td>
+        <td class="right"><span id="repCostPerEgg">0.000</span></td>
+      </tr>
+      <tr>
+        <td>Прибуток з 1 яйця, грн</td>
+        <td class="right"><span id="repProfitPerEgg">0.000</span></td>
+      </tr>
+      <tr>
+        <td>Прибуток з 1 самки за період, грн</td>
+        <td class="right"><span id="repProfitPerHen">0.00</span></td>
+      </tr>
+    </table>
+  </div>
+
+
   <!-- 6. Щоденник -->
   <h2>6. Щоденник (історія)</h2>
   <p class="small">
@@ -674,6 +731,95 @@
       });
     }
 
+        // --- ФІНАНСОВИЙ ЗВІТ ЗА ПЕРІОД ---
+    function recalcReport() {
+      const periodSelect = document.getElementById('reportPeriod');
+      if (!periodSelect) return;
+
+      const period = periodSelect.value; // "7", "30" або "all"
+      const log = loadLog();
+
+      // Якщо щоденник порожній — просто обнуляємо
+      if (!log.length) {
+        document.getElementById('repDays').textContent = '0';
+        document.getElementById('repEggs').textContent = '0';
+        document.getElementById('repTrays').textContent = '0';
+        document.getElementById('repIncome').textContent = '0.00';
+        document.getElementById('repFeedCost').textContent = '0.00';
+        document.getElementById('repProfit').textContent = '0.00';
+        document.getElementById('repProdAvg').textContent = '0.0';
+        document.getElementById('repCostPerEgg').textContent = '0.000';
+        document.getElementById('repProfitPerEgg').textContent = '0.000';
+        document.getElementById('repProfitPerHen').textContent = '0.00';
+        return;
+      }
+
+      const today = new Date();
+      let fromDate = null;
+
+      if (period !== 'all') {
+        const days = parseInt(period, 10) || 0;
+        // напр. останні 7 днів: today-6 ... today
+        fromDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - days + 1);
+      }
+
+      let daysCount = 0;
+      let eggs = 0;
+      let trays = 0;
+      let income = 0;
+      let feedCost = 0;
+      let profit = 0;
+
+      let prodSum = 0;
+      let prodCount = 0;
+
+      log.forEach(entry => {
+        if (!entry.date) return;
+        const d = new Date(entry.date);
+        if (isNaN(d)) return;
+
+        if (fromDate && d < fromDate) return;
+
+        daysCount++;
+        eggs += entry.eggsTotal || 0;
+        trays += entry.trays || 0;
+        income += entry.income || 0;
+        feedCost += entry.dailyCost || 0;
+
+        // якщо в записі нема profit — перерахуємо
+        const p = (typeof entry.profit === 'number')
+          ? entry.profit
+          : (entry.income || 0) - (entry.dailyCost || 0);
+        profit += p;
+
+        if (typeof entry.productivity === 'number') {
+          prodSum += entry.productivity;
+          prodCount++;
+        }
+      });
+
+      const prodAvg = prodCount ? (prodSum / prodCount) : 0;
+      const costPerEgg = eggs > 0 ? (feedCost / eggs) : 0;
+      const profitPerEgg = eggs > 0 ? (profit / eggs) : 0;
+
+      const hens1El = document.getElementById('hens1');
+      const hens2El = document.getElementById('hens2');
+      const hensTotal = (parseInt(hens1El ? hens1El.value : '0') || 0) +
+                        (parseInt(hens2El ? hens2El.value : '0') || 0);
+      const profitPerHen = hensTotal > 0 ? (profit / hensTotal) : 0;
+
+      document.getElementById('repDays').textContent = daysCount.toString();
+      document.getElementById('repEggs').textContent = eggs.toString();
+      document.getElementById('repTrays').textContent = trays.toString();
+      document.getElementById('repIncome').textContent = income.toFixed(2);
+      document.getElementById('repFeedCost').textContent = feedCost.toFixed(2);
+      document.getElementById('repProfit').textContent = profit.toFixed(2);
+      document.getElementById('repProdAvg').textContent = prodAvg.toFixed(1);
+      document.getElementById('repCostPerEgg').textContent = costPerEgg.toFixed(3);
+      document.getElementById('repProfitPerEgg').textContent = profitPerEgg.toFixed(3);
+      document.getElementById('repProfitPerHen').textContent = profitPerHen.toFixed(2);
+    }
+
 
     // --- РОЗРАХУНОК ЯЄЦЬ ---
     function recalcEggs() {
@@ -736,13 +882,15 @@
       document.getElementById('freeTrays').textContent = free;
     }
 
-      function recalcAll() {
+     function recalcAll() {
       recalcFeed();
       recalcEggs();
       recalcSummary();
       updateTrayStats();
       recalcStocks();
+      recalcReport();
     }
+
 
 
        // --- АВТОЗБЕРЕЖЕННЯ ---
@@ -763,8 +911,10 @@
         orderNote: document.getElementById('orderNote').value,
         hens1: document.getElementById('hens1') ? document.getElementById('hens1').value : '',
         hens2: document.getElementById('hens2') ? document.getElementById('hens2').value : '',
-        eggsCarry: document.getElementById('eggsCarry') ? document.getElementById('eggsCarry').value : ''
+        eggsCarry: document.getElementById('eggsCarry') ? document.getElementById('eggsCarry').value : '',
+        reportPeriod: document.getElementById('reportPeriod') ? document.getElementById('reportPeriod').value : '30'
       };
+
 
       // ціни
       document.querySelectorAll('.price').forEach(input => {
@@ -826,7 +976,10 @@
         if (state.logNote !== undefined) document.getElementById('logNote').value = state.logNote;
         if (state.orderCustomer !== undefined) document.getElementById('orderCustomer').value = state.orderCustomer;
         if (state.orderTrays !== undefined) document.getElementById('orderTrays').value = state.orderTrays;
-        if (state.orderNote !== undefined) document.getElementById('orderNote').value = state.orderNote;
+        if (state.orderNote !== undefined) document.getElementById('orderNote').value = state.orderNote;        
+        if (state.reportPeriod !== undefined && document.getElementById('reportPeriod')) {
+          document.getElementById('reportPeriod').value = state.reportPeriod;
+        }
       } catch (e) {
         console.error('Помилка читання стану', e);
       }
@@ -1234,6 +1387,14 @@
       }
     }
 
+      const periodSelect = document.getElementById('reportPeriod');
+      if (periodSelect) {
+        periodSelect.addEventListener('change', () => {
+          recalcReport();
+          saveState();
+        });
+      }
+
 
     // Запуск
     loadState();
@@ -1244,6 +1405,7 @@
   </script>
 </body>
 </html>
+
 
 
 
