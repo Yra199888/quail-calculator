@@ -1149,10 +1149,11 @@
         btn.textContent = '×';
         btn.className = 'btn btn-danger btn-small';
         btn.onclick = function () {
-          const current = loadLog();
-          current.splice(index, 1);
-          saveLog(current);
-          renderLog();
+        const current = loadLog();
+        current.splice(index, 1);
+        saveLog(current);
+        renderLog();
+        recalcReport();
         };
         tdDel.appendChild(btn);
         tr.appendChild(tdDel);
@@ -1218,7 +1219,8 @@
       const backup = {
         state: JSON.parse(stateRaw),
         log: JSON.parse(logRaw),
-        orders: JSON.parse(ordersRaw)
+        orders: JSON.parse(ordersRaw),
+        incubations: JSON.parse(incRaw)
       };
 
       document.getElementById('backupArea').value =
@@ -1242,10 +1244,15 @@
         if (backup.orders) {
           localStorage.setItem('quailOrders', JSON.stringify(backup.orders));
         }
+        if (backup.incubations) {
+          localStorage.setItem('quailIncubations', JSON.stringify(backup.incubations));
+        }  
         loadState();
         renderLog();
         renderOrders();
         recalcAll();
+        renderIncubations();
+        renderClientsSummary();
         alert('Дані успішно імпортовано.');
       } catch (e) {
         console.error(e);
@@ -1618,31 +1625,37 @@
     }
 
     
-    function addOrder() {
-      const customer = document.getElementById('orderCustomer').value.trim();
-      const trays = parseInt(document.getElementById('orderTrays').value) || 0;
-      const note = document.getElementById('orderNote').value.trim();
-      if (!customer || trays <= 0) {
-        alert('Вкажи ім\'я клієнта та кількість лотків > 0');
-        return;
-      }
+   function addOrder() {
+  const customer = document.getElementById('orderCustomer').value.trim();
+  const trays = parseInt(document.getElementById('orderTrays').value) || 0;
+  const note = document.getElementById('orderNote').value.trim();
+  if (!customer || trays <= 0) {
+    alert('Вкажи ім\'я клієнта та кількість лотків > 0');
+    return;
+  }
 
-      const date = new Date().toISOString().slice(0, 10);
-      const eggs = trays * 20;
+  const date = new Date().toISOString().slice(0, 10);
+  const eggs = trays * 20;
 
-      const orders = loadOrders();
-      orders.push({
-        customer,
-        eggs,
-        trays,
-        date,
-        note,
-        done: false
-      });
-      saveOrders(orders);
-      renderOrders();
-      saveState();
-    }
+  // 🔹 Беремо поточну ціну за лоток
+  const trayPrice = parseFloat(document.getElementById('trayPrice').value) || 0;
+  const amount = trays * trayPrice;
+
+  const orders = loadOrders();
+  orders.push({
+    customer,
+    eggs,
+    trays,
+    date,
+    note,
+    amount,      // ⬅️ додано
+    done: false
+  });
+  saveOrders(orders);
+  renderOrders();
+  saveState();
+}
+
 
     function clearOrders() {
       if (!confirm('Точно очистити всі замовлення?')) return;
@@ -1724,6 +1737,14 @@
           addIncubation();
         });
       }
+
+      const periodSelect = document.getElementById('reportPeriod');
+      if (periodSelect) {
+      periodSelect.addEventListener('change', () => {
+      recalcReport();
+      saveState();
+        });
+      }
       
       // Кнопки бекапу
       const backupExportBtn = document.getElementById('backupExport');
@@ -1738,14 +1759,6 @@
       }
     }
 
-      const periodSelect = document.getElementById('reportPeriod');
-      if (periodSelect) {
-        periodSelect.addEventListener('change', () => {
-          recalcReport();
-          saveState();
-        });
-      }
-
 
        // Запуск
     loadState();
@@ -1759,6 +1772,7 @@
   </script>
 </body>
 </html>
+
 
 
 
