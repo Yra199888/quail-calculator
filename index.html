@@ -256,7 +256,7 @@
     </table>
   </div>
 
-  <!-- 4. Облік яєць -->
+    <!-- 4. Облік яєць -->
   <h2>4. Облік яєць</h2>
 
   <p>Кількість зібраних яєць за добу:
@@ -271,15 +271,28 @@
     <input type="number" id="eggsOwn" value="0" step="1" style="width:80px;">
   </p>
 
+  <p>Яйця, що залишилися з попередніх днів (складський залишок):
+    <input type="number" id="eggsCarry" value="0" step="1" style="width:80px;">
+    <span class="small">Якщо щось збилося – можеш виправити вручну.</span>
+  </p>
+
   <div class="table-wrapper">
     <table>
       <tr>
-        <td>Яєць доступно для продажу</td>
+        <td>Яєць доступно для продажу СЬОГОДНІ</td>
         <td class="right"><span id="eggsForSale">0</span></td>
       </tr>
       <tr>
-        <td>Кількість лотків (по 20 шт, повні)</td>
+        <td>Всього яєць для продажу (разом із залишком)</td>
+        <td class="right"><span id="eggsForSaleTotal">0</span></td>
+      </tr>
+      <tr>
+        <td>Кількість повних лотків (по 20 шт)</td>
         <td class="right"><span id="traysCount">0</span></td>
+      </tr>
+      <tr>
+        <td>Залишок яєць після повних лотків</td>
+        <td class="right"><span id="eggsRemainder">0</span></td>
       </tr>
       <tr>
         <td>Ціна за 1 лоток, грн</td>
@@ -288,6 +301,26 @@
       <tr>
         <td>Сума виручки, грн</td>
         <td class="right"><span id="income">0.00</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>4.1. Самки та продуктивність</h3>
+  <p>Кількість самок у 1-й партії (7 серпня):
+    <input type="number" id="hens1" value="0" step="1" style="width:80px;">
+  </p>
+  <p>Кількість самок у 2-й партії (19 жовтня):
+    <input type="number" id="hens2" value="0" step="1" style="width:80px;">
+  </p>
+  <div class="table-wrapper">
+    <table>
+      <tr>
+        <td>Самок всього</td>
+        <td class="right"><span id="hensTotal">0</span></td>
+      </tr>
+      <tr>
+        <td>Фактична продуктивність сьогодні, %</td>
+        <td class="right"><span id="productivityToday">0.0</span></td>
       </tr>
     </table>
   </div>
@@ -332,11 +365,14 @@
 
   <div class="table-wrapper">
     <table>
-      <thead>
+       <thead>
         <tr>
           <th>Дата</th>
           <th>Яєць всього</th>
-          <th>На продаж</th>
+          <th>Самок всього</th>
+          <th>Продуктивність, %</th>
+          <th>На продаж сьогодні</th>
+          <th>На продаж разом із залишком</th>
           <th>Лотків</th>
           <th>Виручка, грн</th>
           <th>Корм/день, грн</th>
@@ -471,20 +507,37 @@
 
     // --- РОЗРАХУНОК ЯЄЦЬ ---
     function recalcEggs() {
-      const eggsTotal = parseInt(document.getElementById('eggsTotal').value) || 0;
-      const eggsBad = parseInt(document.getElementById('eggsBad').value) || 0;
-      const eggsOwn = parseInt(document.getElementById('eggsOwn').value) || 0;
-      const trayPrice = parseFloat(document.getElementById('trayPrice').value) || 0;
+  const eggsTotal = parseInt(document.getElementById('eggsTotal').value) || 0;
+  const eggsBad = parseInt(document.getElementById('eggsBad').value) || 0;
+  const eggsOwn = parseInt(document.getElementById('eggsOwn').value) || 0;
+  const trayPrice = parseFloat(document.getElementById('trayPrice').value) || 0;
+  const eggsCarry = parseInt(document.getElementById('eggsCarry').value) || 0;
 
-      const eggsForSale = Math.max(eggsTotal - eggsBad - eggsOwn, 0);
-      const trays = eggsForSale / 20;
-      const traysRounded = Math.floor(trays);
-      const income = traysRounded * trayPrice;
+  // Яйця, які з'явилися СЬОГОДНІ для продажу
+  const eggsForSaleToday = Math.max(eggsTotal - eggsBad - eggsOwn, 0);
 
-      document.getElementById('eggsForSale').textContent = eggsForSale;
-      document.getElementById('traysCount').textContent = traysRounded;
-      document.getElementById('income').textContent = income.toFixed(2);
-    }
+  // Усього яєць, доступних для продажу з урахуванням залишку
+  const eggsForSaleTotal = Math.max(eggsCarry + eggsForSaleToday, 0);
+
+  const trays = Math.floor(eggsForSaleTotal / 20);
+  const income = trays * trayPrice;
+  const remainder = eggsForSaleTotal - trays * 20;
+
+  document.getElementById('eggsForSale').textContent = eggsForSaleToday;
+  document.getElementById('eggsForSaleTotal').textContent = eggsForSaleTotal;
+  document.getElementById('traysCount').textContent = trays;
+  document.getElementById('eggsRemainder').textContent = remainder;
+  document.getElementById('income').textContent = income.toFixed(2);
+
+  // Продуктивність по стаду
+  const hens1 = parseInt(document.getElementById('hens1').value) || 0;
+  const hens2 = parseInt(document.getElementById('hens2').value) || 0;
+  const hensTotal = hens1 + hens2;
+  const productivity = hensTotal > 0 ? (eggsTotal / hensTotal) * 100 : 0;
+
+  document.getElementById('hensTotal').textContent = hensTotal;
+  document.getElementById('productivityToday').textContent = productivity.toFixed(1);
+}
 
     // --- ПІДСУМОК ДНЯ ---
     function recalcSummary() {
@@ -535,6 +588,9 @@
         orderCustomer: document.getElementById('orderCustomer').value,
         orderTrays: document.getElementById('orderTrays').value,
         orderNote: document.getElementById('orderNote').value
+        hens1: document.getElementById('hens1').value,
+        hens2: document.getElementById('hens2').value,
+        eggsCarry: document.getElementById('eggsCarry').value
       };
 
       document.querySelectorAll('.price').forEach(input => {
@@ -566,6 +622,11 @@
         if (state.eggsBad !== undefined) document.getElementById('eggsBad').value = state.eggsBad;
         if (state.eggsOwn !== undefined) document.getElementById('eggsOwn').value = state.eggsOwn;
         if (state.trayPrice !== undefined) document.getElementById('trayPrice').value = state.trayPrice;
+        if (state.hens1 !== undefined) document.getElementById('hens1').value = state.hens1;
+        if (state.hens2 !== undefined) document.getElementById('hens2').value = state.hens2;
+        if (state.eggsCarry !== undefined) document.getElementById('eggsCarry').value = state.eggsCarry;
+
+        if (state.logDate !== undefined) document.getElementById('logDate').value = state.logDate;
         if (state.logDate !== undefined) document.getElementById('logDate').value = state.logDate;
         if (state.logNote !== undefined) document.getElementById('logNote').value = state.logNote;
         if (state.orderCustomer !== undefined) document.getElementById('orderCustomer').value = state.orderCustomer;
@@ -593,7 +654,7 @@
       localStorage.setItem('quailCalcLog', JSON.stringify(log));
     }
 
-    function renderLog() {
+        function renderLog() {
       const log = loadLog();
       const tbody = document.getElementById('logTableBody');
       tbody.innerHTML = '';
@@ -606,27 +667,53 @@
         tr.appendChild(tdDate);
 
         const tdEggsTotal = document.createElement('td');
-        tdEggsTotal.textContent = entry.eggsTotal;
+        tdEggsTotal.textContent = entry.eggsTotal != null ? entry.eggsTotal : '';
         tr.appendChild(tdEggsTotal);
 
-        const tdEggsForSale = document.createElement('td');
-        tdEggsForSale.textContent = entry.eggsForSale;
-        tr.appendChild(tdEggsForSale);
+        const tdHensTotal = document.createElement('td');
+        tdHensTotal.textContent = entry.hensTotal != null ? entry.hensTotal : '';
+        tr.appendChild(tdHensTotal);
+
+        const tdProd = document.createElement('td');
+        if (typeof entry.productivity === 'number') {
+          tdProd.textContent = entry.productivity.toFixed(1);
+        } else {
+          tdProd.textContent = '';
+        }
+        tr.appendChild(tdProd);
+
+        const tdEggsForSaleToday = document.createElement('td');
+        tdEggsForSaleToday.textContent =
+          entry.eggsForSaleToday != null
+            ? entry.eggsForSaleToday
+            : (entry.eggsForSale != null ? entry.eggsForSale : '');
+        tr.appendChild(tdEggsForSaleToday);
+
+        const tdEggsForSaleTotal = document.createElement('td');
+        if (entry.eggsForSaleTotal != null) {
+          tdEggsForSaleTotal.textContent = entry.eggsForSaleTotal;
+        } else {
+          tdEggsForSaleTotal.textContent = '';
+        }
+        tr.appendChild(tdEggsForSaleTotal);
 
         const tdTrays = document.createElement('td');
-        tdTrays.textContent = entry.trays;
+        tdTrays.textContent = entry.trays != null ? entry.trays : '';
         tr.appendChild(tdTrays);
 
         const tdIncome = document.createElement('td');
-        tdIncome.textContent = entry.income.toFixed(2);
+        tdIncome.textContent =
+          typeof entry.income === 'number' ? entry.income.toFixed(2) : '';
         tr.appendChild(tdIncome);
 
         const tdDailyCost = document.createElement('td');
-        tdDailyCost.textContent = entry.dailyCost.toFixed(2);
+        tdDailyCost.textContent =
+          typeof entry.dailyCost === 'number' ? entry.dailyCost.toFixed(2) : '';
         tr.appendChild(tdDailyCost);
 
         const tdProfit = document.createElement('td');
-        tdProfit.textContent = entry.profit.toFixed(2);
+        tdProfit.textContent =
+          typeof entry.profit === 'number' ? entry.profit.toFixed(2) : '';
         tr.appendChild(tdProfit);
 
         const tdNote = document.createElement('td');
@@ -650,37 +737,94 @@
       });
     }
 
-    function addToLog() {
+        function addToLog() {
       const date = document.getElementById('logDate').value ||
         new Date().toISOString().slice(0, 10);
       const note = document.getElementById('logNote').value || '';
 
       const eggsTotal = parseInt(document.getElementById('eggsTotal').value) || 0;
-      const eggsForSale = parseInt(document.getElementById('eggsForSale').textContent) || 0;
+      const eggsForSaleToday = parseInt(document.getElementById('eggsForSale').textContent) || 0;
+      const eggsForSaleTotal = parseInt(document.getElementById('eggsForSaleTotal').textContent) || eggsForSaleToday;
       const trays = parseInt(document.getElementById('traysCount').textContent) || 0;
       const income = parseFloat(document.getElementById('income').textContent) || 0;
       const dailyCost = parseFloat(document.getElementById('dailyCost').textContent) || 0;
       const profit = income - dailyCost;
 
+      const hens1 = parseInt(document.getElementById('hens1').value) || 0;
+      const hens2 = parseInt(document.getElementById('hens2').value) || 0;
+      const hensTotal = hens1 + hens2;
+      const productivity = hensTotal > 0 ? (eggsTotal / hensTotal) * 100 : 0;
+
       const log = loadLog();
       log.push({
         date,
         eggsTotal,
-        eggsForSale,
+        eggsForSaleToday,
+        eggsForSaleTotal,
         trays,
         income,
         dailyCost,
         profit,
+        hensTotal,
+        productivity,
         note
       });
       saveLog(log);
       renderLog();
+
+      // Оновлюємо залишок яєць на наступний день
+      document.getElementById('eggsCarry').value = eggsForSaleTotal;
+      saveState();
     }
 
     function clearLog() {
       if (!confirm('Точно очистити весь щоденник?')) return;
       localStorage.removeItem('quailCalcLog');
       renderLog();
+    }
+
+        // --- ЕКСПОРТ / ІМПОРТ ДАНИХ ---
+    function backupExport() {
+      const stateRaw = localStorage.getItem('quailCalcState') || '{}';
+      const logRaw = localStorage.getItem('quailCalcLog') || '[]';
+      const ordersRaw = localStorage.getItem('quailOrders') || '[]';
+
+      const backup = {
+        state: JSON.parse(stateRaw),
+        log: JSON.parse(logRaw),
+        orders: JSON.parse(ordersRaw)
+      };
+
+      document.getElementById('backupArea').value =
+        JSON.stringify(backup, null, 2);
+    }
+
+    function backupImport() {
+      const txt = document.getElementById('backupArea').value.trim();
+      if (!txt) {
+        alert('Встав сюди дані для імпорту.');
+        return;
+      }
+      try {
+        const backup = JSON.parse(txt);
+        if (backup.state) {
+          localStorage.setItem('quailCalcState', JSON.stringify(backup.state));
+        }
+        if (backup.log) {
+          localStorage.setItem('quailCalcLog', JSON.stringify(backup.log));
+        }
+        if (backup.orders) {
+          localStorage.setItem('quailOrders', JSON.stringify(backup.orders));
+        }
+        loadState();
+        renderLog();
+        renderOrders();
+        recalcAll();
+        alert('Дані успішно імпортовано.');
+      } catch (e) {
+        console.error(e);
+        alert('Не вдалось прочитати дані. Перевір формат.');
+      }
     }
 
     // --- ЗАМОВЛЕННЯ ---
@@ -824,9 +968,15 @@
         });
       });
 
-      ['birds', 'dailyNorm', 'eggsTotal', 'eggsBad', 'eggsOwn', 'trayPrice',
-       'logDate', 'logNote', 'orderCustomer', 'orderTrays', 'orderNote']
-        .forEach(id => {
+           ['birds', 'dailyNorm',
+       'hens1', 'hens2',
+       'eggsTotal', 'eggsBad', 'eggsOwn', 'eggsCarry',
+       'trayPrice',
+       'logDate', 'logNote',
+       'orderCustomer', 'orderTrays', 'orderNote'
+      ].forEach(id => {
+        ...
+      });
           const el = document.getElementById(id);
           if (el) {
             el.addEventListener('input', () => {
@@ -852,6 +1002,14 @@
       document.getElementById('clearOrders').addEventListener('click', () => {
         clearOrders();
       });
+          const backupExportBtn = document.getElementById('backupExport');
+      if (backupExportBtn) {
+        backupExportBtn.addEventListener('click', backupExport);
+      }
+      const backupImportBtn = document.getElementById('backupImport');
+      if (backupImportBtn) {
+        backupImportBtn.addEventListener('click', backupImport);
+      }
     }
 
     // Запуск
@@ -861,8 +1019,20 @@
     renderLog();
     renderOrders();
   </script>
+    <!-- 8. Резервне копіювання (експорт / імпорт) -->
+  <h2>8. Резервне копіювання (експорт / імпорт)</h2>
+  <p class="small">
+    Тут можна зробити бекап усіх даних (стан, щоденник, замовлення) у вигляді тексту.
+    Потім цей текст можна вставити на іншому пристрої або після скидання браузера.
+  </p>
+  <p>
+    <button class="btn" id="backupExport">Експорт даних у текст</button>
+    <button class="btn" id="backupImport">Імпорт із тексту</button>
+  </p>
+  <textarea id="backupArea" rows="6" style="width:100%;"></textarea>
 </body>
 </html>
+
 
 
 
