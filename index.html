@@ -16,210 +16,256 @@
 <meta name="theme-color" content="#ffffff">
   <title>Розрахунок корму, облік яєць та замовлень</title>
   <style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 10px 15px 30px;
+    box-sizing: border-box;
+  }
+
+  h1, h2, h3 {
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+
+  p {
+    margin: 4px 0 8px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 16px;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 520px;
+    margin-bottom: 4px;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    text-align: center;
+  }
+
+  th {
+    background: #f0f0f0;
+  }
+
+  input {
+    text-align: right;
+    padding: 2px 4px;
+    box-sizing: border-box;
+  }
+
+  input[type="number"] {
+    width: 80px;
+  }
+
+  input[type="text"] {
+    width: 160px;
+    text-align: left;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 50px;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  tfoot td {
+    font-weight: bold;
+  }
+
+  .right {
+    text-align: right;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 6px 10px;
+    margin: 4px 4px 8px 0;
+    border: 1px solid #555;
+    background: #f5f5f5;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .btn:hover {
+    background: #e2e2e2;
+  }
+
+  .btn-danger {
+    border-color: #b00;
+    color: #b00;
+  }
+
+  .btn-small {
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+
+  .small {
+    font-size: 13px;
+    color: #555;
+  }
+
+  /* ========= ВЕРХНЯ ПАНЕЛЬ (Дашборд) ========= */
+
+  #topDashboard {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #ffffff;
+    padding: 8px 10px 10px;
+    margin: -10px -15px 10px; /* тягнемо фон на всю ширину */
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  .dash-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .dash-card {
+    flex: 1 1 22%;
+    min-width: 150px;
+    border-radius: 10px;
+    padding: 6px 8px;
+    background: #f7f9ff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  .dash-label {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .dash-value {
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  /* Навігація по розділах (Корм / Яйця / …) */
+
+  .nav-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .nav-btn {
+    flex: 1 1 18%;
+    text-align: center;
+    padding: 6px 4px;
+    border-radius: 999px;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    font-size: 13px;
+    color: #333;
+    background: #f7f7f7;
+  }
+
+  .nav-btn:hover {
+    background: #e8f0ff;
+    border-color: #7ea8ff;
+  }
+
+  /* Попередження вгорі */
+
+  #topWarnings {
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .warn-item {
+    padding: 4px 6px;
+    border-radius: 6px;
+    margin-bottom: 3px;
+  }
+
+  .warn-bad {
+    background: #ffe5e5;
+    color: #800;
+  }
+
+  .warn-warn {
+    background: #fff5d6;
+    color: #885500;
+  }
+
+  .warn-ok {
+    background: #e7ffe5;
+    color: #126612;
+  }
+
+  /* ========= АДАПТАЦІЯ ДЛЯ ТЕЛЕФОНУ ========= */
+
+  @media (max-width: 600px) {
     body {
-      font-family: Arial, sans-serif;
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 10px 15px 30px;
-      box-sizing: border-box;
+      padding: 6px;
     }
-    h1, h2, h3 {
-      margin-bottom: 6px;
-      margin-top: 14px;
-    }
-    p {
-      margin: 4px 0 8px;
-    }
-    .table-wrapper {
-      overflow-x: auto;
-      margin-bottom: 16px;
-    }
+
     table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 520px;
-      margin-bottom: 4px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px 8px;
-      text-align: center;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    input {
-      text-align: right;
-      padding: 2px 4px;
-      box-sizing: border-box;
-    }
-    input[type="number"] {
-      width: 80px;
-    }
-    input[type="text"] {
-      width: 160px;
-      text-align: left;
-    }
-    textarea {
-      width: 100%;
-      min-height: 50px;
-      box-sizing: border-box;
-      resize: vertical;
-    }
-    tfoot td {
-      font-weight: bold;
-    }
-    .right {
-      text-align: right;
-    }
-    .btn {
-      display: inline-block;
-      padding: 6px 10px;
-      margin: 4px 4px 8px 0;
-      border: 1px solid #555;
-      background: #f5f5f5;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    .btn:hover {
-      background: #e2e2e2;
-    }
-    .btn-danger {
-      border-color: #b00;
-      color: #b00;
-    }
-    .btn-small {
-      padding: 2px 6px;
       font-size: 12px;
-    }
-    .small {
-      font-size: 13px;
-      color: #555;
+      min-width: 480px;
     }
 
-        /* Верхній дашборд – працює і на ПК, і на телефоні */
+    th, td {
+      padding: 4px;
+    }
+
+    input[type="number"] {
+      width: 70px;
+    }
+
+    input[type="text"] {
+      width: 120px;
+    }
+
+    h1 {
+      font-size: 18px;
+    }
+
+    h2 {
+      font-size: 16px;
+    }
+
+    h3 {
+      font-size: 15px;
+    }
+
     #topDashboard {
-      position: sticky;
-      top: 0;
-      background: #ffffff;
-      z-index: 100;
-      padding: 8px 6px 10px;
-      margin: -10px -15px 10px; /* трохи розтягнути на всю ширину */
-      border-bottom: 1px solid #ddd;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-
-    .dash-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 6px;
+      padding: 6px 6px 8px;
+      margin: -6px -6px 8px;
     }
 
     .dash-card {
-      flex: 1 1 22%;
-      min-width: 120px;
-      border-radius: 10px;
-      padding: 6px 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      flex: 1 1 48%;
       font-size: 12px;
-      background: #fdfdfd;
-    }
-
-    .dash-label {
-      color: #666;
-      font-size: 11px;
     }
 
     .dash-value {
-      font-size: 20px;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    .nav-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
+      font-size: 18px;
     }
 
     .nav-btn {
       flex: 1 1 30%;
-      text-align: center;
-      padding: 6px 4px;
-      border-radius: 999px;
-      text-decoration: none;
-      border: 1px solid #ccc;
-      font-size: 13px;
-      color: #333;
-      background: #f7f7f7;
-    }
-
-    .nav-btn:hover {
-      background: #ececec;
-    }
-
-    #topWarnings {
-      margin-bottom: 6px;
       font-size: 12px;
+      padding: 5px 2px;
     }
-
-    .warn-item {
-      padding: 4px 6px;
-      border-radius: 6px;
-      margin-bottom: 3px;
-    }
-    .warn-bad {
-      background: #ffe5e5;
-      color: #800;
-    }
-    .warn-warn {
-      background: #fff5d6;
-      color: #885500;
-    }
-    .warn-ok {
-      background: #e7ffe5;
-      color: #126612;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 6px;
-      }
-      table {
-        font-size: 12px;
-        min-width: 480px;
-      }
-      th, td {
-        padding: 4px;
-      }
-      input[type="number"] {
-        width: 70px;
-      }
-      input[type="text"] {
-        width: 120px;
-      }
-      h1 {
-        font-size: 18px;
-      }
-      h2 {
-        font-size: 16px;
-      }
-      h3 {
-        font-size: 15px;
-      }
-      .dash-card {
-        flex: 1 1 48%;
-      }
-      .nav-btn {
-        font-size: 12px;
-        padding: 5px 2px;
-      }
-    }
-
-  </style>
+  }
+</style>
 </head>
 <body>
 
