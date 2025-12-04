@@ -2641,124 +2641,127 @@
   
   
   
-  <script>
-let googleToken = null;
-let driveFileId = null;
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js"></script>
 
-// ID твого OAuth-клієнта
+<script>
+/* ---------------- GOOGLE DRIVE CONFIG --------------------- */
+
 const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
+const API_KEY = "";
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
 
-// Область доступу – дозвіл на роботу з файлами у Google Drive
-const SCOPE = "https://www.googleapis.com/auth/drive.file";
-
-// Завантаження бібліотек Google
+/* -------- 1. Ініціалізація GAPI (Drive API) -------- */
 function gapiLoaded() {
-    gapi.load("client", initGapiClient);
+  gapi.load("client", initializeGapiClient);
 }
 
-async function initGapiClient() {
-    await gapi.client.init({
-        apiKey: "",
-        clientId: CLIENT_ID,
-        scope: SCOPE,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
-    });
+async function initializeGapiClient() {
+  await gapi.client.init({
+    apiKey: API_KEY,
+    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+  });
+  gapiInited = true;
+  updateGoogleButtons();
 }
 
+/* -------- 2. Ініціалізація Google Identity Services -------- */
 function gisLoaded() {
-    google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPE,
-        callback: (tokenResponse) => {
-            googleToken = tokenResponse.access_token;
-            document.getElementById("btnDriveBackup").disabled = false;
-            document.getElementById("btnDriveRestore").disabled = false;
-        }
-    });
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: "", 
+  });
+  gisInited = true;
+  updateGoogleButtons();
 }
 
-// 🔑 Авторизація в Google
+/* -------- 3. Активувати кнопки, коли все завантажено -------- */
+function updateGoogleButtons() {
+  if (gapiInited && gisInited) {
+    document.getElementById("btnDriveLogin").disabled = false;
+  }
+}
+
+/* -------- 4. Увійти в Google -------- */
 function googleLogin() {
-    google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPE,
-        callback: (tokenResponse) => {
-            googleToken = tokenResponse.access_token;
-            alert("Успішний вхід у Google!");
-            document.getElementById("btnDriveBackup").disabled = false;
-            document.getElementById("btnDriveRestore").disabled = false;
-        }
-    }).requestAccessToken();
+  tokenClient.callback = () => {
+    document.getElementById("btnDriveBackup").disabled = false;
+    document.getElementById("btnDriveRestore").disabled = false;
+    alert("Успішний вхід у Google!");
+  };
+
+  if (gapi.client.getToken() === null) {
+    tokenClient.requestAccessToken({ prompt: "consent" });
+  } else {
+    tokenClient.requestAccessToken({ prompt: "" });
+  }
 }
 
-// ⬆ Завантаження резервної копії у Google Drive
+/* -------- 5. Зберегти бекап у Google Drive -------- */
 async function googleBackup() {
-    if (!googleToken) {
-        alert("Спочатку увійди в Google!");
-        return;
+  const data = localStorage.getItem("quailCalculatorState") || "{}";
+
+  const fileContent = data;
+  const file = new Blob([fileContent], { type: "application/json" });
+
+  const metadata = {
+    name: "quail_calculator_backup.json",
+    mimeType: "application/json",
+  };
+
+  const form = new FormData();
+  form.append(
+    "metadata",
+    new Blob([JSON.stringify(metadata)], { type: "application/json" })
+  );
+  form.append("file", file);
+
+  const response = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method: "POST",
+      headers: { Authorization: "Bearer " + gapi.client.getToken().access_token },
+      body: form,
     }
+  );
 
-    const data = localStorage.getItem("quailCalculatorState") || "{}";
-    const fileContent = new Blob([data], { type: "application/json" });
-
-    const metadata = {
-        name: "quail_calculator_backup.json",
-        mimeType: "application/json"
-    };
-
-    const form = new FormData();
-    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-    form.append("file", fileContent);
-
-    const response = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-            method: "POST",
-            headers: { Authorization: "Bearer " + googleToken },
-            body: form
-        }
-    );
-
-    const result = await response.json();
-    driveFileId = result.id;
-
-    alert("Резервну копію збережено у Google Drive!");
+  if (response.ok) alert("Бекап збережено у Google Drive!");
+  else alert("Помилка при збереженні.");
 }
 
-// ⬇ Відновлення з Google Drive
+/* -------- 6. Завантажити бекап з Google Drive -------- */
 async function googleRestore() {
-    if (!googleToken) {
-        alert("Спочатку увійди в Google!");
-        return;
-    }
+  const res = await gapi.client.drive.files.list({
+    q: "name='quail_calculator_backup.json'",
+    fields: "files(id,name)",
+  });
 
-    const response = await fetch(
-        "https://www.googleapis.com/drive/v3/files?q=name='quail_calculator_backup.json'&spaces=drive&fields=files(id,name)",
-        {
-            headers: { Authorization: "Bearer " + googleToken }
-        }
-    );
+  if (!res.result.files.length) {
+    alert("Файл не знайдено у Google Drive!");
+    return;
+  }
 
-    const result = await response.json();
-    if (!result.files || result.files.length === 0) {
-        alert("Файл резервної копії не знайдено у Google Drive.");
-        return;
-    }
+  const fileId = res.result.files[0].id;
 
-    const fileId = result.files[0].id;
+  const dl = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+    { headers: { Authorization: "Bearer " + gapi.client.getToken().access_token } }
+  );
 
-    const download = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-        {
-            headers: { Authorization: "Bearer " + googleToken }
-        }
-    );
+  const text = await dl.text();
+  localStorage.setItem("quailCalculatorState", text);
 
-    const data = await download.text();
-
-    localStorage.setItem("quailCalculatorState", data);
-    alert("Дані успішно відновлено з Google Drive! Перезавантаж сторінку.");
+  alert("Дані відновлено! Перезавантаж сторінку.");
 }
+
+document.getElementById("btnDriveLogin").onclick = googleLogin;
+document.getElementById("btnDriveBackup").onclick = googleBackup;
+document.getElementById("btnDriveRestore").onclick = googleRestore;
+
 </script>
   
 </body>
