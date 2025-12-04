@@ -2636,13 +2636,128 @@
     renderClientsSummary();
     updateDashboard();
     updateWarnings();
+    
+    
+    // ----- GOOGLE DRIVE AUTH ----- //
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+
+// Твої scopes
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+// INIT GAPI
+function gapiLoaded() {
+  gapi.load("client", initializeGapiClient);
+}
+
+async function initializeGapiClient() {
+  await gapi.client.init({
+    apiKey: "",
+    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+  });
+  gapiInited = true;
+  maybeEnableButtons();
+}
+
+// INIT GOOGLE IDENTITY
+function gisLoaded() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.access_token) {
+        console.log("Logged in to Google");
+      }
+      maybeEnableButtons();
+    },
+  });
+  gisInited = true;
+  maybeEnableButtons();
+}
+
+function maybeEnableButtons() {
+  const btnLogin = document.getElementById("btnDriveLogin");
+  const btnBackup = document.getElementById("btnDriveBackup");
+  const btnRestore = document.getElementById("btnDriveRestore");
+
+  if (gapiInited && gisInited) {
+    btnLogin.disabled = false;
+  }
+}
+
+// --- LOGIN BUTTON ---
+document.getElementById("btnDriveLogin").onclick = () => {
+  tokenClient.requestAccessToken({ prompt: "consent" });
+};
+
+// --- SAVE BACKUP TO DRIVE ---
+document.getElementById("btnDriveBackup").onclick = async () => {
+  const backup = localStorage.getItem("quailState") || "{}";
+
+  const fileContent = backup;
+  const file = new Blob([fileContent], { type: "application/json" });
+
+  const metadata = {
+    name: "quail_calculator_backup.json",
+    mimeType: "application/json",
+  };
+
+  const form = new FormData();
+  form.append(
+    "metadata",
+    new Blob([JSON.stringify(metadata)], { type: "application/json" })
+  );
+  form.append("file", file);
+
+  const res = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method: "POST",
+      headers: new Headers({
+        Authorization: `Bearer ${gapi.client.getToken().access_token}`,
+      }),
+      body: form,
+    }
+  );
+
+  alert("Бекап завантажено в Google Drive");
+};
+
+// --- RESTORE BACKUP FROM DRIVE ---
+document.getElementById("btnDriveRestore").onclick = async () => {
+  const res = await gapi.client.drive.files.list({
+    q: "name='quail_calculator_backup.json'",
+    spaces: "drive",
+    fields: "files(id, name)",
+  });
+
+  if (res.result.files.length === 0) {
+    alert("Бекап не знайдений у Google Drive");
+    return;
+  }
+
+  const fileId = res.result.files[0].id;
+
+  const file = await gapi.client.drive.files.get({
+    fileId,
+    alt: "media",
+  });
+
+  localStorage.setItem("quailState", file.body);
+  alert("Бекап відновлено!");
+  location.reload();
+};
 
   </script>
   
   
   
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer>
+</script>
+<script src="https://apis.google.com/js/api.js">
+</script>
 
 <script>
 /* ---------------- GOOGLE DRIVE CONFIG --------------------- */
