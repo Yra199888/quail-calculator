@@ -2639,7 +2639,7 @@ let GoogleAuth;
 function initGoogleAPI() {
     gapi.load("client:auth2", () => {
         gapi.client.init({
-            clientId: CLIENT_ID,
+            clientId: 764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com,
             scope: SCOPES
         }).then(() => {
             GoogleAuth = gapi.auth2.getAuthInstance();
@@ -2711,7 +2711,7 @@ async function gAuth() {
     return new Promise(resolve => {
         gapi.load("client:auth2", async () => {
             await gapi.client.init({
-                clientId: CLIENT_ID,
+                clientId: 764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com,
                 scope: SCOPES
             });
 
