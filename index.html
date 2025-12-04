@@ -98,71 +98,51 @@
       color: #555;
     }
 
-    @media (max-width: 600px) {
-      body {
-        padding: 8px;
-      }
-      table {
-        font-size: 12px;
-        min-width: 480px;
-      }
-      th, td {
-        padding: 4px;
-      }
-      input[type="number"] {
-        width: 70px;
-      }
-      input[type="text"] {
-        width: 120px;
-      }
-      h1 {
-        font-size: 18px;
-      }
-      h2 {
-        font-size: 16px;
-      }
-      h3 {
-        font-size: 15px;
-      }
-        #topDashboard {
+        /* Верхній дашборд – працює і на ПК, і на телефоні */
+    #topDashboard {
       position: sticky;
       top: 0;
-      background: #fff;
+      background: #ffffff;
       z-index: 100;
-      padding-bottom: 8px;
-      margin-bottom: 10px;
+      padding: 8px 6px 10px;
+      margin: -10px -15px 10px; /* трохи розтягнути на всю ширину */
       border-bottom: 1px solid #ddd;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
 
     .dash-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
       margin-bottom: 6px;
     }
 
     .dash-card {
-      flex: 1 1 45%;
+      flex: 1 1 22%;
+      min-width: 120px;
       border-radius: 10px;
       padding: 6px 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
       font-size: 12px;
+      background: #fdfdfd;
     }
 
     .dash-label {
       color: #666;
+      font-size: 11px;
     }
 
     .dash-value {
-      font-size: 18px;
-      font-weight: bold;
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 2px;
     }
 
     .nav-row {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 4px;
+      margin-top: 4px;
     }
 
     .nav-btn {
@@ -175,6 +155,10 @@
       font-size: 13px;
       color: #333;
       background: #f7f7f7;
+    }
+
+    .nav-btn:hover {
+      background: #ececec;
     }
 
     #topWarnings {
@@ -203,6 +187,28 @@
     @media (max-width: 600px) {
       body {
         padding: 6px;
+      }
+      table {
+        font-size: 12px;
+        min-width: 480px;
+      }
+      th, td {
+        padding: 4px;
+      }
+      input[type="number"] {
+        width: 70px;
+      }
+      input[type="text"] {
+        width: 120px;
+      }
+      h1 {
+        font-size: 18px;
+      }
+      h2 {
+        font-size: 16px;
+      }
+      h3 {
+        font-size: 15px;
       }
       .dash-card {
         flex: 1 1 48%;
@@ -455,6 +461,50 @@
       </tr>
     </table>
   </div>
+  
+    <h3>4.2. Паспорт партій</h3>
+  <p class="small">
+    Вкажи приблизну дату вилупу для кожної партії – система порахує вік та дасть короткий коментар.
+  </p>
+
+  <p>
+    Дата вилупу 1-ї партії:
+    <input type="date" id="hens1Date" style="width:150px;">
+  </p>
+  <p>
+    Дата вилупу 2-ї партії:
+    <input type="date" id="hens2Date" style="width:150px;">
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Партія</th>
+          <th>Дата вилупу</th>
+          <th>Вік, днів</th>
+          <th>Самок</th>
+          <th>Коментар</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1-ша партія</td>
+          <td class="right"><span id="hens1DateLabel">-</span></td>
+          <td class="right"><span id="hens1Age">-</span></td>
+          <td class="right"><span id="hens1CountLabel">0</span></td>
+          <td><span id="hens1Comment">—</span></td>
+        </tr>
+        <tr>
+          <td>2-га партія</td>
+          <td class="right"><span id="hens2DateLabel">-</span></td>
+          <td class="right"><span id="hens2Age">-</span></td>
+          <td class="right"><span id="hens2CountLabel">0</span></td>
+          <td><span id="hens2Comment">—</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <!-- 5. Підсумок дня -->
   <h2>5. Підсумок дня (корм + яйця)</h2>
@@ -548,6 +598,36 @@
       </tr>
     </table>
   </div>
+  
+    <h2>5.2. Прогноз на 30 днів</h2>
+  <p class="small">
+    Розрахунок на основі поточної середньої несучості, кількості самок, ціни лотка та добової вартості корму.
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <tr>
+        <td>Очікуваних яєць за 30 днів</td>
+        <td class="right"><span id="fcastEggs">0</span></td>
+      </tr>
+      <tr>
+        <td>Очікуваних лотків (по 20 шт)</td>
+        <td class="right"><span id="fcastTrays">0</span></td>
+      </tr>
+      <tr>
+        <td>Очікувана виручка, грн</td>
+        <td class="right"><span id="fcastIncome">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Очікувані витрати на корм, грн</td>
+        <td class="right"><span id="fcastFeedCost">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Орієнтовний прибуток за 30 днів, грн</td>
+        <td class="right"><span id="fcastProfit">0.00</span></td>
+      </tr>
+    </table>
+  </div>
 
 
   <!-- 6. Щоденник -->
@@ -590,6 +670,21 @@
       <tbody id="logTableBody">
       </tbody>
     </table>
+  </div>
+  
+  <h2>6.1. Графіки несучості та продажів</h2>
+  <p class="small">
+    Для наочності використовуються останні 14 записів зі щоденника.
+  </p>
+
+  <div class="table-wrapper">
+    <h3>Несучість</h3>
+    <canvas id="chartProductivity" height="200" style="width:100%; max-width:900px; border:1px solid #eee;"></canvas>
+  </div>
+
+  <div class="table-wrapper">
+    <h3>Продажі (лотки та виручка)</h3>
+    <canvas id="chartSales" height="200" style="width:100%; max-width:900px; border:1px solid #eee;"></canvas>
   </div>
 
   <!-- 7. Замовлення яєць -->
@@ -947,6 +1042,57 @@
         salt: 0.05
       }
     };
+    
+        // --- ПАСПОРТ ПАРТІЙ ---
+
+    function recalcFlocksPassport() {
+      const hens1 = parseInt(document.getElementById('hens1').value) || 0;
+      const hens2 = parseInt(document.getElementById('hens2').value) || 0;
+
+      const date1 = document.getElementById('hens1Date').value;
+      const date2 = document.getElementById('hens2Date').value;
+
+      updateFlockRow('hens1', hens1, date1);
+      updateFlockRow('hens2', hens2, date2);
+    }
+
+    function updateFlockRow(prefix, hensCount, dateStr) {
+      const dateLabel = document.getElementById(prefix + 'DateLabel');
+      const ageSpan = document.getElementById(prefix + 'Age');
+      const countSpan = document.getElementById(prefix + 'CountLabel');
+      const commentSpan = document.getElementById(prefix + 'Comment');
+
+      if (countSpan) countSpan.textContent = hensCount;
+
+      if (!dateStr) {
+        if (dateLabel) dateLabel.textContent = '-';
+        if (ageSpan) ageSpan.textContent = '-';
+        if (commentSpan) commentSpan.textContent = 'Дата не вказана.';
+        return;
+      }
+
+      const d = new Date(dateStr);
+      if (isNaN(d)) {
+        if (dateLabel) dateLabel.textContent = dateStr;
+        if (ageSpan) ageSpan.textContent = '?';
+        if (commentSpan) commentSpan.textContent = 'Некоректна дата.';
+        return;
+      }
+
+      const today = new Date();
+      const diffMs = today.getTime() - d.getTime();
+      const ageDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (dateLabel) dateLabel.textContent = dateStr;
+      if (ageSpan) ageSpan.textContent = ageDays.toString();
+
+      let text = '';
+      if (ageDays < 35) text = 'Молодка, ще нарощує несучість.';
+      else if (ageDays < 180) text = 'Робоча несучість.';
+      else text = 'Стадо старіє, продуктивність може падати.';
+
+      if (commentSpan) commentSpan.textContent = text;
+    }
 
     function applyRecipePreset(name) {
       const preset = recipePresets[name];
@@ -967,6 +1113,41 @@
       recalcAll();
       saveState();
     }
+    
+       // --- ПРОГНОЗ НА 30 ДНІВ ---
+
+    function recalcForecast30() {
+      const hens1 = parseInt(document.getElementById('hens1').value) || 0;
+      const hens2 = parseInt(document.getElementById('hens2').value) || 0;
+      const hensTotal = hens1 + hens2;
+
+      const prodAvg = parseFloat(document.getElementById('repProdAvg').textContent) || 0;
+      const trayPrice = parseFloat(document.getElementById('trayPrice').value) || 0;
+      const dailyFeedCost = parseFloat(document.getElementById('dailyCost').textContent) || 0;
+
+      if (hensTotal <= 0 || prodAvg <= 0 || trayPrice <= 0) {
+        // просто очищаємо
+        document.getElementById('fcastEggs').textContent = '0';
+        document.getElementById('fcastTrays').textContent = '0';
+        document.getElementById('fcastIncome').textContent = '0.00';
+        document.getElementById('fcastFeedCost').textContent = '0.00';
+        document.getElementById('fcastProfit').textContent = '0.00';
+        return;
+      }
+
+      const eggsPerDay = hensTotal * (prodAvg / 100);
+      const eggs30 = eggsPerDay * 30;
+      const trays30 = Math.floor(eggs30 / 20);
+      const income30 = trays30 * trayPrice;
+      const feedCost30 = dailyFeedCost * 30;
+      const profit30 = income30 - feedCost30;
+
+      document.getElementById('fcastEggs').textContent = Math.round(eggs30).toString();
+      document.getElementById('fcastTrays').textContent = trays30.toString();
+      document.getElementById('fcastIncome').textContent = income30.toFixed(2);
+      document.getElementById('fcastFeedCost').textContent = feedCost30.toFixed(2);
+      document.getElementById('fcastProfit').textContent = profit30.toFixed(2);
+    } 
 
     
     // --- РОЗРАХУНОК КОРМУ ---
@@ -1207,6 +1388,9 @@
       document.getElementById('repOtherCost').textContent = otherCostPeriod.toFixed(2);
       document.getElementById('repFullCostPerEgg').textContent = fullCostPerEgg.toFixed(3);
       document.getElementById('repProfitPerEggFull').textContent = profitPerEggFull.toFixed(3);
+      document.getElementById('repProfitPerEggFull').textContent = profitPerEggFull.toFixed(3);
+
+      recalcForecast30();
 
     }
 
@@ -1272,7 +1456,7 @@
       document.getElementById('freeTrays').textContent = free;
     }
 
-     function recalcAll() {
+      function recalcAll() {
       recalcFeed();
       recalcEggs();
       recalcSummary();
@@ -1281,6 +1465,9 @@
       recalcReport();
       updateDashboard();
       updateWarnings();
+      renderCharts();
+      recalcFlocksPassport();
+      recalcForecast30();
     }
 
       function updateOrdersSummary() {
@@ -1370,6 +1557,13 @@
       const daily = birds * norm;
       if (daily > 0 && readyStock > 0 && readyStock < daily * 3) {
         addWarn('⚠ Готового комбікорму менше ніж на 3 дні.', 'warn-warn');
+      }
+      
+      // 4) Якщо сьогодні яєць 0, а самки є
+      const eggsToday = parseInt(document.getElementById('eggsTotal')?.value || '0') || 0;
+      const hensTotal = parseInt(document.getElementById('hensTotal')?.textContent || '0') || 0;
+      if (hensTotal > 0 && eggsToday === 0) {
+        addWarn('Сьогодні не внесено яєць або реально 0. Перевір, чи все гаразд з записами / стадо не зупинилось.', 'warn-warn');
       }
 
       
@@ -1578,6 +1772,159 @@
         tbody.appendChild(tr);
       });
     }
+    
+        // --- ГРАФІКИ НЕСУЧОСТІ ТА ПРОДАЖІВ ---
+
+    function renderCharts() {
+      const log = loadLog();
+      if (!log.length) return;
+
+      // беремо максимум 14 останніх записів
+      const data = log.slice(-14);
+      const labels = data.map(e => e.date || '');
+      const prod = data.map(e => typeof e.productivity === 'number' ? e.productivity : null);
+      const trays = data.map(e => e.trays != null ? e.trays : null);
+      const income = data.map(e => typeof e.income === 'number' ? e.income : null);
+
+      drawLineChart('chartProductivity', labels, prod, 'Несучість, %');
+      drawTwoSeriesChart('chartSales', labels, trays, income, 'Лотки', 'Виручка, грн');
+    }
+
+    function drawLineChart(canvasId, labels, values, labelY) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.clientWidth;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const valid = values.filter(v => typeof v === 'number');
+      if (!valid.length) return;
+
+      const min = Math.min.apply(null, valid);
+      const max = Math.max.apply(null, valid);
+      const padding = 25;
+      const xStep = (w - padding * 2) / Math.max(values.length - 1, 1);
+
+      function yScale(v) {
+        if (max === min) return h / 2;
+        return padding + (h - padding * 2) * (1 - (v - min) / (max - min));
+      }
+
+      // Осі
+      ctx.strokeStyle = '#ccc';
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, h - padding);
+      ctx.lineTo(w - padding, h - padding);
+      ctx.stroke();
+
+      // Лінія
+      ctx.strokeStyle = '#0077cc';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      values.forEach((v, i) => {
+        if (typeof v !== 'number') return;
+        const x = padding + xStep * i;
+        const y = yScale(v);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Точки
+      ctx.fillStyle = '#0077cc';
+      values.forEach((v, i) => {
+        if (typeof v !== 'number') return;
+        const x = padding + xStep * i;
+        const y = yScale(v);
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Підписи по X
+      ctx.fillStyle = '#666';
+      ctx.font = '10px Arial';
+      labels.forEach((lbl, i) => {
+        const x = padding + xStep * i;
+        ctx.fillText(lbl.slice(5), x - 12, h - 8); // показуємо тільки ММ-ДД
+      });
+
+      // Підпис осі Y
+      ctx.fillText(labelY, 5, 10);
+    }
+
+    function drawTwoSeriesChart(canvasId, labels, series1, series2, label1, label2) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.clientWidth;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const valid1 = series1.filter(v => typeof v === 'number');
+      const valid2 = series2.filter(v => typeof v === 'number');
+      if (!valid1.length && !valid2.length) return;
+
+      const min = 0;
+      const max = Math.max(
+        valid1.length ? Math.max.apply(null, valid1) : 0,
+        valid2.length ? Math.max.apply(null, valid2) : 0
+      );
+      const padding = 25;
+      const xStep = (w - padding * 2) / Math.max(labels.length - 1, 1);
+
+      function yScale(v) {
+        if (max === min) return h / 2;
+        return padding + (h - padding * 2) * (1 - (v - min) / (max - min));
+      }
+
+      // Осі
+      ctx.strokeStyle = '#ccc';
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, h - padding);
+      ctx.lineTo(w - padding, h - padding);
+      ctx.stroke();
+
+      // 1-ша серія – стовпчики (лотки)
+      ctx.fillStyle = '#3399ff';
+      series1.forEach((v, i) => {
+        if (typeof v !== 'number') return;
+        const x = padding + xStep * i - 5;
+        const y = yScale(v);
+        const barH = (h - padding) - y;
+        ctx.fillRect(x, y, 10, barH);
+      });
+
+      // 2-га серія – лінія (виручка)
+      ctx.strokeStyle = '#ff6600';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      series2.forEach((v, i) => {
+        if (typeof v !== 'number') return;
+        const x = padding + xStep * i;
+        const y = yScale(v);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Легенда
+      ctx.fillStyle = '#333';
+      ctx.font = '10px Arial';
+      ctx.fillText(label1, padding + 5, padding + 10);
+      ctx.fillText(label2, padding + 85, padding + 10);
+
+      // X-labels
+      ctx.fillStyle = '#666';
+      labels.forEach((lbl, i) => {
+        const x = padding + xStep * i;
+        ctx.fillText(lbl.slice(5), x - 12, h - 8);
+      });
+    }
 
         function addToLog() {
       const date = document.getElementById('logDate').value ||
@@ -1613,7 +1960,8 @@
       });
       saveLog(log);
       renderLog();
-      recalcReport();  // ← новий рядок
+      recalcReport();
+      renderCharts();
 
       // Оновлюємо залишок яєць на наступний день
       document.getElementById('eggsCarry').value = eggsForSaleTotal;
