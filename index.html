@@ -2815,6 +2815,131 @@ initGoogleAPI();
     updateWarnings();
 
   </script>
+  
+  <script>
+// === GOOGLE API ===
+
+// Твій клієнт ID
+const GOOGLE_CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
+const FILE_NAME = "quail_calculator_backup.json";
+
+let accessToken = null;
+let googleInitialized = false;
+
+// Завантажується коли підключився Google Identity Services
+function gisLoaded() {
+    console.log("GIS Loaded");
+}
+
+// Завантажується коли підключився Google API
+function gapiLoaded() {
+    gapi.load("client", initGoogle);
+}
+
+// Ініціалізація Google Drive API
+async function initGoogle() {
+    await gapi.client.init({
+        apiKey: "", // НЕ ПОТРІБНО
+        clientId: GOOGLE_CLIENT_ID,
+        scope: "https://www.googleapis.com/auth/drive.file",
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+    });
+
+    googleInitialized = true;
+
+    document.getElementById("btnDriveLogin").onclick = googleLogin;
+    document.getElementById("btnDriveBackup").onclick = googleBackup;
+    document.getElementById("btnDriveRestore").onclick = googleRestore;
+
+    console.log("Google API готовий");
+}
+
+// Вхід у Google
+async function googleLogin() {
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: "https://www.googleapis.com/auth/drive.file",
+        callback: (response) => {
+            accessToken = response.access_token;
+            document.getElementById("btnDriveBackup").disabled = false;
+            document.getElementById("btnDriveRestore").disabled = false;
+            alert("Успішний вхід у Google!");
+        }
+    });
+
+    tokenClient.requestAccessToken();
+}
+
+// === ЕКСПОРТ ДАНИХ ===
+async function googleBackup() {
+    if (!accessToken) return alert("Спочатку увійди у Google");
+
+    const data = localStorage.getItem("quail_calculator_all_data");
+    if (!data) return alert("Немає даних для резервної копії");
+
+    // Пошук чи існує файл
+    const search = await gapi.client.drive.files.list({
+        q: `name='${FILE_NAME}'`,
+        fields: "files(id,name)"
+    });
+
+    let fileId = null;
+
+    if (search.result.files.length > 0) {
+        fileId = search.result.files[0].id;
+    }
+
+    const fileContent = new Blob([data], { type: "application/json" });
+
+    const metadata = {
+        name: FILE_NAME,
+        mimeType: "application/json"
+    };
+
+    const form = new FormData();
+    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+    form.append("file", fileContent);
+
+    const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId ? fileId : ""}?uploadType=multipart`,
+    {
+        method: fileId ? "PATCH" : "POST",
+        headers: { Authorization: "Bearer " + accessToken },
+        body: form
+    });
+
+    if (res.ok) {
+        alert("Бекап збережено у Google Drive!");
+    } else {
+        alert("Помилка при збереженні");
+    }
+}
+
+// === ІМПОРТ ДАНИХ ===
+async function googleRestore() {
+    if (!accessToken) return alert("Спочатку увійди у Google");
+
+    const search = await gapi.client.drive.files.list({
+        q: `name='${FILE_NAME}'`,
+        fields: "files(id,name)"
+    });
+
+    if (search.result.files.length === 0) {
+        return alert("Бекап у Drive не знайдений");
+    }
+
+    const fileId = search.result.files[0].id;
+
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        headers: { Authorization: "Bearer " + accessToken }
+    });
+
+    const text = await res.text();
+    localStorage.setItem("quail_calculator_all_data", text);
+
+    alert("Дані відновлено! Перезавантаж сторінку.");
+}
+</script>
+  
 </body>
 </html>
 
