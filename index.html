@@ -17,7 +17,338 @@
 <!-- MAIN CONTENT WRAPPER -->
 <main class="m3-container">
 
-    <!-- Тут будуть секції UI-2 та UI-3 -->
+    <!-- SECTION 1 — FEED CALCULATOR -->
+<div class="m3-card">
+
+    <h2>1. Комбікорм</h2>
+
+    <div class="m3-input">
+        <label>Бажана вага партії (кг)</label>
+        <input type="number" id="targetKg" value="25" onchange="recalcFeed()">
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <button class="m3-btn" onclick="applyRecipePreset('starter')">Стартер</button>
+        <button class="m3-btn" onclick="applyRecipePreset('grower')">Гровер</button>
+        <button class="m3-btn" onclick="applyRecipePreset('layer')">Несучки</button>
+    </div>
+
+    <table class="m3-table" id="feedTable">
+        <thead>
+            <tr>
+                <th>Компонент</th>
+                <th>К-сть (кг)</th>
+                <th>Ціна</th>
+                <th>Сума</th>
+            </tr>
+        </thead>
+        <tbody id="feedRows">
+            <!-- Генерується автоматично -->
+        </tbody>
+    </table>
+
+    <p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
+    <p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
+
+</div>
+
+<!-- SECTION 2 — EGGS -->
+<div class="m3-card">
+
+    <h2>2. Яйця</h2>
+
+    <div class="m3-input">
+        <label>Кількість самок</label>
+        <input type="number" id="hens" value="40" onchange="recalcEggs()">
+    </div>
+
+    <div class="m3-input">
+        <label>Несучість (%)</label>
+        <input type="number" id="eggRate" value="80" onchange="recalcEggs()">
+    </div>
+
+    <div class="m3-input">
+        <label>Ціна за десяток (грн)</label>
+        <input type="number" id="eggPrice10" value="50" onchange="recalcEggs()">
+    </div>
+
+    <p><b>За день:</b> <span id="eggsPerDay">0</span> яєць</p>
+    <p><b>Дохід за день:</b> <span id="incomePerDay">0</span> грн</p>
+
+    <p><b>За 30 днів:</b> <span id="eggsPerMonth">0</span> яєць, <span id="incomePerMonth">0</span> грн</p>
+
+</div>
+
+<!-- SECTION 3 — STOCKS -->
+<div class="m3-card">
+
+    <h2>3. Запаси компонентів</h2>
+
+    <table class="m3-table">
+        <thead>
+            <tr>
+                <th>Компонент</th>
+                <th>Є (кг)</th>
+                <th>Потрібно</th>
+                <th>Докупити</th>
+            </tr>
+        </thead>
+        <tbody id="stockRows">
+            <!-- Генерується автоматично -->
+        </tbody>
+    </table>
+
+</div>
+
+<!-- SECTION 4 — LOG -->
+<div class="m3-card">
+
+    <h2>4. Щоденник витрат</h2>
+
+    <div class="m3-input">
+        <label>Дата</label>
+        <input type="date" id="logDate">
+    </div>
+
+    <div class="m3-input">
+        <label>Категорія</label>
+        <input type="text" id="logCategory">
+    </div>
+
+    <div class="m3-input">
+        <label>Сума (грн)</label>
+        <input type="number" id="logAmount">
+    </div>
+
+    <div class="m3-input">
+        <label>Коментар</label>
+        <input type="text" id="logComment">
+    </div>
+
+    <button class="m3-btn" onclick="addLog()">Додати запис</button>
+
+    <table class="m3-table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Категорія</th>
+                <th>Сума</th>
+                <th>Коментар</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+    </table>
+
+</div>
+
+<!-- SECTION 5 — ORDERS -->
+<div class="m3-card">
+
+    <h2>5. Замовлення</h2>
+
+    <div class="m3-input">
+        <label>Клієнт</label>
+        <input type="text" id="ordName">
+    </div>
+
+    <div class="m3-input">
+        <label>Яєць</label>
+        <input type="number" id="ordEggs">
+    </div>
+
+    <div class="m3-input">
+        <label>Лотків</label>
+        <input type="number" id="ordTrays">
+    </div>
+
+    <div class="m3-input">
+        <label>Дата</label>
+        <input type="date" id="ordDate">
+    </div>
+
+    <div class="m3-input">
+        <label>Примітка</label>
+        <input type="text" id="ordNote">
+    </div>
+
+    <button class="m3-btn" onclick="addOrder()">Додати</button>
+
+    <h3>Активні замовлення</h3>
+    <table class="m3-table">
+        <tbody id="ordersActive"></tbody>
+    </table>
+
+    <h3>Виконані</h3>
+    <table class="m3-table">
+        <tbody id="ordersDone"></tbody>
+    </table>
+
+</div>
+
+<!-- SECTION 6 — INCUBATION -->
+<div class="m3-card">
+
+    <h2>6. Інкубація</h2>
+
+    <div class="m3-input">
+        <label>Дата закладки</label>
+        <input type="date" id="incDate">
+    </div>
+
+    <div class="m3-input">
+        <label>Кількість яєць</label>
+        <input type="number" id="incEggs">
+    </div>
+
+    <div class="m3-input">
+        <label>Примітка</label>
+        <input type="text" id="incNote">
+    </div>
+
+    <button class="m3-btn" onclick="addInc()">Додати партію</button>
+
+    <table class="m3-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Дата</th>
+                <th>Яєць</th>
+                <th>Вилуп</th>
+                <th>Примітка</th>
+                <th>День</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="incBody"></tbody>
+    </table>
+
+</div>
+
+<!-- SECTION 7 — GRAPHS -->
+<div class="m3-card">
+
+    <h2>7. Графіки продуктивності</h2>
+
+    <div class="m3-chart">
+        <canvas id="chartEggs"></canvas>
+    </div>
+
+    <div class="m3-chart">
+        <canvas id="chartIncome"></canvas>
+    </div>
+
+</div>
+
+<!-- SECTION 8 — FLOCK -->
+<div class="m3-card">
+
+    <h2>8. Поголів’я</h2>
+
+    <div class="m3-input">
+        <label>Кількість самців</label>
+        <input type="number" id="males" value="10" onchange="recalcFlock()">
+    </div>
+
+    <div class="m3-input">
+        <label>Кількість самок</label>
+        <input type="number" id="females" value="40" onchange="recalcFlock()">
+    </div>
+
+    <div class="m3-input">
+        <label>Смертність</label>
+        <input type="number" id="deaths" value="0" onchange="recalcFlock()">
+    </div>
+
+    <div class="m3-input">
+        <label>Середній вік (днів)</label>
+        <input type="number" id="avgAge" value="60" onchange="recalcFlock()">
+    </div>
+
+    <p><b>Усього поголів'я:</b> <span id="flockTotal">50</span></p>
+
+</div>
+
+<!-- SECTION 9 — FEED STOCK -->
+<div class="m3-card">
+
+    <h2>9. Загальні запаси комбікорму</h2>
+
+    <table class="m3-table">
+        <thead>
+            <tr>
+                <th>Компонент</th>
+                <th>Є (кг)</th>
+                <th>Потрібно</th>
+                <th>Докупити</th>
+            </tr>
+        </thead>
+        <tbody id="stockRows2">
+            <!-- якщо потрібно — можна підключити окрему логіку -->
+        </tbody>
+    </table>
+
+</div>
+
+<!-- SECTION 10 — FINANCIAL REPORT -->
+<div class="m3-card">
+
+    <h2>10. Фінансовий звіт</h2>
+
+    <div class="m3-input">
+        <label>Період від</label>
+        <input type="date" id="repFrom" onchange="recalcReport()">
+    </div>
+
+    <div class="m3-input">
+        <label>Період до</label>
+        <input type="date" id="repTo" onchange="recalcReport()">
+    </div>
+
+    <p><b>Витрати:</b> <span id="repCosts">0</span> грн</p>
+    <p><b>Доходи:</b> <span id="repIncome">0</span> грн</p>
+    <p><b>Прибуток:</b> <span id="repProfit">0</span> грн</p>
+
+    <h3>Економіка яйця</h3>
+
+    <p>Собівартість яйця: <b id="repCostPerEgg">0</b> грн</p>
+    <p>Прибуток з яйця: <b id="repProfitPerEgg">0</b> грн</p>
+
+</div>
+
+<!-- SECTION 11 — PWA -->
+<div class="m3-card">
+
+    <h2>11. Оффлайн режим (PWA)</h2>
+
+    <p>Щоб додати застосунок на головний екран:</p>
+
+    <ul>
+        <li><b>Android:</b> Меню → «Install App» або «Add to Home Screen».</li>
+        <li><b>iOS:</b> кнопка Share → «Add to Home Screen».</li>
+    </ul>
+
+</div>
+
+<!-- SECTION 12 — GOOGLE DRIVE BACKUP -->
+<div class="m3-card">
+
+    <h2>12. Резервне копіювання Google Drive</h2>
+
+    <button class="m3-btn" id="btnDriveLogin">Увійти в Google</button>
+    <button class="m3-btn m3-btn-secondary" id="btnBackup" disabled>Створити копію</button>
+    <button class="m3-btn" id="btnRestore" disabled>Відновити</button>
+
+    <p id="driveStatus">Статус: не авторизовано</p>
+
+</div>
+
+<!-- Google API LOADERS -->
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+<!-- ChartJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 </main>
 
