@@ -2857,6 +2857,75 @@ document.getElementById("btnDriveLogin").onclick = driveLogin;
 </script>
 <script src="https://apis.google.com/js/api.js">
 </script>
+
+
+<script>
+/* Кнопка — УВІЙТИ */
+function driveLogin() {
+  tokenClient.requestAccessToken();
+}
+
+/* --------- СТВОРЕННЯ РЕЗЕРВНОЇ КОПІЇ ---------- */
+async function googleBackup() {
+  if (!accessToken) {
+    alert("Увійди в Google спочатку!");
+    return;
+  }
+
+  const backup = JSON.stringify(loadState());
+
+  const metadata = {
+    name: "quail_calculator_backup.json",
+    mimeType: "application/json"
+  };
+
+  const form = new FormData();
+  form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+  form.append("file", new Blob([backup], { type: "application/json" }));
+
+  const res = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method: "POST",
+      headers: { Authorization: "Bearer " + accessToken },
+      body: form
+    }
+  );
+
+  if (res.ok) alert("✔ Резервна копія створена в Google Drive!");
+  else alert("❌ Помилка створення копії");
+}
+
+/* --------- ВІДНОВЛЕННЯ КОПІЇ ---------- */
+async function googleRestore() {
+  if (!accessToken) {
+    alert("Увійди в Google!");
+    return;
+  }
+
+  const res = await gapi.client.drive.files.list({
+    q: "name='quail_calculator_backup.json'",
+    spaces: "drive"
+  });
+
+  if (!res.result.files || res.result.files.length === 0) {
+    alert("❌ Файл копії не знайдено!");
+    return;
+  }
+
+  const fileId = res.result.files[0].id;
+
+  const download = await gapi.client.drive.files.get({
+    fileId: fileId,
+    alt: "media"
+  });
+
+  localStorage.setItem("quailData", JSON.stringify(download.result));
+  alert("✔ Дані відновлено — перезавантаж сторінку!");
+}
+
+document.getElementById("btnDriveLogin").onclick = driveLogin; 
+</script>
   
 </body>
 </html>
