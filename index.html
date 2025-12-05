@@ -979,6 +979,9 @@
 <button id="btnDriveLogin" type="button">🔑 Увійти в Google</button>
 <button id="btnDriveBackup" type="button" disabled>⬆ Зберегти бекап у Drive</button>
 <button id="btnDriveRestore" type="button" disabled>⬇ Завантажити бекап з Drive</button>
+<span id="googleStatus" style="margin-left:8px; font-weight:bold; color:#b71c1c;">
+  Не ввійшли в Google
+</span>
 <p class="small">
 Буде створено файл <code>quail_calculator_backup.json</code> у твоєму Google Drive (папка «Мій диск»).
 </p>
@@ -2035,23 +2038,57 @@
       recalcReport();
     }
 
-        // --- ЕКСПОРТ / ІМПОРТ ДАНИХ ---
-    function backupExport() {
-      const stateRaw = localStorage.getItem('quailCalcState') || '{}';
-      const logRaw = localStorage.getItem('quailCalcLog') || '[]';
-      const ordersRaw = localStorage.getItem('quailOrders') || '[]';
+          // --- ЕКСПОРТ / ІМПОРТ ДАНИХ ---
+// Формуємо один об'єкт-бекап з усіх даних
+    function buildBackupObject() {
+      const stateRaw  = localStorage.getItem('quailCalcState')      || '{}';
+      const logRaw    = localStorage.getItem('quailCalcLog')        || '[]';
+      const ordersRaw = localStorage.getItem('quailOrders')         || '[]';
+      const incRaw    = localStorage.getItem('quailIncubations')    || '[]';
 
-      const backup = {
-        state: JSON.parse(stateRaw),
-        log: JSON.parse(logRaw),
-        orders: JSON.parse(ordersRaw),
-        incubations: JSON.parse(incRaw)
+      return {
+        state:        JSON.parse(stateRaw),
+        log:          JSON.parse(logRaw),
+        orders:       JSON.parse(ordersRaw),
+        incubations:  JSON.parse(incRaw)
       };
+    }
 
+    // Застосувати бекап до локального сховища і оновити інтерфейс
+    function applyBackupObject(backup) {
+      if (backup.state) {
+        localStorage.setItem('quailCalcState', JSON.stringify(backup.state));
+      }
+      if (backup.log) {
+        localStorage.setItem('quailCalcLog', JSON.stringify(backup.log));
+      }
+      if (backup.orders) {
+        localStorage.setItem('quailOrders', JSON.stringify(backup.orders));
+      }
+      if (backup.incubations) {
+        localStorage.setItem('quailIncubations', JSON.stringify(backup.incubations));
+      }
+
+      // оновлюємо все, що є в калькуляторі
+      loadState();
+      renderLog();
+      renderOrders();
+      recalcAll();
+      renderIncubations();
+      if (typeof renderClientsSummary === 'function') {
+        renderClientsSummary();
+      }
+      alert('Дані успішно відновлено.');
+    }
+
+    // Експорт у текстове поле
+    function backupExport() {
+      const backup = buildBackupObject();
       document.getElementById('backupArea').value =
         JSON.stringify(backup, null, 2);
     }
 
+    // Імпорт із текстового поля
     function backupImport() {
       const txt = document.getElementById('backupArea').value.trim();
       if (!txt) {
@@ -2060,25 +2097,7 @@
       }
       try {
         const backup = JSON.parse(txt);
-        if (backup.state) {
-          localStorage.setItem('quailCalcState', JSON.stringify(backup.state));
-        }
-        if (backup.log) {
-          localStorage.setItem('quailCalcLog', JSON.stringify(backup.log));
-        }
-        if (backup.orders) {
-          localStorage.setItem('quailOrders', JSON.stringify(backup.orders));
-        }
-        if (backup.incubations) {
-          localStorage.setItem('quailIncubations', JSON.stringify(backup.incubations));
-        }  
-        loadState();
-        renderLog();
-        renderOrders();
-        recalcAll();
-        renderIncubations();
-        renderClientsSummary();
-        alert('Дані успішно імпортовано.');
+        applyBackupObject(backup);
       } catch (e) {
         console.error(e);
         alert('Не вдалось прочитати дані. Перевір формат.');
@@ -2836,41 +2855,82 @@ async function getUserInfo() {
   document.getElementById("btnDriveLogin").innerText = "✅ Увійшов: " + (profile.email || "Google користувач");
 }
 
+/* -------- 5. Зберегти бекап у Google Drive -------- */
 async function googleBackup() {
-  if (!accessToken) {
-    alert("Спершу увійди в Google!");
-    return;
-  }
-  const content = JSON.stringify(localStorage);
-  const blob = new Blob([content], { type: 'application/json' });
+  // беремо той самий бекап, що і для текстового експорту
+  const backupObj   = buildBackupObject();
+  const fileContent = JSON.stringify(backupObj);
+
+  const file = new Blob([fileContent], { type: "application/json" });
+
   const metadata = {
-    name: 'quail_calculator_backup.json',
-    mimeType: 'application/json'
+    name: "quail_calculator_backup.json",
+    mimeType: "application/json",
   };
 
   const form = new FormData();
-  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-  form.append('file', blob);
+  form.append(
+    "metadata",
+    new Blob([JSON.stringify(metadata)], { type: "application/json" })
+  );
+  form.append("file", file);
 
-  const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-    method: 'POST',
-    headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
-    body: form
-  });
+  const response = await fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+    {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + gapi.client.getToken().access_token,
+      },
+      body: form,
+    }
+  );
 
   if (response.ok) {
-    alert("✅ Резервна копія збережена в Google Drive");
+    alert("Бекап збережено у Google Drive!");
   } else {
-    const err = await response.json();
-    alert("❌ Помилка: " + (err.error?.message || JSON.stringify(err)));
+    console.error(await response.text());
+    alert("Помилка при збереженні у Google Drive.");
   }
 }
 
+/* -------- 6. Завантажити бекап з Google Drive -------- */
 async function googleRestore() {
-  alert("🔜 Функція відновлення ще в розробці");
+  const res = await gapi.client.drive.files.list({
+    q: "name='quail_calculator_backup.json'",
+    fields: "files(id,name)",
+  });
+
+  if (!res.result.files.length) {
+    alert("Файл quail_calculator_backup.json не знайдено у Google Drive!");
+    return;
+  }
+
+  const fileId = res.result.files[0].id;
+
+  const dl = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+    {
+      headers: {
+        Authorization: "Bearer " + gapi.client.getToken().access_token,
+      },
+    }
+  );
+
+  const text = await dl.text();
+  try {
+    const backup = JSON.parse(text);
+    applyBackupObject(backup);
+  } catch (e) {
+    console.error(e);
+    alert("Не вдалось прочитати бекап з Google Drive.");
+  }
 }
 
-document.getElementById("btnDriveLogin").onclick = handleAuthClick;
+document.getElementById("btnDriveLogin").onclick = googleLogin;
+document.getElementById("btnDriveBackup").onclick = googleBackup;
+document.getElementById("btnDriveRestore").onclick = googleRestore;
+
 </script>
   
 
