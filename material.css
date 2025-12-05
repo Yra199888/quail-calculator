@@ -1,0 +1,28 @@
+/* Material 3 Light/Dark Theme Placeholder */
+:root {
+    color-scheme: light dark;
+
+    --m3-primary: #6750A4;
+    --m3-secondary: #625B71;
+    --m3-tertiary: #7D5260;
+
+    --m3-surface: #FFFBFE;
+    --m3-surface-variant: #E7E0EC;
+    --m3-on-surface: #1C1B1F;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --m3-surface: #1C1B1F;
+        --m3-on-surface: #E6E1E5;
+        --m3-surface-variant: #49454F;
+    }
+}
+
+body {
+    background: var(--m3-surface);
+    color: var(--m3-on-surface);
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
