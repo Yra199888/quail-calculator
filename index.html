@@ -1,3013 +1,1053 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-<!-- PWA manifest -->
-<link rel="manifest" href="manifest.webmanifest">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Перепілок</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
 
-<!-- iPhone fullscreen -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Перепілки">
+<style>
 
-<!-- Icon for iPhone -->
-<link rel="apple-touch-icon" href="icon.PNG">
+/* ---------------------- ГЛОБАЛЬНІ СТИЛІ ---------------------- */
 
-<!-- Basic PWA theme -->
-<meta name="theme-color" content="#ffffff">
-  <title>Розрахунок корму, облік яєць та замовлень</title>
-  <style>
-  body {
+body {
     font-family: Arial, sans-serif;
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 10px 15px 30px;
-    box-sizing: border-box;
-  }
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    color: #222;
+}
 
-  h1, h2, h3 {
-    margin-bottom: 6px;
-    margin-top: 14px;
-  }
-
-  p {
-    margin: 4px 0 8px;
-  }
-
-  .table-wrapper {
-    overflow-x: auto;
-    margin-bottom: 16px;
-  }
-
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    min-width: 520px;
-    margin-bottom: 4px;
-  }
-
-  th, td {
-    border: 1px solid #ccc;
-    padding: 6px 8px;
-    text-align: center;
-  }
-
-  th {
-    background: #f0f0f0;
-  }
-
-  input {
-    text-align: right;
-    padding: 2px 4px;
-    box-sizing: border-box;
-  }
-
-  input[type="number"] {
-    width: 80px;
-  }
-
-  input[type="text"] {
-    width: 160px;
-    text-align: left;
-  }
-
-  textarea {
-    width: 100%;
-    min-height: 50px;
-    box-sizing: border-box;
-    resize: vertical;
-  }
-
-  tfoot td {
-    font-weight: bold;
-  }
-
-  .right {
-    text-align: right;
-  }
-
-  .btn {
-    display: inline-block;
-    padding: 6px 10px;
-    margin: 4px 4px 8px 0;
-    border: 1px solid #555;
-    background: #f5f5f5;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-
-  .btn:hover {
-    background: #e2e2e2;
-  }
-
-  .btn-danger {
-    border-color: #b00;
-    color: #b00;
-  }
-
-  .btn-small {
-    padding: 2px 6px;
-    font-size: 12px;
-  }
-
-  .small {
-    font-size: 13px;
-    color: #555;
-  }
-
-  /* ========= ВЕРХНЯ ПАНЕЛЬ (Дашборд) ========= */
-
-  #topDashboard {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: #ffffff;
-    padding: 8px 10px 10px;
-    margin: -10px -15px 10px; /* тягнемо фон на всю ширину */
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-  }
-
-  .dash-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  .dash-card {
-    flex: 1 1 22%;
-    min-width: 150px;
-    border-radius: 10px;
-    padding: 6px 8px;
-    background: #f7f9ff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-  }
-
-  .dash-label {
-    font-size: 12px;
-    color: #666;
-  }
-
-  .dash-value {
-    font-size: 20px;
-    font-weight: 600;
-    margin-top: 2px;
-  }
-
-  /* Навігація по розділах (Корм / Яйця / …) */
-
-  .nav-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 4px;
-  }
-
-  .nav-btn {
-    flex: 1 1 18%;
-    text-align: center;
-    padding: 6px 4px;
-    border-radius: 999px;
-    text-decoration: none;
-    border: 1px solid #ccc;
-    font-size: 13px;
+h2 {
+    margin-top: 40px;
     color: #333;
-    background: #f7f7f7;
-  }
+    padding-bottom: 5px;
+    border-bottom: 2px solid #ddd;
+}
 
-  .nav-btn:hover {
-    background: #e8f0ff;
-    border-color: #7ea8ff;
-  }
+section {
+    padding: 20px;
+    background: #fff;
+    margin: 20px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+}
 
-  /* Попередження вгорі */
-
-  #topWarnings {
-    margin-bottom: 6px;
-    font-size: 12px;
-  }
-
-  .warn-item {
-    padding: 4px 6px;
+input[type="number"], input[type="date"], input[type="text"] {
+    width: 110px;
+    padding: 6px;
     border-radius: 6px;
-    margin-bottom: 3px;
-  }
+    border: 1px solid #ccc;
+}
 
-  .warn-bad {
-    background: #ffe5e5;
-    color: #800;
-  }
+button {
+    cursor: pointer;
+    padding: 8px 14px;
+    background: #1976d2;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    margin: 4px 0;
+}
 
-  .warn-warn {
-    background: #fff5d6;
-    color: #885500;
-  }
+button:hover {
+    opacity: 0.85;
+}
 
-  .warn-ok {
-    background: #e7ffe5;
-    color: #126612;
-  }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 15px;
+}
 
-  /* ========= АДАПТАЦІЯ ДЛЯ ТЕЛЕФОНУ ========= */
+th, td {
+    border: 1px solid #ddd;
+    padding: 7px;
+    text-align: left;
+}
 
-  @media (max-width: 600px) {
-    body {
-      padding: 6px;
-    }
+th {
+    background: #f0f0f0;
+}
+
+.right { text-align: right; }
+.center { text-align: center; }
+
+.hidden { display: none; }
+
+/* ---------------------- БЛОКИ ФУНКЦІЙ ---------------------- */
+
+.block-header {
+    background: #1976d2;
+    padding: 10px;
+    color: #fff;
+    border-radius: 6px 6px 0 0;
+    font-size: 17px;
+    margin-bottom: 0;
+}
+
+.section-content {
+    padding: 15px;
+}
+
+/* ---------------------- ТАБЛИЦІ ---------------------- */
+
+.table-small td input {
+    width: 70px;
+}
+
+td input.stock,
+td input.price {
+    width: 80px;
+}
+
+.sum { font-weight: bold; }
+
+/* ---------------------- ІКОНКИ ТА КНОПКИ ---------------------- */
+
+.btn-small {
+    padding: 4px 7px;
+    margin-left: 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.btn-red {
+    background: #d32f2f !important;
+}
+
+.btn-green {
+    background: #388e3c !important;
+}
+
+/* ---------------------- ЛОГ, ЗАМОВЛЕННЯ ---------------------- */
+
+.log-row:nth-child(even),
+.order-row:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* ---------------------- ГРАФІКИ ---------------------- */
+
+.chart-container {
+    width: 100%;
+    height: 300px;
+    margin-top: 15px;
+}
+
+/* ---------------------- МЕДІА ---------------------- */
+
+@media (max-width: 768px) {
 
     table {
-      font-size: 12px;
-      min-width: 480px;
+        font-size: 13px;
     }
 
-    th, td {
-      padding: 4px;
+    input[type="number"], input[type="date"], input[type="text"] {
+        width: 90px;
     }
 
-    input[type="number"] {
-      width: 70px;
+    button {
+        width: 100%;
+        margin-top: 6px;
     }
+}
 
-    input[type="text"] {
-      width: 120px;
-    }
-
-    h1 {
-      font-size: 18px;
-    }
-
-    h2 {
-      font-size: 16px;
-    }
-
-    h3 {
-      font-size: 15px;
-    }
-
-    #topDashboard {
-      padding: 6px 6px 8px;
-      margin: -6px -6px 8px;
-    }
-
-    .dash-card {
-      flex: 1 1 48%;
-      font-size: 12px;
-    }
-
-    .dash-value {
-      font-size: 18px;
-    }
-
-    .nav-btn {
-      flex: 1 1 30%;
-      font-size: 12px;
-      padding: 5px 2px;
-    }
-  }
 </style>
 
-<script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
-<script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
-
 </head>
+
 <body>
 
-  <!-- Головна панель і попередження -->
-  <div id="topDashboard">
-    <div class="dash-row">
-      <div class="dash-card">
-        <div class="dash-label">Яєць сьогодні</div>
-        <div class="dash-value" id="dashEggsToday">0</div>
-      </div>
-      <div class="dash-card">
-        <div class="dash-label">Вільних лотків</div>
-        <div class="dash-value" id="dashFreeTrays">0</div>
-      </div>
-      <div class="dash-card">
-        <div class="dash-label">Активні замовлення</div>
-        <div class="dash-value" id="dashActiveOrders">0</div>
-      </div>
-      <div class="dash-card">
-        <div class="dash-label">Середня несучість, %</div>
-        <div class="dash-value" id="dashProdAvg">0.0</div>
-      </div>
+<section>
+    <div class="block-header">1. Склад універсального комбікорму</div>
+    <div class="section-content">
+
+        <label>Бажана кількість, кг:</label>
+        <input type="number" id="targetKg" value="25" step="1" onchange="recalcFeed()">
+
+        <button onclick="applyRecipePreset('starter')">Стартер</button>
+        <button onclick="applyRecipePreset('grower')">Гроувер</button>
+        <button onclick="applyRecipePreset('layer')">Несучки</button>
+
+        <table id="feedTable">
+            <thead>
+                <tr>
+                    <th>Компонент</th>
+                    <th class="right">К-сть, кг</th>
+                    <th class="right">Ціна за кг</th>
+                    <th class="right">Сума</th>
+                </tr>
+            </thead>
+            <tbody id="feedRows">
+                <!-- Генерується автоматично через JS -->
+            </tbody>
+        </table>
+
+        <h3>Разом:</h3>
+        <p>Загальна вага: <b id="feedTotalKg">0</b> кг</p>
+        <p>Загальна вартість: <b id="feedTotalCost">0</b> грн</p>
+
     </div>
+</section>
 
-    <div id="topWarnings"></div>
+<section>
+    <div class="block-header">2. Калькулятор яєць</div>
+    <div class="section-content">
 
-    <div class="nav-row">
-      <a href="#feedSection" class="nav-btn">Корм</a>
-      <a href="#eggsSection" class="nav-btn">Яйця</a>
-      <a href="#ordersSection" class="nav-btn">Замовлення</a>
-      <a href="#incubationSection" class="nav-btn">Інкубація</a>
-      <a href="#financeSection" class="nav-btn">Звіт</a>
+        <label>Кількість самок:</label>
+        <input type="number" id="hens" value="40" onchange="recalcEggs()">
+
+        <label>Середня несучість (%):</label>
+        <input type="number" id="eggRate" value="80" onchange="recalcEggs()">
+
+        <label>Ціна за десяток:</label>
+        <input type="number" id="eggPrice10" value="50" onchange="recalcEggs()">
+
+        <p>Добова кількість яєць: <b id="eggsPerDay">0</b></p>
+        <p>Доход за день: <b id="incomePerDay">0</b> грн</p>
+
+        <p>За 30 днів:</p>
+        <p><b id="eggsPerMonth">0</b> яєць — <b id="incomePerMonth">0</b> грн</p>
+
     </div>
-  </div>
+</section>
 
-  
-  <h1>Калькулятор корму, облік яєць та замовлень (перепілки)</h1>
+<section>
+    <div class="block-header">3. Запаси компонентів комбікорму</div>
+    <div class="section-content">
 
-  <p class="small">
-    ✔ Міняєш тільки <b>ціни за 1 кг</b>, кількість птахів, норму, яйця, ціну лотка та замовлення.<br>
-    ✔ Все інше рахується автоматично та зберігається в браузері (окремо на кожному пристрої).
-  </p>
+        <table id="stockTable">
+            <thead>
+                <tr>
+                    <th>Компонент</th>
+                    <th class="right">Є на складі, кг</th>
+                    <th class="right">Потрібно, кг</th>
+                    <th class="right">Докупити, кг</th>
+                </tr>
+            </thead>
+            <tbody id="stockRows">
+                <!-- Генерується автоматично через JS -->
+            </tbody>
+        </table>
 
-  <!-- 1. Склад корму -->
-  <h2 id="feedSection">1. Склад універсального корму (25 кг)</h2>
-   <p>
-    Рецепт:
-    <select id="recipePreset">
-      <option value="universal" selected>Універсальний (25 кг)</option>
-      <option value="high_protein">Для несучок (більш білковий)</option>
-      <option value="economy">Економний варіант</option>
-    </select>
-    <button class="btn btn-small" id="applyPreset">Застосувати</button>
-  </p>
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Компонент</th>
-          <th>Кількість, кг</th>
-          <th>Ціна, грн/кг</th>
-          <th>Сума, грн</th>
-        </tr>
-      </thead>
-      <tbody id="rows">
-        <tr>
-          <td>Кукурудза</td>
-          <td class="qty right">10.0</td>
-          <td><input type="number" step="0.01" class="price" data-key="corn" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Пшениця</td>
-          <td class="qty right">5.0</td>
-          <td><input type="number" step="0.01" class="price" data-key="wheat" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Ячмінь</td>
-          <td class="qty right">1.5</td>
-          <td><input type="number" step="0.01" class="price" data-key="barley" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Соєва макуха</td>
-          <td class="qty right">3.0</td>
-          <td><input type="number" step="0.01" class="price" data-key="soy" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Соняшникова макуха</td>
-          <td class="qty right">2.5</td>
-          <td><input type="number" step="0.01" class="price" data-key="sunflower" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Рибне борошно</td>
-          <td class="qty right">1.0</td>
-          <td><input type="number" step="0.01" class="price" data-key="fishmeal" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Кормові дріжджі</td>
-          <td class="qty right">0.7</td>
-          <td><input type="number" step="0.01" class="price" data-key="yeast" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Трикальційфосфат</td>
-          <td class="qty right">0.5</td>
-          <td><input type="number" step="0.01" class="price" data-key="tcp" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Dolfos D</td>
-          <td class="qty right">0.7</td>
-          <td><input type="number" step="0.01" class="price" data-key="dolfos" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-        <tr>
-          <td>Сіль кухонна</td>
-          <td class="qty right">0.05</td>
-          <td><input type="number" step="0.01" class="price" data-key="salt" value="0"></td>
-          <td class="sum right">0.00</td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr>
-          <td class="right">Разом:</td>
-          <td id="totalQty" class="right">25.0</td>
-          <td></td>
-          <td id="totalCost" class="right">0.00</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+    </div>
+</section>
 
-  <!-- 2. Ціна за 1 кг -->
-  <h2>2. Ціна за 1 кг</h2>
-  <p>Вартість 1 кг корму: <b><span id="pricePerKg">0.00</span> грн/кг</b></p>
+<!-- =============================== -->
+<!--    4. ЩОДЕННИК ВИТРАТ І ПОДІЙ   -->
+<!-- =============================== -->
 
-  <!-- 3. Розрахунок по стаду -->
-  <h2>3. Розрахунок по стаду</h2>
-  <p>
-    Кількість перепілок:
-    <input type="number" id="birds" value="190" step="1" style="width:80px;">
-  </p>
-  <p>
-    Добова норма на 1 голову (кг, напр. 0.025 = 25 г):
-    <input type="number" id="dailyNorm" value="0.025" step="0.001" style="width:80px;">
-  </p>
+<section>
+    <div class="block-header">4. Щоденник витрат та подій</div>
+    <div class="section-content">
 
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Добове споживання корму всім стадом, кг</td>
-        <td class="right"><span id="dailyFeedKg">0.000</span></td>
-      </tr>
-      <tr>
-        <td>Вартість годування всього стада на день, грн</td>
-        <td class="right"><span id="dailyCost">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Вартість годування всього стада на 30 днів, грн</td>
-        <td class="right"><span id="monthlyCost">0.00</span></td>
-      </tr>
-      <tr>
-        <td>На скільки днів вистачить 25 кг при цій нормі</td>
-        <td class="right"><span id="daysFromBag">0.0</span></td>
-      </tr>
-    </table>
-  </div>
+        <label>Дата:</label>
+        <input type="date" id="logDate">
 
-    <!-- 4. Облік яєць -->
-  <h2 id="eggsSection">4. Облік яєць</h2>
+        <label>Категорія:</label>
+        <input type="text" id="logCategory" placeholder="Наприклад: корм, ремонт">
 
-  <p>Кількість зібраних яєць за добу:
-    <input type="number" id="eggsTotal" value="0" step="1" style="width:80px;">
-  </p>
+        <label>Сума, грн:</label>
+        <input type="number" id="logAmount" step="1">
 
-  <p>Браковані яйця:
-    <input type="number" id="eggsBad" value="0" step="1" style="width:80px;">
-  </p>
+        <label>Коментар:</label>
+        <input type="text" id="logComment" placeholder="Додаткові деталі">
 
-  <p>Для власного використання:
-    <input type="number" id="eggsOwn" value="0" step="1" style="width:80px;">
-  </p>
+        <button onclick="addLog()">Додати запис</button>
 
-  <p>Яйця, що залишилися з попередніх днів (складський залишок):
-    <input type="number" id="eggsCarry" value="0" step="1" style="width:80px;">
-    <span class="small">Якщо щось збилося – можеш виправити вручну.</span>
-  </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Категорія</th>
+                    <th>Сума</th>
+                    <th>Коментар</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="logBody">
+                <!-- Автоматично -->
+            </tbody>
+        </table>
 
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Яєць доступно для продажу СЬОГОДНІ</td>
-        <td class="right"><span id="eggsForSale">0</span></td>
-      </tr>
-      <tr>
-        <td>Всього яєць для продажу (разом із залишком)</td>
-        <td class="right"><span id="eggsForSaleTotal">0</span></td>
-      </tr>
-      <tr>
-        <td>Кількість повних лотків (по 20 шт)</td>
-        <td class="right"><span id="traysCount">0</span></td>
-      </tr>
-      <tr>
-        <td>Залишок яєць після повних лотків</td>
-        <td class="right"><span id="eggsRemainder">0</span></td>
-      </tr>
-      <tr>
-        <td>Ціна за 1 лоток, грн</td>
-        <td><input type="number" id="trayPrice" value="0" step="1" style="width:80px;"></td>
-      </tr>
-      <tr>
-        <td>Сума виручки, грн</td>
-        <td class="right"><span id="income">0.00</span></td>
-      </tr>
-    </table>
-  </div>
-
-  <h3>4.1. Самки та продуктивність</h3>
-  <p>Кількість самок у 1-й партії (7 серпня):
-    <input type="number" id="hens1" value="0" step="1" style="width:80px;">
-  </p>
-  <p>Кількість самок у 2-й партії (19 жовтня):
-    <input type="number" id="hens2" value="0" step="1" style="width:80px;">
-  </p>
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Самок всього</td>
-        <td class="right"><span id="hensTotal">0</span></td>
-      </tr>
-      <tr>
-        <td>Фактична продуктивність сьогодні, %</td>
-        <td class="right"><span id="productivityToday">0.0</span></td>
-      </tr>
-    </table>
-  </div>
-  
-    <h3>4.2. Паспорт партій</h3>
-  <p class="small">
-    Вкажи приблизну дату вилупу для кожної партії – система порахує вік та дасть короткий коментар.
-  </p>
-
-  <p>
-    Дата вилупу 1-ї партії:
-    <input type="date" id="hens1Date" style="width:150px;">
-  </p>
-  <p>
-    Дата вилупу 2-ї партії:
-    <input type="date" id="hens2Date" style="width:150px;">
-  </p>
-
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Партія</th>
-          <th>Дата вилупу</th>
-          <th>Вік, днів</th>
-          <th>Самок</th>
-          <th>Коментар</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1-ша партія</td>
-          <td class="right"><span id="hens1DateLabel">-</span></td>
-          <td class="right"><span id="hens1Age">-</span></td>
-          <td class="right"><span id="hens1CountLabel">0</span></td>
-          <td><span id="hens1Comment">—</span></td>
-        </tr>
-        <tr>
-          <td>2-га партія</td>
-          <td class="right"><span id="hens2DateLabel">-</span></td>
-          <td class="right"><span id="hens2Age">-</span></td>
-          <td class="right"><span id="hens2CountLabel">0</span></td>
-          <td><span id="hens2Comment">—</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- 5. Підсумок дня -->
-  <h2>5. Підсумок дня (корм + яйця)</h2>
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Добова вартість корму (все стадо), грн</td>
-        <td class="right"><span id="summaryFeedCost">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Добова виручка від яєць, грн</td>
-        <td class="right"><span id="summaryEggIncome">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Орієнтовний результат за день (прибуток/збиток), грн</td>
-        <td class="right"><span id="summaryProfit">0.00</span></td>
-      </tr>
-    </table>
-  </div>
-
-    <!-- 5.1. Фінансовий звіт за період -->
-  <h2 id="financeSection">5.1. Фінансовий звіт за період</h2>
-  <p>
-    Період:
-    <select id="reportPeriod">
-      <option value="7">Останні 7 днів</option>
-      <option value="30" selected>Останні 30 днів</option>
-      <option value="all">За весь час</option>
-    </select>
-  </p>
-
-  <p>
-    Інші постійні витрати (на місяць), грн:
-    <input type="number" id="otherCostsMonthly" value="0" step="1" style="width:100px;">
-    <span class="small">Електрика, підстилка, амортизація тощо</span>
-  </p>
-  
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Днів у звіті</td>
-        <td class="right"><span id="repDays">0</span></td>
-      </tr>
-      <tr>
-        <td>Зібрано яєць, шт</td>
-        <td class="right"><span id="repEggs">0</span></td>
-      </tr>
-      <tr>
-        <td>Продано лотків (по 20 шт)</td>
-        <td class="right"><span id="repTrays">0</span></td>
-      </tr>
-      <tr>
-        <td>Виручка, грн</td>
-        <td class="right"><span id="repIncome">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Витрати на корм, грн</td>
-        <td class="right"><span id="repFeedCost">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Чистий результат (прибуток), грн</td>
-        <td class="right"><span id="repProfit">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Середня продуктивність, %</td>
-        <td class="right"><span id="repProdAvg">0.0</span></td>
-      </tr>
-      <tr>
-        <td>Собівартість 1 яйця (корм), грн</td>
-        <td class="right"><span id="repCostPerEgg">0.000</span></td>
-      </tr>
-      <tr>
-        <td>Прибуток з 1 яйця, грн</td>
-        <td class="right"><span id="repProfitPerEgg">0.000</span></td>
-      </tr>
-      <tr>
-        <td>Прибуток з 1 самки за період, грн</td>
-        <td class="right"><span id="repProfitPerHen">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Інші витрати за період, грн</td>
-        <td class="right"><span id="repOtherCost">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Повна собівартість 1 яйця (корм + інші), грн</td>
-        <td class="right"><span id="repFullCostPerEgg">0.000</span></td>
-      </tr>
-      <tr>
-        <td>Прибуток з 1 яйця з урахуванням всіх витрат, грн</td>
-        <td class="right"><span id="repProfitPerEggFull">0.000</span></td>
-      </tr>
-    </table>
-  </div>
-  
-    <h2>5.2. Прогноз на 30 днів</h2>
-  <p class="small">
-    Розрахунок на основі поточної середньої несучості, кількості самок, ціни лотка та добової вартості корму.
-  </p>
-
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Очікуваних яєць за 30 днів</td>
-        <td class="right"><span id="fcastEggs">0</span></td>
-      </tr>
-      <tr>
-        <td>Очікуваних лотків (по 20 шт)</td>
-        <td class="right"><span id="fcastTrays">0</span></td>
-      </tr>
-      <tr>
-        <td>Очікувана виручка, грн</td>
-        <td class="right"><span id="fcastIncome">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Очікувані витрати на корм, грн</td>
-        <td class="right"><span id="fcastFeedCost">0.00</span></td>
-      </tr>
-      <tr>
-        <td>Орієнтовний прибуток за 30 днів, грн</td>
-        <td class="right"><span id="fcastProfit">0.00</span></td>
-      </tr>
-    </table>
-  </div>
+    </div>
+</section>
 
 
-  <!-- 6. Щоденник -->
-  <h2>6. Щоденник (історія)</h2>
-  <p class="small">
-    Тут можна зберігати щоденні підсумки (корм + яйця). Все зберігається в браузері.
-  </p>
+<!-- =============================== -->
+<!--           5. ЗАМОВЛЕННЯ         -->
+<!-- =============================== -->
 
-  <p>
-    Дата:
-    <input type="date" id="logDate" style="width:150px;">
-  </p>
-  <p>
-    Нотатка (наприклад: "друга партія дала перше яйце"):
-    <br>
-    <textarea id="logNote"></textarea>
-  </p>
+<section>
+    <div class="block-header">5. Замовлення (активні та виконані)</div>
+    <div class="section-content">
 
-  <button class="btn" id="addToLog">Додати запис у щоденник</button>
-  <button class="btn btn-danger" id="clearLog">Очистити щоденник</button>
+        <h3>Додати нове замовлення</h3>
 
-  <div class="table-wrapper">
-    <table>
-       <thead>
-        <tr>
-          <th>Дата</th>
-          <th>Яєць всього</th>
-          <th>Самок всього</th>
-          <th>Продуктивність, %</th>
-          <th>На продаж сьогодні</th>
-          <th>На продаж разом із залишком</th>
-          <th>Лотків</th>
-          <th>Виручка, грн</th>
-          <th>Корм/день, грн</th>
-          <th>Результат, грн</th>
-          <th>Нотатка</th>
-          <th>×</th>
-        </tr>
-      </thead>
-      <tbody id="logTableBody">
-      </tbody>
-    </table>
-  </div>
-  
-  <h2>6.1. Графіки несучості та продажів</h2>
-  <p class="small">
-    Для наочності використовуються останні 14 записів зі щоденника.
-  </p>
+        <label>Клієнт:</label>
+        <input type="text" id="ordName">
 
-  <div class="table-wrapper">
-    <h3>Несучість</h3>
-    <canvas id="chartProductivity" height="200" style="width:100%; max-width:900px; border:1px solid #eee;"></canvas>
-  </div>
+        <label>Яєць:</label>
+        <input type="number" id="ordEggs">
 
-  <div class="table-wrapper">
-    <h3>Продажі (лотки та виручка)</h3>
-    <canvas id="chartSales" height="200" style="width:100%; max-width:900px; border:1px solid #eee;"></canvas>
-  </div>
+        <label>Лотків:</label>
+        <input type="number" id="ordTrays">
 
-  <!-- 7. Замовлення яєць -->
-  <h2 id="ordersSection">7. Замовлення яєць</h2>
-  <p class="small">
-    Тут ти записуєш, <b>хто замовив</b> і <b>скільки лотків</b>. Замовлення залишаються в списку, доки ти не натиснеш "Виконано".
-  </p>
+        <label>Дата:</label>
+        <input type="date" id="ordDate">
 
-  <p>
-    Клієнт / хто замовив:
-    <input type="text" id="orderCustomer" placeholder="Ім'я / магазин / сусід">
-  </p>
-  <p>
-    <b>Кількість лотків у замовленні (по 20 яєць):</b>
-    <input type="number" id="orderTrays" value="0" step="1" style="width:80px;">
-  </p>
-  <p>
-    Примітка (наприклад: "забрати ввечері", "оплата готівкою"):
-    <br>
-    <textarea id="orderNote"></textarea>
-  </p>
+        <label>Примітка:</label>
+        <input type="text" id="ordNote">
 
-  <button class="btn" id="addOrder">Додати замовлення</button>
-  <button class="btn btn-danger" id="clearOrders">Очистити всі замовлення</button>
+        <button onclick="addOrder()">Додати</button>
 
-  <h3>Активні замовлення</h3>
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Клієнт</th>
-          <th>Яєць</th>
-          <th>Лотків (20 шт)</th>
-          <th>Дата створення</th>
-          <th>Примітка</th>
-          <th>Статус</th>
-          <th>Дії</th>
-        </tr>
-      </thead>
-      <tbody id="ordersActiveBody">
-      </tbody>
-    </table>
-  </div>
+        <h3>Активні замовлення</h3>
 
-  <h3>Виконані замовлення</h3>
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Клієнт</th>
-          <th>Яєць</th>
-          <th>Лотків</th>
-          <th>Дата створення</th>
-          <th>Примітка</th>
-          <th>Статус</th>
-          <th>×</th>
-        </tr>
-      </thead>
-      <tbody id="ordersDoneBody">
-      </tbody>
-    </table>
-  </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Клієнт</th>
+                    <th>Яєць</th>
+                    <th>Лотків</th>
+                    <th>Дата</th>
+                    <th>Примітка</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="ordersActive">
+                <!-- Генерується через JS -->
+            </tbody>
+        </table>
 
-    <h4>Підсумок замовлень</h4>
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Активних замовлень</td>
-        <td class="right"><span id="ordersActiveCount">0</span></td>
-      </tr>
-      <tr>
-        <td>Виконаних замовлень</td>
-        <td class="right"><span id="ordersDoneCount">0</span></td>
-      </tr>
-      <tr>
-        <td>Всього лотків (активні)</td>
-        <td class="right"><span id="ordersActiveTrays">0</span></td>
-      </tr>
-      <tr>
-        <td>Всього лотків (виконані)</td>
-        <td class="right"><span id="ordersDoneTrays">0</span></td>
-      </tr>
-    </table>
-  </div>
+        <h3>Виконані замовлення</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Клієнт</th>
+                    <th>Яєць</th>
+                    <th>Лотків</th>
+                    <th>Дата</th>
+                    <th>Примітка</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="ordersDone">
+                <!-- Генерується через JS -->
+            </tbody>
+        </table>
+
+    </div>
+</section>
 
 
-  <!-- 8. Підсумок по лотках -->
-  <h3>8. Підсумок по лотках (на основі сьогоднішніх яєць)</h3>
-  <div class="table-wrapper">
-    <table>
-      <tr>
-        <td>Усього повних лотків (з яєць для продажу)</td>
-        <td class="right"><span id="totalTraysTodayLabel">0</span></td>
-      </tr>
-      <tr>
-        <td>Заброньовано лотків (активні замовлення)</td>
-        <td class="right"><span id="reservedTrays">0</span></td>
-      </tr>
-      <tr>
-        <td>Вільні лотки (можна продати ще)</td>
-        <td class="right"><span id="freeTrays">0</span></td>
-      </tr>
-    </table>
-  </div>
+<!-- =============================== -->
+<!--            6. ІНКУБАЦІЯ         -->
+<!-- =============================== -->
 
-    <!-- 9. Запаси компонентів і план закупівлі -->
-  <h2>9. Запаси компонентів і план закупівлі</h2>
-  <p class="small">
-    Вкажи, скільки кг кожного компонента є зараз на складі. 
-    Програма порахує, скільки потрібно на 30 днів, 
-    і скільки потрібно докупити, виходячи з норми годівлі та кількості птахів.
-  </p>
+<section>
+    <div class="block-header">6. Інкубація</div>
+    <div class="section-content">
 
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Компонент</th>
-          <th>Запас, кг (є зараз)</th>
-          <th>Потрібно на 30 днів, кг</th>
-          <th>Докупити, кг</th>
-        </tr>
-      </thead>
-      <tbody id="stockRows">
-        <tr data-key="corn">
-          <td>Кукурудза</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="corn" id="stock_corn" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="wheat">
-          <td>Пшениця</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="wheat" id="stock_wheat" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="barley">
-          <td>Ячмінь</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="barley" id="stock_barley" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="soy">
-          <td>Соєва макуха</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="soy" id="stock_soy" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="sunflower">
-          <td>Соняшникова макуха</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="sunflower" id="stock_sunflower" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="fishmeal">
-          <td>Рибне борошно / м'ясокісткове</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="fishmeal" id="stock_fishmeal" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="yeast">
-          <td>Кормові дріжджі</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="yeast" id="stock_yeast" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="tcp">
-          <td>Трикальційфосфат</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="tcp" id="stock_tcp" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="dolfos">
-          <td>Дольфос D</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="dolfos" id="stock_dolfos" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-        <tr data-key="salt">
-          <td>Сіль</td>
-          <td class="right">
-            <input type="number" class="stock" data-key="salt" id="stock_salt" step="0.1" value="0" style="width:80px;">
-          </td>
-          <td class="right"><span class="need">0.0</span></td>
-          <td class="right"><span class="buy">0.0</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+        <h3>Додати партію</h3>
 
-    <!-- 9.1 Склад готового комбікорму -->
-  <h2>9.1 Склад готового комбікорму</h2>
-  <p class="small">
-    Облік того, скільки вже намішано готового комбікорму та на скільки днів його вистачить.
-  </p>
+        <label>Дата закладки:</label>
+        <input type="date" id="incDate">
 
-  <p>
-    Готовий комбікорм на складі, кг:
-    <span id="feedReadyStock">0.0</span>
-  </p>
-  <p>
-    Вага однієї партії (за рецептом), кг:
-    <input type="number" id="feedBatchSize" value="25" step="1" style="width:80px;">
-  </p>
-  <button class="btn" id="produceFeedBatch">Виготовити партію комбікорму</button>
-  <button class="btn" id="consumeDailyFeed">Списати добову норму (згідно кількості птахів)</button>
+        <label>Кількість яєць:</label>
+        <input type="number" id="incEggs">
+
+        <label>Примітка:</label>
+        <input type="text" id="incNote">
+
+        <button onclick="addInc()">Додати партію</button>
+
+        <h3>Список інкубацій</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Партія</th>
+                    <th>Дата</th>
+                    <th>Яєць</th>
+                    <th>Вилуп</th>
+                    <th>Примітка</th>
+                    <th>День</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="incBody">
+                <!-- Генерується через JS -->
+            </tbody>
+        </table>
+
+    </div>
+</section>
 
 
-  <!-- 10. Резервне копіювання (експорт / імпорт) -->
-  <h2>10. Резервне копіювання (експорт / імпорт)</h2>
-  <p class="small">
-    Тут можна зробити бекап усіх даних (стан, щоденник, замовлення) у вигляді тексту.
-    Потім цей текст можна вставити на іншому пристрої або після скидання браузера.
-  </p>
-  <p>
-    <button class="btn" id="backupExport">Експорт даних у текст</button>
-    <button class="btn" id="backupImport">Імпорт із тексту</button>
-    <button onclick="googleBackup()">Резервне копіювання в Google Drive</button>
-    <button onclick="googleRestore()">Відновити з Google Drive</button>
-  </p>
-  <textarea id="backupArea" rows="6" style="width:100%;"></textarea>
-  
-  <h3>Резервна копія в Google Drive</h3>
-<button id="btnDriveLogin" type="button">🔑 Увійти в Google</button>
-<button id="btnDriveBackup" type="button" disabled>⬆ Зберегти бекап у Drive</button>
-<button id="btnDriveRestore" type="button" disabled>⬇ Завантажити бекап з Drive</button>
-<span id="googleStatus" style="margin-left:8px; font-weight:bold; color:#b71c1c;">
-  Не ввійшли в Google
-</span>
-<p class="small">
-Буде створено файл <code>quail_calculator_backup.json</code> у твоєму Google Drive (папка «Мій диск»).
-</p>
+<!-- =============================== -->
+<!--          7. ГРАФІКИ             -->
+<!-- =============================== -->
 
-    <!-- 11. Інкубація партій яєць -->
-  <h2 id="incubationSection">11. Інкубація</h2>
-  <p class="small">
-    Тут можна вести облік партій в інкубаторі: коли заклали, скільки яєць, 
-    скільки виявилось незапліднених при овоскопії, скільки вилупилося, 
-    скільки померло в інкубаторі та в брудері.
-  </p>
+<section>
+    <div class="block-header">7. Графіки продуктивності</div>
+    <div class="section-content">
 
-  <h3>11.1. Додати нову партію</h3>
-  <p>
-    Назва / номер партії:
-    <input type="text" id="incBatchName" style="width:160px;" placeholder="Партія №3">
-  </p>
-  <p>
-    Дата закладки:
-    <input type="date" id="incStartDate">
-  </p>
-  <p>
-    Кількість закладених яєць:
-    <input type="number" id="incEggsSet" value="0" step="1" style="width:80px;">
-  </p>
-  <p>
-    Нотатка (інкубатор, режим, порода тощо):
-    <br>
-    <textarea id="incNote" rows="2" style="width:100%;"></textarea>
-  </p>
-  <button class="btn" id="addIncubation">Додати партію</button>
+        <div class="chart-container">
+            <canvas id="chartEggs"></canvas>
+        </div>
 
-  <h3>11.2. Список партій</h3>
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Партія</th>
-          <th>Дата закладки</th>
-          <th>Днів від закладки</th>
-          <th>Закладено яєць</th>
-          <th>Незапліднені (овоскопія)</th>
-          <th>Вилупилося</th>
-          <th>Померли в інкубаторі</th>
-          <th>Померли в брудері</th>
-          <th>Живі зараз</th>
-          <th>Нотатка</th>
-          <th>Дії</th>
-        </tr>
-      </thead>
-      <tbody id="incubationBody">
-      </tbody>
-    </table>
-  </div>
+        <div class="chart-container">
+            <canvas id="chartIncome"></canvas>
+        </div>
 
-    <!-- 12. Клієнти (зведена інформація) -->
-  <h2>12. Клієнти</h2>
-  <p class="small">
-    Зведення по всіх замовленнях: скільки лотків та яєць купив кожен клієнт 
-    і на яку суму.
-  </p>
+    </div>
+</section>
 
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>Клієнт</th>
-          <th>К-сть замовлень</th>
-          <th>Лотків (20 яєць)</th>
-          <th>Яєць</th>
-          <th>Сума, грн</th>
-          <th>Останнє замовлення</th>
-        </tr>
-      </thead>
-      <tbody id="clientsBody">
-      </tbody>
-    </table>
-  </div>
+<!-- =============================== -->
+<!--      8. СТАТИСТИКА ПТАШНИКА     -->
+<!-- =============================== -->
+
+<section>
+    <div class="block-header">8. Показники пташника</div>
+    <div class="section-content">
+
+        <label>Кількість самців:</label>
+        <input type="number" id="males" value="10" onchange="recalcFlock()">
+
+        <label>Кількість самок:</label>
+        <input type="number" id="females" value="40" onchange="recalcFlock()">
+
+        <label>Смертність (за період):</label>
+        <input type="number" id="deaths" value="0" onchange="recalcFlock()">
+
+        <label>Середній вік, днів:</label>
+        <input type="number" id="avgAge" value="60" onchange="recalcFlock()">
+
+        <p><b>Усього поголів’я: <span id="flockTotal">50</span></b></p>
+
+    </div>
+</section>
 
 
-  <script>
-       // --- ПРЕСЕТИ РЕЦЕПТІВ КОРМУ ---
-    const recipePresets = {
-      // Поточний універсальний рецепт (25 кг)
-      universal: {
-        corn: 10.0,
-        wheat: 5.0,
-        barley: 1.5,
-        soy: 3.0,
-        sunflower: 2.5,
-        fishmeal: 1.0,
-        yeast: 0.7,
-        tcp: 0.5,
-        dolfos: 0.7,
-        salt: 0.05
-      },
-      // Трохи більш білковий варіант (для несучок)
-      high_protein: {
-        corn: 9.0,
-        wheat: 4.0,
-        barley: 1.0,
-        soy: 4.0,
-        sunflower: 3.0,
-        fishmeal: 1.2,
-        yeast: 0.8,
-        tcp: 0.5,
-        dolfos: 0.7,
-        salt: 0.05
-      },
-      // Економний варіант (менше білка, більше зерна)
-      economy: {
-        corn: 11.0,
-        wheat: 6.0,
-        barley: 2.0,
-        soy: 2.0,
-        sunflower: 2.0,
-        fishmeal: 0.5,
-        yeast: 0.5,
-        tcp: 0.5,
-        dolfos: 0.7,
-        salt: 0.05
-      }
-    };
-    
-    // Єдиний список компонентів (щоб не дублювати у HTML)
+<!-- =============================== -->
+<!--      9. ЗАПАСИ КОМБІКОРМУ       -->
+<!-- =============================== -->
+
+<section>
+    <div class="block-header">9. Запаси комбікорму</div>
+    <div class="section-content">
+
+        <p>Вводь фактичні залишки на складі. Після розрахунку система підкаже, скільки треба докупити.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Компонент</th>
+                    <th class="right">Є на складі</th>
+                    <th class="right">Потрібно</th>
+                    <th class="right">Докупити</th>
+                </tr>
+            </thead>
+            <tbody id="stockRows">
+                <!-- Автоматично через JS -->
+            </tbody>
+        </table>
+
+    </div>
+</section>
+
+
+<!-- =============================== -->
+<!--       10. ФІНАНСОВИЙ ЗВІТ       -->
+<!-- =============================== -->
+
+<section>
+    <div class="block-header">10. Фінансовий звіт</div>
+    <div class="section-content">
+
+        <label>Період від:</label>
+        <input type="date" id="repFrom" onchange="recalcReport()">
+
+        <label>до:</label>
+        <input type="date" id="repTo" onchange="recalcReport()">
+
+        <h3>Сумарні показники</h3>
+
+        <p>Витрати: <b id="repCosts">0</b> грн</p>
+        <p>Доходи: <b id="repIncome">0</b> грн</p>
+        <p>Прибуток: <b id="repProfit">0</b> грн</p>
+
+        <h3>Економіка яйця</h3>
+
+        <p>Собівартість яйця: <b id="repCostPerEgg">0</b> грн</p>
+        <p>Прибуток з яйця: <b id="repProfitPerEgg">0</b> грн</p>
+
+    </div>
+</section>
+
+
+<!-- =============================== -->
+<!--              11. PWA            -->
+<!-- =============================== -->
+
+<section>
+    <div class="block-header">11. Оффлайн режим (PWA)</div>
+    <div class="section-content">
+
+        <p>Додаток підтримує оффлайн режим. Щоб додати на головний екран:</p>
+
+        <ul>
+            <li>На Android: кнопка «Додати на головний екран» у браузері.</li>
+            <li>На iOS: Поділитися → «Add to Home Screen».</li>
+        </ul>
+
+    </div>
+</section>
+
+
+<!-- =============================== -->
+<!--      12. GOOGLE DRIVE BACKUP    -->
+<!-- =============================== -->
+
+<section>
+    <div class="block-header">12. Резервне копіювання Google Drive</div>
+    <div class="section-content">
+
+        <button id="btnDriveLogin">Увійти в Google</button>
+        <button id="btnBackup" disabled>Створити резервну копію</button>
+        <button id="btnRestore" disabled>Відновити дані</button>
+
+        <p id="driveStatus">Статус: оффлайн</p>
+
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<!-- GOOGLE API -->
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+
+<script>
+
+// ===============================
+//      СПИСКИ КОМПОНЕНТІВ
+// ===============================
+
 const feedComponents = [
-  {key:'corn', name:'Кукурудза'},
-  {key:'wheat', name:'Пшениця'},
-  {key:'barley', name:'Ячмінь'},
-  {key:'soy', name:'Соєва макуха'},
-  {key:'sunflower', name:'Соняшникова макуха'},
-  {key:'fishmeal', name:'Рибне борошно'},
-  {key:'yeast', name:'Кормові дріжджі'},
-  {key:'tcp', name:'Трикальційфосфат'},
-  {key:'dolfos', name:'Дольфос D'},
-  {key:'salt', name:'Сіль кухонна'}
+    {key:'corn', name:'Кукурудза'},
+    {key:'wheat', name:'Пшениця'},
+    {key:'barley', name:'Ячмінь'},
+    {key:'soy', name:'Соєва макуха'},
+    {key:'sunflower', name:'Соняшникова макуха'},
+    {key:'fishmeal', name:'Рибне борошно'},
+    {key:'yeast', name:'Кормові дріжджі'},
+    {key:'tcp', name:'Трикальційфосфат'},
+    {key:'dolfos', name:'Дольфос D'},
+    {key:'salt', name:'Сіль кухонна'}
 ];
 
-// Динамічне створення таблиць
-function buildFeedTables() {
-  const feedBody = document.getElementById('rows');
-  const stockBody = document.getElementById('stockRows');
-  if (!feedBody || !stockBody) return;
-  feedBody.innerHTML = '';
-  stockBody.innerHTML = '';
 
-  feedComponents.forEach(c => {
-    feedBody.innerHTML += `
-      <tr>
-        <td>${c.name}</td>
-        <td class="qty right">0.0</td>
-        <td><input type="number" step="0.01" class="price" data-key="${c.key}" value="0"></td>
-        <td class="sum right">0.00</td>
-      </tr>`;
-    stockBody.innerHTML += `
-      <tr data-key="${c.key}">
-        <td>${c.name}</td>
-        <td class="right"><input type="number" class="stock" data-key="${c.key}" step="0.1" value="0" style="width:80px;"></td>
-        <td class="right"><span class="need">0.0</span></td>
-        <td class="right"><span class="buy">0.0</span></td>
-      </tr>`;
-  });
-}
-    
-        // --- ПАСПОРТ ПАРТІЙ ---
+// ===============================
+//     ДОПОМОЖНІ ФУНКЦІЇ
+// ===============================
 
-    function recalcFlocksPassport() {
-      const hens1 = parseInt(document.getElementById('hens1').value) || 0;
-      const hens2 = parseInt(document.getElementById('hens2').value) || 0;
-
-      const date1 = document.getElementById('hens1Date').value;
-      const date2 = document.getElementById('hens2Date').value;
-
-      updateFlockRow('hens1', hens1, date1);
-      updateFlockRow('hens2', hens2, date2);
-    }
-
-    function updateFlockRow(prefix, hensCount, dateStr) {
-      const dateLabel = document.getElementById(prefix + 'DateLabel');
-      const ageSpan = document.getElementById(prefix + 'Age');
-      const countSpan = document.getElementById(prefix + 'CountLabel');
-      const commentSpan = document.getElementById(prefix + 'Comment');
-
-      if (countSpan) countSpan.textContent = hensCount;
-
-      if (!dateStr) {
-        if (dateLabel) dateLabel.textContent = '-';
-        if (ageSpan) ageSpan.textContent = '-';
-        if (commentSpan) commentSpan.textContent = 'Дата не вказана.';
-        return;
-      }
-
-      const d = new Date(dateStr);
-      if (isNaN(d)) {
-        if (dateLabel) dateLabel.textContent = dateStr;
-        if (ageSpan) ageSpan.textContent = '?';
-        if (commentSpan) commentSpan.textContent = 'Некоректна дата.';
-        return;
-      }
-
-      const today = new Date();
-      const diffMs = today.getTime() - d.getTime();
-      const ageDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (dateLabel) dateLabel.textContent = dateStr;
-      if (ageSpan) ageSpan.textContent = ageDays.toString();
-
-      let text = '';
-      if (ageDays < 35) text = 'Молодка, ще нарощує несучість.';
-      else if (ageDays < 180) text = 'Робоча несучість.';
-      else text = 'Стадо старіє, продуктивність може падати.';
-
-      if (commentSpan) commentSpan.textContent = text;
-    }
-
-    function applyRecipePreset(name) {
-      const preset = recipePresets[name];
-      if (!preset) return;
-
-      const rows = document.querySelectorAll('#rows tr');
-      rows.forEach(row => {
-        const priceInput = row.querySelector('.price');
-        const qtyCell = row.querySelector('.qty');
-        if (!priceInput || !qtyCell) return;
-
-        const key = priceInput.dataset.key; // corn, wheat, barley, soy...
-        if (preset[key] !== undefined) {
-          qtyCell.textContent = preset[key].toString();
-        }
-      });
-
-      recalcAll();
-      saveState();
-    }
-    
-       // --- ПРОГНОЗ НА 30 ДНІВ ---
-
-    function recalcForecast30() {
-      const hens1 = parseInt(document.getElementById('hens1').value) || 0;
-      const hens2 = parseInt(document.getElementById('hens2').value) || 0;
-      const hensTotal = hens1 + hens2;
-
-      const prodAvg = parseFloat(document.getElementById('repProdAvg').textContent) || 0;
-      const trayPrice = parseFloat(document.getElementById('trayPrice').value) || 0;
-      const dailyFeedCost = parseFloat(document.getElementById('dailyCost').textContent) || 0;
-
-      if (hensTotal <= 0 || prodAvg <= 0 || trayPrice <= 0) {
-        // просто очищаємо
-        document.getElementById('fcastEggs').textContent = '0';
-        document.getElementById('fcastTrays').textContent = '0';
-        document.getElementById('fcastIncome').textContent = '0.00';
-        document.getElementById('fcastFeedCost').textContent = '0.00';
-        document.getElementById('fcastProfit').textContent = '0.00';
-        return;
-      }
-
-      const eggsPerDay = hensTotal * (prodAvg / 100);
-      const eggs30 = eggsPerDay * 30;
-      const trays30 = Math.floor(eggs30 / 20);
-      const income30 = trays30 * trayPrice;
-      const feedCost30 = dailyFeedCost * 30;
-      const profit30 = income30 - feedCost30;
-
-      document.getElementById('fcastEggs').textContent = Math.round(eggs30).toString();
-      document.getElementById('fcastTrays').textContent = trays30.toString();
-      document.getElementById('fcastIncome').textContent = income30.toFixed(2);
-      document.getElementById('fcastFeedCost').textContent = feedCost30.toFixed(2);
-      document.getElementById('fcastProfit').textContent = profit30.toFixed(2);
-    } 
-
-     // --- Допоміжні функції для зручності ---
 function getInt(id) {
-  const el = document.getElementById(id);
-  return el ? parseInt(el.value) || 0 : 0;
+    const el = document.getElementById(id);
+    return el ? parseInt(el.value) || 0 : 0;
 }
+
 function getFloat(id) {
-  const el = document.getElementById(id);
-  return el ? parseFloat(el.value) || 0 : 0;
-}
-    
-    // --- РОЗРАХУНОК КОРМУ ---
-    function recalcFeed() {
-      const rows = document.querySelectorAll('#rows tr');
-      let totalCost = 0;
-      let totalQty = 0;
-
-      rows.forEach(row => {
-        const qty = parseFloat(row.querySelector('.qty').textContent) || 0;
-        const priceInput = row.querySelector('.price');
-        const price = parseFloat(priceInput.value) || 0;
-        const sumCell = row.querySelector('.sum');
-        const sum = qty * price;
-        sumCell.textContent = sum.toFixed(2);
-        totalCost += sum;
-        totalQty += qty;
-      });
-
-      document.getElementById('totalCost').textContent = totalCost.toFixed(2);
-      document.getElementById('totalQty').textContent = totalQty.toFixed(2);
-
-      const pricePerKg = totalQty > 0 ? totalCost / totalQty : 0;
-      document.getElementById('pricePerKg').textContent = pricePerKg.toFixed(2);
-
-      const birds = parseFloat(document.getElementById('birds').value) || 0;
-      const dailyNorm = parseFloat(document.getElementById('dailyNorm').value) || 0;
-      const dailyFeedKg = birds * dailyNorm;
-      document.getElementById('dailyFeedKg').textContent = dailyFeedKg.toFixed(3);
-
-      const dailyCost = dailyFeedKg * pricePerKg;
-      document.getElementById('dailyCost').textContent = dailyCost.toFixed(2);
-
-      const monthlyCost = dailyCost * 30;
-      document.getElementById('monthlyCost').textContent = monthlyCost.toFixed(2);
-
-      const daysFromBag = dailyFeedKg > 0 ? totalQty / dailyFeedKg : 0;
-      document.getElementById('daysFromBag').textContent = daysFromBag.toFixed(1);
-    }
-
-        // --- ЗАПАСИ КОМПОНЕНТІВ І ПЛАН ЗАКУПІВЛІ ---
-    function recalcStocks() {
-      const birds = parseFloat(document.getElementById('birds').value) || 0;
-      const dailyNorm = parseFloat(document.getElementById('dailyNorm').value) || 0;
-
-      // добова потреба в кормі, кг
-      const dailyFeedKg = birds * dailyNorm; // норма в грамах
-
-      const days = 30;
-      const totalFeedNeeded = dailyFeedKg * days; // скільки кг комбікорму треба на 30 днів
-
-      // читаємо рецепт (скільки кг кожного компонента в 25 кг)
-      const rows = document.querySelectorAll('#rows tr');
-      const recipe = {};
-      let totalQty = 0;
-
-      rows.forEach(row => {
-        const qtyCell = row.querySelector('.qty');
-        const priceInput = row.querySelector('.price');
-        if (!qtyCell || !priceInput) return;
-
-        const qty = parseFloat(qtyCell.textContent) || 0;
-        const key = priceInput.dataset.key || '';
-        if (!key) return;
-
-        recipe[key] = qty;
-        totalQty += qty;
-      });
-
-      const stockRows = document.querySelectorAll('#stockRows tr');
-      stockRows.forEach(row => {
-        const key = row.dataset.key;
-        const needSpan = row.querySelector('.need');
-        const buySpan = row.querySelector('.buy');
-        const stockInput = row.querySelector('.stock');
-
-        if (!key || !needSpan || !buySpan || !stockInput) return;
-
-        const haveKg = parseFloat(stockInput.value) || 0;
-
-        let needKg = 0;
-        if (totalFeedNeeded > 0 && totalQty > 0 && recipe[key] !== undefined) {
-          const ratio = recipe[key] / totalQty; // частка компонента в рецепті
-          needKg = totalFeedNeeded * ratio;
-        }
-
-        const toBuy = Math.max(needKg - haveKg, 0);
-
-        needSpan.textContent = needKg.toFixed(1);
-        buySpan.textContent = toBuy.toFixed(1);
-      });
-    }
-
-        // --- СКЛАД ГОТОВОГО КОМБІКОРМУ ---
-    function loadFeedReadyStock() {
-      const raw = localStorage.getItem('quailFeedReadyStock');
-      return raw ? (parseFloat(raw) || 0) : 0;
-    }
-
-    function saveFeedReadyStock(value) {
-      localStorage.setItem('quailFeedReadyStock', String(value));
-    }
-
-    function renderFeedReadyStock() {
-      const span = document.getElementById('feedReadyStock');
-      if (!span) return;
-      span.textContent = loadFeedReadyStock().toFixed(1);
-    }
-
-    function produceFeedBatch() {
-      const sizeInput = document.getElementById('feedBatchSize');
-      const batchSize = sizeInput ? (parseFloat(sizeInput.value) || 0) : 0;
-      if (batchSize <= 0) {
-        alert('Вкажи позитивну вагу партії, кг');
-        return;
-      }
-      const current = loadFeedReadyStock();
-      const total = current + batchSize;
-      saveFeedReadyStock(total);
-      renderFeedReadyStock();
-      updateWarnings();
-    }
-
-    function consumeDailyFeed() {
-      const birds = parseInt(document.getElementById('birds')?.value || '0') || 0;
-      const norm = parseFloat(document.getElementById('dailyNorm')?.value || '0') || 0;
-      const daily = birds * norm;
-      if (daily <= 0) {
-        alert('Невірно задані кількість птахів або добова норма.');
-        return;
-      }
-      let current = loadFeedReadyStock();
-      current -= daily;
-      if (current < 0) current = 0;
-      saveFeedReadyStock(current);
-      renderFeedReadyStock();
-      updateWarnings();
-    }
-
-
-        // --- ФІНАНСОВИЙ ЗВІТ ЗА ПЕРІОД ---
-    function recalcReport() {
-      const periodSelect = document.getElementById('reportPeriod');
-      if (!periodSelect) return;
-
-      const period = periodSelect.value; // "7", "30" або "all"
-      const log = loadLog();
-
-      // Якщо щоденник порожній — просто обнуляємо
-      if (!log.length) {
-        document.getElementById('repDays').textContent = '0';
-        document.getElementById('repEggs').textContent = '0';
-        document.getElementById('repTrays').textContent = '0';
-        document.getElementById('repIncome').textContent = '0.00';
-        document.getElementById('repFeedCost').textContent = '0.00';
-        document.getElementById('repProfit').textContent = '0.00';
-        document.getElementById('repProdAvg').textContent = '0.0';
-        document.getElementById('repCostPerEgg').textContent = '0.000';
-        document.getElementById('repProfitPerEgg').textContent = '0.000';
-        document.getElementById('repProfitPerHen').textContent = '0.00';
-        return;
-      }
-
-      const today = new Date();
-      let fromDate = null;
-
-      if (period !== 'all') {
-        const days = parseInt(period, 10) || 0;
-        // напр. останні 7 днів: today-6 ... today
-        fromDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - days + 1);
-      }
-
-      let daysCount = 0;
-      let eggs = 0;
-      let trays = 0;
-      let income = 0;
-      let feedCost = 0;
-      let profit = 0;
-
-      let prodSum = 0;
-      let prodCount = 0;
-
-      log.forEach(entry => {
-        if (!entry.date) return;
-        const d = new Date(entry.date);
-        if (isNaN(d)) return;
-
-        if (fromDate && d < fromDate) return;
-
-        daysCount++;
-        eggs += entry.eggsTotal || 0;
-        trays += entry.trays || 0;
-        income += entry.income || 0;
-        feedCost += entry.dailyCost || 0;
-
-        // якщо в записі нема profit — перерахуємо
-        const p = (typeof entry.profit === 'number')
-          ? entry.profit
-          : (entry.income || 0) - (entry.dailyCost || 0);
-        profit += p;
-
-        if (typeof entry.productivity === 'number') {
-          prodSum += entry.productivity;
-          prodCount++;
-        }
-      });
-
-      const prodAvg = prodCount ? (prodSum / prodCount) : 0;
-      const costPerEgg = eggs > 0 ? (feedCost / eggs) : 0;
-      const profitPerEgg = eggs > 0 ? (profit / eggs) : 0;
-      const otherInput = document.getElementById('otherCostsMonthly');
-      const otherMonthly = otherInput ? (parseFloat(otherInput.value) || 0) : 0;
-      let otherCostPeriod = 0;
-      if (daysCount > 0 && otherMonthly > 0) {
-      otherCostPeriod = otherMonthly * (daysCount / 30);
-      }
-
-      const fullCostPerEgg = eggs > 0 ? ((feedCost + otherCostPeriod) / eggs) : 0;
-      const profitPerEggFull = eggs > 0 ? ((income - feedCost - otherCostPeriod) / eggs) : 0;
-
-
-      const hens1El = document.getElementById('hens1');
-      const hens2El = document.getElementById('hens2');
-      const hensTotal = (parseInt(hens1El ? hens1El.value : '0') || 0) +
-                        (parseInt(hens2El ? hens2El.value : '0') || 0);
-      const profitPerHen = hensTotal > 0 ? (profit / hensTotal) : 0;
-
-      document.getElementById('repDays').textContent = daysCount.toString();
-      document.getElementById('repEggs').textContent = eggs.toString();
-      document.getElementById('repTrays').textContent = trays.toString();
-      document.getElementById('repIncome').textContent = income.toFixed(2);
-      document.getElementById('repFeedCost').textContent = feedCost.toFixed(2);
-      document.getElementById('repProfit').textContent = profit.toFixed(2);
-      document.getElementById('repProdAvg').textContent = prodAvg.toFixed(1);
-      document.getElementById('repCostPerEgg').textContent = costPerEgg.toFixed(3);
-      document.getElementById('repProfitPerEgg').textContent = profitPerEgg.toFixed(3);
-      document.getElementById('repProfitPerHen').textContent = profitPerHen.toFixed(2);
-      document.getElementById('repOtherCost').textContent = otherCostPeriod.toFixed(2);
-      document.getElementById('repFullCostPerEgg').textContent = fullCostPerEgg.toFixed(3);
-      document.getElementById('repProfitPerEggFull').textContent = profitPerEggFull.toFixed(3);
-// Прогноз на 30 днів рахується окремо при загальному перерахунку      recalcForecast30();
-
-    }
-
-
-    // --- РОЗРАХУНОК ЯЄЦЬ ---
-    function recalcEggs() {
-  const eggsTotal = parseInt(document.getElementById('eggsTotal').value) || 0;
-  const eggsBad = parseInt(document.getElementById('eggsBad').value) || 0;
-  const eggsOwn = parseInt(document.getElementById('eggsOwn').value) || 0;
-  const trayPrice = parseFloat(document.getElementById('trayPrice').value) || 0;
-  const eggsCarry = parseInt(document.getElementById('eggsCarry').value) || 0;
-
-  // Яйця, які з'явилися СЬОГОДНІ для продажу
-  const eggsForSaleToday = Math.max(eggsTotal - eggsBad - eggsOwn, 0);
-
-  // Усього яєць, доступних для продажу з урахуванням залишку
-  const eggsForSaleTotal = Math.max(eggsCarry + eggsForSaleToday, 0);
-
-  const trays = Math.floor(eggsForSaleTotal / 20);
-  const income = trays * trayPrice;
-  const remainder = eggsForSaleTotal - trays * 20;
-
-  document.getElementById('eggsForSale').textContent = eggsForSaleToday;
-  document.getElementById('eggsForSaleTotal').textContent = eggsForSaleTotal;
-  document.getElementById('traysCount').textContent = trays;
-  document.getElementById('eggsRemainder').textContent = remainder;
-  document.getElementById('income').textContent = income.toFixed(2);
-
-  // Продуктивність по стаду
-  const hens1 = parseInt(document.getElementById('hens1').value) || 0;
-  const hens2 = parseInt(document.getElementById('hens2').value) || 0;
-  const hensTotal = hens1 + hens2;
-  const productivity = hensTotal > 0 ? (eggsTotal / hensTotal) * 100 : 0;
-
-  document.getElementById('hensTotal').textContent = hensTotal;
-  document.getElementById('productivityToday').textContent = productivity.toFixed(1);
+    const el = document.getElementById(id);
+    return el ? parseFloat(el.value) || 0 : 0;
 }
 
-    // --- ПІДСУМОК ДНЯ ---
-    function recalcSummary() {
-      const dailyCost = parseFloat(document.getElementById('dailyCost').textContent) || 0;
-      const income = parseFloat(document.getElementById('income').textContent) || 0;
-      const profit = income - dailyCost;
-
-      document.getElementById('summaryFeedCost').textContent = dailyCost.toFixed(2);
-      document.getElementById('summaryEggIncome').textContent = income.toFixed(2);
-      document.getElementById('summaryProfit').textContent = profit.toFixed(2);
-    }
-
-    // --- ПІДСУМОК ЛОТКІВ ---
-    function updateTrayStats() {
-      const totalTraysToday = parseInt(document.getElementById('traysCount').textContent) || 0;
-      const orders = loadOrders();
-      let reserved = 0;
-      orders.forEach(o => {
-        if (!o.done) {
-          reserved += o.trays;
-        }
-      });
-      document.getElementById('totalTraysTodayLabel').textContent = totalTraysToday;
-      document.getElementById('reservedTrays').textContent = reserved;
-      const free = Math.max(totalTraysToday - reserved, 0);
-      document.getElementById('freeTrays').textContent = free;
-    }
-
-      function recalcAll() {
-      recalcFeed();
-      recalcEggs();
-      recalcSummary();
-      updateTrayStats();
-      recalcStocks();
-      recalcReport();
-      updateDashboard();
-      updateWarnings();
-      renderCharts();
-      recalcFlocksPassport();
-      recalcForecast30();
-    }
-
-      function updateOrdersSummary() {
-      const orders = loadOrders();
-      let activeCount = 0, doneCount = 0;
-      let activeTrays = 0, doneTrays = 0;
-
-      orders.forEach(o => {
-        if (o.done) {
-          doneCount++;
-          doneTrays += o.trays || 0;
-        } else {
-          activeCount++;
-          activeTrays += o.trays || 0;
-        }
-      });
-
-      const aC = document.getElementById('ordersActiveCount');
-      const dC = document.getElementById('ordersDoneCount');
-      const aT = document.getElementById('ordersActiveTrays');
-      const dT = document.getElementById('ordersDoneTrays');
-
-      if (aC) aC.textContent = activeCount;
-      if (dC) dC.textContent = doneCount;
-      if (aT) aT.textContent = activeTrays;
-      if (dT) dT.textContent = doneTrays;
-    }
-
-    
-    // --- ГОЛОВНА ПАНЕЛЬ ---
-    function updateDashboard() {
-      const eggsInput = document.getElementById('eggsTotal');
-      const eggsToday = eggsInput ? (parseInt(eggsInput.value) || 0) : 0;
-
-      const freeTraysSpan = document.getElementById('freeTrays');
-      const freeTrays = freeTraysSpan ? (parseInt(freeTraysSpan.textContent) || 0) : 0;
-
-      const orders = typeof loadOrders === 'function' ? loadOrders() : [];
-      const activeOrders = orders.filter(o => !o.done).length;
-
-      const prodSpan = document.getElementById('repProdAvg');
-      const prodAvg = prodSpan ? (parseFloat(prodSpan.textContent) || 0) : 0;
-
-      const dEggs = document.getElementById('dashEggsToday');
-      const dFree = document.getElementById('dashFreeTrays');
-      const dAct = document.getElementById('dashActiveOrders');
-      const dProd = document.getElementById('dashProdAvg');
-
-      if (dEggs) dEggs.textContent = eggsToday;
-      if (dFree) dFree.textContent = freeTrays;
-      if (dAct) dAct.textContent = activeOrders;
-      if (dProd) dProd.textContent = prodAvg.toFixed(1);
-    }
-
-      // --- ПОПЕРЕДЖЕННЯ ---
-      function updateWarnings() {
-      const container = document.getElementById('topWarnings');
-      if (!container) return;
-      container.innerHTML = '';
-
-      function addWarn(text, type) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        div.className = 'warn-item ' + (type || 'warn-warn');
-        container.appendChild(div);
-      }
-
-      // 1) Несучість
-      const prodSpan = document.getElementById('repProdAvg');
-      const prodAvg = prodSpan ? (parseFloat(prodSpan.textContent) || 0) : 0;
-      if (prodAvg > 0 && prodAvg < 70) {
-        addWarn('⚠ Несучість за період нижча 70%. Перевір корм / світло / температуру.', 'warn-bad');
-      }
-
-      // 2) Лотки vs замовлення
-      const totalTraysToday = parseInt(document.getElementById('traysCount')?.textContent || '0') || 0;
-      const reservedTrays = parseInt(document.getElementById('reservedTrays')?.textContent || '0') || 0;
-      if (reservedTrays > totalTraysToday) {
-        addWarn('⚠ Замовлень більше, ніж доступних лотків сьогодні. Перевір план відвантаження.', 'warn-bad');
-      }
-
-      // 3) Корм/компоненти – якщо у тебе є блок "Запаси", можна тут додати перевірки
-
-      const readyStock = loadFeedReadyStock ? loadFeedReadyStock() : 0;
-      const birds = parseInt(document.getElementById('birds')?.value || '0') || 0;
-      const norm = parseFloat(document.getElementById('dailyNorm')?.value || '0') || 0;
-      const daily = birds * norm;
-      if (daily > 0 && readyStock > 0 && readyStock < daily * 3) {
-        addWarn('⚠ Готового комбікорму менше ніж на 3 дні.', 'warn-warn');
-      }
-      
-      // 4) Якщо сьогодні яєць 0, а самки є
-      const eggsToday = parseInt(document.getElementById('eggsTotal')?.value || '0') || 0;
-      const hensTotal = parseInt(document.getElementById('hensTotal')?.textContent || '0') || 0;
-      if (hensTotal > 0 && eggsToday === 0) {
-        addWarn('Сьогодні не внесено яєць або реально 0. Перевір, чи все гаразд з записами / стадо не зупинилось.', 'warn-warn');
-      }
-
-      
-      if (container.innerHTML === '') {
-        addWarn('Все виглядає нормально 👍', 'warn-ok');
-      }
-    }
-
-
-       // --- АВТОЗБЕРЕЖЕННЯ ---
-    function saveState() {
-      const state = {
-        prices: {},
-        stocks: {},
-        birds: document.getElementById('birds').value,
-        dailyNorm: document.getElementById('dailyNorm').value,
-        eggsTotal: document.getElementById('eggsTotal').value,
-        eggsBad: document.getElementById('eggsBad').value,
-        eggsOwn: document.getElementById('eggsOwn').value,
-        trayPrice: document.getElementById('trayPrice').value,
-        logDate: document.getElementById('logDate').value,
-        logNote: document.getElementById('logNote').value,
-        orderCustomer: document.getElementById('orderCustomer').value,
-        orderTrays: document.getElementById('orderTrays').value,
-        orderNote: document.getElementById('orderNote').value,
-        hens1: document.getElementById('hens1') ? document.getElementById('hens1').value : '',
-        hens2: document.getElementById('hens2') ? document.getElementById('hens2').value : '',
-        eggsCarry: document.getElementById('eggsCarry') ? document.getElementById('eggsCarry').value : '',
-        reportPeriod: document.getElementById('reportPeriod') ? document.getElementById('reportPeriod').value : '30',
-        recipePreset: document.getElementById('recipePreset') ? document.getElementById('recipePreset').value : 'universal',
-        otherCostsMonthly: document.getElementById('otherCostsMonthly').value
-
-      };
-
-
-      // ціни
-      document.querySelectorAll('.price').forEach(input => {
-        const key = input.dataset.key || '';
-        if (key) {
-          state.prices[key] = input.value;
-        }
-      });
-
-      // запаси
-      document.querySelectorAll('.stock').forEach(input => {
-        const key = input.dataset.key || '';
-        if (key) {
-          state.stocks[key] = input.value;
-        }
-      });
-
-      localStorage.setItem('quailCalcState', JSON.stringify(state));
-    }
-
-
-       function loadState() {
-      const raw = localStorage.getItem('quailCalcState');
-      if (!raw) return;
-      try {
-        const state = JSON.parse(raw);
-
-        // ціни
-        if (state.prices) {
-          document.querySelectorAll('.price').forEach(input => {
-            const key = input.dataset.key || '';
-            if (key && state.prices[key] !== undefined) {
-              input.value = state.prices[key];
-            }
-          });
-        }
-
-        // ЗАПАСИ
-        if (state.stocks) {
-          document.querySelectorAll('.stock').forEach(input => {
-            const key = input.dataset.key || '';
-            if (key && state.stocks[key] !== undefined) {
-              input.value = state.stocks[key];
-            }
-          });
-        }
-
-        if (state.birds !== undefined) document.getElementById('birds').value = state.birds;
-        if (state.dailyNorm !== undefined) document.getElementById('dailyNorm').value = state.dailyNorm;
-        if (state.eggsTotal !== undefined) document.getElementById('eggsTotal').value = state.eggsTotal;
-        if (state.eggsBad !== undefined) document.getElementById('eggsBad').value = state.eggsBad;
-        if (state.eggsOwn !== undefined) document.getElementById('eggsOwn').value = state.eggsOwn;
-        if (state.trayPrice !== undefined) document.getElementById('trayPrice').value = state.trayPrice;
-        if (state.hens1 !== undefined && document.getElementById('hens1')) document.getElementById('hens1').value = state.hens1;
-        if (state.hens2 !== undefined && document.getElementById('hens2')) document.getElementById('hens2').value = state.hens2;
-        if (state.eggsCarry !== undefined && document.getElementById('eggsCarry')) document.getElementById('eggsCarry').value = state.eggsCarry;
-
-        if (state.logDate !== undefined) document.getElementById('logDate').value = state.logDate;
-        if (state.logNote !== undefined) document.getElementById('logNote').value = state.logNote;
-        if (state.orderCustomer !== undefined) document.getElementById('orderCustomer').value = state.orderCustomer;
-        if (state.orderTrays !== undefined) document.getElementById('orderTrays').value = state.orderTrays;
-        if (state.orderNote !== undefined) document.getElementById('orderNote').value = state.orderNote;   
-        if (state.otherCostsMonthly) {
-        document.getElementById('otherCostsMonthly').value = state.otherCostsMonthly;
-        }
-        if (state.reportPeriod !== undefined && document.getElementById('reportPeriod')) {
-        document.getElementById('reportPeriod').value = state.reportPeriod;
-        }
-      } catch (e) {
-        console.error('Помилка читання стану', e);
-      }
-    }
-
-
-    // --- ЩОДЕННИК ---
-    function loadLog() {
-      const raw = localStorage.getItem('quailCalcLog');
-      if (!raw) return [];
-      try {
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr : [];
-      } catch (e) {
-        console.error('Помилка читання логів', e);
-        return [];
-      }
-    }
-    
-    function saveData(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
+function saveData(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
 }
+
 function loadData(key, fallback = []) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-   function saveLog(log){ saveData('quailCalcLog', log); }
-function loadLog(){ return loadData('quailCalcLog', []); }
-function saveOrders(o){ saveData('quailCalcOrders', o); }
-function loadOrders(){ return loadData('quailCalcOrders', []); }
-function saveIncubations(i){ saveData('quailCalcInc', i); }
-function loadIncubations(){ return loadData('quailCalcInc', []); }
-
-        function renderLog() {
-      const log = loadLog();
-      const tbody = document.getElementById('logTableBody');
-      tbody.innerHTML = '';
-
-      log.forEach((entry, index) => {
-        const tr = document.createElement('tr');
-
-        const tdDate = document.createElement('td');
-        tdDate.textContent = entry.date || '';
-        tr.appendChild(tdDate);
-
-        const tdEggsTotal = document.createElement('td');
-        tdEggsTotal.textContent = entry.eggsTotal != null ? entry.eggsTotal : '';
-        tr.appendChild(tdEggsTotal);
-
-        const tdHensTotal = document.createElement('td');
-        tdHensTotal.textContent = entry.hensTotal != null ? entry.hensTotal : '';
-        tr.appendChild(tdHensTotal);
-
-        const tdProd = document.createElement('td');
-        if (typeof entry.productivity === 'number') {
-          tdProd.textContent = entry.productivity.toFixed(1);
-        } else {
-          tdProd.textContent = '';
-        }
-        tr.appendChild(tdProd);
-
-        const tdEggsForSaleToday = document.createElement('td');
-        tdEggsForSaleToday.textContent =
-          entry.eggsForSaleToday != null
-            ? entry.eggsForSaleToday
-            : (entry.eggsForSale != null ? entry.eggsForSale : '');
-        tr.appendChild(tdEggsForSaleToday);
-
-        const tdEggsForSaleTotal = document.createElement('td');
-        if (entry.eggsForSaleTotal != null) {
-          tdEggsForSaleTotal.textContent = entry.eggsForSaleTotal;
-        } else {
-          tdEggsForSaleTotal.textContent = '';
-        }
-        tr.appendChild(tdEggsForSaleTotal);
-
-        const tdTrays = document.createElement('td');
-        tdTrays.textContent = entry.trays != null ? entry.trays : '';
-        tr.appendChild(tdTrays);
-
-        const tdIncome = document.createElement('td');
-        tdIncome.textContent =
-          typeof entry.income === 'number' ? entry.income.toFixed(2) : '';
-        tr.appendChild(tdIncome);
-
-        const tdDailyCost = document.createElement('td');
-        tdDailyCost.textContent =
-          typeof entry.dailyCost === 'number' ? entry.dailyCost.toFixed(2) : '';
-        tr.appendChild(tdDailyCost);
-
-        const tdProfit = document.createElement('td');
-        tdProfit.textContent =
-          typeof entry.profit === 'number' ? entry.profit.toFixed(2) : '';
-        tr.appendChild(tdProfit);
-
-        const tdNote = document.createElement('td');
-        tdNote.textContent = entry.note || '';
-        tr.appendChild(tdNote);
-
-        const tdDel = document.createElement('td');
-        const btn = document.createElement('button');
-        btn.textContent = '×';
-        btn.className = 'btn btn-danger btn-small';
-        btn.onclick = function () {
-        const current = loadLog();
-        current.splice(index, 1);
-        saveLog(current);
-        renderLog();
-        recalcReport();
-        };
-        tdDel.appendChild(btn);
-        tr.appendChild(tdDel);
-
-        tbody.appendChild(tr);
-      });
+    try {
+        return JSON.parse(localStorage.getItem(key)) || fallback;
+    } catch {
+        return fallback;
     }
-    
-        // --- ГРАФІКИ НЕСУЧОСТІ ТА ПРОДАЖІВ ---
-
-    function renderCharts() {
-      const log = loadLog();
-      if (!log.length) return;
-
-      // беремо максимум 14 останніх записів
-      const data = log.slice(-14);
-      const labels = data.map(e => e.date || '');
-      const prod = data.map(e => typeof e.productivity === 'number' ? e.productivity : null);
-      const trays = data.map(e => e.trays != null ? e.trays : null);
-      const income = data.map(e => typeof e.income === 'number' ? e.income : null);
-
-      drawLineChart('chartProductivity', labels, prod, 'Несучість, %');
-      drawTwoSeriesChart('chartSales', labels, trays, income, 'Лотки', 'Виручка, грн');
-    }
-
-    function drawLineChart(canvasId, labels, values, labelY) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas || !canvas.getContext) return;
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width = canvas.clientWidth;
-      const h = canvas.height;
-
-      ctx.clearRect(0, 0, w, h);
-
-      const valid = values.filter(v => typeof v === 'number');
-      if (!valid.length) return;
-
-      const min = Math.min.apply(null, valid);
-      const max = Math.max.apply(null, valid);
-      const padding = 25;
-      const xStep = (w - padding * 2) / Math.max(values.length - 1, 1);
-
-      function yScale(v) {
-        if (max === min) return h / 2;
-        return padding + (h - padding * 2) * (1 - (v - min) / (max - min));
-      }
-
-      // Осі
-      ctx.strokeStyle = '#ccc';
-      ctx.beginPath();
-      ctx.moveTo(padding, padding);
-      ctx.lineTo(padding, h - padding);
-      ctx.lineTo(w - padding, h - padding);
-      ctx.stroke();
-
-      // Лінія
-      ctx.strokeStyle = '#0077cc';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      values.forEach((v, i) => {
-        if (typeof v !== 'number') return;
-        const x = padding + xStep * i;
-        const y = yScale(v);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Точки
-      ctx.fillStyle = '#0077cc';
-      values.forEach((v, i) => {
-        if (typeof v !== 'number') return;
-        const x = padding + xStep * i;
-        const y = yScale(v);
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Підписи по X
-      ctx.fillStyle = '#666';
-      ctx.font = '10px Arial';
-      labels.forEach((lbl, i) => {
-        const x = padding + xStep * i;
-        ctx.fillText(lbl.slice(5), x - 12, h - 8); // показуємо тільки ММ-ДД
-      });
-
-      // Підпис осі Y
-      ctx.fillText(labelY, 5, 10);
-    }
-
-    function drawTwoSeriesChart(canvasId, labels, series1, series2, label1, label2) {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas || !canvas.getContext) return;
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width = canvas.clientWidth;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      const valid1 = series1.filter(v => typeof v === 'number');
-      const valid2 = series2.filter(v => typeof v === 'number');
-      if (!valid1.length && !valid2.length) return;
-
-      const min = 0;
-      const max = Math.max(
-        valid1.length ? Math.max.apply(null, valid1) : 0,
-        valid2.length ? Math.max.apply(null, valid2) : 0
-      );
-      const padding = 25;
-      const xStep = (w - padding * 2) / Math.max(labels.length - 1, 1);
-
-      function yScale(v) {
-        if (max === min) return h / 2;
-        return padding + (h - padding * 2) * (1 - (v - min) / (max - min));
-      }
-
-      // Осі
-      ctx.strokeStyle = '#ccc';
-      ctx.beginPath();
-      ctx.moveTo(padding, padding);
-      ctx.lineTo(padding, h - padding);
-      ctx.lineTo(w - padding, h - padding);
-      ctx.stroke();
-
-      // 1-ша серія – стовпчики (лотки)
-      ctx.fillStyle = '#3399ff';
-      series1.forEach((v, i) => {
-        if (typeof v !== 'number') return;
-        const x = padding + xStep * i - 5;
-        const y = yScale(v);
-        const barH = (h - padding) - y;
-        ctx.fillRect(x, y, 10, barH);
-      });
-
-      // 2-га серія – лінія (виручка)
-      ctx.strokeStyle = '#ff6600';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      series2.forEach((v, i) => {
-        if (typeof v !== 'number') return;
-        const x = padding + xStep * i;
-        const y = yScale(v);
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Легенда
-      ctx.fillStyle = '#333';
-      ctx.font = '10px Arial';
-      ctx.fillText(label1, padding + 5, padding + 10);
-      ctx.fillText(label2, padding + 85, padding + 10);
-
-      // X-labels
-      ctx.fillStyle = '#666';
-      labels.forEach((lbl, i) => {
-        const x = padding + xStep * i;
-        ctx.fillText(lbl.slice(5), x - 12, h - 8);
-      });
-    }
-
-        function addToLog() {
-      const date = document.getElementById('logDate').value ||
-        new Date().toISOString().slice(0, 10);
-      const note = document.getElementById('logNote').value || '';
-
-      const eggsTotal = parseInt(document.getElementById('eggsTotal').value) || 0;
-      const eggsForSaleToday = parseInt(document.getElementById('eggsForSale').textContent) || 0;
-      const eggsForSaleTotal = parseInt(document.getElementById('eggsForSaleTotal').textContent) || eggsForSaleToday;
-      const trays = parseInt(document.getElementById('traysCount').textContent) || 0;
-      const income = parseFloat(document.getElementById('income').textContent) || 0;
-      const dailyCost = parseFloat(document.getElementById('dailyCost').textContent) || 0;
-      const profit = income - dailyCost;
-
-      const hens1 = parseInt(document.getElementById('hens1').value) || 0;
-      const hens2 = parseInt(document.getElementById('hens2').value) || 0;
-      const hensTotal = hens1 + hens2;
-      const productivity = hensTotal > 0 ? (eggsTotal / hensTotal) * 100 : 0;
-
-      const log = loadLog();
-      log.push({
-        date,
-        eggsTotal,
-        eggsForSaleToday,
-        eggsForSaleTotal,
-        trays,
-        income,
-        dailyCost,
-        profit,
-        hensTotal,
-        productivity,
-        note
-      });
-      saveLog(log);
-      renderLog();
-      recalcReport();
-      renderCharts();
-
-      // Оновлюємо залишок яєць на наступний день
-      document.getElementById('eggsCarry').value = eggsForSaleTotal;
-      saveState();
-    }
-
-    function clearLog() {
-      if (!confirm('Точно очистити весь щоденник?')) return;
-      localStorage.removeItem('quailCalcLog');
-      renderLog();
-      recalcReport();
-    }
-
-          // --- ЕКСПОРТ / ІМПОРТ ДАНИХ ---
-// Формуємо один об'єкт-бекап з усіх даних
-    function buildBackupObject() {
-      const stateRaw  = localStorage.getItem('quailCalcState')      || '{}';
-      const logRaw    = localStorage.getItem('quailCalcLog')        || '[]';
-      const ordersRaw = localStorage.getItem('quailOrders')         || '[]';
-      const incRaw    = localStorage.getItem('quailIncubations')    || '[]';
-
-      return {
-        state:        JSON.parse(stateRaw),
-        log:          JSON.parse(logRaw),
-        orders:       JSON.parse(ordersRaw),
-        incubations:  JSON.parse(incRaw)
-      };
-    }
-
-    // Застосувати бекап до локального сховища і оновити інтерфейс
-    function applyBackupObject(backup) {
-      if (backup.state) {
-        localStorage.setItem('quailCalcState', JSON.stringify(backup.state));
-      }
-      if (backup.log) {
-        localStorage.setItem('quailCalcLog', JSON.stringify(backup.log));
-      }
-      if (backup.orders) {
-        localStorage.setItem('quailOrders', JSON.stringify(backup.orders));
-      }
-      if (backup.incubations) {
-        localStorage.setItem('quailIncubations', JSON.stringify(backup.incubations));
-      }
-
-      // оновлюємо все, що є в калькуляторі
-      loadState();
-      renderLog();
-      renderOrders();
-      recalcAll();
-      renderIncubations();
-      if (typeof renderClientsSummary === 'function') {
-        renderClientsSummary();
-      }
-      alert('Дані успішно відновлено.');
-    }
-
-    // Експорт у текстове поле
-    function backupExport() {
-      const backup = buildBackupObject();
-      document.getElementById('backupArea').value =
-        JSON.stringify(backup, null, 2);
-    }
-
-    // Імпорт із текстового поля
-    function backupImport() {
-      const txt = document.getElementById('backupArea').value.trim();
-      if (!txt) {
-        alert('Встав сюди дані для імпорту.');
-        return;
-      }
-      try {
-        const backup = JSON.parse(txt);
-        applyBackupObject(backup);
-      } catch (e) {
-        console.error(e);
-        alert('Не вдалось прочитати дані. Перевір формат.');
-      }
-    }
-
-    // --- ЗАМОВЛЕННЯ ---
-    function loadOrders() {
-      const raw = localStorage.getItem('quailOrders');
-      if (!raw) return [];
-      try {
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr : [];
-      } catch (e) {
-        console.error('Помилка читання замовлень', e);
-        return [];
-      }
-    }
-
-    function renderOrders() {
-      const orders = loadOrders();
-      const bodyActive = document.getElementById('ordersActiveBody');
-      const bodyDone = document.getElementById('ordersDoneBody');
-      bodyActive.innerHTML = '';
-      bodyDone.innerHTML = '';
-
-      orders.forEach((order, index) => {
-        const tr = document.createElement('tr');
-
-        const tdCustomer = document.createElement('td');
-        tdCustomer.textContent = order.customer || '';
-        tr.appendChild(tdCustomer);
-
-        const tdEggs = document.createElement('td');
-        tdEggs.textContent = order.eggs;
-        tr.appendChild(tdEggs);
-
-        const tdTrays = document.createElement('td');
-        tdTrays.textContent = order.trays;
-        tr.appendChild(tdTrays);
-
-        const tdDate = document.createElement('td');
-        tdDate.textContent = order.date || '';
-        tr.appendChild(tdDate);
-
-        const tdNote = document.createElement('td');
-        tdNote.textContent = order.note || '';
-        tr.appendChild(tdNote);
-
-        const tdStatus = document.createElement('td');
-        tdStatus.textContent = order.done ? 'Виконано' : 'Активне';
-        tr.appendChild(tdStatus);
-
-        const tdActions = document.createElement('td');
-
-        if (!order.done) {
-          const btnDone = document.createElement('button');
-          btnDone.textContent = 'Виконано';
-          btnDone.className = 'btn btn-small';
-          btnDone.onclick = function () {
-            const current = loadOrders();
-            if (current[index]) {
-              current[index].done = true;
-              saveOrders(current);
-              renderOrders();
-            }
-          };
-          tdActions.appendChild(btnDone);
-
-          const btnDel = document.createElement('button');
-          btnDel.textContent = '×';
-          btnDel.className = 'btn btn-danger btn-small';
-          btnDel.style.marginLeft = '4px';
-          btnDel.onclick = function () {
-            const current = loadOrders();
-            current.splice(index, 1);
-            saveOrders(current);
-            renderOrders();
-          };
-          tdActions.appendChild(btnDel);
-
-          tr.appendChild(tdActions);
-          bodyActive.appendChild(tr);
-        } else {
-          const btnDel = document.createElement('button');
-          btnDel.textContent = '×';
-          btnDel.className = 'btn btn-danger btn-small';
-          btnDel.onclick = function () {
-            const current = loadOrders();
-            current.splice(index, 1);
-            saveOrders(current);
-            renderOrders();
-          };
-          tdActions.appendChild(btnDel);
-          tr.appendChild(tdActions);
-          bodyDone.appendChild(tr);
-        }
-      });
-
-      updateTrayStats();
-      updateOrdersSummary();
-      updateDashboard();
-      updateWarnings();
-      renderClientsSummary();
-      
-      
-    }
-
-    // --- ЗВЕДЕННЯ ПО КЛІЄНТАХ ---
-    function renderClientsSummary() {
-      const tbody = document.getElementById('clientsBody');
-      if (!tbody) return;
-
-      const orders = loadOrders();
-      const map = {};
-
-      orders.forEach(order => {
-        const name = (order.customer || 'Без імені').trim() || 'Без імені';
-        if (!map[name]) {
-          map[name] = {
-            ordersCount: 0,
-            trays: 0,
-            eggs: 0,
-            amount: 0,
-            lastDate: ''
-          };
-        }
-        const rec = map[name];
-        rec.ordersCount += 1;
-        const trays = order.trays || 0;
-        const eggs = order.eggs || (trays * 20);
-        rec.trays += trays;
-        rec.eggs += eggs;
-        rec.amount += (order.amount || 0);
-
-        if (order.date) {
-          if (!rec.lastDate) {
-            rec.lastDate = order.date;
-          } else {
-            // просте порівняння рядків YYYY-MM-DD
-            if (order.date > rec.lastDate) {
-              rec.lastDate = order.date;
-            }
-          }
-        }
-      });
-
-      tbody.innerHTML = '';
-
-      Object.keys(map).forEach(name => {
-        const rec = map[name];
-        const tr = document.createElement('tr');
-
-        const tdName = document.createElement('td');
-        tdName.textContent = name;
-        tr.appendChild(tdName);
-
-        const tdCnt = document.createElement('td');
-        tdCnt.textContent = rec.ordersCount;
-        tr.appendChild(tdCnt);
-
-        const tdTrays = document.createElement('td');
-        tdTrays.textContent = rec.trays;
-        tr.appendChild(tdTrays);
-
-        const tdEggs = document.createElement('td');
-        tdEggs.textContent = rec.eggs;
-        tr.appendChild(tdEggs);
-
-        const tdAmount = document.createElement('td');
-        tdAmount.textContent = rec.amount.toFixed(2);
-        tr.appendChild(tdAmount);
-
-        const tdLast = document.createElement('td');
-        tdLast.textContent = rec.lastDate || '';
-        tr.appendChild(tdLast);
-
-        tbody.appendChild(tr);
-      });
-    }
-    
-        // --- ІНКУБАЦІЯ ---
-    function loadIncubations() {
-      const raw = localStorage.getItem('quailIncubations');
-      if (!raw) return [];
-      try {
-        const arr = JSON.parse(raw);
-        return Array.isArray(arr) ? arr : [];
-      } catch (e) {
-        console.error('Помилка читання інкубацій', e);
-        return [];
-      }
-    }
-
-
-    function addIncubation() {
-      const nameEl = document.getElementById('incBatchName');
-      const dateEl = document.getElementById('incStartDate');
-      const eggsEl = document.getElementById('incEggsSet');
-      const noteEl = document.getElementById('incNote');
-
-      if (!nameEl || !dateEl || !eggsEl) return;
-
-      const name = (nameEl.value || '').trim() || 'Без назви';
-      const startDate = dateEl.value || new Date().toISOString().slice(0, 10);
-      const eggsSet = parseInt(eggsEl.value) || 0;
-      const note = noteEl ? noteEl.value : '';
-
-      const list = loadIncubations();
-      list.push({
-        id: Date.now(),
-        name,
-        startDate,
-        eggsSet,
-        infertile: 0,
-        hatched: 0,
-        diedIncubator: 0,
-        diedBrooder: 0,
-        note
-      });
-
-      saveIncubations(list);
-      renderIncubations();
-
-      // очистити форму
-      nameEl.value = '';
-      eggsEl.value = '0';
-      if (noteEl) noteEl.value = '';
-    }
-
-    function renderIncubations() {
-      const tbody = document.getElementById('incubationBody');
-      if (!tbody) return;
-
-      const list = loadIncubations();
-      tbody.innerHTML = '';
-      const today = new Date();
-
-      list.forEach((batch, index) => {
-        const tr = document.createElement('tr');
-
-        const tdName = document.createElement('td');
-        tdName.textContent = batch.name || '';
-        tr.appendChild(tdName);
-
-        const tdDate = document.createElement('td');
-        tdDate.textContent = batch.startDate || '';
-        tr.appendChild(tdDate);
-
-        const tdDays = document.createElement('td');
-        let daysStr = '';
-        if (batch.startDate) {
-          const d = new Date(batch.startDate);
-          if (!isNaN(d)) {
-            const diffMs = today - d;
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
-            daysStr = diffDays.toString();
-          }
-        }
-        tdDays.textContent = daysStr;
-        tr.appendChild(tdDays);
-
-        const tdEggsSet = document.createElement('td');
-        tdEggsSet.textContent = batch.eggsSet != null ? batch.eggsSet : '';
-        tr.appendChild(tdEggsSet);
-
-        // Незапліднені
-        const tdInf = document.createElement('td');
-        const infInput = document.createElement('input');
-        infInput.type = 'number';
-        infInput.step = '1';
-        infInput.style.width = '70px';
-        infInput.value = batch.infertile != null ? batch.infertile : 0;
-        infInput.addEventListener('input', function () {
-          const list2 = loadIncubations();
-          if (list2[index]) {
-            list2[index].infertile = parseInt(this.value) || 0;
-            saveIncubations(list2);
-            renderIncubations();
-          }
-        });
-        tdInf.appendChild(infInput);
-        tr.appendChild(tdInf);
-
-        // Вилупилося
-        const tdHatch = document.createElement('td');
-        const hatchInput = document.createElement('input');
-        hatchInput.type = 'number';
-        hatchInput.step = '1';
-        hatchInput.style.width = '70px';
-        hatchInput.value = batch.hatched != null ? batch.hatched : 0;
-        hatchInput.addEventListener('input', function () {
-          const list2 = loadIncubations();
-          if (list2[index]) {
-            list2[index].hatched = parseInt(this.value) || 0;
-            saveIncubations(list2);
-            renderIncubations();
-          }
-        });
-        tdHatch.appendChild(hatchInput);
-        tr.appendChild(tdHatch);
-
-        // Померли в інкубаторі
-        const tdDeadInc = document.createElement('td');
-        const deadIncInput = document.createElement('input');
-        deadIncInput.type = 'number';
-        deadIncInput.step = '1';
-        deadIncInput.style.width = '70px';
-        deadIncInput.value = batch.diedIncubator != null ? batch.diedIncubator : 0;
-        deadIncInput.addEventListener('input', function () {
-          const list2 = loadIncubations();
-          if (list2[index]) {
-            list2[index].diedIncubator = parseInt(this.value) || 0;
-            saveIncubations(list2);
-            renderIncubations();
-          }
-        });
-        tdDeadInc.appendChild(deadIncInput);
-        tr.appendChild(tdDeadInc);
-
-        // Померли в брудері
-        const tdDeadBr = document.createElement('td');
-        const deadBrInput = document.createElement('input');
-        deadBrInput.type = 'number';
-        deadBrInput.step = '1';
-        deadBrInput.style.width = '70px';
-        deadBrInput.value = batch.diedBrooder != null ? batch.diedBrooder : 0;
-        deadBrInput.addEventListener('input', function () {
-          const list2 = loadIncubations();
-          if (list2[index]) {
-            list2[index].diedBrooder = parseInt(this.value) || 0;
-            saveIncubations(list2);
-            renderIncubations();
-          }
-        });
-        tdDeadBr.appendChild(deadBrInput);
-        tr.appendChild(tdDeadBr);
-
-        // Живі зараз = вилупилось - померли в інкубаторі - в брудері
-        const tdAlive = document.createElement('td');
-        const hatched = batch.hatched || 0;
-        const dInc = batch.diedIncubator || 0;
-        const dBr = batch.diedBrooder || 0;
-        const alive = Math.max(hatched - dInc - dBr, 0);
-        tdAlive.textContent = alive.toString();
-        tr.appendChild(tdAlive);
-
-        const tdNote = document.createElement('td');
-        tdNote.textContent = batch.note || '';
-        tr.appendChild(tdNote);
-
-        const tdActions = document.createElement('td');
-        const btnDel = document.createElement('button');
-        btnDel.textContent = '×';
-        btnDel.className = 'btn btn-danger btn-small';
-        btnDel.onclick = function () {
-          const list2 = loadIncubations();
-          list2.splice(index, 1);
-          saveIncubations(list2);
-          renderIncubations();
-        };
-        tdActions.appendChild(btnDel);
-        tr.appendChild(tdActions);
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    
-   function addOrder() {
-  const customer = document.getElementById('orderCustomer').value.trim();
-  const trays = parseInt(document.getElementById('orderTrays').value) || 0;
-  const note = document.getElementById('orderNote').value.trim();
-  if (!customer || trays <= 0) {
-    alert('Вкажи ім\'я клієнта та кількість лотків > 0');
-    return;
-  }
-
-  const date = new Date().toISOString().slice(0, 10);
-  const eggs = trays * 20;
-
-  // 🔹 Беремо поточну ціну за лоток
-  const trayPrice = parseFloat(document.getElementById('trayPrice').value) || 0;
-  const amount = trays * trayPrice;
-
-  const orders = loadOrders();
-  const totalTraysToday = parseInt(document.getElementById('traysCount')?.textContent || '0') || 0;
-  const reservedTrays = parseInt(document.getElementById('reservedTrays')?.textContent || '0') || 0;
-  if (reservedTrays + trays > totalTraysToday) {
-  if (!confirm('Цим замовленням ти перевищиш доступні на сьогодні лотки. Додати все одно?')) {
-  return;
-        }
-      }
-
-  orders.push({
-    customer,
-    eggs,
-    trays,
-    date,
-    note,
-    amount,      // ⬅️ додано
-    done: false
-  });
-  saveOrders(orders);
-  renderOrders();
-  saveState();
 }
 
 
-    function clearOrders() {
-      if (!confirm('Точно очистити всі замовлення?')) return;
-      localStorage.removeItem('quailOrders');
-      renderOrders();
+// ===============================
+//      ГЕНЕРАЦІЯ ТАБЛИЦЬ
+// ===============================
+
+function buildFeedTables() {
+    const f = document.getElementById("feedRows");
+    const s = document.getElementById("stockRows");
+
+    f.innerHTML = "";
+    s.innerHTML = "";
+
+    feedComponents.forEach(c => {
+        f.innerHTML += `
+            <tr data-key="${c.key}">
+                <td>${c.name}</td>
+                <td class="qty right">0</td>
+                <td><input type="number" class="price" step="0.1" data-key="${c.key}" value="0"></td>
+                <td class="sum right">0.00</td>
+            </tr>
+        `;
+
+        s.innerHTML += `
+            <tr data-key="${c.key}">
+                <td>${c.name}</td>
+                <td><input type="number" class="stock right" step="0.1" value="0"></td>
+                <td class="need right">0</td>
+                <td class="buy right">0</td>
+            </tr>
+        `;
+    });
+}
+
+
+// ===============================
+//        РЕЦЕПТИ КОРМУ
+// ===============================
+
+const recipePresets = {
+    starter: {
+        corn: 8, wheat: 4, barley: 3, soy: 5,
+        sunflower: 2, fishmeal: 1, yeast: 1,
+        tcp: 0.5, dolfos: 0.5, salt: 0.1
+    },
+    grower: {
+        corn: 10, wheat: 4, barley: 3, soy: 4,
+        sunflower: 1, fishmeal: 0.5, yeast: 0.5,
+        tcp: 0.5, dolfos: 0.3, salt: 0.1
+    },
+    layer: {
+        corn: 12, wheat: 5, barley: 4, soy: 5,
+        sunflower: 2, fishmeal: 0.5, yeast: 0.5,
+        tcp: 1, dolfos: 0.5, salt: 0.2
     }
+};
 
-       // --- ІНІЦІАЛІЗАЦІЯ ---
-    function attachEvents() {
-      // Ціни
-      document.querySelectorAll('.price').forEach(input => {
-        input.addEventListener('input', () => {
-          recalcAll();
-          saveState();
-        });
-      });
 
-      // Запаси компонентів
-      document.querySelectorAll('.stock').forEach(input => {
-        input.addEventListener('input', () => {
-          recalcStocks();
-          saveState();
-        });
-      });
+function applyRecipePreset(name) {
+    const preset = recipePresets[name];
+    const rows = document.querySelectorAll("#feedRows tr");
 
-      // Основні поля, що впливають на розрахунки
-      [
-        'birds', 'dailyNorm',
-        'hens1', 'hens2',
-        'eggsTotal', 'eggsBad', 'eggsOwn', 'eggsCarry',
-        'trayPrice',
-        'logDate', 'logNote',
-        'orderCustomer', 'orderTrays', 'orderNote'
-      ].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener('input', () => {
-            recalcAll();
-            saveState();
-          });
+    rows.forEach(row => {
+        const k = row.dataset.key;
+        const qtyCell = row.querySelector(".qty");
+        qtyCell.textContent = preset[k] ?? 0;
+    });
+
+    recalcFeed();
+}
+
+
+// ===============================
+//        РОЗРАХУНОК КОРМУ
+// ===============================
+
+function recalcFeed() {
+    const target = getFloat("targetKg");
+    let totalKg = 0;
+    let totalCost = 0;
+
+    document.querySelectorAll("#feedRows tr").forEach(row => {
+        const qty = parseFloat(row.querySelector(".qty").textContent) || 0;
+        const price = parseFloat(row.querySelector(".price").value) || 0;
+        const sum = qty * price;
+
+        row.querySelector(".sum").textContent = sum.toFixed(2);
+
+        totalKg += qty;
+        totalCost += sum;
+    });
+
+    document.getElementById("feedTotalKg").textContent = totalKg.toFixed(1);
+    document.getElementById("feedTotalCost").textContent = totalCost.toFixed(2);
+
+    recalcStockNeed();
+}
+
+
+// ===============================
+//    РОЗРАХУНОК ЗАПАСІВ КОРМУ
+// ===============================
+
+function recalcStockNeed() {
+    const rows = document.querySelectorAll("#feedRows tr");
+
+    rows.forEach(row => {
+        const key = row.dataset.key;
+        const qty = parseFloat(row.querySelector(".qty").textContent) || 0;
+
+        const stockRow = document.querySelector(`#stockRows tr[data-key="${key}"]`);
+        const have = parseFloat(stockRow.querySelector(".stock").value) || 0;
+
+        let need = qty;
+        let buy = need - have;
+        if (buy < 0) buy = 0;
+
+        stockRow.querySelector(".need").textContent = need.toFixed(1);
+        stockRow.querySelector(".buy").textContent = buy.toFixed(1);
+    });
+}
+
+document.addEventListener("input", e => {
+    if (e.target.classList.contains("price")) recalcFeed();
+    if (e.target.classList.contains("stock")) recalcStockNeed();
+});
+
+
+// ===============================
+//        КАЛЬКУЛЯТОР ЯЄЦЬ
+// ===============================
+
+function recalcEggs() {
+    const hens = getInt("hens");
+    const rate = getInt("eggRate");
+    const price10 = getFloat("eggPrice10");
+
+    const eggsPerDay = hens * rate / 100;
+    const incomeDay = eggsPerDay / 10 * price10;
+
+    document.getElementById("eggsPerDay").textContent = eggsPerDay.toFixed(1);
+    document.getElementById("incomePerDay").textContent = incomeDay.toFixed(2);
+
+    const eggsMonth = eggsPerDay * 30;
+    const incomeMonth = incomeDay * 30;
+
+    document.getElementById("eggsPerMonth").textContent = eggsMonth.toFixed(0);
+    document.getElementById("incomePerMonth").textContent = incomeMonth.toFixed(2);
+}
+
+
+// ===============================
+//           ЛОГ (ЖУРНАЛ)
+// ===============================
+
+let logData = loadData("logData");
+
+function addLog() {
+    const d = document.getElementById("logDate").value;
+    const cat = document.getElementById("logCategory").value;
+    const amount = getFloat("logAmount");
+    const comment = document.getElementById("logComment").value;
+
+    if (!d || !cat || !amount) return;
+
+    logData.push({ d, cat, amount, comment });
+    saveData("logData", logData);
+    renderLog();
+}
+
+function renderLog() {
+    const body = document.getElementById("logBody");
+    body.innerHTML = "";
+
+    logData.forEach((x, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${x.d}</td>
+            <td>${x.cat}</td>
+            <td>${x.amount}</td>
+            <td>${x.comment}</td>
+            <td><button class="btn-small btn-red" onclick="delLog(${i})">×</button></td>
+        `;
+        body.appendChild(tr);
+    });
+}
+
+function delLog(i) {
+    logData.splice(i, 1);
+    saveData("logData", logData);
+    renderLog();
+}
+
+/* ===============================
+        ЗАМОВЛЕННЯ
+=============================== */
+
+let orders = loadData("orders");
+
+function addOrder() {
+    const n = document.getElementById("ordName").value;
+    const e = getInt("ordEggs");
+    const t = getInt("ordTrays");
+    const d = document.getElementById("ordDate").value;
+    const note = document.getElementById("ordNote").value;
+
+    if (!n || !e || !d) return;
+
+    orders.push({ n, e, t, d, note, done: false });
+    saveData("orders", orders);
+    renderOrders();
+}
+
+function renderOrders() {
+    const active = document.getElementById("ordersActive");
+    const done = document.getElementById("ordersDone");
+
+    active.innerHTML = "";
+    done.innerHTML = "";
+
+    orders.forEach((o, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${o.n}</td>
+            <td>${o.e}</td>
+            <td>${o.t}</td>
+            <td>${o.d}</td>
+            <td>${o.note}</td>
+            <td>
+                ${o.done 
+                    ? `<button class="btn-small btn-red" onclick="delOrder(${i})">×</button>`
+                    : `
+                        <button class="btn-small btn-green" onclick="finishOrder(${i})">✓</button>
+                        <button class="btn-small btn-red" onclick="delOrder(${i})">×</button>`
+                }
+            </td>
+        `;
+
+        if (o.done) done.appendChild(row);
+        else active.appendChild(row);
+    });
+}
+
+function finishOrder(i) {
+    orders[i].done = true;
+    saveData("orders", orders);
+    renderOrders();
+}
+
+function delOrder(i) {
+    orders.splice(i, 1);
+    saveData("orders", orders);
+    renderOrders();
+}
+
+
+/* ===============================
+            ІНКУБАЦІЯ
+=============================== */
+
+let inc = loadData("inc");
+
+function addInc() {
+    const d = document.getElementById("incDate").value;
+    const eggs = getInt("incEggs");
+    const note = document.getElementById("incNote").value;
+
+    if (!d || !eggs) return;
+
+    inc.push({ d, eggs, note, hatch: 0 });
+    saveData("inc", inc);
+    renderInc();
+}
+
+function renderInc() {
+    const body = document.getElementById("incBody");
+    body.innerHTML = "";
+
+    inc.forEach((x, i) => {
+        const day = Math.floor((Date.now() - new Date(x.d)) / 86400000);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${i+1}</td>
+            <td>${x.d}</td>
+            <td>${x.eggs}</td>
+            <td><input type="number" value="${x.hatch}" onchange="setHatch(${i}, this.value)"></td>
+            <td>${x.note}</td>
+            <td>${day}</td>
+            <td><button class="btn-small btn-red" onclick="delInc(${i})">×</button></td>
+        `;
+
+        body.appendChild(tr);
+    });
+}
+
+function setHatch(i, v) {
+    inc[i].hatch = parseInt(v) || 0;
+    saveData("inc", inc);
+}
+
+function delInc(i) {
+    inc.splice(i, 1);
+    saveData("inc", inc);
+    renderInc();
+}
+
+
+/* ===============================
+        ФІНАНСОВИЙ ЗВІТ
+=============================== */
+
+function recalcReport() {
+    const from = new Date(document.getElementById("repFrom").value);
+    const to = new Date(document.getElementById("repTo").value);
+
+    let cost = 0;
+    let income = 0;
+
+    logData.forEach(x => {
+        const d = new Date(x.d);
+        if (d >= from && d <= to) cost += x.amount;
+    });
+
+    // Доходи: з яйця (за місяць)
+    const hens = getInt("hens");
+    const rate = getInt("eggRate");
+    const p10 = getFloat("eggPrice10");
+
+    const eggPerDay = hens * rate / 100;
+    income = eggPerDay / 10 * p10 * 30;
+
+    const profit = income - cost;
+
+    document.getElementById("repCosts").textContent = cost.toFixed(2);
+    document.getElementById("repIncome").textContent = income.toFixed(2);
+    document.getElementById("repProfit").textContent = profit.toFixed(2);
+
+    const costPerEgg = cost / (eggPerDay * 30);
+    const profitPerEgg = income / (eggPerDay * 30) - costPerEgg;
+
+    document.getElementById("repCostPerEgg").textContent = costPerEgg.toFixed(3);
+    document.getElementById("repProfitPerEgg").textContent = profitPerEgg.toFixed(3);
+}
+
+
+/* ===============================
+             ГРАФІКИ
+=============================== */
+
+let chartEggs, chartIncome;
+
+function buildCharts() {
+    const ctx1 = document.getElementById("chartEggs");
+    const ctx2 = document.getElementById("chartIncome");
+
+    chartEggs = new Chart(ctx1, {
+        type: "line",
+        data: {
+            labels: Array.from({length: 30}, (_, i) => i+1),
+            datasets: [{
+                label: "Яєць/день",
+                data: Array.from({length: 30}, () => getInt("hens") * getInt("eggRate") / 100),
+                borderColor: "#1976d2"
+            }]
         }
-      });
+    });
 
-      // Кнопки щоденника
-      const addToLogBtn = document.getElementById('addToLog');
-      if (addToLogBtn) {
-        addToLogBtn.addEventListener('click', () => {
-          addToLog();
-          saveState();
+    chartIncome = new Chart(ctx2, {
+        type: "line",
+        data: {
+            labels: Array.from({length: 30}, (_, i) => i+1),
+            datasets: [{
+                label: "Дохід/день",
+                data: Array.from({length: 30}, () => (getInt("hens") * getInt("eggRate") / 100) / 10 * getFloat("eggPrice10")),
+                borderColor: "#388e3c"
+            }]
+        }
+    });
+}
+
+
+/* ===============================
+      GOOGLE DRIVE BACKUP
+=============================== */
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+
+function gapiLoaded() {
+    gapi.load("client", async () => {
+        await gapi.client.init({
+            apiKey: "AIzaSyDqLD-DUMMY-KEY-EXAMPLE",
+            discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
         });
-      }
+        gapiInited = true;
+        updateDriveStatus();
+    });
+}
 
-      const clearLogBtn = document.getElementById('clearLog');
-      if (clearLogBtn) {
-        clearLogBtn.addEventListener('click', () => {
-          clearLog();
-        });
-      }
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
+        scope: "https://www.googleapis.com/auth/drive.file",
+        callback: ""
+    });
+    gisInited = true;
+    updateDriveStatus();
+}
 
-      // Кнопки замовлень
-      const addOrderBtn = document.getElementById('addOrder');
-      if (addOrderBtn) {
-        addOrderBtn.addEventListener('click', () => {
-          addOrder();
-        });
-      }
+function updateDriveStatus() {
+    const btnLogin = document.getElementById("btnDriveLogin");
+    const btnBackup = document.getElementById("btnBackup");
+    const btnRestore = document.getElementById("btnRestore");
 
-      const clearOrdersBtn = document.getElementById('clearOrders');
-      if (clearOrdersBtn) {
-        clearOrdersBtn.addEventListener('click', () => {
-          clearOrders();
-        });
-      }
-
-      // Інкубація
-      const addIncBtn = document.getElementById('addIncubation');
-      if (addIncBtn) {
-        addIncBtn.addEventListener('click', () => {
-          addIncubation();
-        });
-      }
-
-      const periodSelect = document.getElementById('reportPeriod');
-      if (periodSelect) {
-      periodSelect.addEventListener('change', () => {
-      recalcReport();
-      saveState();
-        });
-      }
-
-      // Пресети рецепту
-      const presetSelect = document.getElementById('recipePreset');
-      const presetBtn = document.getElementById('applyPreset');
-      if (presetSelect && presetBtn) {
-        presetBtn.addEventListener('click', () => {
-          applyRecipePreset(presetSelect.value);
-        });
-      }
-      
-      const otherInput = document.getElementById('otherCostsMonthly');
-      if (otherInput) {
-      otherInput.addEventListener('input', () => {
-      recalcReport();
-      saveState();
-      });
-      }
-
-      const produceBtn = document.getElementById('produceFeedBatch');
-      if (produceBtn) {
-        produceBtn.addEventListener('click', produceFeedBatch);
-      }
-
-      const consumeBtn = document.getElementById('consumeDailyFeed');
-      if (consumeBtn) {
-        consumeBtn.addEventListener('click', consumeDailyFeed);
-      }
-
-      
-      // Кнопки бекапу
-      const backupExportBtn = document.getElementById('backupExport');
-      if (backupExportBtn) {
-        backupExportBtn.addEventListener('click', backupExport);
-      }
-
-      
-      const backupImportBtn = document.getElementById('backupImport');
-      if (backupImportBtn) {
-        backupImportBtn.addEventListener('click', backupImport);
-      }
+    if (gapiInited && gisInited) {
+        btnBackup.disabled = false;
+        btnRestore.disabled = false;
+        document.getElementById("driveStatus").textContent = "Статус: готовий";
     }
-    
-       // Запуск
-    loadState();
-    attachEvents();
-    recalcAll();
+}
+
+document.getElementById("btnDriveLogin").onclick = () => {
+    tokenClient.callback = (res) => {
+        document.getElementById("driveStatus").textContent = "Увійшли в Google";
+    };
+    tokenClient.requestAccessToken();
+};
+
+document.getElementById("btnBackup").onclick = async () => {
+    const data = {
+        logData,
+        orders,
+        inc
+    };
+
+    const file = new Blob([JSON.stringify(data)], {type: "application/json"});
+
+    await gapi.client.drive.files.create({
+        resource: { name: "quail_backup.json" },
+        media: { mimeType: "application/json", body: file }
+    });
+
+    alert("Резервна копія створена!");
+};
+
+document.getElementById("btnRestore").onclick = () => {
+    alert("Відновлення буде додано пізніше.");
+};
+
+
+/* ===============================
+            INIT
+=============================== */
+
+function init() {
+    buildFeedTables();
+    recalcFeed();
+    recalcEggs();
+    recalcFlock();
     renderLog();
     renderOrders();
-    renderFeedReadyStock();
-    renderIncubations();
-    renderClientsSummary();
-    updateDashboard();
-    updateWarnings();
-    
-    
-    // ----- GOOGLE DRIVE AUTH ----- //
-
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
-
-// Твої scopes
-scope: 'https://www.googleapis.com/auth/drive.file'
-
-// INIT GAPI
-function gapiLoaded() {
-  gapi.load("client", initializeGapiClient);
+    renderInc();
+    buildCharts();
 }
 
-async function initializeGapiClient() {
-  await gapi.client.init({
-    apiKey: "",
-    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-  });
-  gapiInited = true;
-  maybeEnableButtons();
-}
-
-// INIT GOOGLE IDENTITY
-function gisLoaded() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
-    scope: SCOPES,
-    callback: (resp) => {
-      if (resp.access_token) {
-        console.log("Logged in to Google");
-      }
-      maybeEnableButtons();
-    },
-  });
-  gisInited = true;
-  maybeEnableButtons();
-}
-
-function maybeEnableButtons() {
-  const btnLogin = document.getElementById("btnDriveLogin");
-  const btnBackup = document.getElementById("btnDriveBackup");
-  const btnRestore = document.getElementById("btnDriveRestore");
-
-  if (gapiInited && gisInited) {
-    btnLogin.disabled = false;
-  }
-}
-
-// --- LOGIN BUTTON ---
-document.getElementById("btnDriveLogin").onclick = () => {
-  tokenClient.requestAccessToken({ prompt: "consent" });
-};
-
-// --- SAVE BACKUP TO DRIVE ---
-document.getElementById("btnDriveBackup").onclick = async () => {
-  const backup = localStorage.getItem("quailState") || "{}";
-
-  const fileContent = backup;
-  const file = new Blob([fileContent], { type: "application/json" });
-
-  const metadata = {
-    name: "quail_calculator_backup.json",
-    mimeType: "application/json",
-  };
-
-  const form = new FormData();
-  form.append(
-    "metadata",
-    new Blob([JSON.stringify(metadata)], { type: "application/json" })
-  );
-  form.append("file", file);
-
-  const res = await fetch(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-    {
-      method: "POST",
-      headers: new Headers({
-        Authorization: `Bearer ${gapi.client.getToken().access_token}`,
-      }),
-      body: form,
-    }
-  );
-
-  alert("Бекап завантажено в Google Drive");
-};
-
-// --- RESTORE BACKUP FROM DRIVE ---
-document.getElementById("btnDriveRestore").onclick = async () => {
-  const res = await gapi.client.drive.files.list({
-    q: "name='quail_calculator_backup.json'",
-    spaces: "drive",
-    fields: "files(id, name)",
-  });
-
-  if (res.result.files.length === 0) {
-    alert("Бекап не знайдений у Google Drive");
-    return;
-  }
-
-  const fileId = res.result.files[0].id;
-
-  const file = await gapi.client.drive.files.get({
-    fileId,
-    alt: "media",
-  });
-
-  localStorage.setItem("quailState", file.body);
-  alert("Бекап відновлено!");
-  location.reload();
-};
-
-
-/* ---------------- GOOGLE DRIVE BACKUP ---------------- */
-
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
-let accessToken = null;
-
-function gapiLoaded() {
-  gapi.load("client", initializeGapiClient);
-}
-
-async function initializeGapiClient() {
-  await gapi.client.init({
-    apiKey: "AIzaSyA1-EXAMPLE-KEY",   // ← Можеш не ставити, Google Drive працює без нього
-    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
-  });
-  gapiInited = true;
-}
-
-function gisLoaded() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
-    scope: "https://www.googleapis.com/auth/drive.file",
-    callback: (tokenResponse) => {
-      accessToken = tokenResponse.access_token;
-      document.getElementById("btnDriveBackup").disabled = false;
-      document.getElementById("btnDriveRestore").disabled = false;
-      document.getElementById("btnDriveLogin").textContent = "✔ Увійшов у Google";
-    }
-  });
-}
-
-  </script>
-  
-<script>
-const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
-const API_KEY = "";
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-let tokenClient;
-let accessToken = null;
-let gapiInited = false;
-let gisInited = false;
-
-function gapiLoaded() {
-  gapi.load('client', initializeGapiClient);
-}
-
-async function initializeGapiClient() {
-  await gapi.client.init({
-    apiKey: API_KEY,
-    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-  });
-  gapiInited = true;
-}
-
-function gisLoaded() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: (tokenResponse) => {
-      accessToken = tokenResponse.access_token;
-      document.getElementById("btnDriveBackup").disabled = false;
-      document.getElementById("btnDriveRestore").disabled = false;
-      getUserInfo();
-    },
-  });
-  gisInited = true;
-}
-
-function handleAuthClick() {
-  if (!gapiInited || !gisInited) {
-    alert("Google API ще не готове. Спробуй ще раз через кілька секунд.");
-    return;
-  }
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-}
-
-async function getUserInfo() {
-  const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: { 'Authorization': 'Bearer ' + accessToken },
-  });
-  const profile = await response.json();
-  document.getElementById("btnDriveLogin").innerText = "✅ Увійшов: " + (profile.email || "Google користувач");
-}
-
-/* -------- 5. Зберегти бекап у Google Drive -------- */
-async function googleBackup() {
-  // беремо той самий бекап, що і для текстового експорту
-  const backupObj   = buildBackupObject();
-  const fileContent = JSON.stringify(backupObj);
-
-  const file = new Blob([fileContent], { type: "application/json" });
-
-  const metadata = {
-    name: "quail_calculator_backup.json",
-    mimeType: "application/json",
-  };
-
-  const form = new FormData();
-  form.append(
-    "metadata",
-    new Blob([JSON.stringify(metadata)], { type: "application/json" })
-  );
-  form.append("file", file);
-
-  const response = await fetch(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-    {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + gapi.client.getToken().access_token,
-      },
-      body: form,
-    }
-  );
-
-  if (response.ok) {
-    alert("Бекап збережено у Google Drive!");
-  } else {
-    console.error(await response.text());
-    alert("Помилка при збереженні у Google Drive.");
-  }
-}
-
-/* -------- 6. Завантажити бекап з Google Drive -------- */
-async function googleRestore() {
-  const res = await gapi.client.drive.files.list({
-    q: "name='quail_calculator_backup.json'",
-    fields: "files(id,name)",
-  });
-
-  if (!res.result.files.length) {
-    alert("Файл quail_calculator_backup.json не знайдено у Google Drive!");
-    return;
-  }
-
-  const fileId = res.result.files[0].id;
-
-  const dl = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-    {
-      headers: {
-        Authorization: "Bearer " + gapi.client.getToken().access_token,
-      },
-    }
-  );
-
-  const text = await dl.text();
-  try {
-    const backup = JSON.parse(text);
-    applyBackupObject(backup);
-  } catch (e) {
-    console.error(e);
-    alert("Не вдалось прочитати бекап з Google Drive.");
-  }
-}
-
-document.getElementById("btnDriveLogin").onclick = googleLogin;
-document.getElementById("btnDriveBackup").onclick = googleBackup;
-document.getElementById("btnDriveRestore").onclick = googleRestore;
+window.onload = init;
 
 </script>
-  
 
-<script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
-<script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
-
-  
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
