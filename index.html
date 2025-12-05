@@ -2783,149 +2783,159 @@ function gisLoaded() {
   });
 }
 
-/* Кнопка — УВІЙТИ */
-function driveLogin() {
-  tokenClient.requestAccessToken();
-}
-
-/* --------- СТВОРЕННЯ РЕЗЕРВНОЇ КОПІЇ ---------- */
-async function googleBackup() {
-  if (!accessToken) {
-    alert("Увійди в Google спочатку!");
-    return;
-  }
-
-  const backup = JSON.stringify(loadState());
-
-  const metadata = {
-    name: "quail_calculator_backup.json",
-    mimeType: "application/json"
-  };
-
-  const form = new FormData();
-  form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-  form.append("file", new Blob([backup], { type: "application/json" }));
-
-  const res = await fetch(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-    {
-      method: "POST",
-      headers: { Authorization: "Bearer " + accessToken },
-      body: form
-    }
-  );
-
-  if (res.ok) alert("✔ Резервна копія створена в Google Drive!");
-  else alert("❌ Помилка створення копії");
-}
-
-/* --------- ВІДНОВЛЕННЯ КОПІЇ ---------- */
-async function googleRestore() {
-  if (!accessToken) {
-    alert("Увійди в Google!");
-    return;
-  }
-
-  const res = await gapi.client.drive.files.list({
-    q: "name='quail_calculator_backup.json'",
-    spaces: "drive"
-  });
-
-  if (!res.result.files || res.result.files.length === 0) {
-    alert("❌ Файл копії не знайдено!");
-    return;
-  }
-
-  const fileId = res.result.files[0].id;
-
-  const download = await gapi.client.drive.files.get({
-    fileId: fileId,
-    alt: "media"
-  });
-
-  localStorage.setItem("quailData", JSON.stringify(download.result));
-  alert("✔ Дані відновлено — перезавантаж сторінку!");
-}
-
-document.getElementById("btnDriveLogin").onclick = driveLogin;
-
   </script>
   
-  
-  
-<script src="https://accounts.google.com/gsi/client" async defer>
-</script>
-<script src="https://apis.google.com/js/api.js">
-</script>
+    <script>
+    // ==== Налаштування Google Drive ====
 
+    // Твій OAuth client_id (ти вже його створив у Google Cloud)
+    const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
+    const SCOPE = "https://www.googleapis.com/auth/drive.file";
 
-<script>
-/* Кнопка — УВІЙТИ */
-function driveLogin() {
-  tokenClient.requestAccessToken();
-}
+    // Тут буде збережений access token після входу
+    let googleToken = null;
 
-/* --------- СТВОРЕННЯ РЕЗЕРВНОЇ КОПІЇ ---------- */
-async function googleBackup() {
-  if (!accessToken) {
-    alert("Увійди в Google спочатку!");
-    return;
-  }
-
-  const backup = JSON.stringify(loadState());
-
-  const metadata = {
-    name: "quail_calculator_backup.json",
-    mimeType: "application/json"
-  };
-
-  const form = new FormData();
-  form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-  form.append("file", new Blob([backup], { type: "application/json" }));
-
-  const res = await fetch(
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-    {
-      method: "POST",
-      headers: { Authorization: "Bearer " + accessToken },
-      body: form
+    // Якщо десь у <script> прописано onload="gapiLoaded()", щоб не було помилки:
+    function gapiLoaded() {
+      // Ми не використовуємо gapi напряму, працюємо через fetch + токен
+      console.log("gapiLoaded() викликано (нам тут нічого не треба робити)");
     }
-  );
 
-  if (res.ok) alert("✔ Резервна копія створена в Google Drive!");
-  else alert("❌ Помилка створення копії");
-}
+    // Якщо десь лишився onload="gisLoaded()", теж не ламаємося:
+    function gisLoaded() {
+      console.log("gisLoaded() викликано (ініціалізація піде під час натискання кнопки входу)");
+    }
 
-/* --------- ВІДНОВЛЕННЯ КОПІЇ ---------- */
-async function googleRestore() {
-  if (!accessToken) {
-    alert("Увійди в Google!");
-    return;
-  }
+    // 🔑 УВІЙТИ В GOOGLE
+    function googleLogin() {
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPE,
+        callback: (tokenResponse) => {
+          googleToken = tokenResponse.access_token;
 
-  const res = await gapi.client.drive.files.list({
-    q: "name='quail_calculator_backup.json'",
-    spaces: "drive"
-  });
+          // Увімкнути кнопки бекапу / відновлення
+          const btnLogin   = document.getElementById("btnDriveLogin");
+          const btnBackup  = document.getElementById("btnDriveBackup");
+          const btnRestore = document.getElementById("btnDriveRestore");
 
-  if (!res.result.files || res.result.files.length === 0) {
-    alert("❌ Файл копії не знайдено!");
-    return;
-  }
+          if (btnBackup)  btnBackup.disabled  = false;
+          if (btnRestore) btnRestore.disabled = false;
+          if (btnLogin)   btnLogin.textContent = "✔ Увійшов у Google";
 
-  const fileId = res.result.files[0].id;
+          alert("Успішний вхід у Google!");
+        },
+      });
 
-  const download = await gapi.client.drive.files.get({
-    fileId: fileId,
-    alt: "media"
-  });
+      // Показати вікно авторизації
+      tokenClient.requestAccessToken({ prompt: "consent" });
+    }
 
-  localStorage.setItem("quailData", JSON.stringify(download.result));
-  alert("✔ Дані відновлено — перезавантаж сторінку!");
-}
+    // ⬆ ЗБЕРЕГТИ БЕКАП У GOOGLE DRIVE
+    async function googleBackup() {
+      if (!googleToken) {
+        alert("Спочатку увійди в Google!");
+        return;
+      }
 
-document.getElementById("btnDriveLogin").onclick = driveLogin; 
-</script>
+      // Беремо всі дані з твоєї CRM/калькулятора (в одному JSON)
+      const data = localStorage.getItem("quail_calculator_all_data") || "{}";
+
+      // Формуємо файл JSON
+      const fileContent = new Blob([data], { type: "application/json" });
+      const metadata = {
+        name: "quail_calculator_backup.json",
+        mimeType: "application/json",
+      };
+
+      const form = new FormData();
+      form.append(
+        "metadata",
+        new Blob([JSON.stringify(metadata)], { type: "application/json" })
+      );
+      form.append("file", fileContent);
+
+      // Відправляємо на Google Drive
+      const res = await fetch(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + googleToken,
+          },
+          body: form,
+        }
+      );
+
+      if (res.ok) {
+        alert("Бекап збережено у Google Drive!");
+      } else {
+        alert("Помилка при збереженні у Google Drive");
+      }
+    }
+
+    // ⬇ ВІДНОВИТИ БЕКАП ІЗ GOOGLE DRIVE
+    async function googleRestore() {
+      if (!googleToken) {
+        alert("Спочатку увійди в Google!");
+        return;
+      }
+
+      // Шукаємо наш файл у Drive
+      const searchRes = await fetch(
+        "https://www.googleapis.com/drive/v3/files" +
+          "?q=name='quail_calculator_backup.json'" +
+          "&spaces=drive&fields=files(id,name)",
+        {
+          headers: {
+            Authorization: "Bearer " + googleToken,
+          },
+        }
+      );
+
+      const searchData = await searchRes.json();
+
+      if (!searchData.files || searchData.files.length === 0) {
+        alert("Файл резервної копії не знайдено у Google Drive.");
+        return;
+      }
+
+      const fileId = searchData.files[0].id;
+
+      // Завантажуємо вміст файла
+      const dlRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+        {
+          headers: {
+            Authorization: "Bearer " + googleToken,
+          },
+        }
+      );
+
+      const text = await dlRes.text();
+
+      // Кладемо все у той самий ключ, з якого твій калькулятор читає дані
+      localStorage.setItem("quail_calculator_all_data", text);
+
+      alert("Дані відновлено! Перезавантаж сторінку.");
+    }
+
+    // 🔗 Прив’язуємо кнопки після завантаження сторінки
+    window.addEventListener("load", () => {
+      const btnLogin   = document.getElementById("btnDriveLogin");
+      const btnBackup  = document.getElementById("btnDriveBackup");
+      const btnRestore = document.getElementById("btnDriveRestore");
+
+      if (btnLogin)   btnLogin.onclick   = googleLogin;
+      if (btnBackup)  btnBackup.onclick  = googleBackup;
+      if (btnRestore) btnRestore.onclick = googleRestore;
+    });
+  </script>
+  
+
+<script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
+<script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
+
   
 </body>
 </html>
