@@ -1106,6 +1106,46 @@
       }
     };
     
+    // Єдиний список компонентів (щоб не дублювати у HTML)
+const feedComponents = [
+  {key:'corn', name:'Кукурудза'},
+  {key:'wheat', name:'Пшениця'},
+  {key:'barley', name:'Ячмінь'},
+  {key:'soy', name:'Соєва макуха'},
+  {key:'sunflower', name:'Соняшникова макуха'},
+  {key:'fishmeal', name:'Рибне борошно'},
+  {key:'yeast', name:'Кормові дріжджі'},
+  {key:'tcp', name:'Трикальційфосфат'},
+  {key:'dolfos', name:'Дольфос D'},
+  {key:'salt', name:'Сіль кухонна'}
+];
+
+// Динамічне створення таблиць
+function buildFeedTables() {
+  const feedBody = document.getElementById('rows');
+  const stockBody = document.getElementById('stockRows');
+  if (!feedBody || !stockBody) return;
+  feedBody.innerHTML = '';
+  stockBody.innerHTML = '';
+
+  feedComponents.forEach(c => {
+    feedBody.innerHTML += `
+      <tr>
+        <td>${c.name}</td>
+        <td class="qty right">0.0</td>
+        <td><input type="number" step="0.01" class="price" data-key="${c.key}" value="0"></td>
+        <td class="sum right">0.00</td>
+      </tr>`;
+    stockBody.innerHTML += `
+      <tr data-key="${c.key}">
+        <td>${c.name}</td>
+        <td class="right"><input type="number" class="stock" data-key="${c.key}" step="0.1" value="0" style="width:80px;"></td>
+        <td class="right"><span class="need">0.0</span></td>
+        <td class="right"><span class="buy">0.0</span></td>
+      </tr>`;
+  });
+}
+    
         // --- ПАСПОРТ ПАРТІЙ ---
 
     function recalcFlocksPassport() {
@@ -1212,6 +1252,15 @@
       document.getElementById('fcastProfit').textContent = profit30.toFixed(2);
     } 
 
+     // --- Допоміжні функції для зручності ---
+function getInt(id) {
+  const el = document.getElementById(id);
+  return el ? parseInt(el.value) || 0 : 0;
+}
+function getFloat(id) {
+  const el = document.getElementById(id);
+  return el ? parseFloat(el.value) || 0 : 0;
+}
     
     // --- РОЗРАХУНОК КОРМУ ---
     function recalcFeed() {
@@ -1451,9 +1500,7 @@
       document.getElementById('repOtherCost').textContent = otherCostPeriod.toFixed(2);
       document.getElementById('repFullCostPerEgg').textContent = fullCostPerEgg.toFixed(3);
       document.getElementById('repProfitPerEggFull').textContent = profitPerEggFull.toFixed(3);
-      document.getElementById('repProfitPerEggFull').textContent = profitPerEggFull.toFixed(3);
-
-      recalcForecast30();
+// Прогноз на 30 днів рахується окремо при загальному перерахунку      recalcForecast30();
 
     }
 
@@ -1747,10 +1794,24 @@
         return [];
       }
     }
+    
+    function saveData(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+function loadData(key, fallback = []) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
-    function saveLog(log) {
-      localStorage.setItem('quailCalcLog', JSON.stringify(log));
-    }
+   function saveLog(log){ saveData('quailCalcLog', log); }
+function loadLog(){ return loadData('quailCalcLog', []); }
+function saveOrders(o){ saveData('quailCalcOrders', o); }
+function loadOrders(){ return loadData('quailCalcOrders', []); }
+function saveIncubations(i){ saveData('quailCalcInc', i); }
+function loadIncubations(){ return loadData('quailCalcInc', []); }
 
         function renderLog() {
       const log = loadLog();
@@ -2117,10 +2178,6 @@
       }
     }
 
-    function saveOrders(orders) {
-      localStorage.setItem('quailOrders', JSON.stringify(orders));
-    }
-
     function renderOrders() {
       const orders = loadOrders();
       const bodyActive = document.getElementById('ordersActiveBody');
@@ -2296,9 +2353,6 @@
       }
     }
 
-    function saveIncubations(list) {
-      localStorage.setItem('quailIncubations', JSON.stringify(list));
-    }
 
     function addIncubation() {
       const nameEl = document.getElementById('incBatchName');
