@@ -245,6 +245,8 @@ function recalcEggsBalance() {
     set("traysCount", traysCount);
     set("eggsRemainder", eggsRemainder);
     set("income", income.toFixed(2));
+
+    recalcTraySummary();   // ← ТУТ
 }
 
 function recalcProductivity() {
