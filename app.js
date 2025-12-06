@@ -703,6 +703,65 @@ function updateCharts() {
     chartIncome.update();
 }
 
+// ----------------------------------------------
+// 12. КЛІЄНТИ — ТІЛЬКИ ВИКОНАНІ ЗАМОВЛЕННЯ
+// ----------------------------------------------
+
+function renderClients() {
+    const orders = JSON.parse(localStorage.getItem("ORDERS") || "[]");
+    const body = document.getElementById("clientsBody");
+    if (!body) return;
+
+    body.innerHTML = "";
+
+    const clients = {};
+
+    // Групуємо ТІЛЬКИ виконані замовлення
+    orders
+      .filter(o => o.status === "done")        // ← ВАЖЛИВО!
+      .forEach(o => {
+        const name = o.client?.trim() || "Без імені";
+
+        if (!clients[name]) {
+            clients[name] = {
+                count: 0,
+                trays: 0,
+                eggs: 0,
+                sum: 0,
+                last: "-"
+            };
+        }
+
+        clients[name].count++;
+        clients[name].trays += o.trays || 0;
+        clients[name].eggs += (o.trays || 0) * 20;
+        clients[name].sum += o.total || 0;
+
+        if (o.date) {
+            if (clients[name].last === "-" || o.date > clients[name].last) {
+                clients[name].last = o.date;
+            }
+        }
+    });
+
+    // Відображення
+    Object.keys(clients).forEach(name => {
+        const c = clients[name];
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${name}</td>
+            <td>${c.count}</td>
+            <td>${c.trays}</td>
+            <td>${c.eggs}</td>
+            <td>${c.sum.toFixed(2)}</td>
+            <td>${c.last}</td>
+        `;
+
+        body.appendChild(tr);
+    });
+}
+
 // -------------------------------
 //        GOOGLE DRIVE BACKUP
 // -------------------------------
@@ -887,6 +946,7 @@ function init() {
     // Логи / замовлення / інкубація
     renderLog();
     renderOrders();
+    renderClients();
     renderInc();
 
 document.getElementById("addIncubation").addEventListener("click", addIncubation);
