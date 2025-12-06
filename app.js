@@ -708,7 +708,7 @@ function updateCharts() {
 // ----------------------------------------------
 
 function renderClients() {
-    const orders = JSON.parse(localStorage.getItem("ORDERS") || "[]");
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
     const body = document.getElementById("clientsBody");
     if (!body) return;
 
@@ -716,33 +716,57 @@ function renderClients() {
 
     const clients = {};
 
+    // Ціна за один лоток (з твоєї секції яєць)
+    const trayPrice = parseFloat(localStorage.getItem("TRAY_PRICE") || getFloat("trayPrice") || 0);
+
     // Групуємо ТІЛЬКИ виконані замовлення
     orders
-      .filter(o => o.status === "done")        // ← ВАЖЛИВО!
-      .forEach(o => {
-        const name = o.client?.trim() || "Без імені";
+        .filter(o => o.done === true)                 // ← правильний статус
+        .forEach(o => {
 
-        if (!clients[name]) {
-            clients[name] = {
-                count: 0,
-                trays: 0,
-                eggs: 0,
-                sum: 0,
-                last: "-"
-            };
-        }
+            const name = o.n?.trim() || "Без імені";
+            const trays = o.t || Math.floor((o.e || 0) / 20);
+            const eggs = o.e || trays * 20;
+            const total = trays * trayPrice;
 
-        clients[name].count++;
-        clients[name].trays += o.trays || 0;
-        clients[name].eggs += (o.trays || 0) * 20;
-        clients[name].sum += o.total || 0;
-
-        if (o.date) {
-            if (clients[name].last === "-" || o.date > clients[name].last) {
-                clients[name].last = o.date;
+            if (!clients[name]) {
+                clients[name] = {
+                    count: 0,
+                    trays: 0,
+                    eggs: 0,
+                    sum: 0,
+                    last: "-"
+                };
             }
-        }
+
+            clients[name].count++;
+            clients[name].trays += trays;
+            clients[name].eggs += eggs;
+            clients[name].sum += total;
+
+            if (o.d) {
+                if (clients[name].last === "-" || o.d > clients[name].last) {
+                    clients[name].last = o.d;
+                }
+            }
+        });
+
+    // Відображення
+    Object.keys(clients).forEach(name => {
+        const c = clients[name];
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${name}</td>
+            <td>${c.count}</td>
+            <td>${c.trays}</td>
+            <td>${c.eggs}</td>
+            <td>${c.sum.toFixed(2)}</td>
+            <td>${c.last}</td>
+        `;
+        body.appendChild(tr);
     });
+}
 
     // Відображення
     Object.keys(clients).forEach(name => {
