@@ -81,48 +81,36 @@ let chartIncome = null;
 //   ГЕНЕРАЦІЯ ТАБЛИЦЬ КОМБІКОРМУ
 // -------------------------------
 function buildFeedTables() {
-    const feedBody = document.getElementById("feedRows");
-    const stockBody = document.getElementById("stockRows");
-    if (!feedBody || !stockBody) return;
+    const rows = document.getElementById("feedTableRows");
+    const stock = document.getElementById("stockRows");
+    rows.innerHTML = "";
+    stock.innerHTML = "";
 
-    feedBody.innerHTML = "";
-    stockBody.innerHTML = "";
-
-    feedComponents.forEach(c => {
-        // Основна таблиця комбікорму
-        const trFeed = document.createElement("tr");
-        trFeed.dataset.key = c.key;
-        trFeed.innerHTML = `
-            <td>${c.name}</td>
-            <td><span class="feed-qty">0</span></td>
-            <td><input type="number" class="feed-price" data-key="${c.key}" value="0" step="0.1"></td>
-            <td><span class="feed-sum">0.00</span></td>
+    for (const item of FEED_COMPONENTS) {
+        // Рецепт
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${item.name}</td>
+            <td><input type="number" value="${item.percent}" step="1" data-key="${item.key}" class="feed-percent"></td>
+            <td><span id="kg_${item.key}">0</span></td>
         `;
-        feedBody.appendChild(trFeed);
+        rows.appendChild(tr);
 
-        // Таблиця запасів
-        const trStock = document.createElement("tr");
-        trStock.dataset.key = c.key;
-        trStock.innerHTML = `
-            <td>${c.name}</td>
-            <td><input type="number" class="stock-have" value="0" step="0.1"></td>
-            <td><span class="stock-need">0</span></td>
-            <td><span class="stock-buy">0</span></td>
+        // Запаси
+        const tr2 = document.createElement("tr");
+        tr2.innerHTML = `
+            <td>${item.name}</td>
+            <td><input type="number" id="stock_${item.key}" value="0" step="0.1"></td>
+            <td><span id="need_${item.key}">0</span></td>
+            <td><span id="buy_${item.key}">0</span></td>
         `;
-        stockBody.appendChild(trStock);
-    });
+        stock.appendChild(tr2);
+    }
 
-    // Слухачі на зміни цін/запасів
-    feedBody.addEventListener("input", e => {
-        if (e.target.classList.contains("feed-price")) {
-            recalcFeed();
-        }
-    });
-    stockBody.addEventListener("input", e => {
-        if (e.target.classList.contains("stock-have")) {
-            recalcStockNeed();
-        }
-    });
+    // Відсотки рецепту — перерахунок при зміні
+    for (const inp of document.querySelectorAll(".feed-percent")) {
+        inp.addEventListener("input", recalcFeed);
+    }
 }
 
 // -------------------------------
@@ -151,26 +139,44 @@ function applyRecipePreset(name) {
 //      РОЗРАХУНОК КОМБІКОРМУ
 // -------------------------------
 function recalcFeed() {
-    let totalKg = 0;
+    const batchKg = getFloat("feedBatchKg");
+    let dailyPerHen = getFloat("feedDailyPerHen");
+
+    if (dailyPerHen < 1) dailyPerHen = 1;
+
+    // Загальна кількість птиці
+    const hens = getInt("hens1") + getInt("hens2");
+    set("feedBirdCount", hens);
+
+    const dailyKg = (hens * dailyPerHen) / 1000;
+    set("dailyFeedNeed", dailyKg.toFixed(2));
+
     let totalCost = 0;
 
-    document.querySelectorAll("#feedRows tr").forEach(row => {
-        const qty = parseFloat(row.querySelector(".feed-qty").textContent) || 0;
-        const price = parseFloat(row.querySelector(".feed-price").value) || 0;
-        const sum = qty * price;
+    for (const item of FEED_COMPONENTS) {
+        const kg = batchKg * (item.percent / 100);
+        const stock = getFloat(`stock_${item.key}`);
 
-        row.querySelector(".feed-sum").textContent = sum.toFixed(2);
+        set(`kg_${item.key}`, kg.toFixed(2));
+        set(`need_${item.key}`, kg.toFixed(2));
 
-        totalKg += qty;
-        totalCost += sum;
-    });
+        const buy = Math.max(0, kg - stock);
+        set(`buy_${item.key}`, buy.toFixed(2));
 
-    const totalKgEl = document.getElementById("feedTotalKg");
-    const totalCostEl = document.getElementById("feedTotalCost");
-    if (totalKgEl) totalKgEl.textContent = totalKg.toFixed(2);
-    if (totalCostEl) totalCostEl.textContent = totalCost.toFixed(2);
+        totalCost += kg * item.price;
+    }
 
-    recalcStockNeed();
+    set("dailyFeedCost", (dailyKg * (totalCost / batchKg)).toFixed(2));
+
+    recalcFeedStockDays();
+}
+
+function recalcFeedStockDays() {
+    const stock = parseFloat(get("feedReadyStock")) || 0;
+    const daily = parseFloat(get("dailyFeedNeed")) || 0;
+
+    set("feedStockRemain", stock.toFixed(2));
+    set("feedDaysLeft", daily > 0 ? Math.floor(stock / daily) : 0);
 }
 
 // -------------------------------
@@ -700,6 +706,31 @@ async function backupToDrive() {
         alert("Помилка при авторизації або створенні копії.");
     }
 }
+
+document.addEventListener("click", (e) => {
+    if (e.target.id === "produceFeedBatch") {
+        const size = getFloat("feedBatchSize");
+        let stock = parseFloat(get("feedReadyStock")) || 0;
+
+        stock += size;
+
+        set("feedReadyStock", stock.toFixed(2));
+        recalcFeedStockDays();
+    }
+});
+
+document.addEventListener("click", (e) => {
+    if (e.target.id === "consumeDailyFeed") {
+        const daily = parseFloat(get("dailyFeedNeed")) || 0;
+        let stock = parseFloat(get("feedReadyStock")) || 0;
+
+        stock = Math.max(0, stock - daily);
+
+        set("feedReadyStock", stock.toFixed(2));
+        recalcFeedStockDays();
+    }
+});
+
 
 // -------------------------------
 //            INIT
