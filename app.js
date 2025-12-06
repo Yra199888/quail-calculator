@@ -336,6 +336,7 @@ function addOrder() {
     orders.push({ n, e, t, d, note, done: false });
     saveData("orders", orders);
     renderOrders();
+    recalcTraySummary();
 
     document.getElementById("ordName").value = "";
     document.getElementById("ordEggs").value = "";
