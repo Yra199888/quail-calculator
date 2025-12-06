@@ -393,56 +393,144 @@ function delOrder(i) {
     renderOrders();
 }
 
-// -------------------------------
-//           ІНКУБАЦІЯ
-// -------------------------------
-function addInc() {
-    const d = document.getElementById("incDate").value;
-    const eggs = getInt("incEggs");
+//---------------------------------------------------
+//  ІНКУБАЦІЯ — ЗБЕРІГАННЯ / ЗАВАНТАЖЕННЯ ДАНИХ
+//---------------------------------------------------
+
+let INC = JSON.parse(localStorage.getItem("INCUBATION") || "[]");
+
+function saveInc() {
+    localStorage.setItem("INCUBATION", JSON.stringify(INC));
+}
+
+function loadInc() {
+    INC = JSON.parse(localStorage.getItem("INCUBATION") || "[]");
+}
+
+
+//---------------------------------------------------
+//  РОЗРАХУНОК ДНІВ В ІНКУБАЦІЇ
+//---------------------------------------------------
+function daysSince(dateStr) {
+    if (!dateStr) return 0;
+    const d1 = new Date(dateStr);
+    const d2 = new Date();
+    return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+}
+
+
+//---------------------------------------------------
+//  ДОДАТИ НОВУ ПАРТІЮ
+//---------------------------------------------------
+function addIncubation() {
+    const batchName = document.getElementById("incBatchName").value.trim();
+    const startDate = document.getElementById("incStartDate").value;
+    const eggsSet = getInt("incEggsSet");
     const note = document.getElementById("incNote").value.trim();
 
-    if (!d || !eggs) return;
+    if (!batchName || !startDate || eggsSet <= 0) {
+        alert("Заповніть всі обов’язкові поля!");
+        return;
+    }
 
-    incData.push({ d, eggs, hatch: 0, note });
-    saveData("incData", incData);
+    const obj = {
+        batchName,
+        startDate,
+        eggsSet,
+        eggsInfertile: 0,
+        eggsHatched: 0,
+        deadIncubator: 0,
+        deadBrooder: 0,
+        aliveNow: eggsSet, 
+        humidityStart: "",
+        humidityFinish: "",
+        tempStart: "",
+        tempFinish: "",
+        note
+    };
+
+    INC.push(obj);
+    saveInc();
     renderInc();
 
-    document.getElementById("incEggs").value = "";
+    // Очистити форму
+    document.getElementById("incBatchName").value = "";
+    document.getElementById("incStartDate").value = "";
+    document.getElementById("incEggsSet").value = 0;
     document.getElementById("incNote").value = "";
 }
 
-function renderInc() {
-    const body = document.getElementById("incBody");
-    if (!body) return;
 
+//---------------------------------------------------
+//  ОНОВИТИ ОКРЕМЕ ПОЛЕ ПАРТІЇ (редагування прямо в таблиці)
+//---------------------------------------------------
+function updateIncField(i, field, value) {
+    const num = parseInt(value) || 0;
+
+    INC[i][field] = num;
+
+    // авто-рахунок живих
+    INC[i].aliveNow =
+        INC[i].eggsSet -
+        INC[i].eggsInfertile -
+        INC[i].deadIncubator -
+        INC[i].deadBrooder;
+
+    if (INC[i].aliveNow < 0) INC[i].aliveNow = 0;
+
+    saveInc();
+    renderInc();
+}
+
+
+//---------------------------------------------------
+//  ВИДАЛИТИ ПАРТІЮ
+//---------------------------------------------------
+function deleteInc(i) {
+    if (!confirm("Видалити цю інкубаційну партію?")) return;
+    INC.splice(i, 1);
+    saveInc();
+    renderInc();
+}
+
+
+//---------------------------------------------------
+//  РЕНДЕР СПИСКУ ПАРТІЙ (повна таблиця)
+//---------------------------------------------------
+function renderInc() {
+    loadInc();
+    const body = document.getElementById("incubationBody");
     body.innerHTML = "";
-    incData.forEach((item, i) => {
-        const now = new Date();
-        const dayNum = Math.floor((now - new Date(item.d)) / 86400000);
+
+    INC.forEach((item, i) => {
+        const days = daysSince(item.startDate);
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${i + 1}</td>
-            <td>${item.d}</td>
-            <td>${item.eggs}</td>
-            <td><input type="number" value="${item.hatch}" onchange="setHatch(${i}, this.value)"></td>
-            <td>${item.note}</td>
-            <td>${dayNum}</td>
-            <td><button class="m3-btn m3-btn-small" onclick="delInc(${i})">×</button></td>
+            <td>${item.batchName}</td>
+            <td>${item.startDate}</td>
+            <td>${days}</td>
+            <td>${item.eggsSet}</td>
+
+            <td><input type="number" value="${item.eggsInfertile}" onchange="updateIncField(${i}, 'eggsInfertile', this.value)" class="m3-input" style="width:70px;"></td>
+
+            <td><input type="number" value="${item.eggsHatched}" onchange="updateIncField(${i}, 'eggsHatched', this.value)" class="m3-input" style="width:70px;"></td>
+
+            <td><input type="number" value="${item.deadIncubator}" onchange="updateIncField(${i}, 'deadIncubator', this.value)" class="m3-input" style="width:70px;"></td>
+
+            <td><input type="number" value="${item.deadBrooder}" onchange="updateIncField(${i}, 'deadBrooder', this.value)" class="m3-input" style="width:70px;"></td>
+
+            <td>${item.aliveNow}</td>
+
+            <td>${item.note || ""}</td>
+
+            <td>
+                <button class="btn small-btn" onclick="deleteInc(${i})">🗑</button>
+            </td>
         `;
+
         body.appendChild(tr);
     });
-}
-
-function setHatch(i, v) {
-    incData[i].hatch = parseInt(v) || 0;
-    saveData("incData", incData);
-}
-
-function delInc(i) {
-    incData.splice(i, 1);
-    saveData("incData", incData);
-    renderInc();
 }
 
 // -------------------------------
@@ -753,6 +841,8 @@ function init() {
     renderLog();
     renderOrders();
     renderInc();
+
+    document.getElementById("addIncubation").addEventListener("click", addIncubation);
 
     // Встановлення дат
     const today = new Date();
