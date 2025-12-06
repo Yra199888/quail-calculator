@@ -352,34 +352,67 @@ function addOrder() {
 }
 
 function renderOrders() {
-    const activeBody = document.getElementById("ordersActive");
-    const doneBody = document.getElementById("ordersDone");
-    if (!activeBody || !doneBody) return;
+    const orders = loadOrders();
+    const body = document.getElementById("ordersBody");
+    const filter = document.getElementById("orderFilter")?.value || "all";
 
-    activeBody.innerHTML = "";
-    doneBody.innerHTML = "";
+    body.innerHTML = "";
 
     orders.forEach((o, i) => {
+
+        // Фільтрування
+        if (filter === "done" && !o.done) return;
+        if (filter === "active" && o.done) return;
+        if (filter === "cancel" && !o.cancelled) return;
+
         const tr = document.createElement("tr");
+
+        // Кольори
+        if (o.done) tr.className = "order-row-done";
+        else if (o.cancelled) tr.className = "order-row-cancel";
+        else tr.className = "order-row-active";
+
+        // HTML рядка
         tr.innerHTML = `
             <td>${o.n}</td>
             <td>${o.e}</td>
             <td>${o.t}</td>
             <td>${o.d}</td>
-            <td>${o.note}</td>
+            <td>${o.note || ""}</td>
             <td>
-                ${o.done
-                    ? `<button class="m3-btn m3-btn-small" onclick="delOrder(${i})">×</button>`
-                    : `
-                        <button class="m3-btn m3-btn-small" onclick="finishOrder(${i})">✓</button>
-                        <button class="m3-btn m3-btn-small" onclick="delOrder(${i})">×</button>
-                      `
-                }
+                <button class="btn small-btn" onclick="markDone(${i})">✔</button>
+                <button class="btn small-btn cancel" onclick="markCancel(${i})">✖</button>
             </td>
         `;
-        if (o.done) doneBody.appendChild(tr);
-        else activeBody.appendChild(tr);
+
+        body.appendChild(tr);
     });
+}
+
+function markDone(i) {
+    const orders = loadOrders();
+    orders[i].done = true;
+    orders[i].cancelled = false;
+    saveOrders(orders);
+    renderOrders();
+    renderClients(); 
+}
+
+function markCancel(i) {
+    const orders = loadOrders();
+    orders[i].done = false;
+    orders[i].cancelled = true;
+    saveOrders(orders);
+    renderOrders();
+    renderClients();
+}
+    
+    function loadOrders() {
+    return JSON.parse(localStorage.getItem("orders") || "[]");
+}
+
+function saveOrders(list) {
+    localStorage.setItem("orders", JSON.stringify(list));
 }
 
 function finishOrder(i) {
