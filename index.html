@@ -342,29 +342,134 @@
 
 </div>
 
-<!-- SECTION 10 — FINANCIAL REPORT -->
-<div class="m3-card">
+<!-- 10. ФІНАНСОВА АНАЛІТИКА -->
+<div class="m3-card" id="sec-finance">
 
-    <h2>10. Фінансовий звіт</h2>
+  <!-- 10.1. Підсумок дня -->
+  <h2 class="m3-title">10.1. Підсумок дня (корм + яйця)</h2>
+  <div class="table-wrapper">
+    <table class="m3-table">
+      <tr>
+        <td>Добова вартість корму (все стадо), грн</td>
+        <td class="right"><span id="summaryFeedCost">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Добова виручка від яєць, грн</td>
+        <td class="right"><span id="summaryEggIncome">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Орієнтовний результат за день (прибуток/збиток), грн</td>
+        <td class="right"><span id="summaryProfit">0.00</span></td>
+      </tr>
+    </table>
+  </div>
 
-    <div class="m3-input">
-        <label>Період від</label>
-        <input type="date" id="repFrom" onchange="recalcReport()">
-    </div>
+  <!-- 10.2. Фінансовий звіт за період -->
+  <h2 class="m3-title" id="financeSection">10.2. Фінансовий звіт за період</h2>
 
-    <div class="m3-input">
-        <label>Період до</label>
-        <input type="date" id="repTo" onchange="recalcReport()">
-    </div>
+  <p>
+    Період:
+    <select id="reportPeriod" onchange="recalcReport()">
+      <option value="7">Останні 7 днів</option>
+      <option value="30" selected>Останні 30 днів</option>
+      <option value="all">За весь час</option>
+    </select>
+  </p>
 
-    <p><b>Витрати:</b> <span id="repCosts">0</span> грн</p>
-    <p><b>Доходи:</b> <span id="repIncome">0</span> грн</p>
-    <p><b>Прибуток:</b> <span id="repProfit">0</span> грн</p>
+  <p>
+    Інші постійні витрати (на місяць), грн:
+    <input type="number" id="otherCostsMonthly" value="0" step="1" style="width:100px;"
+           oninput="recalcReport()">
+    <span class="small">Електрика, підстилка, амортизація тощо</span>
+  </p>
+  
+  <div class="table-wrapper">
+    <table class="m3-table">
+      <tr>
+        <td>Днів у звіті</td>
+        <td class="right"><span id="repDays">0</span></td>
+      </tr>
+      <tr>
+        <td>Зібрано яєць, шт</td>
+        <td class="right"><span id="repEggs">0</span></td>
+      </tr>
+      <tr>
+        <td>Продано лотків (по 20 шт)</td>
+        <td class="right"><span id="repTrays">0</span></td>
+      </tr>
+      <tr>
+        <td>Виручка, грн</td>
+        <td class="right"><span id="repIncome">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Витрати на корм, грн</td>
+        <td class="right"><span id="repFeedCost">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Чистий результат (прибуток), грн</td>
+        <td class="right"><span id="repProfit">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Середня продуктивність, %</td>
+        <td class="right"><span id="repProdAvg">0.0</span></td>
+      </tr>
+      <tr>
+        <td>Собівартість 1 яйця (корм), грн</td>
+        <td class="right"><span id="repCostPerEgg">0.000</span></td>
+      </tr>
+      <tr>
+        <td>Прибуток з 1 яйця, грн</td>
+        <td class="right"><span id="repProfitPerEgg">0.000</span></td>
+      </tr>
+      <tr>
+        <td>Прибуток з 1 самки за період, грн</td>
+        <td class="right"><span id="repProfitPerHen">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Інші витрати за період, грн</td>
+        <td class="right"><span id="repOtherCost">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Повна собівартість 1 яйця (корм + інші), грн</td>
+        <td class="right"><span id="repFullCostPerEgg">0.000</span></td>
+      </tr>
+      <tr>
+        <td>Прибуток з 1 яйця з урахуванням всіх витрат, грн</td>
+        <td class="right"><span id="repProfitPerEggFull">0.000</span></td>
+      </tr>
+    </table>
+  </div>
 
-    <h3>Економіка яйця</h3>
+  <!-- 10.3. Прогноз на 30 днів -->
+  <h2 class="m3-title">10.3. Прогноз на 30 днів</h2>
+  <p class="small">
+    Розрахунок на основі поточної середньої несучості, кількості самок, ціни лотка та добової вартості корму.
+  </p>
 
-    <p>Собівартість яйця: <b id="repCostPerEgg">0</b> грн</p>
-    <p>Прибуток з яйця: <b id="repProfitPerEgg">0</b> грн</p>
+  <div class="table-wrapper">
+    <table class="m3-table">
+      <tr>
+        <td>Очікуваних яєць за 30 днів</td>
+        <td class="right"><span id="fcastEggs">0</span></td>
+      </tr>
+      <tr>
+        <td>Очікуваних лотків (по 20 шт)</td>
+        <td class="right"><span id="fcastTrays">0</span></td>
+      </tr>
+      <tr>
+        <td>Очікувана виручка, грн</td>
+        <td class="right"><span id="fcastIncome">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Очікувані витрати на корм, грн</td>
+        <td class="right"><span id="fcastFeedCost">0.00</span></td>
+      </tr>
+      <tr>
+        <td>Орієнтовний прибуток за 30 днів, грн</td>
+        <td class="right"><span id="fcastProfit">0.00</span></td>
+      </tr>
+    </table>
+  </div>
 
 </div>
 
