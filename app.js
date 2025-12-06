@@ -710,6 +710,7 @@ function init() {
     recalcEggs();            // старий теоретичний розрахунок, якщо потрібен
     recalcEggsBalance();     // новий облік яєць
     recalcProductivity();    // нова продуктивність
+    recalcTraySummary();
 
     // Поголів'я
     recalcFlock();
