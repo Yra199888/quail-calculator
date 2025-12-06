@@ -355,42 +355,78 @@
 
 </div>
 
-<!-- SECTION 6 — INCUBATION -->
-<div class="m3-card">
+<!-- ========================================= -->
+<!--            SECTION 6 — INCUBATION         -->
+<!-- ========================================= -->
 
-    <h2>6. Інкубація</h2>
+<div class="m3-card" id="sec-incubation">
 
-    <div class="m3-input">
-        <label>Дата закладки</label>
-        <input type="date" id="incDate">
+    <!-- 6.0 ІНКУБАЦІЯ -->
+    <h2 class="m3-title">6. Інкубація</h2>
+
+    <p class="small">
+        Облік інкубаційних партій: дати закладки, кількість яєць,
+        результати овоскопії, вилуплення та втрати.
+    </p>
+
+
+    <!-- 6.1 ДОДАТИ НОВУ ПАРТІЮ -->
+    <h3 class="m3-subtitle">6.1. Нова інкубаційна партія</h3>
+
+    <div class="m3-field-group">
+
+        <p>
+            Назва / номер партії:
+            <input type="text" id="incBatchName" placeholder="Партія №3" class="m3-input">
+        </p>
+
+        <p>
+            Дата закладки:
+            <input type="date" id="incStartDate" class="m3-input">
+        </p>
+
+        <p>
+            Кількість закладених яєць:
+            <input type="number" id="incEggsSet" value="0" step="1" class="m3-input" style="width:100px;">
+        </p>
+
+        <p>
+            Нотатка (інкубатор, режим, порода тощо):
+            <textarea id="incNote" rows="2" class="m3-input" style="width:100%;"></textarea>
+        </p>
+
+        <button class="btn m3-btn" id="addIncubation">Додати партію</button>
+
     </div>
 
-    <div class="m3-input">
-        <label>Кількість яєць</label>
-        <input type="number" id="incEggs">
+
+
+    <!-- 6.2 СПИСОК ПАРТІЙ -->
+    <h3 class="m3-subtitle">6.2. Список інкубаційних партій</h3>
+
+    <div class="table-wrapper">
+        <table class="m3-table">
+            <thead>
+                <tr>
+                    <th>Партія</th>
+                    <th>Дата</th>
+                    <th>Днів у інкуб.</th>
+                    <th>Закладено</th>
+                    <th>Незапліднені</th>
+                    <th>Вилупилось</th>
+                    <th>Померли (інк.)</th>
+                    <th>Померли (брудер)</th>
+                    <th>Живі</th>
+                    <th>Нотатка</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+
+            <tbody id="incubationBody">
+                <!-- renderInc() підставить усі партії -->
+            </tbody>
+        </table>
     </div>
-
-    <div class="m3-input">
-        <label>Примітка</label>
-        <input type="text" id="incNote">
-    </div>
-
-    <button class="m3-btn" onclick="addInc()">Додати партію</button>
-
-    <table class="m3-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Дата</th>
-                <th>Яєць</th>
-                <th>Вилуп</th>
-                <th>Примітка</th>
-                <th>День</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody id="incBody"></tbody>
-    </table>
 
 </div>
 
