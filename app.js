@@ -697,37 +697,44 @@ function init() {
     buildFeedTables();
     recalcFeed();
 
-    // Базові розрахунки
-    recalcEggs();
+    // Базові розрахунки по яйцях
+    recalcEggs();            // теоретичні яйця (як було)
+    recalcEggsBalance();     // НОВЕ: облік яєць (зібрані / брак / свої / склад)
+    recalcProductivity();    // НОВЕ: фактична продуктивність і загальна кількість самок
+
+    // Поголів'я
     recalcFlock();
+
+    // Логи / замовлення / інкубація
     renderLog();
     renderOrders();
     renderInc();
 
-    // Дати за замовчуванням
+    // Дати за замовчуванням (для логів, замовлень, інкубації, звіту)
     const today = new Date();
     const prior = new Date();
     prior.setDate(today.getDate() - 30);
 
     const repFrom = document.getElementById("repFrom");
-    const repTo = document.getElementById("repTo");
+    const repTo   = document.getElementById("repTo");
     const logDate = document.getElementById("logDate");
+    const ordDate = document.getElementById("ordDate");
     const incDate = document.getElementById("incDate");
 
-    const toIso = d => d.toISOString().slice(0, 10);
-
     if (repFrom) repFrom.value = toIso(prior);
-    if (repTo) repTo.value = toIso(today);
+    if (repTo)   repTo.value   = toIso(today);
     if (logDate) logDate.value = toIso(today);
+    if (ordDate) ordDate.value = toIso(today);
     if (incDate) incDate.value = toIso(today);
 
+    // Фінансовий звіт (розрахунок за період)
     recalcReport();
 
     // Графіки
     buildCharts();
 
     // Кнопки Google Drive
-    const btnLogin = document.getElementById("btnDriveLogin");
+    const btnLogin  = document.getElementById("btnDriveLogin");
     const btnBackup = document.getElementById("btnBackup");
     const btnRestore = document.getElementById("btnRestore");
 
