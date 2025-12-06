@@ -266,7 +266,6 @@ function recalcProductivity() {
     set("productivityToday", prod.toFixed(1));
 }
 
-
 // -------------------------------
 //          ЩОДЕННИК (LOG)
 // -------------------------------
@@ -693,14 +692,14 @@ async function backupToDrive() {
 //            INIT
 // -------------------------------
 function init() {
-    // Генерація таблиць комбікорму
+    // Корм
     buildFeedTables();
     recalcFeed();
 
-    // Базові розрахунки по яйцях
-    recalcEggs();            // теоретичні яйця (як було)
-    recalcEggsBalance();     // НОВЕ: облік яєць (зібрані / брак / свої / склад)
-    recalcProductivity();    // НОВЕ: фактична продуктивність і загальна кількість самок
+    // Яйця (нові функції)
+    recalcEggs();            // старий теоретичний розрахунок, якщо потрібен
+    recalcEggsBalance();     // новий облік яєць
+    recalcProductivity();    // нова продуктивність
 
     // Поголів'я
     recalcFlock();
@@ -710,55 +709,27 @@ function init() {
     renderOrders();
     renderInc();
 
-    // Дати за замовчуванням (для логів, замовлень, інкубації, звіту)
+    // Встановлення дат
     const today = new Date();
     const prior = new Date();
     prior.setDate(today.getDate() - 30);
 
-    const repFrom = document.getElementById("repFrom");
-    const repTo   = document.getElementById("repTo");
-    const logDate = document.getElementById("logDate");
-    const ordDate = document.getElementById("ordDate");
-    const incDate = document.getElementById("incDate");
+    if (document.getElementById("repFrom")) document.getElementById("repFrom").value = toIso(prior);
+    if (document.getElementById("repTo"))   document.getElementById("repTo").value   = toIso(today);
 
-    if (repFrom) repFrom.value = toIso(prior);
-    if (repTo)   repTo.value   = toIso(today);
-    if (logDate) logDate.value = toIso(today);
-    if (ordDate) ordDate.value = toIso(today);
-    if (incDate) incDate.value = toIso(today);
+    if (document.getElementById("logDate")) document.getElementById("logDate").value = toIso(today);
+    if (document.getElementById("ordDate")) document.getElementById("ordDate").value = toIso(today);
+    if (document.getElementById("incDate")) document.getElementById("incDate").value = toIso(today);
 
-    // Фінансовий звіт (розрахунок за період)
+    // Фінансова аналітика
+    recalcSummary();
     recalcReport();
+    recalcForecast30();
 
     // Графіки
     buildCharts();
 
-    // Кнопки Google Drive
-    const btnLogin  = document.getElementById("btnDriveLogin");
-    const btnBackup = document.getElementById("btnBackup");
-    const btnRestore = document.getElementById("btnRestore");
-
-    if (btnLogin) {
-        btnLogin.addEventListener("click", async () => {
-            try {
-                await requestDriveToken();
-                alert("Успішний вхід у Google.");
-            } catch (e) {
-                alert("Не вдалося увійти у Google.");
-            }
-        });
-    }
-
-    if (btnBackup) {
-        btnBackup.addEventListener("click", backupToDrive);
-    }
-
-    if (btnRestore) {
-        btnRestore.addEventListener("click", () => {
-            alert("Відновлення з Google Drive можна реалізувати пізніше.");
-        });
-    }
-
+    // Google Drive
     updateDriveUI();
 }
 
