@@ -497,7 +497,8 @@ function deleteInc(i) {
 //---------------------------------------------------
 //  РЕНДЕР ТАБЛИЦІ ІЗ ФІЛЬТРАМИ ТА НАГАДУВАННЯМИ
 //---------------------------------------------------
-function renderInc() {
+
+    function renderInc() {
     loadInc();
     const body = document.getElementById("incubationBody");
     if (!body) return;
@@ -506,8 +507,12 @@ function renderInc() {
     const filter = document.getElementById("incFilter")?.value || "all";
 
     INC.forEach((item, i) => {
+
         const days = daysSince(item.startDate);
 
+        // -----------------------
+        //  ФІЛЬТРАЦІЯ
+        // -----------------------
         let pass = true;
 
         if (filter === "active") pass = item.aliveNow > 0;
@@ -517,15 +522,35 @@ function renderInc() {
 
         if (!pass) return;
 
+        // -----------------------
+        //  КОЛЬОРИ РЯДКІВ
+        // -----------------------
+        let rowClass = "inc-blue"; // базовий колір
+
+        if (item.aliveNow <= 0) rowClass = "inc-green";
+        else if (days === 7) rowClass = "inc-yellow";
+        else if (days === 14) rowClass = "inc-orange";
+        else if (days === 17) rowClass = "inc-red";
+        else if (days === 18) rowClass = "inc-red2";
+        else if (days >= 16 && days <= 18) rowClass = "inc-purple";
+
+        // -----------------------
+        //  НАГАДУВАННЯ
+        // -----------------------
         let remind = "";
 
-        if (days === 7) remind = "🟡 Овоскопія №1 сьогодні";
-        else if (days === 14) remind = "🟠 Овоскопія №2 сьогодні";
-        else if (days === 17) remind = "🔴 Припинити перевертання";
-        else if (days === 18) remind = "🔴 Підвищити вологість";
-        else if (days >= 16 && days <= 18) remind = "🐣 Період вилуплення";
+        if (days === 7) remind = "Овоскопія №1";
+        else if (days === 14) remind = "Овоскопія №2";
+        else if (days === 17) remind = "Стоп перевороту";
+        else if (days === 18) remind = "Підвищити вологість";
+        else if (days >= 16 && days <= 18) remind = "Період вилуплення";
 
+        // -----------------------
+        //  РЯДОК ТАБЛИЦІ
+        // -----------------------
         const tr = document.createElement("tr");
+        tr.className = rowClass;
+
         tr.innerHTML = `
             <td>${item.batchName}</td>
             <td>${item.startDate}</td>
@@ -546,7 +571,9 @@ function renderInc() {
 
             <td>${item.note || ""}</td>
 
-            <td><button class="btn small-btn" onclick="deleteInc(${i})">🗑</button></td>
+            <td>
+                <button class="btn small-btn" onclick="deleteInc(${i})">🗑</button>
+            </td>
         `;
 
         body.appendChild(tr);
