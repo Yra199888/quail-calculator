@@ -441,11 +441,13 @@ function addIncubation() {
         eggsHatched: 0,
         deadIncubator: 0,
         deadBrooder: 0,
-        aliveNow: eggsSet, 
+        aliveNow: eggsSet,
+
         humidityStart: "",
         humidityFinish: "",
         tempStart: "",
         tempFinish: "",
+
         note
     };
 
@@ -453,7 +455,6 @@ function addIncubation() {
     saveInc();
     renderInc();
 
-    // Очистити форму
     document.getElementById("incBatchName").value = "";
     document.getElementById("incStartDate").value = "";
     document.getElementById("incEggsSet").value = 0;
@@ -462,14 +463,13 @@ function addIncubation() {
 
 
 //---------------------------------------------------
-//  ОНОВИТИ ОКРЕМЕ ПОЛЕ ПАРТІЇ (редагування прямо в таблиці)
+//  ОНОВЛЕННЯ ПОЛІВ ПАРТІЇ
 //---------------------------------------------------
 function updateIncField(i, field, value) {
     const num = parseInt(value) || 0;
 
     INC[i][field] = num;
 
-    // авто-рахунок живих
     INC[i].aliveNow =
         INC[i].eggsSet -
         INC[i].eggsInfertile -
@@ -484,7 +484,7 @@ function updateIncField(i, field, value) {
 
 
 //---------------------------------------------------
-//  ВИДАЛИТИ ПАРТІЮ
+//  ВИДАЛЕННЯ ПАРТІЇ
 //---------------------------------------------------
 function deleteInc(i) {
     if (!confirm("Видалити цю інкубаційну партію?")) return;
@@ -495,15 +495,35 @@ function deleteInc(i) {
 
 
 //---------------------------------------------------
-//  РЕНДЕР СПИСКУ ПАРТІЙ (повна таблиця)
+//  РЕНДЕР ТАБЛИЦІ ІЗ ФІЛЬТРАМИ ТА НАГАДУВАННЯМИ
 //---------------------------------------------------
 function renderInc() {
     loadInc();
     const body = document.getElementById("incubationBody");
+    if (!body) return;
     body.innerHTML = "";
+
+    const filter = document.getElementById("incFilter")?.value || "all";
 
     INC.forEach((item, i) => {
         const days = daysSince(item.startDate);
+
+        let pass = true;
+
+        if (filter === "active") pass = item.aliveNow > 0;
+        if (filter === "done") pass = item.aliveNow <= 0;
+        if (filter === "candling") pass = days >= 7 && days < 15;
+        if (filter === "hatch") pass = days >= 16 && days <= 18;
+
+        if (!pass) return;
+
+        let remind = "";
+
+        if (days === 7) remind = "🟡 Овоскопія №1 сьогодні";
+        else if (days === 14) remind = "🟠 Овоскопія №2 сьогодні";
+        else if (days === 17) remind = "🔴 Припинити перевертання";
+        else if (days === 18) remind = "🔴 Підвищити вологість";
+        else if (days >= 16 && days <= 18) remind = "🐣 Період вилуплення";
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -522,11 +542,11 @@ function renderInc() {
 
             <td>${item.aliveNow}</td>
 
+            <td class="small">${remind || "-"}</td>
+
             <td>${item.note || ""}</td>
 
-            <td>
-                <button class="btn small-btn" onclick="deleteInc(${i})">🗑</button>
-            </td>
+            <td><button class="btn small-btn" onclick="deleteInc(${i})">🗑</button></td>
         `;
 
         body.appendChild(tr);
@@ -842,8 +862,8 @@ function init() {
     renderOrders();
     renderInc();
 
-    document.getElementById("addIncubation").addEventListener("click", addIncubation);
-
+document.getElementById("addIncubation").addEventListener("click", addIncubation);
+    
     // Встановлення дат
     const today = new Date();
     const prior = new Date();
