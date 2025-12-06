@@ -221,6 +221,52 @@ function recalcEggs() {
     updateCharts();
 }
 
+function recalcEggsBalance() {
+    const total = getInt("eggsTotal");
+    const bad = getInt("eggsBad");
+    const own = getInt("eggsOwn");
+    const carry = getInt("eggsCarry");
+    const trayPrice = getFloat("trayPrice");
+
+    let goodToday = total - bad - own;
+    if (goodToday < 0) goodToday = 0;
+
+    const eggsForSale = goodToday;
+    const eggsForSaleTotal = eggsForSale + carry;
+
+    const traySize = 20;
+    const traysCount = Math.floor(eggsForSaleTotal / traySize);
+    const eggsRemainder = eggsForSaleTotal - traysCount * traySize;
+
+    const income = traysCount * trayPrice;
+
+    set("eggsForSale", eggsForSale);
+    set("eggsForSaleTotal", eggsForSaleTotal);
+    set("traysCount", traysCount);
+    set("eggsRemainder", eggsRemainder);
+    set("income", income.toFixed(2));
+}
+
+function recalcProductivity() {
+    const hens1 = getInt("hens1");
+    const hens2 = getInt("hens2");
+    const totalHens = hens1 + hens2;
+
+    set("hensTotal", totalHens);
+
+    const eggsTotal = getInt("eggsTotal");
+    const bad = getInt("eggsBad");
+    const own = getInt("eggsOwn");
+
+    const goodEggs = eggsTotal - bad - own;
+
+    let prod = 0;
+    if (totalHens > 0) prod = (goodEggs / totalHens) * 100;
+
+    set("productivityToday", prod.toFixed(1));
+}
+
+
 // -------------------------------
 //          ЩОДЕННИК (LOG)
 // -------------------------------
