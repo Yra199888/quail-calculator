@@ -139,3 +139,6 @@ body {
 .inc-red2   { background: #ffb6b6; } /* підвищити вологість 18 день */
 .inc-purple { background: #f4e2ff; } /* період вилуплення 16–18 день */
 .inc-green  { background: #e1ffd9; } /* завершена */
+.order-row-active   { background: #e9f3ff; } /* активне замовлення */
+.order-row-done     { background: #e6ffd9; } /* виконано */
+.order-row-cancel   { background: #ffe3e3; } /* скасовано */
