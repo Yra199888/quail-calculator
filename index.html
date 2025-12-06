@@ -387,7 +387,7 @@
 
         <p>
             Кількість закладених яєць:
-            <input type="number" id="incEggsSet" value="0" step="1" class="m3-input" style="width:100px;">
+            <input type="number" id="incEggsSet" value="0" step="1" class="m3-input" style="width:120px;">
         </p>
 
         <p>
@@ -396,13 +396,26 @@
         </p>
 
         <button class="btn m3-btn" id="addIncubation">Додати партію</button>
-
     </div>
 
 
+    <!-- 6.2 ФІЛЬТР -->
+    <h3 class="m3-subtitle">6.2. Фільтр партій</h3>
 
-    <!-- 6.2 СПИСОК ПАРТІЙ -->
-    <h3 class="m3-subtitle">6.2. Список інкубаційних партій</h3>
+    <p>
+      Показувати:
+      <select id="incFilter" class="m3-input" style="width:220px;" onchange="renderInc()">
+          <option value="all">Всі партії</option>
+          <option value="active">Активні</option>
+          <option value="done">Завершені</option>
+          <option value="candling">На овоскопії</option>
+          <option value="hatch">Етап виведення</option>
+      </select>
+    </p>
+
+
+    <!-- 6.3 СПИСОК ПАРТІЙ -->
+    <h3 class="m3-subtitle">6.3. Список інкубаційних партій</h3>
 
     <div class="table-wrapper">
         <table class="m3-table">
@@ -410,20 +423,21 @@
                 <tr>
                     <th>Партія</th>
                     <th>Дата</th>
-                    <th>Днів у інкуб.</th>
+                    <th>Днів</th>
                     <th>Закладено</th>
                     <th>Незапліднені</th>
                     <th>Вилупилось</th>
                     <th>Померли (інк.)</th>
                     <th>Померли (брудер)</th>
                     <th>Живі</th>
+                    <th>Нагадування</th>
                     <th>Нотатка</th>
                     <th>Дії</th>
                 </tr>
             </thead>
 
             <tbody id="incubationBody">
-                <!-- renderInc() підставить усі партії -->
+                <!-- renderInc() вставляє дані -->
             </tbody>
         </table>
     </div>
