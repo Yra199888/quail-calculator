@@ -253,6 +253,7 @@ function recalcEggsBalance() {
     set("income", income.toFixed(2));
 
     recalcTraySummary();   // ← ТУТ
+    localStorage.setItem("TRAY_PRICE", trayPrice);
 }
 
 function recalcProductivity() {
