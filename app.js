@@ -266,6 +266,16 @@ function recalcProductivity() {
     set("productivityToday", prod.toFixed(1));
 }
 
+function recalcTraySummary() {
+    const traysToday = getInt("traysCount");      // лотки із секції 2.1
+    const reserved = getInt("reservedTrays");     // з активних замовлень
+
+    const free = Math.max(0, traysToday - reserved);
+
+    set("totalTraysTodayLabel", traysToday);
+    set("freeTrays", free);
+}
+
 // -------------------------------
 //          ЩОДЕННИК (LOG)
 // -------------------------------
