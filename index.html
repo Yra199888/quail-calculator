@@ -55,27 +55,79 @@
 <!-- SECTION 2 — EGGS -->
 <div class="m3-card">
 
-    <h2>2. Яйця</h2>
+<!-- 2. Облік яєць -->
+<div class="m3-card" id="sec-eggs">
 
-    <div class="m3-input">
-        <label>Кількість самок</label>
-        <input type="number" id="hens" value="40" onchange="recalcEggs()">
-    </div>
+  <h2 class="m3-title">2. Облік яєць</h2>
 
-    <div class="m3-input">
-        <label>Несучість (%)</label>
-        <input type="number" id="eggRate" value="80" onchange="recalcEggs()">
-    </div>
+  <p>Кількість зібраних яєць за добу:
+    <input type="number" id="eggsTotal" value="0" step="1" style="width:80px;" oninput="recalcEggsBalance(); recalcProductivity();">
+  </p>
 
-    <div class="m3-input">
-        <label>Ціна за десяток (грн)</label>
-        <input type="number" id="eggPrice10" value="50" onchange="recalcEggs()">
-    </div>
+  <p>Браковані яйця:
+    <input type="number" id="eggsBad" value="0" step="1" style="width:80px;" oninput="recalcEggsBalance(); recalcProductivity();">
+  </p>
 
-    <p><b>За день:</b> <span id="eggsPerDay">0</span> яєць</p>
-    <p><b>Дохід за день:</b> <span id="incomePerDay">0</span> грн</p>
+  <p>Для власного використання:
+    <input type="number" id="eggsOwn" value="0" step="1" style="width:80px;" oninput="recalcEggsBalance(); recalcProductivity();">
+  </p>
 
-    <p><b>За 30 днів:</b> <span id="eggsPerMonth">0</span> яєць, <span id="incomePerMonth">0</span> грн</p>
+  <p>Яйця, що залишилися з попередніх днів (складський залишок):
+    <input type="number" id="eggsCarry" value="0" step="1" style="width:80px;" oninput="recalcEggsBalance();">
+    <span class="small">Якщо щось збилося — виправ вручну.</span>
+  </p>
+
+  <div class="table-wrapper">
+    <table class="m3-table">
+      <tr>
+        <td>Яєць доступно для продажу СЬОГОДНІ</td>
+        <td class="right"><span id="eggsForSale">0</span></td>
+      </tr>
+      <tr>
+        <td>Всього яєць для продажу (разом із залишком)</td>
+        <td class="right"><span id="eggsForSaleTotal">0</span></td>
+      </tr>
+      <tr>
+        <td>Кількість повних лотків (по 20 шт)</td>
+        <td class="right"><span id="traysCount">0</span></td>
+      </tr>
+      <tr>
+        <td>Залишок яєць після повних лотків</td>
+        <td class="right"><span id="eggsRemainder">0</span></td>
+      </tr>
+      <tr>
+        <td>Ціна за 1 лоток, грн</td>
+        <td><input type="number" id="trayPrice" value="0" step="1" style="width:80px;" oninput="recalcEggsBalance();"></td>
+      </tr>
+      <tr>
+        <td>Сума виручки, грн</td>
+        <td class="right"><span id="income">0.00</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>2.2. Самки та продуктивність</h3>
+
+  <p>Кількість самок у 1-й партії (7 серпня):
+    <input type="number" id="hens1" value="0" step="1" style="width:80px;" oninput="recalcProductivity();">
+  </p>
+
+  <p>Кількість самок у 2-й партії (19 жовтня):
+    <input type="number" id="hens2" value="0" step="1" style="width:80px;" oninput="recalcProductivity();">
+  </p>
+
+  <div class="table-wrapper">
+    <table class="m3-table">
+      <tr>
+        <td>Самок всього</td>
+        <td class="right"><span id="hensTotal">0</span></td>
+      </tr>
+      <tr>
+        <td>Фактична продуктивність сьогодні, %</td>
+        <td class="right"><span id="productivityToday">0.0</span></td>
+      </tr>
+    </table>
+  </div>
 
 </div>
 
