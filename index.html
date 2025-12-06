@@ -160,10 +160,67 @@
 
 </div>
 
-<!-- SECTION 3 — STOCKS -->
-<div class="m3-card">
+<!-- ========================= -->
+<!--      SECTION 3 — FEED     -->
+<!-- ========================= -->
 
-    <h2>3. Запаси компонентів</h2>
+<div class="m3-card" id="sec-feed">
+
+    <!-- 3.1 РЕЦЕПТ КОМБІКОРМУ -->
+    <h2 class="m3-title">3.1. Рецепт комбікорму</h2>
+
+    <p class="small">Розрахунок інгредієнтів залежно від розміру партії.</p>
+
+    <p>
+        Вага партії (кг):
+        <input type="number" id="feedBatchKg" value="25" step="1" style="width:90px;" oninput="recalcFeed()">
+    </p>
+
+    <table class="m3-table">
+        <thead>
+            <tr>
+                <th>Компонент</th>
+                <th>%</th>
+                <th>Кількість (кг)</th>
+            </tr>
+        </thead>
+        <tbody id="feedTableRows">
+            <!-- генерується через JS -->
+        </tbody>
+    </table>
+
+    <p class="small">Зміни рецепту застосовуються автоматично.</p>
+
+    <!-- 3.2 ДОБОВА НОРМА КОМБІКОРМУ -->
+    <h2 class="m3-title">3.2. Добова норма комбікорму</h2>
+
+    <p>
+        Добова норма комбікорму на 1 самку, грам:
+        <input type="number" id="feedDailyPerHen" value="30" step="1" style="width:90px;" oninput="recalcFeed()">
+    </p>
+
+    <p>
+        Кількість птахів:
+        <span id="feedBirdCount">0</span>
+    </p>
+
+    <div class="table-wrapper">
+        <table class="m3-table">
+            <tr>
+                <td>Добова потреба комбікорму (кг)</td>
+                <td class="right"><span id="dailyFeedNeed">0.00</span></td>
+            </tr>
+            <tr>
+                <td>Вартість комбікорму на добу, грн</td>
+                <td class="right"><span id="dailyFeedCost">0.00</span></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 3.3 ЗАПАСИ КОМПОНЕНТІВ -->
+    <h2 class="m3-title">3.3. Запаси компонентів</h2>
+
+    <p class="small">Порівняння наявних запасів із тим, що потрібно для рецепту.</p>
 
     <table class="m3-table">
         <thead>
@@ -175,9 +232,40 @@
             </tr>
         </thead>
         <tbody id="stockRows">
-            <!-- Генерується автоматично -->
+            <!-- генерується через JS -->
         </tbody>
     </table>
+
+    <!-- 3.4 СКЛАД ГОТОВОГО КОМБІКОРМУ -->
+    <h2 class="m3-title">3.4. Склад готового комбікорму</h2>
+
+    <p class="small">Облік реально намішаного корму та його залишку.</p>
+
+    <p>
+        Готовий комбікорм на складі: 
+        <span id="feedReadyStock">0.0</span> кг
+    </p>
+
+    <p>
+        Вага однієї партії комбікорму:
+        <input type="number" id="feedBatchSize" value="25" step="1" style="width:90px;">
+    </p>
+
+    <button class="btn" id="produceFeedBatch">Виготовити партію комбікорму</button>
+    <button class="btn" id="consumeDailyFeed">Списати добову норму</button>
+
+    <div class="table-wrapper">
+        <table class="m3-table">
+            <tr>
+                <td>Залишок комбікорму (кг)</td>
+                <td class="right"><span id="feedStockRemain">0.0</span></td>
+            </tr>
+            <tr>
+                <td>Хватить на днів</td>
+                <td class="right"><span id="feedDaysLeft">0</span></td>
+            </tr>
+        </table>
+    </div>
 
 </div>
 
