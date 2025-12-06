@@ -130,3 +130,12 @@ body {
 .m3-btn-secondary {
     background: var(--m3-secondary);
 }
+
+/* ІНКУБАЦІЯ — кольорові статуси рядків */
+.inc-blue   { background: #e8f1ff; } /* активна */
+.inc-yellow { background: #fff8d5; } /* овоскопія 7 день */
+.inc-orange { background: #ffe3c2; } /* овоскопія 14 день */
+.inc-red    { background: #ffd2d2; } /* стоп перевороту 17 день */
+.inc-red2   { background: #ffb6b6; } /* підвищити вологість 18 день */
+.inc-purple { background: #f4e2ff; } /* період вилуплення 16–18 день */
+.inc-green  { background: #e1ffd9; } /* завершена */
