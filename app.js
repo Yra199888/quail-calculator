@@ -553,6 +553,103 @@ function recalcFeed() {
     document.getElementById("feedTotalCost").textContent = totalCost.toFixed(2);
 }
 
+
+/* ============================================================
+   GOOGLE DRIVE — PRO MODE
+============================================================ */
+
+let googleUser = null;
+
+// Крок 1 — кнопка входу
+document.getElementById("btnLogin").onclick = () => {
+    google.accounts.id.initialize({
+        client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
+        callback: handleCredentialResponse
+    });
+    google.accounts.id.prompt();
+};
+
+function handleCredentialResponse(res) {
+    googleUser = res.credential;
+    document.getElementById("driveStatus").textContent = "Авторизація успішна";
+    document.getElementById("btnBackup").disabled = false;
+    document.getElementById("btnRestore").disabled = false;
+}
+
+// Крок 2 — створення резервної копії
+document.getElementById("btnBackup").onclick = async () => {
+    try {
+        let data = JSON.stringify({
+            orders,
+            incubation,
+            feed: { feedRecipe, feedStock, readyFeedKg }
+        });
+
+        const file = new Blob([data], { type: "application/json" });
+
+        let response = await gapi.client.drive.files.create({
+            resource: {
+                name: "quail_backup.json",
+                mimeType: "application/json"
+            },
+            media: {
+                mimeType: "application/json",
+                body: file
+            }
+        });
+
+        alert("Резервна копія збережена");
+    }
+    catch (err) {
+        console.error(err);
+        alert("Помилка при збереженні");
+    }
+};
+
+// Крок 3 — відновлення
+document.getElementById("btnRestore").onclick = async () => {
+    try {
+        const res = await gapi.client.drive.files.list({
+            q: "name='quail_backup.json'",
+            spaces: "drive",
+            fields: "files(id,name)"
+        });
+
+        if (!res.result.files || res.result.files.length === 0) {
+            alert("Файл резервної копії не знайдено");
+            return;
+        }
+
+        const fileId = res.result.files[0].id;
+
+        const file = await gapi.client.drive.files.get({
+            fileId,
+            alt: "media"
+        });
+
+        const data = JSON.parse(file.body);
+
+        orders = data.orders || [];
+        incubation = data.incubation || [];
+        feedRecipe = data.feed?.feedRecipe || feedRecipe;
+        feedStock = data.feed?.feedStock || feedStock;
+        readyFeedKg = data.feed?.readyFeedKg || 0;
+
+        renderOrders();
+        renderInc();
+        recalcFeed();
+        recalcEggsBalance();
+        recalcProductivity();
+
+        alert("Дані успішно відновлено");
+
+    } catch (err) {
+        console.error(err);
+        alert("Помилка при відновленні");
+    }
+};
+
+
 /* ============================================================
    11. INIT
 ============================================================ */
