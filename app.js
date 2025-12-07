@@ -559,8 +559,10 @@ function recalcFeed() {
 ============================================================ */
 
 const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
-const API_KEY = "AIzaSyD0t-REPLACE-YOURS";  // якщо немає — залиш пустим
-const SCOPES = "https://www.googleapis.com/auth/drive.file";
+const API_KEY = "";
+const SCOPES = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file";
+const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
+
 
 let tokenClient;
 let gapiInited = false;
