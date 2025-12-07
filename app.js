@@ -72,7 +72,6 @@ function loadData(key, fallback = []) {
 // -------------------------------
 let logData   = loadData("logData", []);
 let orders    = loadData("orders", []);
-let incData   = loadData("incData", []);
 
 let chartEggs  = null;
 let chartIncome = null;
@@ -352,27 +351,21 @@ function addOrder() {
 }
 
 function renderOrders() {
-    const orders = loadOrders();
-    const body = document.getElementById("ordersBody");
-    const filter = document.getElementById("orderFilter")?.value || "all";
+    const list = loadOrders();
 
-    body.innerHTML = "";
+    const activeBody = document.getElementById("ordersActive");
+    const doneBody   = document.getElementById("ordersDone");
 
-    orders.forEach((o, i) => {
+    activeBody.innerHTML = "";
+    doneBody.innerHTML = "";
 
-        // Фільтрування
-        if (filter === "done" && !o.done) return;
-        if (filter === "active" && o.done) return;
-        if (filter === "cancel" && !o.cancelled) return;
-
+    list.forEach((o, i) => {
         const tr = document.createElement("tr");
 
-        // Кольори
         if (o.done) tr.className = "order-row-done";
         else if (o.cancelled) tr.className = "order-row-cancel";
         else tr.className = "order-row-active";
 
-        // HTML рядка
         tr.innerHTML = `
             <td>${o.n}</td>
             <td>${o.e}</td>
@@ -385,9 +378,13 @@ function renderOrders() {
             </td>
         `;
 
-        body.appendChild(tr);
+        if (o.done) doneBody.appendChild(tr);
+        else activeBody.appendChild(tr);
     });
+
+    updateReservedTrays();
 }
+
 
 function markDone(i) {
     const orders = loadOrders();
@@ -405,6 +402,18 @@ function markCancel(i) {
     saveOrders(orders);
     renderOrders();
     renderClients();
+}
+
+function updateReservedTrays() {
+    const list = loadOrders();
+    let reserved = 0;
+
+    list.forEach(o => {
+        if (!o.done && !o.cancelled) reserved += o.t;
+    });
+
+    set("reservedTrays", reserved);
+    recalcTraySummary();
 }
 
 function loadOrders() {
@@ -789,41 +798,6 @@ function updateCharts() {
     });
 }
 
-
-    // Відображення
-    Object.keys(clients).forEach(name => {
-        const c = clients[name];
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${name}</td>
-            <td>${c.count}</td>
-            <td>${c.trays}</td>
-            <td>${c.eggs}</td>
-            <td>${c.sum.toFixed(2)}</td>
-            <td>${c.last}</td>
-        `;
-        body.appendChild(tr);
-    });
-}
-
-    // Відображення
-    Object.keys(clients).forEach(name => {
-        const c = clients[name];
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${name}</td>
-            <td>${c.count}</td>
-            <td>${c.trays}</td>
-            <td>${c.eggs}</td>
-            <td>${c.sum.toFixed(2)}</td>
-            <td>${c.last}</td>
-        `;
-
-        body.appendChild(tr);
-    });
-}
 
 // -------------------------------
 //        GOOGLE DRIVE BACKUP
