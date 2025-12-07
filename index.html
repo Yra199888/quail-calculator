@@ -131,7 +131,35 @@ input:focus, select:focus, textarea:focus {
     display: block;
 }
 
-        
+        .buy-red {
+    background: #ffdddd;
+    border-left: 6px solid #b30000;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.buy-orange {
+    background: #fff4dd;
+    border-left: 6px solid #e69500;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.buy-green {
+    background: #e3f5da;
+    border-left: 6px solid #2d6a1f;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+#needToBuyBox {
+    margin-top: 12px;
+    font-size: 17px;
+}
+
 
 
 </style>
@@ -277,6 +305,16 @@ input:focus, select:focus, textarea:focus {
           </tr>
       </table>
   </div>
+
+    <div class="m3-card">
+    <h2>3.5 Мені треба купити…</h2>
+    <p class="small">Автоматичний аналіз запасів + рецепту + споживання.</p>
+
+    <div id="needToBuyBox">
+        <!-- Список генерується автоматично з app.js -->
+    </div>
+</div>
+
 
 </div>
 
