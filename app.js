@@ -553,6 +553,42 @@ function recalcFeed() {
     document.getElementById("feedTotalCost").textContent = totalCost.toFixed(2);
 }
 
+function analyzeNeeds() {
+    if (!window.feedRecipe || !window.stocks) return;
+
+    let html = "";
+    let dailyFeed = (window.hensTotal || 0) * 0.03; // 30 г на добу
+    let batchKg = Number(document.getElementById("targetKg")?.value || 25);
+
+    for (let comp of Object.keys(feedRecipe)) {
+        let needForBatch = (feedRecipe[comp] / 100) * batchKg;
+        let stock = window.stocks[comp] || 0;
+
+        let shortage = stock - needForBatch;
+
+        if (shortage < 0) {
+            html += `
+                <div class="buy-red">
+                    🟥 <b>${comp}</b>: потрібно купити <b>${Math.abs(shortage).toFixed(1)} кг</b>
+                </div>`;
+        } 
+        else if (stock < dailyFeed * 3) {
+            html += `
+                <div class="buy-orange">
+                    🟧 <b>${comp}</b>: мало (хватить лише на ${(stock / dailyFeed).toFixed(1)} дн.)
+                </div>`;
+        } 
+        else {
+            html += `
+                <div class="buy-green">
+                    🟩 <b>${comp}</b>: достатньо (${stock.toFixed(1)} кг)
+                </div>`;
+        }
+    }
+
+    document.getElementById("needToBuyBox").innerHTML = html;
+}
+
 
 /* ============================================================
    AUTO BACKUP SYSTEM: LocalStorage + Google Drive Sync
@@ -708,8 +744,11 @@ async function uploadJsonToDrive(filename, content) {
 window.onload = () => {
     showPage("feed");
     recalcFeed();
+    analyzeNeeds();
     recalcEggsBalance();
     recalcProductivity();
+    analyzeNeeds();
+
 };
 
 /* ============================================================
