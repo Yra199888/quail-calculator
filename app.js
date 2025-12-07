@@ -1,1037 +1,229 @@
-// ===============================
-//   КАЛЬКУЛЯТОР ПЕРЕПІЛОК — app.js
-//   Material 3, Light/Dark Auto
-// ===============================
-"use strict";
+// =======================
+//   GLOBAL STORAGE
+// =======================
 
-// -------------------------------
-//   ДАНІ КОМПОНЕНТІВ КОМБІКОРМУ
-// -------------------------------
-const feedComponents = [
-    { key: "corn",       name: "Кукурудза" },
-    { key: "wheat",      name: "Пшениця" },
-    { key: "barley",     name: "Ячмінь" },
-    { key: "soy",        name: "Соєва макуха" },
-    { key: "sunflower",  name: "Соняшникова макуха" },
-    { key: "fishmeal",   name: "Рибне борошно" },
-    { key: "yeast",      name: "Кормові дріжджі" },
-    { key: "tcp",        name: "Трикальційфосфат" },
-    { key: "dolfos",     name: "Дольфос D" },
-    { key: "salt",       name: "Сіль кухонна" }
-];
+let STATE = {
+    feed: {
+        recipe: [],
+        stock: [],
+        batchKg: 25,
+        dailyPerHen: 30,
+        readyStock: 0
+    },
 
-// Рецепти (базові на 25 кг, далі можна масштабувати)
-const recipePresets = {
-    starter: {
-        corn: 8, wheat: 4, barley: 3, soy: 5,
-        sunflower: 2, fishmeal: 1, yeast: 1,
-        tcp: 0.5, dolfos: 0.5, salt: 0.1
+    eggs: {
+        total: 0,
+        bad: 0,
+        own: 0,
+        carry: 0,
+        hens1: 0,
+        hens2: 0
     },
-    grower: {
-        corn: 10, wheat: 4, barley: 3, soy: 4,
-        sunflower: 1, fishmeal: 0.5, yeast: 0.5,
-        tcp: 0.5, dolfos: 0.3, salt: 0.1
-    },
-    layer: {
-        corn: 12, wheat: 5, barley: 4, soy: 5,
-        sunflower: 2, fishmeal: 0.5, yeast: 0.5,
-        tcp: 1, dolfos: 0.5, salt: 0.2
-    }
+
+    orders: [],
+    logs: [],
+    incubations: [],
+    clients: []
 };
 
-// -------------------------------
-//         ХЕЛПЕРИ
-// -------------------------------
+// ---- Автозавантаження з localStorage
+if (localStorage.getItem("quailData")) {
+    STATE = JSON.parse(localStorage.getItem("quailData"));
+}
+
+// ---- Автозбереження
+function save() {
+    localStorage.setItem("quailData", JSON.stringify(STATE));
+}
+
+// =======================
+//     TAB SWITCHER
+// =======================
 
 function showPage(id) {
-    document.querySelectorAll('.m3-section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.m3-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll(".m3-tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".m3-card").forEach(s => s.style.display = "none");
 
-    document.getElementById(id).classList.add('active');
+    document.querySelector(`.m3-tab[onclick="showPage('${id}')"]`).classList.add("active");
 
-    // Позначити активну вкладку
-    event.target.classList.add('active');
-}
-
-
-function getInt(id) {
-    const el = document.getElementById(id);
-    return el ? (parseInt(el.value) || 0) : 0;
-}
-
-function getFloat(id) {
-    const el = document.getElementById(id);
-    return el ? (parseFloat(el.value) || 0) : 0;
-}
-
-function get(id){
-    const el = document.getElementById(id);
-    return el ? el.textContent : "";
-}
-
-function set(id, value){
-    const el = document.getElementById(id);
-    if (el) el.textContent = value;
-}
-
-function saveData(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
-
-function loadData(key, fallback = []) {
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return fallback;
-        const parsed = JSON.parse(raw);
-        return parsed ?? fallback;
-    } catch {
-        return fallback;
-    }
-}
-
-// -------------------------------
-//     ГЛОБАЛЬНІ СТАНИ
-// -------------------------------
-let logData   = loadData("logData", []);
-let orders    = loadData("orders", []);
-
-let chartEggs  = null;
-let chartIncome = null;
-
-// -------------------------------
-//   ГЕНЕРАЦІЯ ТАБЛИЦЬ КОМБІКОРМУ
-// -------------------------------
-function buildFeedTables() {
-    const rows = document.getElementById("feedTableRows");
-    const stock = document.getElementById("stockRows");
-    rows.innerHTML = "";
-    stock.innerHTML = "";
-
-    for (const item of feedComponents) {
-        // Рецепт
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${item.name}</td>
-            <td><input type="number" value="${item.percent}" step="1" data-key="${item.key}" class="feed-percent"></td>
-            <td><span id="kg_${item.key}">0</span></td>
-        `;
-        rows.appendChild(tr);
-
-        // Запаси
-        const tr2 = document.createElement("tr");
-        tr2.innerHTML = `
-            <td>${item.name}</td>
-            <td><input type="number" id="stock_${item.key}" value="0" step="0.1"></td>
-            <td><span id="need_${item.key}">0</span></td>
-            <td><span id="buy_${item.key}">0</span></td>
-        `;
-        stock.appendChild(tr2);
-    }
-
-    // Відсотки рецепту — перерахунок при зміні
-    for (const inp of document.querySelectorAll(".feed-percent")) {
-        inp.addEventListener("input", recalcFeed);
-    }
-}
-
-// -------------------------------
-//     ЗАСТОСУВАННЯ РЕЦЕПТУ
-// -------------------------------
-function applyRecipePreset(name) {
-    const preset = recipePresets[name];
-    if (!preset) return;
-
-    const targetKg = getFloat("targetKg") || 25;
-    const baseTotal = 25; // базовий рецепт на 25 кг
-    const scale = targetKg / baseTotal;
-
-    document.querySelectorAll("#feedRows tr").forEach(row => {
-        const key = row.dataset.key;
-        const qtySpan = row.querySelector(".feed-qty");
-        const baseQty = preset[key] || 0;
-        const scaled = baseQty * scale;
-        qtySpan.textContent = scaled.toFixed(2);
+    document.querySelectorAll(`#sec-${id}, #${id}, .${id}`).forEach(el => {
+        el.style.display = "block";
     });
-
-    recalcFeed();
-}
-
-// -------------------------------
-//      РОЗРАХУНОК КОМБІКОРМУ
-// -------------------------------
-function recalcFeed() {
-    const batchKg = getFloat("feedBatchKg");
-    let dailyPerHen = getFloat("feedDailyPerHen");
-
-    if (dailyPerHen < 1) dailyPerHen = 1;
-
-    // Загальна кількість птиці
-    const hens = getInt("hens1") + getInt("hens2");
-    set("feedBirdCount", hens);
-
-    const dailyKg = (hens * dailyPerHen) / 1000;
-    set("dailyFeedNeed", dailyKg.toFixed(2));
-
-    let totalCost = 0;
-
-    for (const item of feedComponents) {
-        const kg = batchKg * (item.percent / 100);
-        const stock = getFloat(`stock_${item.key}`);
-
-        set(`kg_${item.key}`, kg.toFixed(2));
-        set(`need_${item.key}`, kg.toFixed(2));
-
-        const buy = Math.max(0, kg - stock);
-        set(`buy_${item.key}`, buy.toFixed(2));
-
-        totalCost += kg * item.price;
-    }
-
-    set("dailyFeedCost", (dailyKg * (totalCost / batchKg)).toFixed(2));
-
-    recalcFeedStockDays();
-}
-
-function recalcFeedStockDays() {
-    const stock = parseFloat(get("feedReadyStock")) || 0;
-    const daily = parseFloat(get("dailyFeedNeed")) || 0;
-
-    set("feedStockRemain", stock.toFixed(2));
-    set("feedDaysLeft", daily > 0 ? Math.floor(stock / daily) : 0);
-}
-
-// -------------------------------
-//     РОЗРАХУНОК ЗАПАСІВ
-// -------------------------------
-function recalcStockNeed() {
-    document.querySelectorAll("#feedRows tr").forEach(row => {
-        const key = row.dataset.key;
-        const need = parseFloat(row.querySelector(".feed-qty").textContent) || 0;
-
-        const stockRow = document.querySelector(`#stockRows tr[data-key="${key}"]`);
-        if (!stockRow) return;
-
-        const have = parseFloat(stockRow.querySelector(".stock-have").value) || 0;
-        let buy = need - have;
-        if (buy < 0) buy = 0;
-
-        stockRow.querySelector(".stock-need").textContent = need.toFixed(2);
-        stockRow.querySelector(".stock-buy").textContent = buy.toFixed(2);
-    });
-}
-
-// -------------------------------
-//        КАЛЬКУЛЯТОР ЯЄЦЬ
-// -------------------------------
-function recalcEggs() {
-    const hens = getInt("hens");
-    const rate = getFloat("eggRate");
-    const price10 = getFloat("eggPrice10");
-
-    const eggsPerDay = hens * (rate / 100);
-    const incomePerDay = (eggsPerDay / 10) * price10;
-
-    const eggsPerDayEl = document.getElementById("eggsPerDay");
-    const incomePerDayEl = document.getElementById("incomePerDay");
-    const eggsPerMonthEl = document.getElementById("eggsPerMonth");
-    const incomePerMonthEl = document.getElementById("incomePerMonth");
-
-    if (eggsPerDayEl) eggsPerDayEl.textContent = eggsPerDay.toFixed(1);
-    if (incomePerDayEl) incomePerDayEl.textContent = incomePerDay.toFixed(2);
-
-    const eggsMonth = eggsPerDay * 30;
-    const incomeMonth = incomePerDay * 30;
-
-    if (eggsPerMonthEl) eggsPerMonthEl.textContent = eggsMonth.toFixed(0);
-    if (incomePerMonthEl) incomePerMonthEl.textContent = incomeMonth.toFixed(2);
-
-    updateCharts();
 }
 
 function recalcEggsBalance() {
-    const total = getInt("eggsTotal");
-    const bad = getInt("eggsBad");
-    const own = getInt("eggsOwn");
-    const carry = getInt("eggsCarry");
-    const trayPrice = getFloat("trayPrice");
+    let t = +document.getElementById("eggsTotal").value;
+    let b = +document.getElementById("eggsBad").value;
+    let o = +document.getElementById("eggsOwn").value;
+    let c = +document.getElementById("eggsCarry").value;
+    let price = +document.getElementById("trayPrice").value;
 
-    let goodToday = total - bad - own;
-    if (goodToday < 0) goodToday = 0;
+    let forSaleToday = t - b - o;
+    let totalForSale = forSaleToday + c;
 
-    const eggsForSale = goodToday;
-    const eggsForSaleTotal = eggsForSale + carry;
+    let trays = Math.floor(totalForSale / 20);
+    let remainder = totalForSale % 20;
 
-    const traySize = 20;
-    const traysCount = Math.floor(eggsForSaleTotal / traySize);
-    const eggsRemainder = eggsForSaleTotal - traysCount * traySize;
+    document.getElementById("eggsForSale").innerText = forSaleToday;
+    document.getElementById("eggsForSaleTotal").innerText = totalForSale;
+    document.getElementById("traysCount").innerText = trays;
+    document.getElementById("eggsRemainder").innerText = remainder;
 
-    const income = traysCount * trayPrice;
+    document.getElementById("income").innerText = (trays * price).toFixed(2);
 
-    set("eggsForSale", eggsForSale);
-    set("eggsForSaleTotal", eggsForSaleTotal);
-    set("traysCount", traysCount);
-    set("eggsRemainder", eggsRemainder);
-    set("income", income.toFixed(2));
+    // Для секції 2.3
+    document.getElementById("totalTraysTodayLabel").innerText = trays;
 
-    recalcTraySummary();   // ← ТУТ
-    localStorage.setItem("TRAY_PRICE", trayPrice);
+    save();
 }
 
 function recalcProductivity() {
-    const hens1 = getInt("hens1");
-    const hens2 = getInt("hens2");
-    const totalHens = hens1 + hens2;
+    let h1 = +document.getElementById("hens1").value;
+    let h2 = +document.getElementById("hens2").value;
+    let totalHens = h1 + h2;
 
-    set("hensTotal", totalHens);
+    let eggsToday = +document.getElementById("eggsTotal").value;
+    let bad = +document.getElementById("eggsBad").value;
+    let own = +document.getElementById("eggsOwn").value;
 
-    const eggsTotal = getInt("eggsTotal");
-    const bad = getInt("eggsBad");
-    const own = getInt("eggsOwn");
+    let useful = eggsToday - bad - own;
 
-    const goodEggs = eggsTotal - bad - own;
+    document.getElementById("hensTotal").innerText = totalHens;
 
-    let prod = 0;
-    if (totalHens > 0) prod = (goodEggs / totalHens) * 100;
+    if (totalHens > 0) {
+        let prod = (useful / totalHens) * 100;
+        document.getElementById("productivityToday").innerText = prod.toFixed(1);
+    } else {
+        document.getElementById("productivityToday").innerText = "0.0";
+    }
 
-    set("productivityToday", prod.toFixed(1));
+    save();
 }
 
-function recalcTraySummary() {
-    const traysToday = getInt("traysCount");      // лотки із секції 2.1
-    const reserved = getInt("reservedTrays");     // з активних замовлень
-
-    const free = Math.max(0, traysToday - reserved);
-
-    set("totalTraysTodayLabel", traysToday);
-    set("freeTrays", free);
-}
-
-// -------------------------------
-//          ЩОДЕННИК (LOG)
-// -------------------------------
-function addLog() {
-    const d = document.getElementById("logDate").value;
-    const cat = document.getElementById("logCategory").value.trim();
-    const amount = getFloat("logAmount");
-    const comment = document.getElementById("logComment").value.trim();
-
-    if (!d || !cat || !amount) return;
-
-    logData.push({ d, cat, amount, comment });
-    saveData("logData", logData);
-    renderLog();
-
-    document.getElementById("logAmount").value = "";
-    document.getElementById("logComment").value = "";
-}
-
-function renderLog() {
-    const body = document.getElementById("logBody");
-    if (!body) return;
-
-    body.innerHTML = "";
-    logData.forEach((item, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${item.d}</td>
-            <td>${item.cat}</td>
-            <td>${item.amount.toFixed(2)}</td>
-            <td>${item.comment}</td>
-            <td><button class="m3-btn m3-btn-small" onclick="delLog(${index})">×</button></td>
-        `;
-        body.appendChild(tr);
-    });
-}
-
-function delLog(i) {
-    logData.splice(i, 1);
-    saveData("logData", logData);
-    renderLog();
-}
-
-// -------------------------------
-//           ЗАМОВЛЕННЯ
-// -------------------------------
 function addOrder() {
-    const n = document.getElementById("ordName").value.trim();
-    const e = getInt("ordEggs");
-    const t = getInt("ordTrays");
-    const d = document.getElementById("ordDate").value;
-    const note = document.getElementById("ordNote").value.trim();
+    let name = document.getElementById("ordName").value;
+    let eggs = +document.getElementById("ordEggs").value;
+    let trays = +document.getElementById("ordTrays").value;
+    let date = document.getElementById("ordDate").value;
+    let note = document.getElementById("ordNote").value;
 
-    if (!n || !e || !d) return;
+    if (!name || (!eggs && !trays)) return;
 
-    orders.push({ n, e, t, d, note, done: false });
-    saveData("orders", orders);
+    STATE.orders.push({
+        id: Date.now(),
+        name,
+        eggs,
+        trays,
+        date,
+        note,
+        done: false
+    });
+
+    save();
     renderOrders();
-    recalcTraySummary();
-
-    document.getElementById("ordName").value = "";
-    document.getElementById("ordEggs").value = "";
-    document.getElementById("ordTrays").value = "";
-    document.getElementById("ordNote").value = "";
 }
 
 function renderOrders() {
-    const list = loadOrders();
+    let active = "";
+    let done = "";
 
-    const activeBody = document.getElementById("ordersActive");
-    const doneBody   = document.getElementById("ordersDone");
-
-    activeBody.innerHTML = "";
-    doneBody.innerHTML = "";
-
-    list.forEach((o, i) => {
-        const tr = document.createElement("tr");
-
-        if (o.done) tr.className = "order-row-done";
-        else if (o.cancelled) tr.className = "order-row-cancel";
-        else tr.className = "order-row-active";
-
-        tr.innerHTML = `
-            <td>${o.n}</td>
-            <td>${o.e}</td>
-            <td>${o.t}</td>
-            <td>${o.d}</td>
-            <td>${o.note || ""}</td>
-            <td>
-                <button class="btn small-btn" onclick="markDone(${i})">✔</button>
-                <button class="btn small-btn cancel" onclick="markCancel(${i})">✖</button>
-            </td>
+    STATE.orders.forEach(o => {
+        let row = `
+            <tr>
+              <td>${o.name}</td>
+              <td>${o.eggs}</td>
+              <td>${o.trays}</td>
+              <td>${o.date}</td>
+              <td>${o.note}</td>
+              <td>
+                <button onclick="toggleOrder(${o.id})">${o.done ? "↩" : "✔"}</button>
+              </td>
+            </tr>
         `;
 
-        if (o.done) doneBody.appendChild(tr);
-        else activeBody.appendChild(tr);
+        if (!o.done) active += row;
+        else done += row;
     });
 
-    updateReservedTrays();
+    document.getElementById("ordersActive").innerHTML = active;
+    document.getElementById("ordersDone").innerHTML = done;
 }
 
+function toggleOrder(id) {
+    let order = STATE.orders.find(o => o.id == id);
+    if (!order) return;
 
-function markDone(i) {
-    const orders = loadOrders();
-    orders[i].done = true;
-    orders[i].cancelled = false;
-    saveOrders(orders);
-    renderOrders();
-    renderClients(); 
-}
+    order.done = !order.done;
 
-function markCancel(i) {
-    const orders = loadOrders();
-    orders[i].done = false;
-    orders[i].cancelled = true;
-    saveOrders(orders);
-    renderOrders();
-    renderClients();
-}
-
-function updateReservedTrays() {
-    const list = loadOrders();
-    let reserved = 0;
-
-    list.forEach(o => {
-        if (!o.done && !o.cancelled) reserved += o.t;
-    });
-
-    set("reservedTrays", reserved);
-    recalcTraySummary();
-}
-
-function loadOrders() {
-    return JSON.parse(localStorage.getItem("orders") || "[]");
-}
-
-function saveOrders(list) {
-    localStorage.setItem("orders", JSON.stringify(list));
-}
-
-function finishOrder(i) {
-    orders[i].done = true;
-    saveData("orders", orders);
+    save();
     renderOrders();
 }
 
-function delOrder(i) {
-    orders.splice(i, 1);
-    saveData("orders", orders);
-    renderOrders();
-}
-
-//---------------------------------------------------
-//  ІНКУБАЦІЯ — ЗБЕРІГАННЯ / ЗАВАНТАЖЕННЯ ДАНИХ
-//---------------------------------------------------
-
-let INC = JSON.parse(localStorage.getItem("INCUBATION") || "[]");
-
-function saveInc() {
-    localStorage.setItem("INCUBATION", JSON.stringify(INC));
-}
-
-function loadInc() {
-    INC = JSON.parse(localStorage.getItem("INCUBATION") || "[]");
-}
-
-
-//---------------------------------------------------
-//  РОЗРАХУНОК ДНІВ В ІНКУБАЦІЇ
-//---------------------------------------------------
-function daysSince(dateStr) {
-    if (!dateStr) return 0;
-    const d1 = new Date(dateStr);
-    const d2 = new Date();
-    return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
-}
-
-
-//---------------------------------------------------
-//  ДОДАТИ НОВУ ПАРТІЮ
-//---------------------------------------------------
 function addIncubation() {
-    const batchName = document.getElementById("incBatchName").value.trim();
-    const startDate = document.getElementById("incStartDate").value;
-    const eggsSet = getInt("incEggsSet");
-    const note = document.getElementById("incNote").value.trim();
+    let name = incBatchName.value;
+    let start = incStartDate.value;
+    let eggs = +incEggsSet.value;
+    let note = incNote.value;
 
-    if (!batchName || !startDate || eggsSet <= 0) {
-        alert("Заповніть всі обов’язкові поля!");
-        return;
-    }
+    if (!name || !start || eggs <= 0) return;
 
-    const obj = {
-        batchName,
-        startDate,
-        eggsSet,
-        eggsInfertile: 0,
-        eggsHatched: 0,
-        deadIncubator: 0,
-        deadBrooder: 0,
-        aliveNow: eggsSet,
-
-        humidityStart: "",
-        humidityFinish: "",
-        tempStart: "",
-        tempFinish: "",
-
+    STATE.incubations.push({
+        id: Date.now(),
+        name,
+        start,
+        eggs,
+        infertile: 0,
+        hatched: 0,
+        diedInc: 0,
+        diedBrood: 0,
         note
-    };
+    });
 
-    INC.push(obj);
-    saveInc();
-    renderInc();
-
-    document.getElementById("incBatchName").value = "";
-    document.getElementById("incStartDate").value = "";
-    document.getElementById("incEggsSet").value = 0;
-    document.getElementById("incNote").value = "";
-}
-
-
-//---------------------------------------------------
-//  ОНОВЛЕННЯ ПОЛІВ ПАРТІЇ
-//---------------------------------------------------
-function updateIncField(i, field, value) {
-    const num = parseInt(value) || 0;
-
-    INC[i][field] = num;
-
-    INC[i].aliveNow =
-        INC[i].eggsSet -
-        INC[i].eggsInfertile -
-        INC[i].deadIncubator -
-        INC[i].deadBrooder;
-
-    if (INC[i].aliveNow < 0) INC[i].aliveNow = 0;
-
-    saveInc();
+    save();
     renderInc();
 }
 
+function renderInc() {
+    let body = "";
+    let filter = document.getElementById("incFilter").value;
 
-//---------------------------------------------------
-//  ВИДАЛЕННЯ ПАРТІЇ
-//---------------------------------------------------
-function deleteInc(i) {
-    if (!confirm("Видалити цю інкубаційну партію?")) return;
-    INC.splice(i, 1);
-    saveInc();
+    STATE.incubations.forEach(p => {
+        body += `
+        <tr>
+          <td>${p.name}</td>
+          <td>${p.start}</td>
+          <td>${daysFrom(p.start)}</td>
+          <td>${p.eggs}</td>
+          <td>${p.infertile}</td>
+          <td>${p.hatched}</td>
+          <td>${p.diedInc}</td>
+          <td>${p.diedBrood}</td>
+          <td>${p.eggs - p.infertile - p.diedInc - p.diedBrood}</td>
+          <td>—</td>
+          <td>${p.note}</td>
+          <td><button onclick="deleteInc(${p.id})">✖</button></td>
+        </tr>`;
+    });
+
+    document.getElementById("incubationBody").innerHTML = body;
+}
+
+function daysFrom(d) {
+    let start = new Date(d);
+    let now = new Date();
+    let diff = Math.floor((now - start) / 86400000);
+    return diff >= 0 ? diff : 0;
+}
+
+function deleteInc(id) {
+    STATE.incubations = STATE.incubations.filter(p => p.id !== id);
+    save();
     renderInc();
 }
 
-
-//---------------------------------------------------
-//  РЕНДЕР ТАБЛИЦІ ІЗ ФІЛЬТРАМИ ТА НАГАДУВАННЯМИ
-//---------------------------------------------------
-
-    function renderInc() {
-    loadInc();
-    const body = document.getElementById("incubationBody");
-    if (!body) return;
-    body.innerHTML = "";
-
-    const filter = document.getElementById("incFilter")?.value || "all";
-
-    INC.forEach((item, i) => {
-
-        const days = daysSince(item.startDate);
-
-        // -----------------------
-        //  ФІЛЬТРАЦІЯ
-        // -----------------------
-        let pass = true;
-
-        if (filter === "active") pass = item.aliveNow > 0;
-        if (filter === "done") pass = item.aliveNow <= 0;
-        if (filter === "candling") pass = days >= 7 && days < 15;
-        if (filter === "hatch") pass = days >= 16 && days <= 18;
-
-        if (!pass) return;
-
-        // -----------------------
-        //  КОЛЬОРИ РЯДКІВ
-        // -----------------------
-        let rowClass = "inc-blue"; // базовий колір
-
-        if (item.aliveNow <= 0) rowClass = "inc-green";
-        else if (days === 7) rowClass = "inc-yellow";
-        else if (days === 14) rowClass = "inc-orange";
-        else if (days === 17) rowClass = "inc-red";
-        else if (days === 18) rowClass = "inc-red2";
-        else if (days >= 16 && days <= 18) rowClass = "inc-purple";
-
-        // -----------------------
-        //  НАГАДУВАННЯ
-        // -----------------------
-        let remind = "";
-
-        if (days === 7) remind = "Овоскопія №1";
-        else if (days === 14) remind = "Овоскопія №2";
-        else if (days === 17) remind = "Стоп перевороту";
-        else if (days === 18) remind = "Підвищити вологість";
-        else if (days >= 16 && days <= 18) remind = "Період вилуплення";
-
-        // -----------------------
-        //  РЯДОК ТАБЛИЦІ
-        // -----------------------
-        const tr = document.createElement("tr");
-        tr.className = rowClass;
-
-        tr.innerHTML = `
-            <td>${item.batchName}</td>
-            <td>${item.startDate}</td>
-            <td>${days}</td>
-            <td>${item.eggsSet}</td>
-
-            <td><input type="number" value="${item.eggsInfertile}" onchange="updateIncField(${i}, 'eggsInfertile', this.value)" class="m3-input" style="width:70px;"></td>
-
-            <td><input type="number" value="${item.eggsHatched}" onchange="updateIncField(${i}, 'eggsHatched', this.value)" class="m3-input" style="width:70px;"></td>
-
-            <td><input type="number" value="${item.deadIncubator}" onchange="updateIncField(${i}, 'deadIncubator', this.value)" class="m3-input" style="width:70px;"></td>
-
-            <td><input type="number" value="${item.deadBrooder}" onchange="updateIncField(${i}, 'deadBrooder', this.value)" class="m3-input" style="width:70px;"></td>
-
-            <td>${item.aliveNow}</td>
-
-            <td class="small">${remind || "-"}</td>
-
-            <td>${item.note || ""}</td>
-
-            <td>
-                <button class="btn small-btn" onclick="deleteInc(${i})">🗑</button>
-            </td>
-        `;
-
-        body.appendChild(tr);
-    });
-}
-
-// -------------------------------
-//      ПОГОЛІВ’Я (ПТАШНИК)
-// -------------------------------
-function recalcFlock() {
-    const males = getInt("males");
-    const females = getInt("females");
-    const deaths = getInt("deaths");
-
-    const total = males + females - deaths;
-    const el = document.getElementById("flockTotal");
-    if (el) el.textContent = total >= 0 ? total : 0;
-}
-
-// -------------------------------
-//       ФІНАНСОВИЙ ЗВІТ
-// -------------------------------
-function recalcReport() {
-    const fromStr = document.getElementById("repFrom").value;
-    const toStr = document.getElementById("repTo").value;
-    if (!fromStr || !toStr) return;
-
-    const from = new Date(fromStr);
-    const to = new Date(toStr);
-    to.setHours(23, 59, 59, 999);
-
-    let costs = 0;
-
-    logData.forEach(item => {
-        const d = new Date(item.d);
-        if (d >= from && d <= to) {
-            costs += item.amount;
-        }
-    });
-
-    const hens = getInt("hens");
-    const rate = getFloat("eggRate");
-    const price10 = getFloat("eggPrice10");
-
-    const eggsPerDay = hens * (rate / 100);
-    const eggsTotal = eggsPerDay * 30;
-    const income = (eggsPerDay / 10) * price10 * 30;
-
-    const profit = income - costs;
-
-    const repCostsEl = document.getElementById("repCosts");
-    const repIncomeEl = document.getElementById("repIncome");
-    const repProfitEl = document.getElementById("repProfit");
-
-    if (repCostsEl) repCostsEl.textContent = costs.toFixed(2);
-    if (repIncomeEl) repIncomeEl.textContent = income.toFixed(2);
-    if (repProfitEl) repProfitEl.textContent = profit.toFixed(2);
-
-    const costPerEggEl = document.getElementById("repCostPerEgg");
-    const profitPerEggEl = document.getElementById("repProfitPerEgg");
-
-    if (eggsTotal > 0) {
-        const costPerEgg = costs / eggsTotal;
-        const profitPerEgg = profit / eggsTotal;
-        if (costPerEggEl) costPerEggEl.textContent = costPerEgg.toFixed(3);
-        if (profitPerEggEl) profitPerEggEl.textContent = profitPerEgg.toFixed(3);
-    } else {
-        if (costPerEggEl) costPerEggEl.textContent = "0.000";
-        if (profitPerEggEl) profitPerEggEl.textContent = "0.000";
-    }
-}
-
-// -------------------------------
-//          ГРАФІКИ (Chart.js)
-// -------------------------------
-function buildCharts() {
-    const ctxEggs = document.getElementById("chartEggs");
-    const ctxIncome = document.getElementById("chartIncome");
-    if (!ctxEggs || !ctxIncome || typeof Chart === "undefined") return;
-
-    const labels = Array.from({ length: 30 }, (_, i) => i + 1);
-
-    const hens = getInt("hens");
-    const rate = getFloat("eggRate");
-    const price10 = getFloat("eggPrice10");
-    const eggsPerDay = hens * (rate / 100);
-    const incomePerDay = (eggsPerDay / 10) * price10;
-
-    chartEggs = new Chart(ctxEggs, {
-        type: "line",
-        data: {
-            labels,
-            datasets: [{
-                label: "Яєць/день",
-                data: labels.map(() => eggsPerDay),
-                tension: 0.3
-            }]
-        }
-    });
-
-    chartIncome = new Chart(ctxIncome, {
-        type: "line",
-        data: {
-            labels,
-            datasets: [{
-                label: "Дохід/день (грн)",
-                data: labels.map(() => incomePerDay),
-                tension: 0.3
-            }]
-        }
-    });
-}
-
-function updateCharts() {
-    if (!chartEggs || !chartIncome) return;
-
-    const hens = getInt("hens");
-    const rate = getFloat("eggRate");
-    const price10 = getFloat("eggPrice10");
-    const eggsPerDay = hens * (rate / 100);
-    const incomePerDay = (eggsPerDay / 10) * price10;
-
-    chartEggs.data.datasets[0].data = chartEggs.data.labels.map(() => eggsPerDay);
-    chartIncome.data.datasets[0].data = chartIncome.data.labels.map(() => incomePerDay);
-
-    chartEggs.update();
-    chartIncome.update();
-}
-
-// ----------------------------------------------
-// 12. КЛІЄНТИ — ТІЛЬКИ ВИКОНАНІ ЗАМОВЛЕННЯ
-// ----------------------------------------------
-
-    function renderClients() {
-    const orders = loadOrders();
-    const body = document.getElementById("clientsBody");
-    if (!body) return;
-
-    body.innerHTML = "";
-
-    const clients = {};
-    // Ціна за один лоток (з твоєї секції яєць)
-    const trayPrice = parseFloat(localStorage.getItem("TRAY_PRICE") || getFloat("trayPrice") || 0);
-    // Групуємо ТІЛЬКИ виконані замовлення
-    orders
-        .filter(o => o.done === true) // ← лише виконані
-        .forEach(o => {
-            const name = o.n?.trim() || "Без імені";
-
-            if (!clients[name]) {
-                clients[name] = {
-                    count: 0,
-                    trays: 0,
-                    eggs: 0,
-                    sum: 0,
-                    last: "-"
-                };
-            }
-
-            clients[name].count++;
-            clients[name].trays += o.t;
-            clients[name].eggs += o.e;
-            clients[name].sum += o.t * trayPrice;
-            if (o.d > clients[name].last) clients[name].last = o.d;
-        });
-
-    Object.keys(clients).forEach(name => {
-        const c = clients[name];
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${name}</td>
-            <td>${c.count}</td>
-            <td>${c.trays}</td>
-            <td>${c.eggs}</td>
-            <td>${c.sum.toFixed(2)}</td>
-            <td>${c.last}</td>
-        `;
-        body.appendChild(tr);
-    });
-}
-
-
-// -------------------------------
-//        GOOGLE DRIVE BACKUP
-// -------------------------------
-let tokenClient = null;
-let gapiInited = false;
-let gisInited = false;
-
-function updateDriveUI() {
-    const btnLogin = document.getElementById("btnDriveLogin");
-    const btnBackup = document.getElementById("btnBackup");
-    const btnRestore = document.getElementById("btnRestore");
-    const status = document.getElementById("driveStatus");
-
-    if (!btnLogin || !btnBackup || !btnRestore || !status) return;
-
-    if (gapiInited && gisInited) {
-        status.textContent = "Статус: сервіс готовий, увійдіть у Google";
-        btnLogin.disabled = false;
-    } else {
-        status.textContent = "Статус: ініціалізація...";
-        btnLogin.disabled = true;
-        btnBackup.disabled = true;
-        btnRestore.disabled = true;
-    }
-
-    const token = gapi.client && gapi.client.getToken ? gapi.client.getToken() : null;
-    if (token && token.access_token) {
-        status.textContent = "Статус: авторизовано";
-        btnBackup.disabled = false;
-        // Відновлення можна реалізувати пізніше
-    }
-}
-
-// Викликається по onload у script api.js
-function gapiLoaded() {
-    if (!window.gapi) return;
-    gapi.load("client", async () => {
-        try {
-            await gapi.client.init({
-                apiKey: "YOUR_API_KEY_HERE", // заміни на свій API KEY
-                discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
-            });
-            gapiInited = true;
-            updateDriveUI();
-        } catch (e) {
-            console.error("Помилка ініціалізації GAPI:", e);
-        }
-    });
-}
-
-// Викликається по onload у script gsi/client
-function gisLoaded() {
-    if (!window.google || !google.accounts || !google.accounts.oauth2) return;
-
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: "YOUR_CLIENT_ID_HERE", // заміни на свій Client ID
-        scope: "https://www.googleapis.com/auth/drive.file",
-        callback: ""
-    });
-    gisInited = true;
-    updateDriveUI();
-}
-
-async function requestDriveToken() {
-    return new Promise((resolve, reject) => {
-        if (!tokenClient) {
-            return reject("Token client not initialized");
-        }
-        tokenClient.callback = resp => {
-            if (resp.error) {
-                reject(resp);
-            } else {
-                updateDriveUI();
-                resolve(resp);
-            }
-        };
-        tokenClient.requestAccessToken({ prompt: "" });
-    });
-}
-
-async function backupToDrive() {
-    try {
-        await requestDriveToken();
-        const token = gapi.client.getToken();
-        if (!token || !token.access_token) {
-            alert("Не вдалося отримати токен доступу.");
-            return;
-        }
-
-        const backupData = {
-            logData,
-            orders,
-            incData
-        };
-
-        const metadata = {
-            name: "quail-calculator-backup.json",
-            mimeType: "application/json"
-        };
-
-        const fileContent = JSON.stringify(backupData);
-        const boundary = "-------314159265358979323846";
-        const delimiter = "\r\n--" + boundary + "\r\n";
-        const closeDelim = "\r\n--" + boundary + "--";
-
-        const multipartRequestBody =
-            delimiter +
-            "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-            JSON.stringify(metadata) +
-            delimiter +
-            "Content-Type: application/json\r\n\r\n" +
-            fileContent +
-            closeDelim;
-
-        const response = await fetch(
-            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + token.access_token,
-                    "Content-Type": "multipart/related; boundary=" + boundary
-                },
-                body: multipartRequestBody
-            }
-        );
-
-        if (!response.ok) {
-            console.error("Drive upload error:", await response.text());
-            alert("Помилка при створенні резервної копії (див. консоль).");
-            return;
-        }
-
-        alert("Резервна копія створена на Google Drive!");
-    } catch (e) {
-        console.error(e);
-        alert("Помилка при авторизації або створенні копії.");
-    }
-}
-
-document.addEventListener("click", (e) => {
-    if (e.target.id === "produceFeedBatch") {
-        const size = getFloat("feedBatchSize");
-        let stock = parseFloat(get("feedReadyStock")) || 0;
-
-        stock += size;
-
-        set("feedReadyStock", stock.toFixed(2));
-        recalcFeedStockDays();
-    }
-});
-
-document.addEventListener("click", (e) => {
-    if (e.target.id === "consumeDailyFeed") {
-        const daily = parseFloat(get("dailyFeedNeed")) || 0;
-        let stock = parseFloat(get("feedReadyStock")) || 0;
-
-        stock = Math.max(0, stock - daily);
-
-        set("feedReadyStock", stock.toFixed(2));
-        recalcFeedStockDays();
-    }
-});
-
-
-// -------------------------------
-//            INIT
-// -------------------------------
-function init() {
-    // Корм
-    buildFeedTables();
-    recalcFeed();
-
-    // Яйця (нові функції)
-    recalcEggs();            // старий теоретичний розрахунок, якщо потрібен
-    recalcEggsBalance();     // новий облік яєць
-    recalcProductivity();    // нова продуктивність
-    recalcTraySummary();
-
-    // Поголів'я
-    recalcFlock();
-
-    // Логи / замовлення / інкубація
-    renderLog();
+window.onload = () => {
     renderOrders();
-    renderClients();
     renderInc();
-
-document.getElementById("addIncubation").addEventListener("click", addIncubation);
-    
-    // Встановлення дат
-    const today = new Date();
-    const prior = new Date();
-    prior.setDate(today.getDate() - 30);
-
-    if (document.getElementById("repFrom")) document.getElementById("repFrom").value = toIso(prior);
-    if (document.getElementById("repTo"))   document.getElementById("repTo").value   = toIso(today);
-
-    if (document.getElementById("logDate")) document.getElementById("logDate").value = toIso(today);
-    if (document.getElementById("ordDate")) document.getElementById("ordDate").value = toIso(today);
-    if (document.getElementById("incDate")) document.getElementById("incDate").value = toIso(today);
-
-    // Фінансова аналітика
-    recalcSummary();
-    recalcReport();
-    recalcForecast30();
-
-    // Графіки
-    buildCharts();
-
-    // Google Drive
-    updateDriveUI();
-}
-
-window.addEventListener("load", init);
+    recalcEggsBalance();
+    recalcProductivity();
+};
