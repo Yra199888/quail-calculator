@@ -711,3 +711,202 @@ window.onload = () => {
     recalcEggsBalance();
     recalcProductivity();
 };
+
+/* ============================================================
+   100. FULL PRO BACKUP MODE — Google Drive Sync
+============================================================ */
+
+// === ТВОЇ ДАНІ ===
+const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
+const API_KEY = "AIzaSyD-FAKE-KEY-EXAMPLE"; // якщо немає — залиш порожнім або додам тобі
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+
+let AUTO_BACKUP_ENABLED = true;
+
+/* === UI Elements === */
+const driveStatusEl = document.getElementById("driveStatus");
+const btnLogin = document.getElementById("btnDriveLogin");
+const btnBackup = document.getElementById("btnBackup");
+const btnRestore = document.getElementById("btnRestore");
+
+updateDriveStatus("Очікування авторизації...");
+
+
+function updateDriveStatus(msg) {
+    if (driveStatusEl) driveStatusEl.textContent = "Статус: " + msg;
+}
+
+
+/* ============================================================
+   101. INIT
+============================================================ */
+
+function gapiLoaded() {
+    gapi.load("client", initializeGapiClient);
+}
+
+async function initializeGapiClient() {
+    await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+    });
+    gapiInited = true;
+    updateDriveStatus("GAPI ініціалізовано");
+}
+
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: "",
+    });
+    gisInited = true;
+    updateDriveStatus("Google OAuth готовий");
+}
+
+
+/* ============================================================
+   102. LOGIN
+============================================================ */
+
+btnLogin.onclick = () => {
+    if (!gisInited) return;
+
+    tokenClient.callback = async (resp) => {
+        if (resp.error) {
+            updateDriveStatus("Помилка авторизації");
+            return;
+        }
+        updateDriveStatus("Авторизовано ✓");
+
+        btnBackup.disabled = false;
+        btnRestore.disabled = false;
+
+        // Автозавантаження останньої копії
+        await restoreFromDrive();
+    };
+
+    tokenClient.requestAccessToken({ prompt: "consent" });
+};
+
+
+/* ============================================================
+   103. BACKUP TO DRIVE
+============================================================ */
+
+async function backupToDrive() {
+    updateDriveStatus("Збереження в Google Drive...");
+
+    const data = JSON.stringify({
+        feedRecipe,
+        feedStock,
+        readyFeedKg,
+        orders,
+        incubation
+    });
+
+    const fileContent = new Blob([data], { type: "application/json" });
+
+    const metadata = {
+        name: "quail_backup.json",
+        mimeType: "application/json"
+    };
+
+    const form = new FormData();
+    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+    form.append("file", fileContent);
+
+    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+        method: "POST",
+        headers: new Headers({ "Authorization": "Bearer " + gapi.client.getToken().access_token }),
+        body: form
+    });
+
+    if (res.ok) {
+        updateDriveStatus("Копія збережена ✓");
+    } else {
+        updateDriveStatus("Помилка збереження");
+    }
+}
+
+btnBackup.onclick = backupToDrive;
+
+
+/* ============================================================
+   104. RESTORE FROM DRIVE
+============================================================ */
+
+async function restoreFromDrive() {
+    updateDriveStatus("Відновлення з Google Drive...");
+
+    const response = await gapi.client.drive.files.list({
+        q: "name='quail_backup.json'",
+        fields: "files(id, name)"
+    });
+
+    if (!response.result.files || response.result.files.length === 0) {
+        updateDriveStatus("Копій немає");
+        return;
+    }
+
+    const fileId = response.result.files[0].id;
+
+    const file = await gapi.client.drive.files.get({
+        fileId,
+        alt: "media"
+    });
+
+    try {
+        const backup = JSON.parse(file.body);
+
+        feedRecipe = backup.feedRecipe;
+        feedStock = backup.feedStock;
+        readyFeedKg = backup.readyFeedKg;
+        orders = backup.orders;
+        incubation = backup.incubation;
+
+        recalcFeed();
+        recalcEggsBalance();
+        renderOrders();
+        renderInc();
+
+        updateDriveStatus("Відновлено ✓");
+    } catch (e) {
+        updateDriveStatus("Помилка відновлення");
+    }
+}
+
+btnRestore.onclick = restoreFromDrive;
+
+
+/* ============================================================
+   105. AUTO BACKUP (PRO MODE)
+============================================================ */
+
+function autoBackup() {
+    if (!AUTO_BACKUP_ENABLED) return;
+    if (!gapi.client.getToken()) return; // немає логіну
+    backupToDrive();
+}
+
+setInterval(autoBackup, 60 * 1000); // кожну хвилину
+
+
+/* ============================================================
+   106. EVENTS FOR AUTO-SYNC
+============================================================ */
+
+// при кожній зміні даних
+window.addEventListener("change", autoBackup);
+window.addEventListener("input", autoBackup);
+
+
+/* ============================================================
+   107. Допоміжне
+============================================================ */
+updateDriveStatus("Готовий до роботи");
+
