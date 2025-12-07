@@ -42,6 +42,18 @@ const recipePresets = {
 // -------------------------------
 //         ХЕЛПЕРИ
 // -------------------------------
+
+function showPage(id) {
+    document.querySelectorAll('.m3-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.m3-tab').forEach(t => t.classList.remove('active'));
+
+    document.getElementById(id).classList.add('active');
+
+    // Позначити активну вкладку
+    event.target.classList.add('active');
+}
+
+
 function getInt(id) {
     const el = document.getElementById(id);
     return el ? (parseInt(el.value) || 0) : 0;
