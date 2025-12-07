@@ -741,27 +741,21 @@ function updateCharts() {
 // 12. КЛІЄНТИ — ТІЛЬКИ ВИКОНАНІ ЗАМОВЛЕННЯ
 // ----------------------------------------------
 
-function renderClients() {
-    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    function renderClients() {
+    const orders = loadOrders();
     const body = document.getElementById("clientsBody");
     if (!body) return;
 
     body.innerHTML = "";
 
     const clients = {};
-
     // Ціна за один лоток (з твоєї секції яєць)
     const trayPrice = parseFloat(localStorage.getItem("TRAY_PRICE") || getFloat("trayPrice") || 0);
-
     // Групуємо ТІЛЬКИ виконані замовлення
     orders
-        .filter(o => o.done === true)                 // ← правильний статус
+        .filter(o => o.done === true) // ← лише виконані
         .forEach(o => {
-
             const name = o.n?.trim() || "Без імені";
-            const trays = o.t || Math.floor((o.e || 0) / 20);
-            const eggs = o.e || trays * 20;
-            const total = trays * trayPrice;
 
             if (!clients[name]) {
                 clients[name] = {
@@ -774,16 +768,27 @@ function renderClients() {
             }
 
             clients[name].count++;
-            clients[name].trays += trays;
-            clients[name].eggs += eggs;
-            clients[name].sum += total;
-
-            if (o.d) {
-                if (clients[name].last === "-" || o.d > clients[name].last) {
-                    clients[name].last = o.d;
-                }
-            }
+            clients[name].trays += o.t;
+            clients[name].eggs += o.e;
+            clients[name].sum += o.t * trayPrice;
+            if (o.d > clients[name].last) clients[name].last = o.d;
         });
+
+    Object.keys(clients).forEach(name => {
+        const c = clients[name];
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${name}</td>
+            <td>${c.count}</td>
+            <td>${c.trays}</td>
+            <td>${c.eggs}</td>
+            <td>${c.sum.toFixed(2)}</td>
+            <td>${c.last}</td>
+        `;
+        body.appendChild(tr);
+    });
+}
+
 
     // Відображення
     Object.keys(clients).forEach(name => {
