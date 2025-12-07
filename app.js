@@ -64,6 +64,16 @@ function getFloat(id) {
     return el ? (parseFloat(el.value) || 0) : 0;
 }
 
+function get(id){
+    const el = document.getElementById(id);
+    return el ? el.textContent : "";
+}
+
+function set(id, value){
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
 function saveData(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
@@ -97,7 +107,7 @@ function buildFeedTables() {
     rows.innerHTML = "";
     stock.innerHTML = "";
 
-    for (const item of FEED_COMPONENTS) {
+    for (const item of feedComponents) {
         // Рецепт
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -164,7 +174,7 @@ function recalcFeed() {
 
     let totalCost = 0;
 
-    for (const item of FEED_COMPONENTS) {
+    for (const item of feedComponents) {
         const kg = batchKg * (item.percent / 100);
         const stock = getFloat(`stock_${item.key}`);
 
