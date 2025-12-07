@@ -5,8 +5,116 @@
 <title>Quail Calculator Final</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#e8f5e9;color:#1b5e20;}
-.m3-card{background:#c8e6c9;padding:16px;margin:12px;border-radius:20px;}
+/* === GLOBAL GREEN MATERIAL THEME === */
+body {
+    background: #e3eed8;     /* світло-зелений фон */
+    color: #1a2a11;          /* темно-зелений текст */
+    font-family: Arial, sans-serif;
+    margin: 0;
+}
+
+/* === TOP TAB BAR === */
+.tabbar {
+    display: flex;
+    background: #3f5e33;     /* темно-зелена навігація */
+    color: white;
+}
+
+.tabbar button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    background: #3f5e33;
+    color: white;
+    font-size: 18px;
+    border-radius: 0;
+}
+
+.tabbar button.activeTab {
+    background: #6f8f5f;     /* світліший зелений (тональний акцент) */
+}
+
+/* === CONTENT TABS === */
+.tab {
+    display: none;
+    padding: 20px;
+}
+
+.tab.active {
+    display: block;
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* === MATERIAL 3 TONAL CARDS === */
+.m3-card {
+    background: #dfead3;     /* світла зелена карта */
+    border-radius: 18px;
+    padding: 18px;
+    margin: 16px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* === TITLES === */
+h2, h3 {
+    color: #1a2a11;
+}
+
+/* === MATERIAL TABLE === */
+.m3-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    background: #f4f9ef; /* дуже світлий зелений */
+}
+
+.m3-table th {
+    background: #6f8f5f; /* тональний зелений */
+    color: white;
+    padding: 10px;
+}
+
+.m3-table td {
+    padding: 10px;
+    border-bottom: 1px solid #c5d2b9;
+}
+
+/* === INPUTS === */
+input, select, textarea {
+    border: 2px solid #6f8f5f;
+    background: #f4f9ef;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 16px;
+    color: #1a2a11;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #3f5e33;
+}
+
+/* === BUTTONS === */
+.btn,
+button {
+    background: #3f5e33;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 16px;
+    margin: 4px 0;
+}
+
+.btn:hover,
+button:hover {
+    background: #2b3f1e;
+}
+
 </style>
 
 </head>
