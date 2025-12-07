@@ -796,21 +796,21 @@ input:focus, select:focus, textarea:focus {
 <!-- ======================================= -->
 <!--  SECTION 11   GOOGLE DRIVE — FULL PRO   -->
 <!-- ======================================= -->
-<div class="m3-card" id="googleBackup">
-
-    <h2 class="m3-title">Google Drive — Full Pro Backup</h2>
+<div class="m3-card">
+    <h2>11. Google Drive — FULL PRO BACKUP MODE</h2>
 
     <p class="small">
-        Створює повну резервну копію всіх даних:  
-        корм, яйця, замовлення, клієнти, інкубація, фінанси.
+      Дані ніколи не пропадуть.<br>
+      Відновлюються автоматично.<br>
+      Працює офлайн.<br>
+      Синхронізується у Drive при кожній зміні.
     </p>
 
-    <button class="btn m3-btn" id="driveLogin">Увійти в Google</button>
-    <button class="btn m3-btn" id="driveBackup" disabled>📤 Створити повну копію</button>
-    <button class="btn m3-btn" id="driveRestore" disabled>📥 Відновити дані</button>
+    <button class="m3-btn" id="btnDriveLogin">Увійти в Google</button>
+    <button class="m3-btn" id="btnBackup">Створити резервну копію</button>
+    <button class="m3-btn" id="btnRestore">Відновити дані</button>
 
-    <p id="driveStatus">Статус: ❌ Не авторизовано</p>
-
+    <p id="driveStatus">Статус: очікується…</p>
 </div>
 
 <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
