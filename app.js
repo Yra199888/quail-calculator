@@ -43,46 +43,132 @@ function showPage(id) {
 /* ============================================================
    2. Розрахунок корму
 ============================================================ */
+
+/**
+ * Пресети рецепту комбікорму.
+ * Викликається з кнопок "Стартер / Гровер / Несучки".
+ */
+function applyRecipePreset(type) {
+    if (type === "starter") {
+        // приклад: стартер
+        feedRecipe = {
+            corn: 45,
+            wheat: 15,
+            soy: 20,
+            fish: 10,
+            calcium: 5,
+            premix: 5
+        };
+    } else if (type === "grower") {
+        // приклад: гровер
+        feedRecipe = {
+            corn: 40,
+            wheat: 25,
+            soy: 18,
+            fish: 7,
+            calcium: 5,
+            premix: 5
+        };
+    } else if (type === "layer") {
+        // приклад: несучки
+        feedRecipe = {
+            corn: 50,
+            wheat: 20,
+            soy: 15,
+            fish: 5,
+            calcium: 5,
+            premix: 5
+        };
+    }
+    recalcFeed();
+}
+
+/**
+ * Основний перерахунок корму.
+ * Працює ОДРАЗУ для двох секцій:
+ * 1) твоя секція "1. Комбікорм" (targetKg, feedRows, feedTotalKg...)
+ * 2) секція 3.* (feedBatchKg, feedTableRows, dailyFeedNeed...)
+ */
 function recalcFeed() {
-    const batchKg = Number(document.getElementById("feedBatchKg")?.value || 25);
-    const perHen = Number(document.getElementById("feedDailyPerHen")?.value || 30);
+    // вага партії: або з feedBatchKg, або з targetKg (секція 1)
+    const batchInput =
+        document.getElementById("feedBatchKg") ||
+        document.getElementById("targetKg");
+    const batchKg = batchInput ? Number(batchInput.value || 0) : 25;
 
-    const hens1 = Number(document.getElementById("hens1")?.value || 0);
-    const hens2 = Number(document.getElementById("hens2")?.value || 0);
-    const totalBirds = hens1 + hens2;
+    // добова норма на 1 самку (секція 3.2)
+    const perHen = Number(
+        document.getElementById("feedDailyPerHen")?.value || 30
+    );
 
-    if (document.getElementById("feedBirdCount"))
-        document.getElementById("feedBirdCount").textContent = totalBirds;
+    // загальна кількість птахів з hens1 + hens2
+    const hens1El = document.getElementById("hens1");
+    const hens2El = document.getElementById("hens2");
+    const hens1Val = hens1El ? Number(hens1El.value || 0) : 0;
+    const hens2Val = hens2El ? Number(hens2El.value || 0) : 0;
+    const totalBirds = hens1Val + hens2Val;
 
-    let tbody = document.getElementById("feedTableRows");
-    if (!tbody) return;
+    const birdCountEl = document.getElementById("feedBirdCount");
+    if (birdCountEl) birdCountEl.textContent = totalBirds;
 
-    tbody.innerHTML = "";
+    // тіла таблиць для двох секцій
+    const tbody3 = document.getElementById("feedTableRows"); // секція 3.1
+    const tbody1 = document.getElementById("feedRows");      // секція 1
+
+    if (tbody3) tbody3.innerHTML = "";
+    if (tbody1) tbody1.innerHTML = "";
+
     let totalKg = 0;
 
-    for (let comp in feedRecipe) {
-        let percent = feedRecipe[comp];
-        let kg = batchKg * percent / 100;
+    // проходимось по рецепту
+    for (const comp in feedRecipe) {
+        const percent = feedRecipe[comp];
+        const kg = (batchKg * percent) / 100;
         totalKg += kg;
 
-        let row = `
-        <tr>
-            <td>${comp}</td>
-            <td>${percent}%</td>
-            <td>${kg.toFixed(2)}</td>
-        </tr>`;
-        tbody.insertAdjacentHTML("beforeend", row);
+        // заповнюємо таблицю 3.1 (Компонент / % / кг)
+        if (tbody3) {
+            tbody3.insertAdjacentHTML(
+                "beforeend",
+                `<tr>
+                    <td>${comp}</td>
+                    <td>${percent}%</td>
+                    <td>${kg.toFixed(2)}</td>
+                </tr>`
+            );
+        }
+
+        // заповнюємо таблицю 1. Комбікорм (Компонент / кг / Ціна / Сума)
+        if (tbody1) {
+            tbody1.insertAdjacentHTML(
+                "beforeend",
+                `<tr>
+                    <td>${comp}</td>
+                    <td>${kg.toFixed(2)}</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>`
+            );
+        }
     }
 
-    // добова потреба
-    let dailyKg = totalBirds * perHen / 1000;
-    if (document.getElementById("dailyFeedNeed"))
-        document.getElementById("dailyFeedNeed").textContent = dailyKg.toFixed(2);
+    // підсумки для секції 1 (якщо є)
+    const totalKgEl = document.getElementById("feedTotalKg");
+    if (totalKgEl) totalKgEl.textContent = totalKg.toFixed(2);
 
-    // добова вартість — поки 0
-    if (document.getElementById("dailyFeedCost"))
-        document.getElementById("dailyFeedCost").textContent = (0).toFixed(2);
+    const totalCostEl = document.getElementById("feedTotalCost");
+    if (totalCostEl) totalCostEl.textContent = "0";
 
+    // добова потреба комбікорму (секція 3.2)
+    const dailyKg = (totalBirds * perHen) / 1000;
+    const needEl = document.getElementById("dailyFeedNeed");
+    if (needEl) needEl.textContent = dailyKg.toFixed(2);
+
+    // поки що вартість доби = 0 (можеш доробити потім)
+    const costEl = document.getElementById("dailyFeedCost");
+    if (costEl) costEl.textContent = (0).toFixed(2);
+
+    // оновити інформацію по готовому корму
     updateFeedStock();
 }
 
@@ -161,20 +247,29 @@ function recalcEggsBalance() {
    5. Продуктивність
 ============================================================ */
 function recalcProductivity() {
-    let hens1 = Number(hens1?.value || 0);
-    let hens2 = Number(hens2?.value || 0);
-    let total = hens1 + hens2;
+    const hens1Input = document.getElementById("hens1");
+    const hens2Input = document.getElementById("hens2");
 
-    hensTotal.textContent = total;
+    const hens1Val = hens1Input ? Number(hens1Input.value || 0) : 0;
+    const hens2Val = hens2Input ? Number(hens2Input.value || 0) : 0;
 
-    let eggs = Number(eggsTotal.value) - Number(eggsBad.value);
-    let prod = total > 0 ? (eggs / total * 100) : 0;
+    const total = hens1Val + hens2Val;
 
-    productivityToday.textContent = prod.toFixed(1);
+    const hensTotalEl = document.getElementById("hensTotal");
+    if (hensTotalEl) hensTotalEl.textContent = total;
 
+    const eggsTotalVal = Number(document.getElementById("eggsTotal")?.value || 0);
+    const eggsBadVal   = Number(document.getElementById("eggsBad")?.value   || 0);
+    const eggsGood = Math.max(0, eggsTotalVal - eggsBadVal);
+
+    const prod = total > 0 ? (eggsGood / total * 100) : 0;
+
+    const prodEl = document.getElementById("productivityToday");
+    if (prodEl) prodEl.textContent = prod.toFixed(1);
+
+    // перерахувати корм з урахуванням нової кількості самок
     recalcFeed();
 }
-
 /* ============================================================
    6. Замовлення
 ============================================================ */
