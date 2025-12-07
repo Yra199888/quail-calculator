@@ -406,8 +406,8 @@ function markCancel(i) {
     renderOrders();
     renderClients();
 }
-    
-    function loadOrders() {
+
+function loadOrders() {
     return JSON.parse(localStorage.getItem("orders") || "[]");
 }
 
