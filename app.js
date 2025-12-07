@@ -29,15 +29,16 @@ let incubation = [];
    1. Вкладки
 ============================================================ */
 function showPage(id) {
-    document.querySelectorAll(".m3-card, .section-page").forEach(sec => {
+    document.querySelectorAll(".section-page").forEach(sec => {
         sec.style.display = "none";
     });
 
-    document.querySelectorAll(".m3-tab").forEach(tab => tab.classList.remove("active"));
-
     document.getElementById(id).style.display = "block";
+
+    document.querySelectorAll(".m3-tab").forEach(t => t.classList.remove("active"));
     document.querySelector(`.m3-tab[onclick="showPage('${id}')"]`).classList.add("active");
 }
+
 
 /* ============================================================
    2. Розрахунок корму
