@@ -384,7 +384,73 @@ function recalcForecast() {
 }
 
 /* ============================================================
-   10. INIT
+   10. БАЗОВІ РЕЦЕПТИ
+============================================================ */
+
+const recipes = {
+    starter: [
+        { name: "Кукурудза", pct: 40, price: 8 },
+        { name: "Пшениця", pct: 20, price: 7 },
+        { name: "Соя", pct: 25, price: 18 },
+        { name: "Рибне борошно", pct: 10, price: 50 },
+        { name: "Крейда", pct: 5, price: 5 }
+    ],
+    grower: [
+        { name: "Кукурудза", pct: 45, price: 8 },
+        { name: "Пшениця", pct: 25, price: 7 },
+        { name: "Соя", pct: 20, price: 18 },
+        { name: "Крейда", pct: 10, price: 5 }
+    ],
+    layer: [
+        { name: "Кукурудза", pct: 35, price: 8 },
+        { name: "Пшениця", pct: 30, price: 7 },
+        { name: "Соя", pct: 20, price: 18 },
+        { name: "Крейда", pct: 15, price: 5 }
+    ]
+};
+
+// ===== ПОТОЧНИЙ РЕЦЕПТ =====
+let currentRecipe = [];
+
+// ===== застосування пресету =====
+function applyRecipePreset(type) {
+    currentRecipe = JSON.parse(JSON.stringify(recipes[type]));
+    recalcFeed();
+}
+
+// ===== перерахунок комбікорму =====
+function recalcFeed() {
+    const targetKg = parseFloat(document.getElementById("targetKg").value);
+    const tbody = document.getElementById("feedRows");
+
+    tbody.innerHTML = "";
+    let totalKg = 0;
+    let totalCost = 0;
+
+    currentRecipe.forEach(item => {
+        const kg = (item.pct / 100) * targetKg;
+        const cost = kg * item.price;
+
+        totalKg += kg;
+        totalCost += cost;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${item.name}</td>
+            <td>${kg.toFixed(2)}</td>
+            <td>${item.price} грн</td>
+            <td>${cost.toFixed(2)} грн</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById("feedTotalKg").textContent = totalKg.toFixed(2);
+    document.getElementById("feedTotalCost").textContent = totalCost.toFixed(2);
+}
+
+
+/* ============================================================
+   11. INIT
 ============================================================ */
 window.onload = () => {
     showPage("feed");
