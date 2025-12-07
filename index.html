@@ -132,47 +132,146 @@ input:focus, select:focus, textarea:focus {
   <div class="m3-tab" onclick="showPage('eggs')">Яйця</div>
   <div class="m3-tab" onclick="showPage('orders')">Замовлення</div>
   <div class="m3-tab" onclick="showPage('clients')">Клієнти</div>
+  <div class="m3-tab" onclick="showPage('finance')">Фінанси</div>
   <div class="m3-tab" onclick="showPage('incub')">Інкубація</div>
 </div>
 
 
-    <!-- SECTION 1 — FEED CALCULATOR -->
-<div class="m3-card">
+    <!-- =============== PAGE CONTAINERS =============== -->
 
-    <h2>1. Комбікорм</h2>
+<div id="feed" class="section-page" style="display:block;">
 
-    <div class="m3-input">
-        <label>Бажана вага партії (кг)</label>
-        <input type="number" id="targetKg" value="25" onchange="recalcFeed()">
-    </div>
+  <!-- === СЕКЦІЯ 1 — Комбікорм (Старий рецепт) === -->
+  <div class="m3-card">
+      <h2>1. Комбікорм</h2>
 
-    <div style="margin-bottom: 12px;">
-        <button class="m3-btn" onclick="applyRecipePreset('starter')">Стартер</button>
-        <button class="m3-btn" onclick="applyRecipePreset('grower')">Гровер</button>
-        <button class="m3-btn" onclick="applyRecipePreset('layer')">Несучки</button>
-    </div>
+      <div class="m3-input">
+          <label>Бажана вага партії (кг)</label>
+          <input type="number" id="targetKg" value="25" onchange="recalcFeed()">
+      </div>
 
-    <table class="m3-table" id="feedTable">
-        <thead>
-            <tr>
-                <th>Компонент</th>
-                <th>К-сть (кг)</th>
-                <th>Ціна</th>
-                <th>Сума</th>
-            </tr>
-        </thead>
-        <tbody id="feedRows">
-            <!-- Генерується автоматично -->
-        </tbody>
-    </table>
+      <div style="margin-bottom: 12px;">
+          <button class="m3-btn" onclick="applyRecipePreset('starter')">Стартер</button>
+          <button class="m3-btn" onclick="applyRecipePreset('grower')">Гровер</button>
+          <button class="m3-btn" onclick="applyRecipePreset('layer')">Несучки</button>
+      </div>
 
-    <p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
-    <p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
+      <table class="m3-table" id="feedTable">
+          <thead>
+              <tr>
+                  <th>Компонент</th>
+                  <th>К-сть (кг)</th>
+                  <th>Ціна</th>
+                  <th>Сума</th>
+              </tr>
+          </thead>
+          <tbody id="feedRows"></tbody>
+      </table>
+
+      <p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
+      <p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
+  </div>
+
+
+
+  <!-- === СЕКЦІЯ 3.1 — Рецепт комбікорму === -->
+  <div class="m3-card">
+      <h2 class="m3-title">3.1. Рецепт комбікорму</h2>
+
+      <p>Вага партії (кг):
+         <input type="number" id="feedBatchKg" value="25" step="1" style="width:90px;" oninput="recalcFeed()">
+      </p>
+
+      <table class="m3-table">
+          <thead>
+              <tr>
+                  <th>Компонент</th>
+                  <th>%</th>
+                  <th>Кількість (кг)</th>
+              </tr>
+          </thead>
+          <tbody id="feedTableRows"></tbody>
+      </table>
+  </div>
+
+
+
+  <!-- === СЕКЦІЯ 3.2 — Добова норма комбікорму === -->
+  <div class="m3-card">
+      <h2 class="m3-title">3.2. Добова норма</h2>
+
+      <p>
+          Добова норма на 1 самку (г):
+          <input type="number" id="feedDailyPerHen" value="30" style="width:90px;" oninput="recalcFeed()">
+      </p>
+
+      <p>
+          Кількість птахів: <span id="feedBirdCount">0</span>
+      </p>
+
+      <table class="m3-table">
+          <tr>
+              <td>Добова потреба (кг)</td>
+              <td><span id="dailyFeedNeed">0.00</span></td>
+          </tr>
+          <tr>
+              <td>Вартість доби (грн)</td>
+              <td><span id="dailyFeedCost">0.00</span></td>
+          </tr>
+      </table>
+  </div>
+
+
+
+  <!-- === СЕКЦІЯ 3.3 — Запаси компонентів === -->
+  <div class="m3-card">
+      <h2 class="m3-title">3.3. Запаси компонентів</h2>
+
+      <table class="m3-table">
+          <thead>
+              <tr>
+                  <th>Компонент</th>
+                  <th>Є (кг)</th>
+                  <th>Потрібно</th>
+                  <th>Докупити</th>
+              </tr>
+          </thead>
+          <tbody id="stockRows"></tbody>
+      </table>
+  </div>
+
+
+
+  <!-- === СЕКЦІЯ 3.4 — Склад готового комбікорму === -->
+  <div class="m3-card">
+      <h2 class="m3-title">3.4. Склад готового комбікорму</h2>
+
+      <p>Готовий комбікорм: <span id="feedReadyStock">0.0</span> кг</p>
+
+      <p>Вага однієї партії:
+         <input type="number" id="feedBatchSize" value="25" style="width:90px;">
+      </p>
+
+      <button class="btn" id="produceFeedBatch">Виготовити партію</button>
+      <button class="btn" id="consumeDailyFeed">Списати добову норму</button>
+
+      <table class="m3-table">
+          <tr>
+              <td>Залишок (кг)</td>
+              <td><span id="feedStockRemain">0.0</span></td>
+          </tr>
+          <tr>
+              <td>Хватить на днів</td>
+              <td><span id="feedDaysLeft">0</span></td>
+          </tr>
+      </table>
+  </div>
 
 </div>
 
 
-<!-- 2. Облік яєць -->
+<div id="eggs" class="section-page" style="display:none;">
+  <!-- 2. Облік яєць -->
 <div class="m3-card" id="sec-eggs">
 
   <h2 class="m3-title">2. Облік яєць</h2>
@@ -278,159 +377,11 @@ input:focus, select:focus, textarea:focus {
   </div>
 
 </div>
-
-<!-- ========================= -->
-<!--      SECTION 3 — FEED     -->
-<!-- ========================= -->
-
-<div class="m3-card" id="sec-feed">
-
-    <!-- 3.1 РЕЦЕПТ КОМБІКОРМУ -->
-    <h2 class="m3-title">3.1. Рецепт комбікорму</h2>
-
-    <p class="small">Розрахунок інгредієнтів залежно від розміру партії.</p>
-
-    <p>
-        Вага партії (кг):
-        <input type="number" id="feedBatchKg" value="25" step="1" style="width:90px;" oninput="recalcFeed()">
-    </p>
-
-    <table class="m3-table">
-        <thead>
-            <tr>
-                <th>Компонент</th>
-                <th>%</th>
-                <th>Кількість (кг)</th>
-            </tr>
-        </thead>
-        <tbody id="feedTableRows">
-            <!-- генерується через JS -->
-        </tbody>
-    </table>
-
-    <p class="small">Зміни рецепту застосовуються автоматично.</p>
-
-    <!-- 3.2 ДОБОВА НОРМА КОМБІКОРМУ -->
-    <h2 class="m3-title">3.2. Добова норма комбікорму</h2>
-
-    <p>
-        Добова норма комбікорму на 1 самку, грам:
-        <input type="number" id="feedDailyPerHen" value="30" step="1" style="width:90px;" oninput="recalcFeed()">
-    </p>
-
-    <p>
-        Кількість птахів:
-        <span id="feedBirdCount">0</span>
-    </p>
-
-    <div class="table-wrapper">
-        <table class="m3-table">
-            <tr>
-                <td>Добова потреба комбікорму (кг)</td>
-                <td class="right"><span id="dailyFeedNeed">0.00</span></td>
-            </tr>
-            <tr>
-                <td>Вартість комбікорму на добу, грн</td>
-                <td class="right"><span id="dailyFeedCost">0.00</span></td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- 3.3 ЗАПАСИ КОМПОНЕНТІВ -->
-    <h2 class="m3-title">3.3. Запаси компонентів</h2>
-
-    <p class="small">Порівняння наявних запасів із тим, що потрібно для рецепту.</p>
-
-    <table class="m3-table">
-        <thead>
-            <tr>
-                <th>Компонент</th>
-                <th>Є (кг)</th>
-                <th>Потрібно</th>
-                <th>Докупити</th>
-            </tr>
-        </thead>
-        <tbody id="stockRows">
-            <!-- генерується через JS -->
-        </tbody>
-    </table>
-
-    <!-- 3.4 СКЛАД ГОТОВОГО КОМБІКОРМУ -->
-    <h2 class="m3-title">3.4. Склад готового комбікорму</h2>
-
-    <p class="small">Облік реально намішаного корму та його залишку.</p>
-
-    <p>
-        Готовий комбікорм на складі: 
-        <span id="feedReadyStock">0.0</span> кг
-    </p>
-
-    <p>
-        Вага однієї партії комбікорму:
-        <input type="number" id="feedBatchSize" value="25" step="1" style="width:90px;">
-    </p>
-
-    <button class="btn" id="produceFeedBatch">Виготовити партію комбікорму</button>
-    <button class="btn" id="consumeDailyFeed">Списати добову норму</button>
-
-    <div class="table-wrapper">
-        <table class="m3-table">
-            <tr>
-                <td>Залишок комбікорму (кг)</td>
-                <td class="right"><span id="feedStockRemain">0.0</span></td>
-            </tr>
-            <tr>
-                <td>Хватить на днів</td>
-                <td class="right"><span id="feedDaysLeft">0</span></td>
-            </tr>
-        </table>
-    </div>
-
+    
 </div>
 
-<!-- SECTION 4 — LOG -->
-<div class="m3-card">
-
-    <h2>4. Щоденник витрат</h2>
-
-    <div class="m3-input">
-        <label>Дата</label>
-        <input type="date" id="logDate">
-    </div>
-
-    <div class="m3-input">
-        <label>Категорія</label>
-        <input type="text" id="logCategory">
-    </div>
-
-    <div class="m3-input">
-        <label>Сума (грн)</label>
-        <input type="number" id="logAmount">
-    </div>
-
-    <div class="m3-input">
-        <label>Коментар</label>
-        <input type="text" id="logComment">
-    </div>
-
-    <button class="m3-btn" onclick="addLog()">Додати запис</button>
-
-    <table class="m3-table">
-        <thead>
-            <tr>
-                <th>Дата</th>
-                <th>Категорія</th>
-                <th>Сума</th>
-                <th>Коментар</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody id="logBody"></tbody>
-    </table>
-
-</div>
-
-<!-- SECTION 5 — ORDERS -->
+<div id="orders" class="section-page" style="display:none;">
+  <!-- Секція 5 (замовлення) -->
 <div class="m3-card">
 
     <h2>5. Замовлення</h2>
@@ -473,141 +424,41 @@ input:focus, select:focus, textarea:focus {
     </table>
 
 </div>
-
-<!-- ========================================= -->
-<!--            SECTION 6 — INCUBATION         -->
-<!-- ========================================= -->
-
-<div class="m3-card" id="sec-incubation">
-
-    <!-- 6.0 ІНКУБАЦІЯ -->
-    <h2 class="m3-title">6. Інкубація</h2>
-
-    <p class="small">
-        Облік інкубаційних партій: дати закладки, кількість яєць,
-        результати овоскопії, вилуплення та втрати.
-    </p>
-
-
-    <!-- 6.1 ДОДАТИ НОВУ ПАРТІЮ -->
-    <h3 class="m3-subtitle">6.1. Нова інкубаційна партія</h3>
-
-    <div class="m3-field-group">
-
-        <p>
-            Назва / номер партії:
-            <input type="text" id="incBatchName" placeholder="Партія №3" class="m3-input">
-        </p>
-
-        <p>
-            Дата закладки:
-            <input type="date" id="incStartDate" class="m3-input">
-        </p>
-
-        <p>
-            Кількість закладених яєць:
-            <input type="number" id="incEggsSet" value="0" step="1" class="m3-input" style="width:120px;">
-        </p>
-
-        <p>
-            Нотатка (інкубатор, режим, порода тощо):
-            <textarea id="incNote" rows="2" class="m3-input" style="width:100%;"></textarea>
-        </p>
-
-        <button class="btn m3-btn" id="addIncubation">Додати партію</button>
-    </div>
-
-
-    <!-- 6.2 ФІЛЬТР -->
-    <h3 class="m3-subtitle">6.2. Фільтр партій</h3>
-
-    <p>
-      Показувати:
-      <select id="incFilter" class="m3-input" style="width:220px;" onchange="renderInc()">
-          <option value="all">Всі партії</option>
-          <option value="active">Активні</option>
-          <option value="done">Завершені</option>
-          <option value="candling">На овоскопії</option>
-          <option value="hatch">Етап виведення</option>
-      </select>
-    </p>
-
-
-    <!-- 6.3 СПИСОК ПАРТІЙ -->
-    <h3 class="m3-subtitle">6.3. Список інкубаційних партій</h3>
-
-    <div class="table-wrapper">
-        <table class="m3-table">
-            <thead>
-                <tr>
-                    <th>Партія</th>
-                    <th>Дата</th>
-                    <th>Днів</th>
-                    <th>Закладено</th>
-                    <th>Незапліднені</th>
-                    <th>Вилупилось</th>
-                    <th>Померли (інк.)</th>
-                    <th>Померли (брудер)</th>
-                    <th>Живі</th>
-                    <th>Нагадування</th>
-                    <th>Нотатка</th>
-                    <th>Дії</th>
-                </tr>
-            </thead>
-
-            <tbody id="incubationBody">
-                <!-- renderInc() вставляє дані -->
-            </tbody>
-        </table>
-    </div>
-
 </div>
 
-<!-- SECTION 7 — GRAPHS -->
+<div id="clients" class="section-page" style="display:none;">
+  <!-- Секція 12 (клієнти) -->
+    <!-- 12. Клієнти (зведена інформація) -->
 <div class="m3-card">
+  <h2 class="m3-title">12. Клієнти</h2>
 
-    <h2>7. Графіки продуктивності</h2>
+  <p class="small">
+    Зведення по виконаних замовленнях: скільки лотків та яєць купив кожен клієнт 
+    і на яку суму.
+  </p>
 
-    <div class="m3-chart">
-        <canvas id="chartEggs"></canvas>
-    </div>
-
-    <div class="m3-chart">
-        <canvas id="chartIncome"></canvas>
-    </div>
+  <div class="table-wrapper">
+    <table class="m3-table">
+      <thead>
+        <tr>
+          <th>Клієнт</th>
+          <th>К-сть замовлень</th>
+          <th>Лотків (20 яєць)</th>
+          <th>Яєць</th>
+          <th>Сума, грн</th>
+          <th>Останнє замовлення</th>
+        </tr>
+      </thead>
+      <tbody id="clientsBody"></tbody>
+    </table>
+  </div>
+</div>
 
 </div>
 
-<!-- SECTION 8 — FLOCK -->
-<div class="m3-card">
+<div id="finance" class="section-page" style="display:none;">
 
-    <h2>8. Поголів’я</h2>
-
-    <div class="m3-input">
-        <label>Кількість самців</label>
-        <input type="number" id="males" value="10" onchange="recalcFlock()">
-    </div>
-
-    <div class="m3-input">
-        <label>Кількість самок</label>
-        <input type="number" id="females" value="40" onchange="recalcFlock()">
-    </div>
-
-    <div class="m3-input">
-        <label>Смертність</label>
-        <input type="number" id="deaths" value="0" onchange="recalcFlock()">
-    </div>
-
-    <div class="m3-input">
-        <label>Середній вік (днів)</label>
-        <input type="number" id="avgAge" value="60" onchange="recalcFlock()">
-    </div>
-
-    <p><b>Усього поголів'я:</b> <span id="flockTotal">50</span></p>
-
-</div>
-
-<!-- 9. ФІНАНСОВА АНАЛІТИКА -->
+ <!-- 9. ФІНАНСОВА АНАЛІТИКА -->
 <div class="m3-card" id="sec-finance">
 
   <!-- 9.1. Підсумок дня -->
@@ -737,6 +588,185 @@ input:focus, select:focus, textarea:focus {
   </div>
 
 </div>
+    <!-- SECTION 4 — LOG -->
+<div class="m3-card">
+
+    <h2>4. Щоденник витрат</h2>
+
+    <div class="m3-input">
+        <label>Дата</label>
+        <input type="date" id="logDate">
+    </div>
+
+    <div class="m3-input">
+        <label>Категорія</label>
+        <input type="text" id="logCategory">
+    </div>
+
+    <div class="m3-input">
+        <label>Сума (грн)</label>
+        <input type="number" id="logAmount">
+    </div>
+
+    <div class="m3-input">
+        <label>Коментар</label>
+        <input type="text" id="logComment">
+    </div>
+
+    <button class="m3-btn" onclick="addLog()">Додати запис</button>
+
+    <table class="m3-table">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Категорія</th>
+                <th>Сума</th>
+                <th>Коментар</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+    </table>
+
+</div>
+
+
+</div>
+
+
+<div id="incub" class="section-page" style="display:none;">
+  <!-- Секція 6 (інкубація) -->
+    <div class="m3-card" id="sec-incubation">
+
+    <!-- 6.0 ІНКУБАЦІЯ -->
+    <h2 class="m3-title">6. Інкубація</h2>
+
+    <p class="small">
+        Облік інкубаційних партій: дати закладки, кількість яєць,
+        результати овоскопії, вилуплення та втрати.
+    </p>
+
+
+    <!-- 6.1 ДОДАТИ НОВУ ПАРТІЮ -->
+    <h3 class="m3-subtitle">6.1. Нова інкубаційна партія</h3>
+
+    <div class="m3-field-group">
+
+        <p>
+            Назва / номер партії:
+            <input type="text" id="incBatchName" placeholder="Партія №3" class="m3-input">
+        </p>
+
+        <p>
+            Дата закладки:
+            <input type="date" id="incStartDate" class="m3-input">
+        </p>
+
+        <p>
+            Кількість закладених яєць:
+            <input type="number" id="incEggsSet" value="0" step="1" class="m3-input" style="width:120px;">
+        </p>
+
+        <p>
+            Нотатка (інкубатор, режим, порода тощо):
+            <textarea id="incNote" rows="2" class="m3-input" style="width:100%;"></textarea>
+        </p>
+
+        <button class="btn m3-btn" id="addIncubation">Додати партію</button>
+    </div>
+
+
+    <!-- 6.2 ФІЛЬТР -->
+    <h3 class="m3-subtitle">6.2. Фільтр партій</h3>
+
+    <p>
+      Показувати:
+      <select id="incFilter" class="m3-input" style="width:220px;" onchange="renderInc()">
+          <option value="all">Всі партії</option>
+          <option value="active">Активні</option>
+          <option value="done">Завершені</option>
+          <option value="candling">На овоскопії</option>
+          <option value="hatch">Етап виведення</option>
+      </select>
+    </p>
+
+
+    <!-- 6.3 СПИСОК ПАРТІЙ -->
+    <h3 class="m3-subtitle">6.3. Список інкубаційних партій</h3>
+
+    <div class="table-wrapper">
+        <table class="m3-table">
+            <thead>
+                <tr>
+                    <th>Партія</th>
+                    <th>Дата</th>
+                    <th>Днів</th>
+                    <th>Закладено</th>
+                    <th>Незапліднені</th>
+                    <th>Вилупилось</th>
+                    <th>Померли (інк.)</th>
+                    <th>Померли (брудер)</th>
+                    <th>Живі</th>
+                    <th>Нагадування</th>
+                    <th>Нотатка</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+
+            <tbody id="incubationBody">
+                <!-- renderInc() вставляє дані -->
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</div>
+
+<!-- SECTION 7 — GRAPHS -->
+<div class="m3-card">
+
+    <h2>7. Графіки продуктивності</h2>
+
+    <div class="m3-chart">
+        <canvas id="chartEggs"></canvas>
+    </div>
+
+    <div class="m3-chart">
+        <canvas id="chartIncome"></canvas>
+    </div>
+
+</div>
+
+<!-- SECTION 8 — FLOCK -->
+<div class="m3-card">
+
+    <h2>8. Поголів’я</h2>
+
+    <div class="m3-input">
+        <label>Кількість самців</label>
+        <input type="number" id="males" value="10" onchange="recalcFlock()">
+    </div>
+
+    <div class="m3-input">
+        <label>Кількість самок</label>
+        <input type="number" id="females" value="40" onchange="recalcFlock()">
+    </div>
+
+    <div class="m3-input">
+        <label>Смертність</label>
+        <input type="number" id="deaths" value="0" onchange="recalcFlock()">
+    </div>
+
+    <div class="m3-input">
+        <label>Середній вік (днів)</label>
+        <input type="number" id="avgAge" value="60" onchange="recalcFlock()">
+    </div>
+
+    <p><b>Усього поголів'я:</b> <span id="flockTotal">50</span></p>
+
+</div>
+
+
 
 <!-- SECTION 10 — PWA -->
 <div class="m3-card">
@@ -765,31 +795,6 @@ input:focus, select:focus, textarea:focus {
 
 </div>
 
-<!-- 12. Клієнти (зведена інформація) -->
-<div class="m3-card">
-  <h2 class="m3-title">12. Клієнти</h2>
-
-  <p class="small">
-    Зведення по виконаних замовленнях: скільки лотків та яєць купив кожен клієнт 
-    і на яку суму.
-  </p>
-
-  <div class="table-wrapper">
-    <table class="m3-table">
-      <thead>
-        <tr>
-          <th>Клієнт</th>
-          <th>К-сть замовлень</th>
-          <th>Лотків (20 яєць)</th>
-          <th>Яєць</th>
-          <th>Сума, грн</th>
-          <th>Останнє замовлення</th>
-        </tr>
-      </thead>
-      <tbody id="clientsBody"></tbody>
-    </table>
-  </div>
-</div>
 
 </main>
 
