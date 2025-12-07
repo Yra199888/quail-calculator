@@ -793,38 +793,28 @@ input:focus, select:focus, textarea:focus {
 
 </div>
 
-<!-- SECTION 11 — GOOGLE DRIVE BACKUP -->
-<div class="m3-card" id="googleBackupSection">
+<!-- ======================================= -->
+<!--  SECTION 11   GOOGLE DRIVE — FULL PRO   -->
+<!-- ======================================= -->
+<div class="m3-card" id="googleBackup">
 
-  <h2 class="m3-title">11. Резервне копіювання Google Drive</h2>
+    <h2 class="m3-title">Google Drive — Full Pro Backup</h2>
 
-  <p class="small">
-    Професійна система резервного копіювання: зберігає всі дані сайту в один файл .json на ваш Google Drive.
-  </p>
+    <p class="small">
+        Створює повну резервну копію всіх даних:  
+        корм, яйця, замовлення, клієнти, інкубація, фінанси.
+    </p>
 
-  <button class="m3-btn" id="btnDriveLogin">🔐 Увійти в Google</button>
-  <button class="m3-btn" id="btnBackup" disabled>☁️ Створити резервну копію</button>
-  <button class="m3-btn" id="btnRestore" disabled>📥 Відновити дані</button>
+    <button class="btn m3-btn" id="driveLogin">Увійти в Google</button>
+    <button class="btn m3-btn" id="driveBackup" disabled>📤 Створити повну копію</button>
+    <button class="btn m3-btn" id="driveRestore" disabled>📥 Відновити дані</button>
 
-  <p id="driveStatus">Статус: ❌ Не авторизовано</p>
+    <p id="driveStatus">Статус: ❌ Не авторизовано</p>
+
 </div>
 
-
-<script>
-window.gapiLoaded = function () {
-    gapi.load("client", initGapiClient);
-};
-
-async function initGapiClient() {
-    await gapi.client.init({
-        apiKey: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool",
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-    });
-}
-</script>
-    <!-- Google API LOADERS -->
-<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 
 <!-- MAIN APP LOGIC -->
 <script src="app.js"></script>
