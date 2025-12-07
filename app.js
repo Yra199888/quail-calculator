@@ -555,95 +555,151 @@ function recalcFeed() {
 
 
 /* ============================================================
-   GOOGLE DRIVE — FULL PRO BACKUP MODE
+   AUTO BACKUP SYSTEM: LocalStorage + Google Drive Sync
 ============================================================ */
 
-const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
-const API_KEY = "";
-const SCOPES = "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file";
-const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
+// ключ у локальному сховищі
+const LS_KEY = "quail_full_backup";
 
+// змінна для анти-спаму синхронізації
+let lastDriveSync = 0;
 
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
+/* -----------------------------------------------
+   1. ЗБІР ВСІХ ДАНИХ У ЄДИНУ СТРУКТУРУ
+------------------------------------------------ */
+function collectAllData() {
+    return {
+        timestamp: Date.now(),
 
-function gapiLoaded() {
-    gapi.load("client", initializeGapiClient);
+        feedRecipe,
+        feedStock,
+        readyFeedKg,
+
+        orders,
+        incubation,
+
+        eggs: {
+            eggsTotal: eggsTotal.value,
+            eggsBad: eggsBad.value,
+            eggsOwn: eggsOwn.value,
+            eggsCarry: eggsCarry.value,
+            trayPrice: trayPrice.value
+        },
+
+        hens: {
+            hens1: hens1.value,
+            hens2: hens2.value
+        },
+
+        settings: {
+            feedBatchKg: feedBatchKg.value,
+            feedDailyPerHen: feedDailyPerHen.value,
+            activeTab: document.querySelector(".m3-tab.active")?.innerText || "Корм"
+        }
+    };
 }
 
-async function initializeGapiClient() {
-    await gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-    });
-    gapiInited = true;
-    updateDriveUI();
-}
-
-function gisLoaded() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: "",
-    });
-    gisInited = true;
-    updateDriveUI();
-}
-
-function updateDriveUI() {
-    if (gapiInited && gisInited) {
-        document.getElementById("btnDriveLogin").disabled = false;
+/* -----------------------------------------------
+   2. ЛОКАЛЬНЕ ЗБЕРЕЖЕННЯ
+------------------------------------------------ */
+function saveToLocal() {
+    try {
+        const data = collectAllData();
+        localStorage.setItem(LS_KEY, JSON.stringify(data));
+        // console.log("Автозбереження виконано");
+    } catch (e) {
+        console.error("Помилка локального збереження:", e);
     }
 }
 
-document.getElementById("btnDriveLogin").onclick = () => {
-    tokenClient.callback = async (resp) => {
-        if (resp.error) throw resp;
+/* -----------------------------------------------
+   3. ВІДНОВЛЕННЯ ДАНИХ ПРИ ЗАПУСКУ
+------------------------------------------------ */
+function loadFromLocal() {
+    try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return;
 
-        document.getElementById("driveStatus").textContent = "Авторизовано ✔";
-        document.getElementById("btnBackup").disabled = false;
-        document.getElementById("btnRestore").disabled = false;
-    };
+        const data = JSON.parse(raw);
 
-    tokenClient.requestAccessToken();
-};
+        // Яйця
+        eggsTotal.value = data.eggs.eggsTotal ?? 0;
+        eggsBad.value = data.eggs.eggsBad ?? 0;
+        eggsOwn.value = data.eggs.eggsOwn ?? 0;
+        eggsCarry.value = data.eggs.eggsCarry ?? 0;
+        trayPrice.value = data.eggs.trayPrice ?? 0;
 
-document.getElementById("btnBackup").onclick = async () => {
-    const content = JSON.stringify({ 
-        orders, 
-        incubation, 
-        readyFeedKg,
-    });
+        // Самки
+        hens1.value = data.hens.hens1 ?? 0;
+        hens2.value = data.hens.hens2 ?? 0;
 
+        // Корм
+        feedBatchKg.value = data.settings.feedBatchKg ?? 25;
+        feedDailyPerHen.value = data.settings.feedDailyPerHen ?? 30;
+
+        // Масиви
+        orders = data.orders || [];
+        incubation = data.incubation || [];
+        feedRecipe = data.feedRecipe || feedRecipe;
+        feedStock = data.feedStock || feedStock;
+        readyFeedKg = data.readyFeedKg ?? 0;
+
+    } catch (e) {
+        console.error("Помилка відновлення даних:", e);
+    }
+}
+
+/* -----------------------------------------------
+   4. GOOGLE DRIVE — ЗБЕРЕЖЕННЯ JSON
+------------------------------------------------ */
+async function saveToDrive() {
+    const now = Date.now();
+
+    // не частіше ніж раз на 10 секунд
+    if (now - lastDriveSync < 10000) return;
+    lastDriveSync = now;
+
+    try {
+        const data = JSON.stringify(collectAllData(), null, 2);
+        await uploadJsonToDrive("quail-backup.json", data);
+        console.log("Автосинхронізація Drive — OK");
+    } catch (e) {
+        console.warn("Drive sync failed:", e);
+    }
+}
+
+/* -----------------------------------------------
+   5. ГОЛОВНИЙ ЦИКЛ — АВТОСИНХРОНІЗАЦІЯ
+------------------------------------------------ */
+setInterval(() => {
+    saveToLocal();   // локальне автозбереження
+    saveToDrive();   // автосинхронізація на Google Drive
+}, 5000); // кожні 5 секунд
+
+async function uploadJsonToDrive(filename, content) {
     const file = new Blob([content], { type: "application/json" });
+
     const metadata = {
-        name: "quail-backup.json",
+        name: filename,
         mimeType: "application/json"
     };
 
-    const accessToken = gapi.client.getToken().access_token;
-
-    let form = new FormData();
+    const form = new FormData();
     form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
     form.append("file", file);
 
-    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-        method: "POST",
-        headers: new Headers({ "Authorization": "Bearer " + accessToken }),
-        body: form
-    });
+    return fetch(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${gapi.client.getToken().access_token}`
+            },
+            body: form
+        }
+    );
+}
 
-    if (res.ok) {
-        document.getElementById("driveStatus").textContent = "Резервна копія створена ✔";
-    } else {
-        alert("Помилка завантаження!");
-    }
-};
-
-document.getElementById("btnRestore").onclick = async () => {
-    alert("PRO Restore потребує вибору файлу — доробимо після тесту Backup.");
-};
 
 
 /* ============================================================
