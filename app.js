@@ -589,6 +589,18 @@ function analyzeNeeds() {
     document.getElementById("needToBuyBox").innerHTML = html;
 }
 
+function updateToBuy() {
+    let result = "";
+    Object.keys(stock).forEach(name => {
+        if (stock[name].need > 0) {
+            result += `${name}: потрібно докупити ${stock[name].need} кг\n`;
+        }
+    });
+
+    alert(result || "Все є в наявності!");
+}
+
+
 
 /* ============================================================
    AUTO BACKUP SYSTEM: LocalStorage + Google Drive Sync
