@@ -386,68 +386,77 @@ function recalcForecast() {
 /* ============================================================
    10. БАЗОВІ РЕЦЕПТИ
 ============================================================ */
-
 const recipes = {
-    starter: [
-        { name: "Кукурудза", pct: 40, price: 8 },
-        { name: "Пшениця", pct: 20, price: 7 },
-        { name: "Соя", pct: 25, price: 18 },
-        { name: "Рибне борошно", pct: 10, price: 50 },
-        { name: "Крейда", pct: 5, price: 5 }
-    ],
-    grower: [
-        { name: "Кукурудза", pct: 45, price: 8 },
-        { name: "Пшениця", pct: 25, price: 7 },
-        { name: "Соя", pct: 20, price: 18 },
-        { name: "Крейда", pct: 10, price: 5 }
-    ],
-    layer: [
-        { name: "Кукурудза", pct: 35, price: 8 },
-        { name: "Пшениця", pct: 30, price: 7 },
-        { name: "Соя", pct: 20, price: 18 },
-        { name: "Крейда", pct: 15, price: 5 }
-    ]
+    starter: {
+        "Кукурудза": 40,
+        "Пшениця": 20,
+        "Соєвий шрот": 25,
+        "Соняшниковий шрот": 10,
+        "Рибне борошно": 5
+    },
+    grower: {
+        "Кукурудза": 45,
+        "Пшениця": 25,
+        "Соєвий шрот": 20,
+        "Соняшниковий шрот": 8,
+        "Рибне борошно": 2
+    },
+    layer: {
+        "Кукурудза": 50,
+        "Пшениця": 20,
+        "Соєвий шрот": 15,
+        "Соняшниковий шрот": 10,
+        "Крейда": 5
+    }
 };
 
-// ===== ПОТОЧНИЙ РЕЦЕПТ =====
-let currentRecipe = [];
 
-// ===== застосування пресету =====
+// ==== ПІДСТАВИТИ РЕЦЕПТ ПРИ НАТИСКАННІ КНОПКИ ====
 function applyRecipePreset(type) {
-    currentRecipe = JSON.parse(JSON.stringify(recipes[type]));
+    const recipe = recipes[type];
+    if (!recipe) return;
+
+    const tbody = document.getElementById("feedRows");
+    tbody.innerHTML = "";
+
+    for (const comp in recipe) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${comp}</td>
+            <td><input type="number" class="feed-kg" value="${recipe[comp]}" onchange="recalcFeed()"></td>
+            <td><input type="number" class="feed-price" value="0" onchange="recalcFeed()"></td>
+            <td class="feed-sum">0</td>
+        `;
+        tbody.appendChild(tr);
+    }
+
     recalcFeed();
 }
 
-// ===== перерахунок комбікорму =====
-function recalcFeed() {
-    const targetKg = parseFloat(document.getElementById("targetKg").value);
-    const tbody = document.getElementById("feedRows");
 
-    tbody.innerHTML = "";
+// ==== ПЕРЕРАХУНОК ВАГИ ТА ЦІНИ ====
+function recalcFeed() {
     let totalKg = 0;
     let totalCost = 0;
 
-    currentRecipe.forEach(item => {
-        const kg = (item.pct / 100) * targetKg;
-        const cost = kg * item.price;
+    const kgInputs = document.querySelectorAll(".feed-kg");
+    const priceInputs = document.querySelectorAll(".feed-price");
+    const sumCells = document.querySelectorAll(".feed-sum");
 
-        totalKg += kg;
-        totalCost += cost;
+    kgInputs.forEach((kg, i) => {
+        const kgVal = parseFloat(kg.value) || 0;
+        const priceVal = parseFloat(priceInputs[i].value) || 0;
+        const sum = kgVal * priceVal;
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${item.name}</td>
-            <td>${kg.toFixed(2)}</td>
-            <td>${item.price} грн</td>
-            <td>${cost.toFixed(2)} грн</td>
-        `;
-        tbody.appendChild(tr);
+        sumCells[i].textContent = sum.toFixed(2);
+
+        totalKg += kgVal;
+        totalCost += sum;
     });
 
-    document.getElementById("feedTotalKg").textContent = totalKg.toFixed(2);
+    document.getElementById("feedTotalKg").textContent = totalKg.toFixed(1);
     document.getElementById("feedTotalCost").textContent = totalCost.toFixed(2);
 }
-
 
 /* ============================================================
    11. INIT
