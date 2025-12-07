@@ -794,28 +794,21 @@ input:focus, select:focus, textarea:focus {
 </div>
 
 <!-- SECTION 11 — GOOGLE DRIVE BACKUP -->
-<div class="m3-card" id="sec-drive">
-    <h2>11. Google Drive Backup</h2>
+<div class="m3-card" id="googleBackupSection">
 
-    <button class="m3-btn" id="btnLogin">Увійти в Google</button>
-    <button class="m3-btn" id="btnBackup" disabled>Створити резервну копію</button>
-    <button class="m3-btn" id="btnRestore" disabled>Відновити дані</button>
+  <h2 class="m3-title">11. Резервне копіювання Google Drive</h2>
 
-    <p id="driveStatus">Статус: не авторизовано</p>
+  <p class="small">
+    Професійна система резервного копіювання: зберігає всі дані сайту в один файл .json на ваш Google Drive.
+  </p>
+
+  <button class="m3-btn" id="btnDriveLogin">🔐 Увійти в Google</button>
+  <button class="m3-btn" id="btnBackup" disabled>☁️ Створити резервну копію</button>
+  <button class="m3-btn" id="btnRestore" disabled>📥 Відновити дані</button>
+
+  <p id="driveStatus">Статус: ❌ Не авторизовано</p>
 </div>
 
-
-
-</main>
-
-<!-- ChartJS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<!-- Google API Loader -->
-<script src="https://apis.google.com/js/api.js" async defer></script>
 
 <script>
 window.gapiLoaded = function () {
@@ -829,7 +822,9 @@ async function initGapiClient() {
     });
 }
 </script>
-
+    <!-- Google API LOADERS -->
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 
 <!-- MAIN APP LOGIC -->
 <script src="app.js"></script>
