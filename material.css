@@ -1,13 +1,14 @@
 /* Основні змінні Material 3 */
 :root {
-  --m3-primary: #6750A4;
+  --m3-primary: #3F622D; /* ← ТЕМНО-ЗЕЛЕНИЙ */
   --m3-on-primary: #FFFFFF;
   --m3-surface: #FFFFFF;
-  --m3-surface-variant: #F5F2FB;
-  --m3-outline: #CAC4D0;
+  --m3-surface-variant: #D4F2A1; /* Світло-зелений тональний */
+  --m3-outline: #0D2601;
   --m3-radius: 16px;
   --m3-transition: 0.25s ease;
 }
+
 
 /* Анімована M3-картка */
 .m3-card {
