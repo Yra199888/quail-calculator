@@ -555,98 +555,92 @@ function recalcFeed() {
 
 
 /* ============================================================
-   GOOGLE DRIVE — PRO MODE
+   GOOGLE DRIVE — FULL PRO BACKUP MODE
 ============================================================ */
 
-let googleUser = null;
+const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
+const API_KEY = "AIzaSyD0t-REPLACE-YOURS";  // якщо немає — залиш пустим
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
 
-// Крок 1 — кнопка входу
-document.getElementById("btnLogin").onclick = () => {
-    google.accounts.id.initialize({
-        client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
-        callback: handleCredentialResponse
-    });
-    google.accounts.id.prompt();
-};
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
 
-function handleCredentialResponse(res) {
-    googleUser = res.credential;
-    document.getElementById("driveStatus").textContent = "Авторизація успішна";
-    document.getElementById("btnBackup").disabled = false;
-    document.getElementById("btnRestore").disabled = false;
+function gapiLoaded() {
+    gapi.load("client", initializeGapiClient);
 }
 
-// Крок 2 — створення резервної копії
-document.getElementById("btnBackup").onclick = async () => {
-    try {
-        let data = JSON.stringify({
-            orders,
-            incubation,
-            feed: { feedRecipe, feedStock, readyFeedKg }
-        });
+async function initializeGapiClient() {
+    await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+    });
+    gapiInited = true;
+    updateDriveUI();
+}
 
-        const file = new Blob([data], { type: "application/json" });
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: "",
+    });
+    gisInited = true;
+    updateDriveUI();
+}
 
-        let response = await gapi.client.drive.files.create({
-            resource: {
-                name: "quail_backup.json",
-                mimeType: "application/json"
-            },
-            media: {
-                mimeType: "application/json",
-                body: file
-            }
-        });
-
-        alert("Резервна копія збережена");
+function updateDriveUI() {
+    if (gapiInited && gisInited) {
+        document.getElementById("btnDriveLogin").disabled = false;
     }
-    catch (err) {
-        console.error(err);
-        alert("Помилка при збереженні");
+}
+
+document.getElementById("btnDriveLogin").onclick = () => {
+    tokenClient.callback = async (resp) => {
+        if (resp.error) throw resp;
+
+        document.getElementById("driveStatus").textContent = "Авторизовано ✔";
+        document.getElementById("btnBackup").disabled = false;
+        document.getElementById("btnRestore").disabled = false;
+    };
+
+    tokenClient.requestAccessToken();
+};
+
+document.getElementById("btnBackup").onclick = async () => {
+    const content = JSON.stringify({ 
+        orders, 
+        incubation, 
+        readyFeedKg,
+    });
+
+    const file = new Blob([content], { type: "application/json" });
+    const metadata = {
+        name: "quail-backup.json",
+        mimeType: "application/json"
+    };
+
+    const accessToken = gapi.client.getToken().access_token;
+
+    let form = new FormData();
+    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+    form.append("file", file);
+
+    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+        method: "POST",
+        headers: new Headers({ "Authorization": "Bearer " + accessToken }),
+        body: form
+    });
+
+    if (res.ok) {
+        document.getElementById("driveStatus").textContent = "Резервна копія створена ✔";
+    } else {
+        alert("Помилка завантаження!");
     }
 };
 
-// Крок 3 — відновлення
 document.getElementById("btnRestore").onclick = async () => {
-    try {
-        const res = await gapi.client.drive.files.list({
-            q: "name='quail_backup.json'",
-            spaces: "drive",
-            fields: "files(id,name)"
-        });
-
-        if (!res.result.files || res.result.files.length === 0) {
-            alert("Файл резервної копії не знайдено");
-            return;
-        }
-
-        const fileId = res.result.files[0].id;
-
-        const file = await gapi.client.drive.files.get({
-            fileId,
-            alt: "media"
-        });
-
-        const data = JSON.parse(file.body);
-
-        orders = data.orders || [];
-        incubation = data.incubation || [];
-        feedRecipe = data.feed?.feedRecipe || feedRecipe;
-        feedStock = data.feed?.feedStock || feedStock;
-        readyFeedKg = data.feed?.readyFeedKg || 0;
-
-        renderOrders();
-        renderInc();
-        recalcFeed();
-        recalcEggsBalance();
-        recalcProductivity();
-
-        alert("Дані успішно відновлено");
-
-    } catch (err) {
-        console.error(err);
-        alert("Помилка при відновленні");
-    }
+    alert("PRO Restore потребує вибору файлу — доробимо після тесту Backup.");
 };
 
 
