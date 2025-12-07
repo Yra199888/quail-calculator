@@ -210,6 +210,49 @@ function updateFeedStock() {
         document.getElementById("feedDaysLeft").textContent = daysLeft;
 }
 
+// --- 3.5 "Мені треба купити…" ---
+function updateBuySummary() {
+  const list = document.getElementById('buySummary');
+  if (!list) return;
+
+  // очищаємо старий список
+  list.innerHTML = '';
+
+  const rows = document.querySelectorAll('#stockRows tr');
+  const items = [];
+
+  rows.forEach(row => {
+    const nameCell = row.querySelector('.comp-name'); // назва компонента
+    const needSpan = row.querySelector('.need');      // Потрібно на 30 днів
+    const buySpan  = row.querySelector('.buy');       // Докупити
+
+    if (!nameCell || !needSpan || !buySpan) return;
+
+    const name = nameCell.textContent.trim();
+    const need = parseFloat(needSpan.textContent) || 0;
+    const buy  = parseFloat(buySpan.textContent)  || 0;
+
+    // дрібні "хвости" типу 0.0 кг пропускаємо
+    if (buy <= 0.05) return;
+
+    items.push(`${name}: докупити ≈ ${buy.toFixed(1)} кг (потрібно ${need.toFixed(1)} кг)`);
+  });
+
+  if (items.length === 0) {
+    // Якщо все вистачає
+    const li = document.createElement('li');
+    li.textContent = 'На 30 днів запасів достатньо — докупляти нічого не потрібно 👍';
+    list.appendChild(li);
+  } else {
+    items.forEach(text => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      list.appendChild(li);
+    });
+  }
+}
+
+
 /* ============================================================
    4. Облік яєць
 ============================================================ */
