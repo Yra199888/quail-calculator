@@ -305,14 +305,16 @@ input:focus, select:focus, textarea:focus {
           </tr>
       </table>
   </div>
+    
+ <!-- === СЕКЦІЯ 3.5 — Мені треба купити === -->
+   <div class="m3-card">
+  <h2>3.5 Мені треба купити…</h2>
+  <p>Автоматичний аналіз запасів + рецепту + споживання.</p>
 
-    <div class="m3-card">
-    <h2>3.5 Мені треба купити…</h2>
-    <p class="small">Автоматичний аналіз запасів + рецепту + споживання.</p>
-    <div onclick="updateToBuy()">
-    <div id="needToBuyBox">
-        <!-- Список генерується автоматично з app.js -->
-    </div>
+  <!-- Сюди JS буде вставляти список покупок -->
+  <ul id="buySummary"></ul>
+</div>
+
 </div>
 
 
