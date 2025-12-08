@@ -1,10 +1,10 @@
 {
   "name": "Калькулятор перепілок",
   "short_name": "Перепілки",
-  "start_url": "./index.html",
+  "theme_color": "#3F622D",
+  "background_color": "#DEE7CD",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "start_url": "./",
   "icons": [
     {
       "src": "icon.PNG",
