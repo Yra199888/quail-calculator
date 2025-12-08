@@ -86,65 +86,55 @@
   </div>
 
 
-  <!-- 3.1 РЕЦЕПТ КОМБІКОРМУ -->
+    <!-- 3.1. Добова норма -->
   <div class="m3-card">
-      <h2>3.1. Рецепт комбікорму</h2>
+      <section id="dailyFeedSection">
+    <h2>3.2. Добова норма</h2>
 
-      <p>Вага партії:
-         <input type="number" id="feedBatchKg" value="25" oninput="recalcFeed()">
-      </p>
+    <label>Добова норма на 1 птицю (г):</label>
+    <input id="dailyNormInput" type="number" value="30">
 
-      <table class="m3-table">
-          <thead><tr><th>Компонент</th><th>%</th><th>К-сть (кг)</th></tr></thead>
-          <tbody id="feedTableRows"></tbody>
-      </table>
-  </div>
+    <label>Кількість птахів:</label>
+    <input id="birdCountInput" type="number" value="0">
 
-
-  <!-- 3.2. Добова норма -->
-  <div class="m3-card">
-      <h2>3.2. Добова норма</h2>
-
-      Добова норма на 1 птицю (г):
-      <input type="number" id="feedDailyPerHen" value="30" oninput="recalcFeed()">
-
-      <p>Птахів: <span id="feedBirdCount">0</span></p>
-
-      <table class="m3-table">
-          <tr><td>Добова потреба кг</td><td><span id="dailyFeedNeed">0.00</span></td></tr>
-          <tr><td>Вартість грн</td><td><span id="dailyFeedCost">0.00</span></td></tr>
-      </table>
+    <p>Добова потреба: <span id="dailyNeedKg">0</span> кг</p>
+    <p>Вартість: <span id="dailyCost">0.00</span> грн</p>
+</section>
   </div>
 
 
   <!-- 3.3. Запаси компонентів -->
   <div class="m3-card">
-      <h2>3.3. Запаси компонентів</h2>
+     <section id="componentStockSection">
+    <h2>3.3. Запаси компонентів</h2>
 
-      <table class="m3-table">
-          <thead><tr><th>Компонент</th><th>Є</th><th>Потрібно</th><th>Докупити</th></tr></thead>
-          <tbody id="stockRows"></tbody>
-      </table>
+    <table id="componentStockTable">
+        <tr>
+            <th>Компонент</th>
+            <th>Є (кг)</th>
+            <th>Потрібно докупити (кг)</th>
+        </tr>
+    </table>
+</section>
   </div>
 
 
   <!-- 3.4. Склад готового корму -->
   <div class="m3-card">
-      <h2>3.4. Готовий комбікорм</h2>
+     <section id="readyFeedSection">
+    <h2>3.4. Готовий комбікорм</h2>
 
-      Готового комбікорму: <span id="feedReadyStock">0</span> кг
+    <p>Готового комбікорму: <span id="readyFeed">0</span> кг</p>
 
-      <p>Вага партії:
-         <input type="number" id="feedBatchSize" value="25">
-      </p>
+    <label>Вага партії:</label>
+    <input id="batchSizeInput" type="number" value="25">
 
-      <button id="produceFeedBatch">Виготовити партію</button>
-      <button id="consumeDailyFeed">Списати добову норму</button>
+    <button id="makeFeedBtn">Виготовити партію</button>
+    <button id="consumeDailyBtn">Списати добову норму</button>
 
-      <table class="m3-table">
-          <tr><td>Залишок кг</td><td><span id="feedStockRemain">0</span></td></tr>
-          <tr><td>Хватить на днів</td><td><span id="feedDaysLeft">0</span></td></tr>
-      </table>
+    <p>Залишок: <span id="feedLeft">0</span> кг</p>
+    <p>Хватить на днів: <span id="daysLeft">0</span></p>
+</section>
   </div>
 
 
