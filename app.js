@@ -1,98 +1,114 @@
-/* ======================================================
-     QUAIL CALCULATOR — PRO MODE
-     ЄДИНИЙ data.json + Offline + Autosave + Drive Sync
-   ====================================================== */
+/* ============================================================
+   QUAIL CALCULATOR — PRO MODE (A) 
+   ЄДИНИЙ data.json + Offline Sync + Drive Backup
+   Автор: GPT + Юрій :)
+===============================================================*/
 
-/*
- Структура основної бази даних
- everything inside ONE object → data.json
-*/
-let DB = {
+/* ============================================================
+   0. Глобальні змінні
+===============================================================*/
+
+let DATA = {
     feed: {
-        components: {},
-        readyStock: 0,
-        history: []
+        batchKg: 25,
+        recipe: {},         // % компоненти
+        stocks: {},         // запаси
+        readyKg: 0,         // готовий комбікорм
+        birds: 0,
+        dailyPerHen: 30     // г/добу
     },
+
     eggs: {
-        days: [],
-        today: {},
-        totalTrays: 0
+        total: 0,
+        bad: 0,
+        own: 0,
+        carry: 0,
+        traysPrice: 0,
+        hens1: 0,
+        hens2: 0,
+        history: []         // [{date, total, bad, own, sale, trays}]
     },
+
     orders: {
         active: [],
         done: []
     },
-    clients: {},
+
+    clients: {},             // статистика клієнтів
+
     finance: {
-        logs: [],
-        summary: {}
+        logs: [],            // {date, category, amount, comment}
+        otherCostsMonthly: 0
     },
-    incub: {
-        batches: []
-    },
+
+    incub: [],               // партії інкубації
+
     flock: {
         males: 0,
         females: 0,
         deaths: 0,
         avgAge: 0
-    },
-    meta: {
-        lastUpdate: Date.now()
     }
 };
 
 
-/* ======================================================
-    🔥 AUTOSAVE + LOCAL STORAGE
-   ====================================================== */
+/* ============================================================
+   1. Завантаження + Автозбереження
+===============================================================*/
 
-function saveLocal() {
-    DB.meta.lastUpdate = Date.now();
-    localStorage.setItem("quail_pro_mode", JSON.stringify(DB));
-    setStatus("💾 Дані збережено локально");
+function loadData() {
+    try {
+        let saved = localStorage.getItem("quail_pro_data");
+        if (saved) DATA = JSON.parse(saved);
+    } catch (e) { console.error("Помилка завантаження", e); }
+
+    renderAll();
 }
 
-function loadLocal() {
-    let saved = localStorage.getItem("quail_pro_mode");
-    if (saved) {
-        DB = JSON.parse(saved);
-        setStatus("Локальна база даних завантажена");
-    } else {
-        setStatus("Локальна база відсутня");
+function saveData() {
+    localStorage.setItem("quail_pro_data", JSON.stringify(DATA));
+    scheduleSyncUpload();
+}
+
+/* Автозбереження при будь-якій зміні інпутів */
+document.addEventListener("input", saveData);
+
+
+/* ============================================================
+   2. Offline Sync Queue — черга дій
+===============================================================*/
+
+let syncQueue = JSON.parse(localStorage.getItem("syncQueue") || "[]");
+
+function scheduleSyncUpload() {
+    syncQueue.push({ time: Date.now(), data: DATA });
+    localStorage.setItem("syncQueue", JSON.stringify(syncQueue));
+    trySyncUpload();
+}
+
+function trySyncUpload() {
+    if (!navigator.onLine) return;
+
+    if (syncQueue.length > 0) {
+        console.log("Синхронізую зміну…");
+        uploadToDrive(DATA, () => {
+            syncQueue = [];
+            localStorage.setItem("syncQueue", "[]");
+        });
     }
 }
 
-function autosave() {
-    saveLocal();
-}
-
-function setStatus(msg) {
-    document.getElementById("statusBar").textContent = "Статус: " + msg;
-}
+window.addEventListener("online", trySyncUpload);
 
 
-/* ======================================================
-   🔥 OFFLINE QUEUE (зберігаємо дії для Drive)
-   ====================================================== */
-
-let offlineQueue = [];
-
-function queueAction(action) {
-    offlineQueue.push(action);
-    saveLocal();
-}
-
-/* ======================================================
-   🔥 GOOGLE DRIVE AUTH + SYNC
-   ====================================================== */
-
-const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
-const API_KEY = "AIzaSy...";     // ← вставиш свій
-const SCOPES = "https://www.googleapis.com/auth/drive.file";
+/* ============================================================
+   3. Google Drive FULL PRO MODE
+===============================================================*/
 
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
+let DRIVE_FILE_ID = null;
 
 function gapiLoaded() {
     gapi.load("client", initializeGapiClient);
@@ -100,234 +116,346 @@ function gapiLoaded() {
 
 async function initializeGapiClient() {
     await gapi.client.init({
-        apiKey: API_KEY,
-        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+        apiKey: "",
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
     });
     gapiInited = true;
 }
 
 function gisLoaded() {
     tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: ""
+        client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
+        scope: "https://www.googleapis.com/auth/drive.file",
+        callback: "",
     });
     gisInited = true;
 }
 
-function loginGoogle() {
+document.getElementById("btnDriveLogin").onclick = () => {
     tokenClient.callback = (resp) => {
-        if (resp.error) throw resp;
-        setStatus("Успішний вхід у Google");
-        uploadToDrive();
+        if (resp.access_token) {
+            document.getElementById("driveStatus").innerText = "Увійшли в Google ✔";
+        }
     };
     tokenClient.requestAccessToken();
-}
+};
 
 
-/* ======================================================
-   🔥 DRIVE BACKUP (UPLOAD)
-   ====================================================== */
-async function uploadToDrive() {
-    setStatus("Синхронізація з Drive…");
+/* === Створити резервну копію === */
+document.getElementById("btnBackup").onclick = () => {
+    uploadToDrive(DATA, () => {
+        document.getElementById("driveStatus").innerText = "Бекап створено ✔";
+    });
+};
 
-    let fileContent = JSON.stringify(DB, null, 2);
-    let blob = new Blob([fileContent], { type: "application/json" });
-
-    let metadata = {
+async function uploadToDrive(json, callback) {
+    const fileContent = JSON.stringify(json);
+    const metadata = {
         name: "quail_data.json",
-        mimeType: "application/json"
+        mimeType: "application/json",
     };
 
-    const form = new FormData();
-    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-    form.append("file", blob);
+    const boundary = "-------314159265358979323846";
+    let body =
+        "--" + boundary + "\r\n" +
+        "Content-Type: application/json\r\n\r\n" +
+        JSON.stringify(metadata) + "\r\n" +
+        "--" + boundary + "\r\n" +
+        "Content-Type: application/json\r\n\r\n" +
+        fileContent + "\r\n" +
+        "--" + boundary + "--";
 
-    const res = await fetch(
-        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-        {
-            method: "POST",
-            headers: new Headers({ Authorization: "Bearer " + gapi.client.getToken().access_token }),
-            body: form
-        }
-    );
+    await gapi.client.request({
+        path: "/upload/drive/v3/files?uploadType=multipart",
+        method: "POST",
+        headers: {
+            "Content-Type": "multipart/related; boundary=" + boundary,
+        },
+        body: body,
+    });
 
-    if (res.status === 200 || res.status === 201) {
-        setStatus("☁ Бекап створено у Drive");
-    } else {
-        setStatus("Помилка Drive");
-    }
+    if (callback) callback();
 }
 
 
-/* ======================================================
-   🔥 RESTORE (DOWNLOAD)
-   ====================================================== */
-async function restoreFromDrive() {
-    setStatus("Завантаження даних із Drive…");
-
-    let result = await gapi.client.drive.files.list({
+/* === Відновити резервну копію === */
+document.getElementById("btnRestore").onclick = async () => {
+    let list = await gapi.client.drive.files.list({
         q: "name='quail_data.json'",
-        fields: "files(id, name)"
+        fields: "files(id,name)"
     });
 
-    if (!result.result.files.length) {
-        setStatus("Файл не знайдено");
+    if (!list.result.files.length) {
+        alert("Файл не знайдено у Drive");
         return;
     }
 
-    let fileId = result.result.files[0].id;
+    let id = list.result.files[0].id;
 
-    let download = await gapi.client.drive.files.get({
-        fileId: fileId,
+    let file = await gapi.client.drive.files.get({
+        fileId: id,
         alt: "media"
     });
 
-    DB = JSON.parse(download.body);
-    saveLocal();
-    setStatus("Дані відновлено");
+    DATA = JSON.parse(file.body);
+    saveData();
     renderAll();
+
+    document.getElementById("driveStatus").innerText = "Дані відновлено ✔";
+};
+
+
+/* ============================================================
+   4. Локальні резервні копії
+===============================================================*/
+
+function exportLocalBackup() {
+    let blob = new Blob([JSON.stringify(DATA)], { type: "application/json" });
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "quail_backup.json";
+    a.click();
+}
+
+function importLocalBackup(ev) {
+    let file = ev.target.files[0];
+    let reader = new FileReader();
+
+    reader.onload = function () {
+        DATA = JSON.parse(reader.result);
+        saveData();
+        renderAll();
+    };
+
+    reader.readAsText(file);
 }
 
 
-/* ======================================================
-   🔥 AUTOSYNC WHEN ONLINE
-   ====================================================== */
+/* ============================================================
+   5. Основні розрахункові функції
+===============================================================*/
 
-window.addEventListener("online", () => {
-    setStatus("Online — синхронізація…");
-    if (offlineQueue.length > 0) {
-        uploadToDrive();
-        offlineQueue = [];
-        saveLocal();
-    }
-});
-
-window.addEventListener("offline", () => {
-    setStatus("offline");
-});
-
-
-/* ======================================================
-   🔥 SECTION RENDERERS
-   ====================================================== */
-
-function renderAll() {
-    renderFeed();
-    renderEggs();
-    renderOrders();
-    renderClients();
-    renderFinance();
-    renderInc();
-    renderFlock();
-}
-
-/* === Feed === */
+/* ——— КОРМ ————————————————————— */
 
 function recalcFeed() {
-    autosave();
-    renderFeed();
+    let kg = Number(document.getElementById("feedBatchKg")?.value || 25);
+    let rows = document.getElementById("feedTableRows");
+    if (!rows) return;
+
+    rows.innerHTML = "";
+
+    let totalKg = 0;
+
+    for (let comp in DATA.feed.recipe) {
+        let percent = DATA.feed.recipe[comp];
+        let amount = kg * percent / 100;
+
+        totalKg += amount;
+
+        rows.innerHTML += `
+           <tr>
+             <td>${comp}</td>
+             <td>${percent}%</td>
+             <td>${amount.toFixed(2)} кг</td>
+           </tr>`;
+    }
+
+    DATA.feed.batchKg = kg;
+    saveData();
 }
 
-function renderFeed() {
-    // твоя логіка розрахунку, вона підключиться сама
+document.getElementById("produceFeedBatch")?.addEventListener("click", () => {
+    DATA.feed.readyKg += DATA.feed.batchKg;
+    saveData();
+    renderFeedStock();
+});
+
+document.getElementById("consumeDailyFeed")?.addEventListener("click", () => {
+    let birds = DATA.feed.birds;
+    let daily = DATA.feed.dailyPerHen;
+
+    let needKg = (birds * daily) / 1000;
+    DATA.feed.readyKg -= needKg;
+    if (DATA.feed.readyKg < 0) DATA.feed.readyKg = 0;
+
+    saveData();
+    renderFeedStock();
+});
+
+
+function renderFeedStock() {
+    let remain = document.getElementById("feedStockRemain");
+    let days = document.getElementById("feedDaysLeft");
+
+    if (!remain) return;
+
+    remain.innerText = DATA.feed.readyKg.toFixed(2);
+
+    let dailyKg = (DATA.feed.birds * DATA.feed.dailyPerHen) / 1000;
+
+    days.innerText = dailyKg > 0 ? Math.floor(DATA.feed.readyKg / dailyKg) : 0;
 }
 
-/* === Eggs === */
+
+/* ——— ЯЙЦЯ ————————————————————— */
 
 function recalcEggsBalance() {
-    autosave();
-    renderEggs();
-}
+    let e = DATA.eggs;
 
-function recalcProductivity() {
-    autosave();
-    renderEggs();
-}
+    e.total = Number(document.getElementById("eggsTotal").value || 0);
+    e.bad = Number(document.getElementById("eggsBad").value || 0);
+    e.own = Number(document.getElementById("eggsOwn").value || 0);
+    e.carry = Number(document.getElementById("eggsCarry").value || 0);
 
-function renderEggs() { }
+    let sale = e.total - e.bad - e.own;
+    if (sale < 0) sale = 0;
 
-/* === Orders === */
+    let totalSale = sale + e.carry;
+    let trays = Math.floor(totalSale / 20);
+    let rem = totalSale % 20;
 
-function addOrder() {
-    DB.orders.active.push({
-        name: document.getElementById("ordName").value,
-        eggs: Number(ordEggs.value),
-        trays: Number(ordTrays.value),
-        date: ordDate.value,
-        note: ordNote.value,
-        id: Date.now()
+    document.getElementById("eggsForSale").innerText = sale;
+    document.getElementById("eggsForSaleTotal").innerText = totalSale;
+    document.getElementById("traysCount").innerText = trays;
+    document.getElementById("eggsRemainder").innerText = rem;
+
+    DATA.eggs.history.push({
+        date: new Date().toISOString().slice(0, 10),
+        sale,
+        total: e.total
     });
 
-    autosave();
+    saveData();
+}
+
+
+/* ——— ЗАМОВЛЕННЯ ————————————————————— */
+
+function addOrder() {
+    let name = ordName.value;
+    let trays = Number(ordTrays.value);
+    let eggs = Number(ordEggs.value);
+    let date = ordDate.value;
+
+    DATA.orders.active.push({
+        id: Date.now(),
+        name,
+        trays,
+        eggs,
+        date,
+        note: ordNote.value
+    });
+
+    saveData();
     renderOrders();
 }
 
-function renderOrders() { }
-
-/* === Clients === */
-
-function renderClients() { }
-
-/* === Finance === */
-
-function addLog() {
-    DB.finance.logs.push({
-        date: logDate.value,
-        category: logCategory.value,
-        amount: Number(logAmount.value),
-        comment: logComment.value
-    });
-
-    autosave();
-    renderFinance();
+function completeOrder(id) {
+    let idx = DATA.orders.active.findIndex(o => o.id === id);
+    if (idx >= 0) {
+        let ord = DATA.orders.active.splice(idx, 1)[0];
+        DATA.orders.done.push(ord);
+        saveData();
+        renderOrders();
+    }
 }
 
-function renderFinance() { }
+function renderOrders() {
+    let act = document.getElementById("ordersActive");
+    if (!act) return;
 
-/* === Incubation === */
+    act.innerHTML = "";
+    DATA.orders.active.forEach(o => {
+        act.innerHTML += `
+          <tr>
+            <td>${o.name}</td>
+            <td>${o.trays}</td>
+            <td>${o.eggs}</td>
+            <td>${o.date}</td>
+            <td><button onclick="completeOrder(${o.id})">✔</button></td>
+          </tr>`;
+    });
 
-function addIncubationBatch() {
-    DB.incub.batches.push({
+    let done = document.getElementById("ordersDone");
+    done.innerHTML = "";
+    DATA.orders.done.forEach(o => {
+        done.innerHTML += `<tr><td>${o.name}</td><td>${o.trays}</td><td>${o.eggs}</td><td>${o.date}</td></tr>`;
+    });
+}
+
+
+/* ——— ІНКУБАЦІЯ ————————————————————— */
+
+document.getElementById("addIncubation")?.addEventListener("click", () => {
+    DATA.incub.push({
+        id: Date.now(),
         name: incBatchName.value,
-        start: incStartDate.value,
+        date: incStartDate.value,
         eggs: Number(incEggsSet.value),
         note: incNote.value,
-        id: Date.now()
+        infertile: 0,
+        hatched: 0,
+        diedInc: 0,
+        diedBrooder: 0
     });
-
-    autosave();
+    saveData();
     renderInc();
+});
+
+function renderInc() {
+    let body = document.getElementById("incubationBody");
+    if (!body) return;
+
+    body.innerHTML = "";
+
+    let filter = document.getElementById("incFilter").value;
+
+    DATA.incub.forEach(p => {
+        body.innerHTML += `
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.date}</td>
+            <td>${daysSince(p.date)}</td>
+            <td>${p.eggs}</td>
+            <td>${p.infertile}</td>
+            <td>${p.hatched}</td>
+            <td>${p.diedInc}</td>
+            <td>${p.diedBrooder}</td>
+            <td>${p.eggs - p.infertile - p.diedInc - p.diedBrooder}</td>
+            <td></td>
+            <td>${p.note || ""}</td>
+            <td></td>
+          </tr>`;
+    });
 }
 
-function renderInc() { }
-
-/* === Flock === */
-
-function recalcFlock() {
-    DB.flock.males = Number(males.value);
-    DB.flock.females = Number(females.value);
-    DB.flock.deaths = Number(deaths.value);
-    DB.flock.avgAge = Number(avgAge.value);
-
-    autosave();
-    renderFlock();
+function daysSince(dateStr) {
+    let d = new Date(dateStr);
+    let now = new Date();
+    return Math.floor((now - d) / 86400000);
 }
 
-function renderFlock() { }
 
-/* ======================================================
-   STARTUP
-   ====================================================== */
+/* ============================================================
+   6. Рендер усіх секцій
+===============================================================*/
 
-window.onload = function () {
-    loadLocal();
-    renderAll();
+function renderAll() {
+    renderFeedStock();
+    renderOrders();
+    renderInc();
+    recalcEggsBalance();
+}
 
-    document.getElementById("saveLocal").onclick = saveLocal;
-    document.getElementById("backupDrive").onclick = uploadToDrive;
-    document.getElementById("restoreDrive").onclick = restoreFromDrive;
-    document.getElementById("btnDriveLogin").onclick = loginGoogle;
 
-    document.getElementById("addIncubation").onclick = addIncubationBatch;
-};
+/* ============================================================
+   7. Запуск
+===============================================================*/
+
+loadData();
+trySyncUpload();
+
+
+console.log("PRO MODE app.js завантажено ✔");
