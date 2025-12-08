@@ -1,34 +1,75 @@
-// SERVICE WORKER — OFFLINE + AUTOSYNC BASE
-self.addEventListener("install", (e) => {
-    self.skipWaiting();
-});
+// ==============================
+// SERVICE WORKER — PRO MODE
+// ==============================
 
-self.addEventListener("activate", (e) => {
-    clients.claim();
-});
-
-// Реєстрація офлайн-механізмів буде вставлена в ЧАСТИНІ 2
-
-// PRO CACHE VERSION
-const CACHE = "quail-pro-cache-v1";
-const FILES = [
-    "/",
-    "/index.html",
-    "/app.js",
-    "/manifest.webmanifest"
+const CACHE_NAME = "quail-pro-cache-v1";
+const FILES_TO_CACHE = [
+  "./",
+  "index.html",
+  "app.js",
+  "material.css",
+  "manifest.webmanifest",
+  "icons/icon-192.png",
+  "icons/icon-512.png"
 ];
 
-// install
-self.addEventListener("install", e => {
-    e.waitUntil(
-        caches.open(CACHE).then(c => c.addAll(FILES))
-    );
-    self.skipWaiting();
+// ------- INSTALL -------
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
+  );
+  self.skipWaiting();
 });
 
-// fetch offline-first
-self.addEventListener("fetch", e => {
-    e.respondWith(
-        caches.match(e.request).then(r => r || fetch(e.request))
-    );
+// ------- ACTIVATE -------
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(
+        names.map((name) => {
+          if (name !== CACHE_NAME) return caches.delete(name);
+        })
+      )
+    )
+  );
+  self.clients.claim();
+});
+
+// ------- FETCH STRATEGY (network → fallback cache) -------
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request))
+  );
+});
+
+// =====================================
+// BACKGROUND SYNC — OFFLINE QUEUE
+// =====================================
+
+let syncQueue = [];
+
+// отримує запити від app.js
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "queue-sync") {
+    syncQueue.push(event.data.payload);
+  }
+});
+
+// Виконується коли мережа з’явилась
+self.addEventListener("sync", async (event) => {
+  if (event.tag === "sync-drive") {
+    for (let item of syncQueue) {
+      try {
+        await fetch(item.url, {
+          method: item.method,
+          headers: item.headers || {},
+          body: item.body ? JSON.stringify(item.body) : null,
+        });
+      } catch (e) {
+        console.warn("Sync failed, retry later.");
+        return;
+      }
+    }
+    syncQueue = [];
+  }
 });
