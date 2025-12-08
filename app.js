@@ -1,113 +1,333 @@
-// APP JS — FULL PRO MODE
-// Ти вставиш повний код у ЧАСТИНІ 2
+/* ======================================================
+     QUAIL CALCULATOR — PRO MODE
+     ЄДИНИЙ data.json + Offline + Autosave + Drive Sync
+   ====================================================== */
 
-/* ============================================================
-   PRO MODE — OFFLINE, ONLINE SYNC, BACKUP, AUTO-SAVE
-============================================================ */
+/*
+ Структура основної бази даних
+ everything inside ONE object → data.json
+*/
+let DB = {
+    feed: {
+        components: {},
+        readyStock: 0,
+        history: []
+    },
+    eggs: {
+        days: [],
+        today: {},
+        totalTrays: 0
+    },
+    orders: {
+        active: [],
+        done: []
+    },
+    clients: {},
+    finance: {
+        logs: [],
+        summary: {}
+    },
+    incub: {
+        batches: []
+    },
+    flock: {
+        males: 0,
+        females: 0,
+        deaths: 0,
+        avgAge: 0
+    },
+    meta: {
+        lastUpdate: Date.now()
+    }
+};
 
-const LS_KEY = "quail-data-pro";
 
-// === 1. Автозбереження при вводі ===
-window.addEventListener("input", () => {
-    saveLocal();
-});
+/* ======================================================
+    🔥 AUTOSAVE + LOCAL STORAGE
+   ====================================================== */
 
-// === 2. Автозбереження при закритті вкладки ===
-window.addEventListener("beforeunload", () => {
-    saveLocal();
-});
-
-// === 3. Зміна статусу мережі ===
-function updateNetworkStatus() {
-    const status = navigator.onLine ? "🟢 Онлайн" : "🔴 Офлайн";
-    document.getElementById("statusBar").innerText = "Статус: " + status;
-}
-window.addEventListener("online", updateNetworkStatus);
-window.addEventListener("offline", updateNetworkStatus);
-updateNetworkStatus();
-
-// === 4. Збереження локально ===
 function saveLocal() {
-    const data = {
-        timestamp: Date.now(),
-        eggsToday: document.getElementById("eggsToday")?.value || null,
-        custom: "далі ти впишеш структуру"
-    };
-
-    localStorage.setItem(LS_KEY, JSON.stringify(data));
-    console.log("Local saved");
+    DB.meta.lastUpdate = Date.now();
+    localStorage.setItem("quail_pro_mode", JSON.stringify(DB));
+    setStatus("💾 Дані збережено локально");
 }
 
-// === 5. Реєстрація service worker ===
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("SW registered"))
-        .catch(console.error);
+function loadLocal() {
+    let saved = localStorage.getItem("quail_pro_mode");
+    if (saved) {
+        DB = JSON.parse(saved);
+        setStatus("Локальна база даних завантажена");
+    } else {
+        setStatus("Локальна база відсутня");
+    }
 }
 
-// === 6. Google Drive AUTH ===
+function autosave() {
+    saveLocal();
+}
+
+function setStatus(msg) {
+    document.getElementById("statusBar").textContent = "Статус: " + msg;
+}
+
+
+/* ======================================================
+   🔥 OFFLINE QUEUE (зберігаємо дії для Drive)
+   ====================================================== */
+
+let offlineQueue = [];
+
+function queueAction(action) {
+    offlineQueue.push(action);
+    saveLocal();
+}
+
+/* ======================================================
+   🔥 GOOGLE DRIVE AUTH + SYNC
+   ====================================================== */
+
+const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
+const API_KEY = "AIzaSy...";     // ← вставиш свій
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
 let tokenClient;
+let gapiInited = false;
+let gisInited = false;
 
-function initGoogle() {
+function gapiLoaded() {
+    gapi.load("client", initializeGapiClient);
+}
+
+async function initializeGapiClient() {
+    await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
+    });
+    gapiInited = true;
+}
+
+function gisLoaded() {
     tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com",
-        scope: "https://www.googleapis.com/auth/drive.file",
+        client_id: CLIENT_ID,
+        scope: SCOPES,
         callback: ""
     });
+    gisInited = true;
 }
 
-// === 7. Backup to Drive ===
-async function backupToDrive() {
-    tokenClient.callback = async () => {
-        const raw = localStorage.getItem(LS_KEY);
-        const blob = new Blob([raw], { type: "application/json" });
+function loginGoogle() {
+    tokenClient.callback = (resp) => {
+        if (resp.error) throw resp;
+        setStatus("Успішний вхід у Google");
+        uploadToDrive();
+    };
+    tokenClient.requestAccessToken();
+}
 
-        const metadata = { name: "quail-pro-backup.json" };
 
-        const form = new FormData();
-        form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
-        form.append("file", blob);
+/* ======================================================
+   🔥 DRIVE BACKUP (UPLOAD)
+   ====================================================== */
+async function uploadToDrive() {
+    setStatus("Синхронізація з Drive…");
 
-        await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+    let fileContent = JSON.stringify(DB, null, 2);
+    let blob = new Blob([fileContent], { type: "application/json" });
+
+    let metadata = {
+        name: "quail_data.json",
+        mimeType: "application/json"
+    };
+
+    const form = new FormData();
+    form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+    form.append("file", blob);
+
+    const res = await fetch(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        {
             method: "POST",
-            headers: { "Authorization": "Bearer " + gapi.client.getToken().access_token },
+            headers: new Headers({ Authorization: "Bearer " + gapi.client.getToken().access_token }),
             body: form
-        });
+        }
+    );
 
-        alert("☁ Резервна копія створена");
-    };
-
-    tokenClient.requestAccessToken({ prompt: "consent" });
+    if (res.status === 200 || res.status === 201) {
+        setStatus("☁ Бекап створено у Drive");
+    } else {
+        setStatus("Помилка Drive");
+    }
 }
 
-document.getElementById("backupDrive").onclick = backupToDrive;
 
-// === 8. Restore ===
+/* ======================================================
+   🔥 RESTORE (DOWNLOAD)
+   ====================================================== */
 async function restoreFromDrive() {
-    tokenClient.callback = async () => {
-        const res = await gapi.client.drive.files.list({
-            q: "name='quail-pro-backup.json'",
-            fields: "files(id)"
-        });
+    setStatus("Завантаження даних із Drive…");
 
-        if (!res.result.files.length) return alert("Немає копій");
+    let result = await gapi.client.drive.files.list({
+        q: "name='quail_data.json'",
+        fields: "files(id, name)"
+    });
 
-        const fileId = res.result.files[0].id;
+    if (!result.result.files.length) {
+        setStatus("Файл не знайдено");
+        return;
+    }
 
-        const file = await gapi.client.drive.files.get({ fileId, alt: "media" });
+    let fileId = result.result.files[0].id;
 
-        localStorage.setItem(LS_KEY, file.body);
-        alert("🔄 Відновлено");
+    let download = await gapi.client.drive.files.get({
+        fileId: fileId,
+        alt: "media"
+    });
 
-        location.reload();
-    };
-
-    tokenClient.requestAccessToken({ prompt: "consent" });
+    DB = JSON.parse(download.body);
+    saveLocal();
+    setStatus("Дані відновлено");
+    renderAll();
 }
 
-document.getElementById("restoreDrive").onclick = restoreFromDrive;
 
-window.onload = () => {
-    updateNetworkStatus();
-    initGoogle();
+/* ======================================================
+   🔥 AUTOSYNC WHEN ONLINE
+   ====================================================== */
+
+window.addEventListener("online", () => {
+    setStatus("Online — синхронізація…");
+    if (offlineQueue.length > 0) {
+        uploadToDrive();
+        offlineQueue = [];
+        saveLocal();
+    }
+});
+
+window.addEventListener("offline", () => {
+    setStatus("offline");
+});
+
+
+/* ======================================================
+   🔥 SECTION RENDERERS
+   ====================================================== */
+
+function renderAll() {
+    renderFeed();
+    renderEggs();
+    renderOrders();
+    renderClients();
+    renderFinance();
+    renderInc();
+    renderFlock();
+}
+
+/* === Feed === */
+
+function recalcFeed() {
+    autosave();
+    renderFeed();
+}
+
+function renderFeed() {
+    // твоя логіка розрахунку, вона підключиться сама
+}
+
+/* === Eggs === */
+
+function recalcEggsBalance() {
+    autosave();
+    renderEggs();
+}
+
+function recalcProductivity() {
+    autosave();
+    renderEggs();
+}
+
+function renderEggs() { }
+
+/* === Orders === */
+
+function addOrder() {
+    DB.orders.active.push({
+        name: document.getElementById("ordName").value,
+        eggs: Number(ordEggs.value),
+        trays: Number(ordTrays.value),
+        date: ordDate.value,
+        note: ordNote.value,
+        id: Date.now()
+    });
+
+    autosave();
+    renderOrders();
+}
+
+function renderOrders() { }
+
+/* === Clients === */
+
+function renderClients() { }
+
+/* === Finance === */
+
+function addLog() {
+    DB.finance.logs.push({
+        date: logDate.value,
+        category: logCategory.value,
+        amount: Number(logAmount.value),
+        comment: logComment.value
+    });
+
+    autosave();
+    renderFinance();
+}
+
+function renderFinance() { }
+
+/* === Incubation === */
+
+function addIncubationBatch() {
+    DB.incub.batches.push({
+        name: incBatchName.value,
+        start: incStartDate.value,
+        eggs: Number(incEggsSet.value),
+        note: incNote.value,
+        id: Date.now()
+    });
+
+    autosave();
+    renderInc();
+}
+
+function renderInc() { }
+
+/* === Flock === */
+
+function recalcFlock() {
+    DB.flock.males = Number(males.value);
+    DB.flock.females = Number(females.value);
+    DB.flock.deaths = Number(deaths.value);
+    DB.flock.avgAge = Number(avgAge.value);
+
+    autosave();
+    renderFlock();
+}
+
+function renderFlock() { }
+
+/* ======================================================
+   STARTUP
+   ====================================================== */
+
+window.onload = function () {
+    loadLocal();
+    renderAll();
+
+    document.getElementById("saveLocal").onclick = saveLocal;
+    document.getElementById("backupDrive").onclick = uploadToDrive;
+    document.getElementById("restoreDrive").onclick = restoreFromDrive;
+    document.getElementById("btnDriveLogin").onclick = loginGoogle;
+
+    document.getElementById("addIncubation").onclick = addIncubationBatch;
 };
