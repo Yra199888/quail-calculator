@@ -215,6 +215,92 @@ function updateStatus(text) {
    (адаптовано під твої HTML-елементи)
 ------------------------------------------------------------ */
 
+/* ====== 3.2 ДОБОВА НОРМА ====== */
+
+function calcDailyNeed() {
+    const norm = Number(document.getElementById("dailyNorm").value);
+    const birds = Number(document.getElementById("birdsCount").value);
+
+    const needGr = norm * birds;
+    const needKg = needGr / 1000;
+
+    DATA.feed.dailyNeed = needKg;
+
+    document.getElementById("dailyNeedKg").textContent = needKg.toFixed(2);
+    document.getElementById("dailyNeedCost").textContent =
+        ((needKg * (DATA.feed.avgPrice || 0))).toFixed(2);
+
+    autosave();
+}
+
+/* ====== 3.3 ЗАПАСИ КОМПОНЕНТІВ ====== */
+
+function updateComponentsStock() {
+    const table = document.getElementById("componentsTable");
+    table.innerHTML = "";
+
+    for (const key in DATA.feed.components) {
+        const item = DATA.feed.components[key];
+
+        const need = item.need || 0;
+        const have = item.have || 0;
+
+        const row = `
+        <tr>
+            <td>${key}</td>
+            <td>${have} кг</td>
+            <td>${need > have ? (need - have).toFixed(2) + " кг" : "0"}</td>
+        </tr>`;
+
+        table.innerHTML += row;
+    }
+
+    autosave();
+}
+
+/* ====== 3.4 ГОТОВИЙ КОМБІКОРМ ====== */
+
+function produceFeed() {
+    const batchKg = Number(document.getElementById("feedBatchSize2").value);
+    DATA.feed.ready = (DATA.feed.ready || 0) + batchKg;
+
+    document.getElementById("feedReadyKg").textContent = DATA.feed.ready;
+    autosave();
+}
+
+function consumeDailyFeed2() {
+    const need = DATA.feed.dailyNeed || 0;
+    DATA.feed.ready -= need;
+
+    if (DATA.feed.ready < 0) DATA.feed.ready = 0;
+
+    document.getElementById("feedReadyKg").textContent = DATA.feed.ready;
+    autosave();
+}
+
+/* ====== 3.5 МЕНІ ТРЕБА КУПИТИ ====== */
+
+function updateShoppingList() {
+    const list = document.getElementById("shoppingList");
+    list.innerHTML = "";
+
+    for (const key in DATA.feed.components) {
+        const c = DATA.feed.components[key];
+
+        if (c.need > c.have) {
+            const missing = c.need - c.have;
+            list.innerHTML += `<li>${key}: потрібно докупити ${missing.toFixed(2)} кг</li>`;
+        }
+    }
+
+    if (list.innerHTML === "") {
+        list.innerHTML = "<li>Все є, купувати нічого не потрібно</li>";
+    }
+
+    autosave();
+}
+
+
 /* ---------------- FEED ---------------- */
 function recalcFeed() {
     autosave();
