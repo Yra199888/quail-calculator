@@ -1,38 +1,12 @@
-/* ============================
-   core/storage.js
-   LocalStorage + AUTOSAVE
-============================ */
+import { DATA } from "./data.js";
 
-const STORAGE_KEY = "quail_pro_data_v1";
+export function saveLocal() {
+    localStorage.setItem("quail_data", JSON.stringify(DATA));
+}
 
-/* --- Завантаження даних --- */
-function loadLocal() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return {};
-        return JSON.parse(raw);
-    } catch (e) {
-        console.error("Помилка читання localStorage:", e);
-        return {};
+export function loadLocal() {
+    const raw = localStorage.getItem("quail_data");
+    if (raw) {
+        Object.assign(DATA, JSON.parse(raw));
     }
 }
-
-/* --- Збереження --- */
-function saveLocal() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA));
-    } catch (e) {
-        console.error("Помилка запису localStorage:", e);
-    }
-}
-
-/* --- AUTOSAVE кожні 3 секунди --- */
-let autosaveTimer = null;
-
-function autosave() {
-    clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(saveLocal, 3000);
-}
-
-/* --- Автозбереження при закритті вкладки --- */
-window.addEventListener("beforeunload", saveLocal);
