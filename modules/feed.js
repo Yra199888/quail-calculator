@@ -15,22 +15,126 @@ import { renderFeed } from "./ui.js";
    1. Розрахунок рецепту
 ------------------------------------------------------------ */
 
+/* ============================================================
+   FEED MODULE — РЕЦЕПТ + РОЗРАХУНОК КОМБІКОРМУ
+============================================================ */
+
 export function recalcFeed() {
     const batchKg = Number(document.getElementById("feedBatchKg").value);
 
-    DATA.feed.batchKg = batchKg;
-
     const recipe = DATA.feed.recipe || {};
-    DATA.feed.components = {};
+    if (!DATA.feed.prices) DATA.feed.prices = {};
+    if (!DATA.feed.components) DATA.feed.components = {};
 
-    for (let key in recipe) {
-        const percent = recipe[key];
+    let totalKg = 0;
+    let totalCost = 0;
+
+    let rows = "";
+
+    for (let comp in recipe) {
+        const percent = recipe[comp];
         const kg = (batchKg * percent) / 100;
-        DATA.feed.components[key] = kg;
+
+        DATA.feed.components[comp] = kg;
+
+        const price = Number(DATA.feed.prices[comp] || 0);
+        const sum = price * kg;
+
+        totalKg += kg;
+        totalCost += sum;
+
+        rows += `
+            <tr>
+                <td>${comp}</td>
+                <td>${percent}%</td>
+                <td>${kg.toFixed(2)}</td>
+
+                <td>
+                    <input 
+                        type="number" 
+                        value="${price}" 
+                        oninput="updateFeedPrice('${comp}', this.value)"
+                        style="width:80px"
+                    >
+                </td>
+
+                <td>${sum.toFixed(2)}</td>
+            </tr>
+        `;
     }
+
+    document.getElementById("feedTableRows").innerHTML = rows;
+    document.getElementById("feedTotalKg").innerText = totalKg.toFixed(2);
+    document.getElementById("feedTotalCost").innerText = totalCost.toFixed(2);
+    document.getElementById("feedAvgCost").innerText = (totalCost / totalKg).toFixed(2);
 
     autosave();
     renderFeed();
+}
+
+/* ------------------- Оновлення ціни ------------------- */
+export function updateFeedPrice(comp, val) {
+    if (!DATA.feed.prices) DATA.feed.prices = {};
+    DATA.feed.prices[comp] = Number(val);
+    recalcFeed();
+}
+
+/* ------------------------------------------------------------
+   Пресети рецептів
+------------------------------------------------------------ */
+export function applyRecipePreset(type) {
+    if (type === "starter") {
+        DATA.feed.recipe = {
+            "Кукурудза": 45,
+            "Пшениця": 20,
+            "Макуха соєва": 18,
+            "Макуха соняшникова": 7,
+            "Рибне борошно": 5,
+            "Дріжджі": 2,
+            "Трикальційфосфат": 2,
+            "Крейда": 1
+        };
+    }
+
+    if (type === "grower") {
+        DATA.feed.recipe = {
+            "Кукурудза": 50,
+            "Пшениця": 22,
+            "Макуха соєва": 15,
+            "Макуха соняшникова": 6,
+            "Рибне борошно": 4,
+            "Дріжджі": 2,
+            "Трикальційфосфат": 1
+        };
+    }
+
+    if (type === "layer") {
+    // Рецепт на 25 кг
+    DATA.feed.recipeKg = {
+        "Кукурудза": 10.0,
+        "Пшениця": 5.0,
+        "Ячмінь": 1.5,
+        "Соева макуха": 3.0,
+        "Соняшникова макуха": 2.5,
+        "Рибне борошно": 1.0,
+        "Кормові дріжджі": 0.7,
+        "Трикальційфосфат": 0.5,
+        "Dolfos D": 0.7,
+        "Сіль": 0.05
+    };
+    }
+
+    recalcFeed();
+}
+
+/* ------------------------------------------------------------
+   Ініціалізація модуля
+------------------------------------------------------------ */
+export function initFeedModule() {
+    if (!DATA.feed) DATA.feed = {};
+    if (!DATA.feed.recipe) applyRecipePreset("layer");
+
+    recalcFeed();
 }
 
 /* === 1.1 Рецепт — рендер таблиці === */
