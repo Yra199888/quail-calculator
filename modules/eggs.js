@@ -1,189 +1,177 @@
 /* ============================================================
-   MODULE: EGGS / ЯЙЦЯ
-   FULL ENTERPRISE MODE — Модульна система (М1)
-   Автор: ChatGPT для Юрія
+   MODULE: EGGS — FULL ENTERPRISE MODE
+   Працює із DATA.eggs та глобальним autosave(), renderAll()
 ============================================================ */
 
-/* ------------------------------------------------------------
-   1. ІНІЦІАЛІЗАЦІЯ ПОСИЛАНЬ НА ЕЛЕМЕНТИ
------------------------------------------------------------- */
+/* ---------- 0. Ініціалізація структури DATA ---------- */
 
-const EG = {
-    total: document.getElementById("eggsTotal"),
-    bad: document.getElementById("eggsBad"),
-    own: document.getElementById("eggsOwn"),
-    carry: document.getElementById("eggsCarry"),
-
-    forSale: document.getElementById("eggsForSale"),
-    forSaleTotal: document.getElementById("eggsForSaleTotal"),
-    traysCount: document.getElementById("traysCount"),
-    eggsRemainder: document.getElementById("eggsRemainder"),
-    trayPrice: document.getElementById("trayPrice"),
-    income: document.getElementById("income"),
-
-    hens1: document.getElementById("hens1"),
-    hens2: document.getElementById("hens2"),
-
-    hensTotal: document.getElementById("hensTotal"),
-    productivityToday: document.getElementById("productivityToday"),
-
-    traysTodayLabel: document.getElementById("totalTraysTodayLabel"),
-    reservedTrays: document.getElementById("reservedTrays"),
-    freeTrays: document.getElementById("freeTrays"),
-};
-
-
-/* ------------------------------------------------------------
-   2. ГОЛОВНИЙ ОНOВЛЮВАЧ
------------------------------------------------------------- */
-
-function updateEggs() {
-    recalcEggsBalance();
-    recalcProductivity();
-    calcTraysSummary();
-}
-
-
-/* ------------------------------------------------------------
-   3. РОЗРАХУНОК БАЛАНСУ ЯЄЦЬ
------------------------------------------------------------- */
-
-function recalcEggsBalance() {
-
-    const total = Number(EG.total.value) || 0;
-    const bad = Number(EG.bad.value) || 0;
-    const own = Number(EG.own.value) || 0;
-    const carry = Number(EG.carry.value) || 0;
-
-    const goodToday = total - bad;
-    const saleToday = goodToday - own;
-
-    const saleTotal = saleToday + carry;
-
-    const trays = Math.floor(saleTotal / 20);
-    const remainder = saleTotal % 20;
-
-    const trayPrice = Number(EG.trayPrice.value) || 0;
-    const income = trays * trayPrice;
-
-    // Запис у DATA
+if (!DATA.eggs) {
     DATA.eggs = {
-        total, bad, own, carry,
-        saleToday,
-        saleTotal,
-        trays,
-        remainder,
-        incomeToday: income
+        today: {
+            total: 0,
+            bad: 0,
+            own: 0,
+            carry: 0
+        },
+        hens: {
+            batch1: 0,
+            batch2: 0
+        },
+        history: [],   // [{date, total, bad, own, forSale, trays}]
+        metrics: {
+            forSale: 0,
+            totalSale: 0,
+            trays: 0,
+            remainder: 0,
+            income: 0,
+            productivity: 0
+        }
     };
-
-    // Відображення
-    EG.forSale.textContent = saleToday;
-    EG.forSaleTotal.textContent = saleTotal;
-    EG.traysCount.textContent = trays;
-    EG.eggsRemainder.textContent = remainder;
-    EG.income.textContent = income.toFixed(2);
-
-    autosave();
 }
 
-
 /* ------------------------------------------------------------
-   4. ПРОДУКТИВНІСТЬ
+   1. Отримання значень з форми
 ------------------------------------------------------------ */
 
-function recalcProductivity() {
+function readEggInputs() {
+    const e = DATA.eggs;
 
-    const hens1 = Number(EG.hens1.value) || 0;
-    const hens2 = Number(EG.hens2.value) || 0;
-    const hensTotal = hens1 + hens2;
+    e.today.total  = Number(document.getElementById("eggsTotal").value) || 0;
+    e.today.bad    = Number(document.getElementById("eggsBad").value) || 0;
+    e.today.own    = Number(document.getElementById("eggsOwn").value) || 0;
+    e.today.carry  = Number(document.getElementById("eggsCarry").value) || 0;
 
-    const totalEggs = Number(EG.total.value) || 0;
+    e.hens.batch1 = Number(document.getElementById("hens1").value) || 0;
+    e.hens.batch2 = Number(document.getElementById("hens2").value) || 0;
 
-    const prod =
-        hensTotal > 0
-            ? (totalEggs / hensTotal) * 100
-            : 0;
+    e.trayPrice = Number(document.getElementById("trayPrice").value) || 0;
 
-    // UPDATE DATA
-    DATA.eggs.hens1 = hens1;
-    DATA.eggs.hens2 = hens2;
-    DATA.eggs.hensTotal = hensTotal;
-    DATA.eggs.productivity = prod;
-
-    // RENDER
-    EG.hensTotal.textContent = hensTotal;
-    EG.productivityToday.textContent = prod.toFixed(1);
-
-    autosave();
+    return e;
 }
 
-
 /* ------------------------------------------------------------
-   5. РОЗРАХУНОК ЛОТКІВ З УРАХУВАННЯМ ЗАМОВЛЕНЬ
+   2. Розрахунок балансу яєць
 ------------------------------------------------------------ */
 
-function calcTraysSummary() {
+function calcEggBalance() {
+    const e = DATA.eggs;
+    const t = e.today;
 
-    const traysTotal = DATA.eggs.trays || 0;
+    const available = (t.total - t.bad - t.own);
+    const forSaleToday = Math.max(available, 0);
 
-    // Скільки лотків заброньовано замовленнями
-    const reserved =
-        DATA.orders.filter(o => !o.done)
-                   .reduce((sum, o) => sum + (o.trays || 0), 0);
+    const totalForSale = forSaleToday + t.carry;
 
-    const free = Math.max(traysTotal - reserved, 0);
+    const trays = Math.floor(totalForSale / 20);
+    const remainder = totalForSale % 20;
 
-    DATA.eggs.reserved = reserved;
-    DATA.eggs.free = free;
+    const income = trays * (e.trayPrice || 0);
 
-    EG.traysTodayLabel.textContent = traysTotal;
-    EG.reservedTrays.textContent = reserved;
-    EG.freeTrays.textContent = free;
-
-    autosave();
+    e.metrics.forSale = forSaleToday;
+    e.metrics.totalSale = totalForSale;
+    e.metrics.trays = trays;
+    e.metrics.remainder = remainder;
+    e.metrics.income = income;
 }
 
+/* ------------------------------------------------------------
+   3. Розрахунок продуктивності
+------------------------------------------------------------ */
+
+function calcProductivity() {
+    const e = DATA.eggs;
+    const totalHens = e.hens.batch1 + e.hens.batch2;
+
+    let productiveEggs = Math.max(e.today.total - e.today.bad, 0);
+
+    let percent = totalHens > 0 ? (productiveEggs / totalHens) * 100 : 0;
+
+    e.metrics.productivity = percent.toFixed(1);
+}
 
 /* ------------------------------------------------------------
-   6. РЕНДЕР МОДУЛЯ
+   4. Додавання в історію дня
+------------------------------------------------------------ */
+
+function pushEggHistory() {
+    const e = DATA.eggs;
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    e.history.push({
+        date: todayStr,
+        total: e.today.total,
+        bad: e.today.bad,
+        own: e.today.own,
+        carry: e.today.carry,
+        forSale: e.metrics.forSale,
+        trays: e.metrics.trays
+    });
+
+    if (e.history.length > 1200) {
+        e.history.shift();
+    }
+}
+
+/* ------------------------------------------------------------
+   5. Головна функція перерахунку
+------------------------------------------------------------ */
+
+function recalcEggs() {
+    readEggInputs();
+    calcEggBalance();
+    calcProductivity();
+    autosave();
+    renderEggs();
+    renderFinance(); // оновлення фінансових даних
+}
+
+/* ------------------------------------------------------------
+   6. Відображення UI
 ------------------------------------------------------------ */
 
 function renderEggs() {
+    const e = DATA.eggs;
+    const m = e.metrics;
 
-    // Якщо DATA порожній — не ломати інтерфейс
-    if (!DATA.eggs) return;
+    // Баланс
+    document.getElementById("eggsForSale").textContent = m.forSale;
+    document.getElementById("eggsForSaleTotal").textContent = m.totalSale;
+    document.getElementById("traysCount").textContent = m.trays;
+    document.getElementById("eggsRemainder").textContent = m.remainder;
+    document.getElementById("income").textContent = m.income.toFixed(2);
 
-    EG.total.value = DATA.eggs.total ?? 0;
-    EG.bad.value = DATA.eggs.bad ?? 0;
-    EG.own.value = DATA.eggs.own ?? 0;
-    EG.carry.value = DATA.eggs.carry ?? 0;
+    // Продуктивність
+    const hensTotal = e.hens.batch1 + e.hens.batch2;
+    document.getElementById("hensTotal").textContent = hensTotal;
+    document.getElementById("productivityToday").textContent = m.productivity;
 
-    EG.forSale.textContent = DATA.eggs.saleToday ?? 0;
-    EG.forSaleTotal.textContent = DATA.eggs.saleTotal ?? 0;
-    EG.traysCount.textContent = DATA.eggs.trays ?? 0;
-    EG.eggsRemainder.textContent = DATA.eggs.remainder ?? 0;
-    EG.income.textContent = (DATA.eggs.incomeToday ?? 0).toFixed(2);
+    // Підсумок по лотках
+    document.getElementById("totalTraysTodayLabel").textContent = m.trays;
 
-    EG.hens1.value = DATA.eggs.hens1 ?? 0;
-    EG.hens2.value = DATA.eggs.hens2 ?? 0;
-    EG.hensTotal.textContent = DATA.eggs.hensTotal ?? 0;
-
-    EG.productivityToday.textContent =
-        (DATA.eggs.productivity ?? 0).toFixed(1);
-
-    EG.reservedTrays.textContent = DATA.eggs.reserved ?? 0;
-    EG.freeTrays.textContent = DATA.eggs.free ?? 0;
-
-    EG.trayPrice.value = DATA.eggs.trayPrice ?? EG.trayPrice.value;
+    // Заброньовані / Вільні — бере з ORDERS MODULE
+    if (typeof calcFreeTrays === "function") {
+        calcFreeTrays();
+    }
 }
 
-
 /* ------------------------------------------------------------
-   7. ЕКСПОРТ ФУНКЦІЙ МОДУЛЯ
+   7. Події
 ------------------------------------------------------------ */
 
-window.updateEggs = updateEggs;
-window.recalcEggsBalance = recalcEggsBalance;
-window.recalcProductivity = recalcProductivity;
-window.calcTraysSummary = calcTraysSummary;
-window.renderEggs = renderEggs;
+document.getElementById("eggsTotal").oninput = recalcEggs;
+document.getElementById("eggsBad").oninput = recalcEggs;
+document.getElementById("eggsOwn").oninput = recalcEggs;
+document.getElementById("eggsCarry").oninput = recalcEggs;
+
+document.getElementById("hens1").oninput = recalcEggs;
+document.getElementById("hens2").oninput = recalcEggs;
+
+document.getElementById("trayPrice").oninput = recalcEggs;
+
+/* ------------------------------------------------------------
+   8. Ініціалізація
+------------------------------------------------------------ */
+
+recalcEggs();
+console.log("EGGS MODULE LOADED");
