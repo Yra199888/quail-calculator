@@ -87,29 +87,21 @@
     <div class="tab" onclick="showPage('incub')">Інкубація</div>
 </div>
 
-<!-- =============================== -->
-<!--             FEED                -->
-<!-- =============================== -->
+<!-- ================= -->
+<!--   РЕЦЕПТ КОМБІКОРМУ -->
+<!-- ================= -->
 <div id="feed" class="section-page" style="display:block;">
     <div class="m3-card">
-        <h2>1. Рецепт комбікорму</h2>
+        <h2>Рецепт комбікорму (моя формула №1)</h2>
 
-        <label>Бажана вага партії (кг):</label>
-        <input id="feedBatchKg" type="number" value="25" oninput="recalcFeed()">
+        <label>Вага партії (кг)</label>
+        <input type="number" id="feedBatchKg" value="25" oninput="updateFeedRecipe()">
 
-        <div style="margin:10px 0;">
-            <button onclick="applyRecipePreset('starter')">Стартер</button>
-            <button onclick="applyRecipePreset('grower')">Гровер</button>
-            <button onclick="applyRecipePreset('layer')">Несучки</button>
-        </div>
-
-        <!-- Таблиця рецепту -->
         <table class="m3-table">
             <thead>
                 <tr>
                     <th>Компонент</th>
-                    <th>%</th>
-                    <th>Кілограм</th>
+                    <th>К-сть кг</th>
                     <th>Ціна за кг</th>
                     <th>Сума</th>
                 </tr>
@@ -118,8 +110,8 @@
         </table>
 
         <p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
-        <p><b>Загальна сума:</b> <span id="feedTotalCost">0.00</span> грн</p>
-        <p><b>Середня ціна за 1 кг:</b> <span id="feedAvgCost">0.00</span> грн</p>
+        <p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
+        <p><b>Середня ціна за 1 кг:</b> <span id="feedAvgCost">0</span> грн</p>
     </div>
 </div>
     
