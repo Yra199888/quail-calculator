@@ -16,60 +16,59 @@ import { renderFeed } from "./ui.js";
 ------------------------------------------------------------ */
 
 /* ============================================================
-   FEED MODULE — РЕЦЕПТ + РОЗРАХУНОК КОМБІКОРМУ
+   FEED MODULE — рецепт комбікорму (FULL INTEGRATION)
 ============================================================ */
 
-export function recalcFeed() {
-    const batchKg = Number(document.getElementById("feedBatchKg").value);
+export function updateFeedRecipe() {
 
-    const recipe = DATA.feed.recipe || {};
-    if (!DATA.feed.prices) DATA.feed.prices = {};
-    if (!DATA.feed.components) DATA.feed.components = {};
+    const batch = Number(document.getElementById("feedBatchKg").value);
 
+    // Твій точний рецепт (25 кг)
+    const baseRecipe = {
+        "Кукурудза": 10.0,
+        "Пшениця": 5.0,
+        "Ячмінь": 1.5,
+        "Макуха соєва": 3.0,
+        "Макуха соняшникова": 2.5,
+        "Рибне борошно": 1.0,
+        "Кормові дріжджі": 0.7,
+        "Трикальційфосфат": 0.5,
+        "Dolfos D": 0.7,
+        "Сіль": 0.05
+    };
+
+    // Масштаб під нову вагу партії
+    const k = batch / 25;
+
+    let html = "";
     let totalKg = 0;
     let totalCost = 0;
 
-    let rows = "";
+    for (let comp in baseRecipe) {
+        const kg = (baseRecipe[comp] * k).toFixed(3);
+        totalKg += Number(kg);
 
-    for (let comp in recipe) {
-        const percent = recipe[comp];
-        const kg = (batchKg * percent) / 100;
-
-        DATA.feed.components[comp] = kg;
-
-        const price = Number(DATA.feed.prices[comp] || 0);
+        const priceInputId = `${comp}_price`;
+        const price = Number(document.getElementById(priceInputId)?.value || 0);
         const sum = price * kg;
-
-        totalKg += kg;
         totalCost += sum;
 
-        rows += `
-            <tr>
-                <td>${comp}</td>
-                <td>${percent}%</td>
-                <td>${kg.toFixed(2)}</td>
-
-                <td>
-                    <input 
-                        type="number" 
-                        value="${price}" 
-                        oninput="updateFeedPrice('${comp}', this.value)"
-                        style="width:80px"
-                    >
-                </td>
-
-                <td>${sum.toFixed(2)}</td>
-            </tr>
-        `;
+        html += `
+        <tr>
+            <td>${comp}</td>
+            <td>${kg}</td>
+            <td>
+                <input type="number" id="${priceInputId}" value="${price}" 
+                    oninput="updateFeedRecipe()" style="width:80px">
+            </td>
+            <td>${sum.toFixed(2)}</td>
+        </tr>`;
     }
 
-    document.getElementById("feedTableRows").innerHTML = rows;
+    document.getElementById("feedTableRows").innerHTML = html;
     document.getElementById("feedTotalKg").innerText = totalKg.toFixed(2);
     document.getElementById("feedTotalCost").innerText = totalCost.toFixed(2);
     document.getElementById("feedAvgCost").innerText = (totalCost / totalKg).toFixed(2);
-
-    autosave();
-    renderFeed();
 }
 
 /* ------------------- Оновлення ціни ------------------- */
