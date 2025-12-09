@@ -1,22 +1,26 @@
 /* ============================================================
    MODULE: clients.js
+   FULL ENTERPRISE MODE
    Відповідає за:
-   - Аналітику клієнтів
-   - Зведені дані: замовлення, лотки, яйця, сума
-   - Рендер таблиці
-   - Автоматичну синхронізацію після змін у orders.js
+   - автоматичну аналітику клієнтів
+   - підрахунок замовлень, лотків, яєць, виручки
+   - оновлення таблиці "Клієнти"
+   - синхронізацію з глобальним DATA та autosave()
 ============================================================ */
 
+import { DATA, autosave } from "../core/data.js";
+import { renderClients } from "./render.js";
+
 /* ------------------------------------------------------------
-   1. Оновлення статистики клієнтів
+   1. Перерахунок статистики клієнтів
 ------------------------------------------------------------ */
 
-function updateClientsSummary() {
+export function updateClientsSummary() {
     const orders = DATA.orders || [];
     const clients = {};
 
     for (let o of orders) {
-        if (!o.done) continue; // рахуємо лише виконані замовлення
+        if (!o.done) continue; // враховуємо лише виконані замовлення
 
         if (!clients[o.name]) {
             clients[o.name] = {
@@ -30,62 +34,69 @@ function updateClientsSummary() {
         }
 
         clients[o.name].orders += 1;
-        clients[o.name].trays += Number(o.trays);
-        clients[o.name].eggs += Number(o.eggs);
+        clients[o.name].trays += Number(o.trays || 0);
+        clients[o.name].eggs += Number(o.eggs || 0);
 
-        // Вартість = кількість лотків × ціна лотка
+        // ціна лотка з DATA.eggs
         const trayPrice = Number(DATA.eggs?.trayPrice || 0);
-        clients[o.name].income += Number(o.trays) * trayPrice;
+        clients[o.name].income += Number(o.trays || 0) * trayPrice;
 
         clients[o.name].lastDate = o.date || clients[o.name].lastDate;
     }
 
     DATA.clients = clients;
+
     autosave();
 }
 
-
 /* ------------------------------------------------------------
-   2. Рендер таблиці "Клієнти"
+   2. Рендер таблиці клієнтів
 ------------------------------------------------------------ */
 
-function renderClients() {
-    const body = document.getElementById("clientsBody");
-    if (!body) return;
-
+export function renderClientsTable() {
     updateClientsSummary();
+
+    const tbody = document.getElementById("clientsBody");
+    if (!tbody) return;
 
     const list = Object.values(DATA.clients || {});
-
     let html = "";
+
     for (let c of list) {
         html += `
-        <tr>
-            <td>${c.name}</td>
-            <td>${c.orders}</td>
-            <td>${c.trays}</td>
-            <td>${c.eggs}</td>
-            <td>${c.income.toFixed(2)} грн</td>
-            <td>${c.lastDate}</td>
-        </tr>`;
+            <tr>
+                <td>${c.name}</td>
+                <td>${c.orders}</td>
+                <td>${c.trays}</td>
+                <td>${c.eggs}</td>
+                <td>${c.income.toFixed(2)} грн</td>
+                <td>${c.lastDate}</td>
+            </tr>
+        `;
     }
 
-    body.innerHTML = html;
+    tbody.innerHTML = html;
 }
-
 
 /* ------------------------------------------------------------
-   3. Автоматичний перерахунок після змін замовлень
+   3. Автоматичне оновлення після змін замовлень
 ------------------------------------------------------------ */
 
-function clientsAutoUpdate() {
+export function clientsAutoUpdate() {
     updateClientsSummary();
-    renderClients();
-    autosave();
+    renderClientsTable();
 }
 
-/* Викликатиметься з orders.js після:
-   - додавання замовлення
-   - підтвердження (done)
-   - видалення (якщо додаси)
-*/
+/* Викликається з orders.js після:
+   - addOrder()
+   - completeOrder()
+------------------------------------------------------------ */
+
+/* ------------------------------------------------------------
+   4. Ініціалізація модуля
+------------------------------------------------------------ */
+
+export function initClientsModule() {
+    updateClientsSummary();
+    renderClientsTable();
+}
