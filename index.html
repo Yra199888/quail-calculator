@@ -106,17 +106,21 @@
         <input id="feedBatchKg" type="number" value="25">
 
         <table class="m3-table">
-            <thead>
-                <tr>
-                    <th>Компонент</th>
-                    <th>%</th>
-                    <th>Кілограм</th>
-                    <th>Ціна за кг</th>
-                    <th>Сума</th>
-                </tr>
-            </thead>
-            <tbody id="feedTableRows"></tbody>
-        </table>
+    <thead>
+        <tr>
+            <th>Компонент</th>
+            <th>%</th>
+            <th>Кг</th>
+            <th>Ціна / кг</th>
+            <th>Сума</th>
+        </tr>
+    </thead>
+    <tbody id="feedRows"></tbody>
+</table>
+
+<p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
+<p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
+<p><b>Середня ціна 1 кг:</b> <span id="feedAvgCost">0</span> грн</p>
 
         <p><b>Середня ціна 1 кг:</b> <span id="feedAvgCost">0.00</span> грн</p>
     </div>
