@@ -8,72 +8,311 @@
     <!-- PWA -->
     <link rel="manifest" href="manifest.webmanifest">
 
+    <!-- Material 3 styles (можеш додати свій файл) -->
+    <link rel="stylesheet" href="material.css">
+
     <style>
-        body { font-family: Arial; margin:0; padding:0; background:#f5f5f5; }
-        .tab-bar {
-            display:flex; background:#e5e5e5; padding:10px;
+        body { margin:0; background:#f5f5f5; font-family:Arial; }
+
+        /* PRO BAR */
+        #probar {
+            background:#2d6a1f;
+            color:white;
+            padding:10px;
+            text-align:center;
         }
-        .tab-item {
-            flex:1; text-align:center; padding:10px; cursor:pointer;
-            border-right:1px solid #ccc;
+        #probar button {
+            background:#d6ffb9;
+            border:none;
+            padding:8px 14px;
+            border-radius:8px;
+            margin:4px;
         }
-        .tab-item.active {
-            background:#cfffbe;
+
+        /* ТАБИ */
+        .m3-tabs {
+            display:flex;
+            background:#e8e8e8;
+            border-bottom:1px solid #bbb;
+        }
+        .m3-tab {
+            flex:1;
+            padding:12px;
+            text-align:center;
+            cursor:pointer;
             font-weight:bold;
         }
-        .page { display:none; padding:15px; }
+        .m3-tab.active {
+            background:#d7f7c9;
+            border-bottom:3px solid #2d6a1f;
+        }
+
+        .section-page {
+            display:none;
+            padding-bottom:50px;
+        }
+
+        .m3-card {
+            background:white;
+            margin:14px;
+            padding:16px;
+            border-radius:12px;
+            box-shadow:0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        table { width:100%; border-collapse:collapse; }
+        th,td { padding:6px; border-bottom:1px solid #ddd; }
     </style>
+
 </head>
 
 <body>
 
-<!-- Навігація -->
-<div class="tab-bar">
-    <div class="tab-item active" onclick="showPage('feed')">Корм</div>
-    <div class="tab-item" onclick="showPage('eggs')">Яйця</div>
-    <div class="tab-item" onclick="showPage('orders')">Замовлення</div>
-    <div class="tab-item" onclick="showPage('clients')">Клієнти</div>
-    <div class="tab-item" onclick="showPage('finance')">Фінанси</div>
-    <div class="tab-item" onclick="showPage('incub')">Інкубація</div>
+<!-- ================================================= -->
+<!--                   PRO MODE PANEL                  -->
+<!-- ================================================= -->
+<div id="probar">
+    <div>🔥 <b>PRO MODE активний</b></div>
+    <div id="statusBar">Статус: offline</div>
+
+    <button id="saveLocal">💾 Зберегти локально</button>
+    <button id="backupDrive">☁ Резервна копія у Drive</button>
+    <button id="restoreDrive">🔄 Відновити із Drive</button>
 </div>
 
-<!-- Сторінки -->
-<div id="feed" class="page" style="display:block;"></div>
-<div id="eggs" class="page"></div>
-<div id="orders" class="page"></div>
-<div id="clients" class="page"></div>
-<div id="finance" class="page"></div>
-<div id="incub" class="page"></div>
+<!-- ================================================= -->
+<!--                      НАВІГАЦІЯ                    -->
+<!-- ================================================= -->
+<div class="m3-tabs">
+    <div class="m3-tab active" onclick="showPage('feed')">Корм</div>
+    <div class="m3-tab" onclick="showPage('eggs')">Яйця</div>
+    <div class="m3-tab" onclick="showPage('orders')">Замовлення</div>
+    <div class="m3-tab" onclick="showPage('clients')">Клієнти</div>
+    <div class="m3-tab" onclick="showPage('finance')">Фінанси</div>
+    <div class="m3-tab" onclick="showPage('incub')">Інкубація</div>
+    <div class="m3-tab" onclick="showPage('flock')">Поголів’я</div>
+    <div class="m3-tab" onclick="showPage('logs')">Логи</div>
+</div>
 
-<!-- CORE -->
-<script type="module" src="core/data.js"></script>
-<script type="module" src="core/storage.js"></script>
-<script type="module" src="core/sync.js"></script>
-<script type="module" src="core/drive.js"></script>
-<script type="module" src="core/pwa.js"></script>
+<!-- ================================================= -->
+<!--                     1. FEED                       -->
+<!-- ================================================= -->
+<div id="feed" class="section-page" style="display:block;">
 
-<!-- MODULES -->
-<script type="module" src="modules/feed.js"></script>
-<script type="module" src="modules/eggs.js"></script>
-<script type="module" src="modules/orders.js"></script>
-<script type="module" src="modules/clients.js"></script>
-<script type="module" src="modules/finance.js"></script>
-<script type="module" src="modules/incub.js"></script>
-<script type="module" src="modules/flock.js"></script>
-<script type="module" src="modules/logs.js"></script>
-<script type="module" src="modules/render.js"></script>
+    <div class="m3-card">
+        <h2>Рецепт комбікорму</h2>
 
-<!-- MAIN -->
-<script type="module" src="app.js"></script>
+        <label>Вага партії (кг)</label>
+        <input id="feedBatchKg" type="number" value="25">
+
+        <table class="m3-table">
+            <thead>
+                <tr>
+                    <th>Компонент</th>
+                    <th>%</th>
+                    <th>Кілограм</th>
+                    <th>Ціна за кг</th>
+                    <th>Сума</th>
+                </tr>
+            </thead>
+            <tbody id="feedTableRows"></tbody>
+        </table>
+
+        <p><b>Середня ціна 1 кг:</b> <span id="feedAvgCost">0.00</span> грн</p>
+    </div>
+
+    <div class="m3-card">
+        <h2>Добова норма</h2>
+        <label>Грам на птицю</label>
+        <input id="feedDailyPerHen" type="number" value="30">
+
+        <p>Добова потреба: <b id="feedDailyKg">0</b> кг</p>
+    </div>
+
+    <div class="m3-card">
+        <h2>Партія комбікорму</h2>
+        <label>Виготовити (кг)</label>
+        <input id="feedBatchSize" type="number" value="25">
+        <button id="produceFeedBatch">Виготовити</button>
+        <button id="consumeDailyFeed">Списати добову норму</button>
+
+        <p>Залишок комбікорму: <b id="feedStockRemain">0</b> кг</p>
+        <p>Хватить на: <b id="feedDaysLeft">0</b> днів</p>
+    </div>
+
+    <div class="m3-card">
+        <h2>Запаси компонентів</h2>
+        <table>
+            <thead><tr><th>Компонент</th><th>Є</th><th>Потрібно</th><th>Статус</th></tr></thead>
+            <tbody id="stockRows"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--                2. EGGS MODULE                     -->
+<!-- ================================================= -->
+<div id="eggs" class="section-page">
+    <div class="m3-card">
+        <h2>Облік яєць</h2>
+
+        <p>Зібрано: <input id="eggsTotal" type="number"></p>
+        <p>Брак: <input id="eggsBad" type="number"></p>
+        <p>Свої потреби: <input id="eggsOwn" type="number"></p>
+        <p>Залишок з учора: <input id="eggsCarry" type="number"></p>
+
+        <h3>Підсумок</h3>
+        <table>
+            <tr><td>Для продажу</td><td id="eggsForSale">0</td></tr>
+            <tr><td>Лотків</td><td id="traysCount">0</td></tr>
+            <tr><td>Вільні</td><td id="freeTrays">0</td></tr>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--                     ORDERS MODULE                  -->
+<!-- ================================================= -->
+<div id="orders" class="section-page">
+    <div class="m3-card">
+        <h2>Замовлення</h2>
+
+        <label>Клієнт</label><input id="ordName">
+        <label>Яєць</label><input id="ordEggs" type="number">
+        <label>Лотків</label><input id="ordTrays" type="number">
+        <label>Дата</label><input id="ordDate" type="date">
+        <label>Примітка</label><input id="ordNote">
+
+        <button onclick="addOrder()">Додати</button>
+
+        <h3>Активні</h3>
+        <table><tbody id="ordersActive"></tbody></table>
+
+        <h3>Виконані</h3>
+        <table><tbody id="ordersDone"></tbody></table>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--                      CLIENTS                       -->
+<!-- ================================================= -->
+<div id="clients" class="section-page">
+    <div class="m3-card">
+        <h2>Клієнти</h2>
+        <table>
+            <thead>
+                <tr><th>Клієнт</th><th>Замовлень</th><th>Лотків</th><th>Сума</th><th>Останнє</th></tr>
+            </thead>
+            <tbody id="clientsBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--                     FINANCE                        -->
+<!-- ================================================= -->
+<div id="finance" class="section-page">
+    <div class="m3-card">
+        <h2>Фінанси</h2>
+        <table>
+            <tr><td>Виручка</td><td id="summaryEggIncome">0</td></tr>
+            <tr><td>Витрати</td><td id="summaryFeedCost">0</td></tr>
+            <tr><td>Прибуток</td><td id="summaryProfit">0</td></tr>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--                     INCUBATION                     -->
+<!-- ================================================= -->
+<div id="incub" class="section-page">
+    <div class="m3-card">
+        <h2>Інкубація</h2>
+        <p>Назва: <input id="incBatchName"></p>
+        <p>Дата: <input id="incStartDate" type="date"></p>
+        <p>Яєць: <input id="incEggsSet" type="number"></p>
+        <button id="addIncubation">Додати</button>
+
+        <table>
+            <thead>
+                <tr><th>Партія</th><th>Дата</th><th>Днів</th><th>Закладено</th><th>Вилуп.</th></tr>
+            </thead>
+            <tbody id="incubationBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--                     FLOCK MODULE                   -->
+<!-- ================================================= -->
+<div id="flock" class="section-page">
+    <div class="m3-card">
+        <h2>Поголів’я</h2>
+
+        Самців: <input id="males" type="number">
+        Самок: <input id="females" type="number">
+        Смертність: <input id="deaths" type="number">
+
+        <p>Разом: <b id="flockTotal">0</b></p>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--                     LOGS MODULE                    -->
+<!-- ================================================= -->
+<div id="logs" class="section-page">
+    <div class="m3-card">
+        <h2>Логи витрат</h2>
+
+        <label>Категорія</label><input id="logCategory">
+        <label>Сума</label><input id="logAmount" type="number">
+        <label>Коментар</label><input id="logComment">
+
+        <button onclick="addLog()">Додати</button>
+
+        <table>
+            <thead><tr><th>Дата</th><th>Категорія</th><th>Сума</th><th>Коментар</th><th></th></tr></thead>
+            <tbody id="logBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ================================================= -->
+<!--         GOOGLE / PWA SCRIPTS + MODULES            -->
+<!-- ================================================= -->
+
+<script src="core/data.js"></script>
+<script src="core/storage.js"></script>
+<script src="core/sync.js"></script>
+<script src="core/drive.js"></script>
+<script src="core/pwa.js"></script>
+
+<script src="modules/render.js"></script>
+<script src="modules/feed.js"></script>
+<script src="modules/eggs.js"></script>
+<script src="modules/orders.js"></script>
+<script src="modules/clients.js"></script>
+<script src="modules/finance.js"></script>
+<script src="modules/incub.js"></script>
+<script src="modules/flock.js"></script>
+<script src="modules/logs.js"></script>
+
+<script src="app.js"></script>
 
 <script>
-function showPage(id){
-    document.querySelectorAll(".page").forEach(p => p.style.display="none");
-    document.getElementById(id).style.display="block";
+    // PWA Service Worker
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js");
+    }
 
-    document.querySelectorAll(".tab-item").forEach(btn => btn.classList.remove("active"));
-    event.target.classList.add("active");
-}
+    // Показ секцій
+    function showPage(id) {
+        document.querySelectorAll(".section-page").forEach(x => x.style.display="none");
+        document.getElementById(id).style.display="block";
+
+        document.querySelectorAll(".m3-tab").forEach(x => x.classList.remove("active"));
+        event.target.classList.add("active");
+    }
 </script>
 
 </body>
