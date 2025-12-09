@@ -1,29 +1,39 @@
 /* ============================================================
-   MODULE: logs.js
-   Щоденник витрат (Section 4)
-   - Додавання записів
-   - Видалення записів
-   - Збереження у DATA.logs
-   - Рендер таблиці
-   - Автоматичний перерахунок фінансів
+   MODULE: logs.js  — фінансовий щоденник витрат/доходів
+   Відповідає за:
+   - додавання записів (корм, інкубація, обладнання тощо)
+   - видалення записів
+   - перерахунок загальних витрат
+   - синхронізацію через autosave()
 ============================================================ */
 
-/* ------------------------------------------------------------
-   1. Додати запис у щоденник
------------------------------------------------------------- */
+import { DATA } from "../core/data.js";
+import { autosave } from "../core/storage.js";
+import { pushSyncEvent } from "../core/sync.js";
+import { renderLogs, renderFinance } from "./render.js";
 
-function addLog() {
+/* ------------------------------------------------------------
+   1. Ініціалізація структури
+------------------------------------------------------------ */
+export function initLogsModule() {
+    if (!DATA.logs) DATA.logs = [];
+}
+
+/* ------------------------------------------------------------
+   2. Додати запис
+------------------------------------------------------------ */
+export function addLog() {
     const date = document.getElementById("logDate").value;
-    const category = document.getElementById("logCategory").value.trim();
+    const category = document.getElementById("logCategory").value;
     const amount = Number(document.getElementById("logAmount").value);
-    const comment = document.getElementById("logComment").value.trim();
+    const comment = document.getElementById("logComment").value;
 
     if (!date || !category || !amount) {
-        alert("Заповніть дату, категорію та суму");
+        alert("Заповни дату, категорію і суму!");
         return;
     }
 
-    const entry = {
+    const newLog = {
         id: Date.now(),
         date,
         category,
@@ -31,63 +41,38 @@ function addLog() {
         comment
     };
 
-    DATA.logs = DATA.logs || [];
-    DATA.logs.push(entry);
+    DATA.logs.push(newLog);
 
     autosave();
+    pushSyncEvent("logs:add", newLog);
+
     renderLogs();
-    if (typeof financeAutoUpdate === "function") financeAutoUpdate();
+    renderFinance();
 }
 
 /* ------------------------------------------------------------
-   2. Видалити запис
+   3. Видалити запис
 ------------------------------------------------------------ */
-
-function deleteLog(id) {
+export function deleteLog(id) {
     DATA.logs = DATA.logs.filter(l => l.id !== id);
+
     autosave();
+    pushSyncEvent("logs:delete", { id });
+
     renderLogs();
-    if (typeof financeAutoUpdate === "function") financeAutoUpdate();
+    renderFinance();
 }
 
 /* ------------------------------------------------------------
-   3. Рендер таблиці витрат
+   4. Порахувати загальні витрати
 ------------------------------------------------------------ */
-
-function renderLogs() {
-    const body = document.getElementById("logBody");
-    if (!body) return;
-
-    const list = DATA.logs || [];
-    let html = "";
-
-    for (let l of list) {
-        html += `
-            <tr>
-                <td>${l.date}</td>
-                <td>${l.category}</td>
-                <td>${l.amount.toFixed(2)}</td>
-                <td>${l.comment || ""}</td>
-                <td>
-                    <button onclick="deleteLog(${l.id})"
-                        style="background:#b30000; color:white; padding:6px 10px; border-radius:6px;">
-                        ✖
-                    </button>
-                </td>
-            </tr>
-        `;
-    }
-
-    body.innerHTML = html;
+export function calculateTotalCosts() {
+    return DATA.logs.reduce((sum, l) => sum + Number(l.amount || 0), 0);
 }
 
 /* ------------------------------------------------------------
-   4. Автоматичний перерахунок фінансів
-   (викликається після змін у витратах)
+   5. Експорт для інших модулів
 ------------------------------------------------------------ */
-
-function logsAutoUpdate() {
-    renderLogs();
-    if (typeof financeAutoUpdate === "function") financeAutoUpdate();
-    autosave();
+export function getLogs() {
+    return DATA.logs || [];
 }
