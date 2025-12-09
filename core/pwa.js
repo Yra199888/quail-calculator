@@ -1,70 +1,69 @@
 /* ============================================================
-   CORE MODULE: pwa.js
-   Відповідає за:
-   - реєстрацію service worker
-   - статус мережі (online/offline)
-   - оновлення UI індикатора
-   - запуск offline → online autosync
-============================================================ */
-
-import { autosyncQueue } from "./sync.js";
+   core/pwa.js
+   PRO MODE — PWA + статус мережі + Material 3
+   ============================================================ */
 
 /* ------------------------------------------------------------
    1. Реєстрація Service Worker
 ------------------------------------------------------------ */
-export function initPWA() {
+
+export function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-            .register("service-worker.js")
-            .then(() => console.log("[PWA] Service Worker активний"))
-            .catch(err => console.error("SW error:", err));
+        navigator.serviceWorker.register("service-worker.js")
+            .then(() => console.log("✔ Service Worker зареєстровано"))
+            .catch(err => console.error("SW Error:", err));
     }
-
-    updateStatusBar();
-
-    // Слухаємо зміни інтернету
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
 }
 
 /* ------------------------------------------------------------
-   2. Оновлення UI статусу
+   2. Відображення статусу мережі (online / offline)
 ------------------------------------------------------------ */
-export function updateStatusBar() {
-    const el = document.getElementById("statusBar");
-    if (!el) return;
+
+export function updateNetworkStatus() {
+    const bar = document.getElementById("statusBar");
+
+    if (!bar) return;
 
     if (navigator.onLine) {
-        el.innerHTML = "🟢 Онлайн";
-        el.style.color = "limegreen";
+        bar.innerText = "Статус: online";
+        bar.style.color = "#00c853";   // зелений
     } else {
-        el.innerHTML = "🔴 Оффлайн";
-        el.style.color = "red";
+        bar.innerText = "Статус: offline";
+        bar.style.color = "#d50000";   // червоний
     }
 }
 
+/* Автоматичне оновлення статусу */
+window.addEventListener("online", updateNetworkStatus);
+window.addEventListener("offline", updateNetworkStatus);
+
 /* ------------------------------------------------------------
-   3. Подія — інтернет зʼявився
+   3. Обробка події "install to home screen" (Android)
 ------------------------------------------------------------ */
-function handleOnline() {
-    console.log("[PWA] ONLINE — запускаємо синхронізацію");
 
-    updateStatusBar();
+let deferredPrompt = null;
 
-    // Запускаємо чергу авто-синхронізації
-    autosyncQueue();
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    const installBtn = document.getElementById("btnInstallApp");
+    if (installBtn) {
+        installBtn.style.display = "block";
+        installBtn.onclick = () => {
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+            installBtn.style.display = "none";
+        };
+    }
+});
+
+/* ------------------------------------------------------------
+   4. Ініціалізація PWA при старті програми
+------------------------------------------------------------ */
+
+export function initPWA() {
+    registerServiceWorker();
+    updateNetworkStatus();
+    console.log("✔ PWA ініціалізовано");
 }
-
-/* ------------------------------------------------------------
-   4. Подія — інтернет зник
------------------------------------------------------------- */
-function handleOffline() {
-    console.log("[PWA] OFFLINE — переходимо в локальний режим");
-
-    updateStatusBar();
-}
-
-/* ------------------------------------------------------------
-   5. Точка запуску цього модуля
------------------------------------------------------------- */
-document.addEventListener("DOMContentLoaded", initPWA);
