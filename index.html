@@ -110,29 +110,41 @@
         <p>Вартість: <b id="feedTotalCost">0</b> грн</p>
     </div>
     
-    <div class="m3-card">
-    <h2>1.1 Рецепт комбікорму</h2>
+/* === 1.1 Рецепт — рендер таблиці === */
+if (DATA.feed.recipe && DATA.feed.components) {
+    let html = "";
+    let totalKg = 0;
+    let totalCost = 0;
 
-    <label>Вага партії (кг):</label>
-    <input type="number" id="feedBatchKg" value="25" oninput="recalcFeed()">
+    for (let key in DATA.feed.recipe) {
 
-    <table class="m3-table">
-        <thead>
+        const percent = DATA.feed.recipe[key];
+        const kg = DATA.feed.components[key] || 0;
+        const price = DATA.feed.prices?.[key] || 0;
+        const sum = kg * price;
+
+        totalKg += kg;
+        totalCost += sum;
+
+        html += `
             <tr>
-                <th>Компонент</th>
-                <th>%</th>
-                <th>Кількість (кг)</th>
-                <th>Ціна/кг (грн)</th>
-                <th>Сума (грн)</th>
-            </tr>
-        </thead>
-        <tbody id="feedRecipeRows"></tbody>
-    </table>
+                <td>${key}</td>
+                <td>${percent}%</td>
+                <td>${kg.toFixed(2)}</td>
+                <td>
+                    <input type="number" 
+                        value="${price}" 
+                        onchange="updateFeedPrice('${key}', this.value)">
+                </td>
+                <td>${sum.toFixed(2)}</td>
+            </tr>`;
+    }
 
-    <p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
-    <p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
-    <p><b>Собівартість 1 кг:</b> <span id="feedCostPerKg">0</span> грн</p>
-</div>
+    setHTML("feedTableRows", html);
+    setHTML("recipeTotalKg", totalKg.toFixed(2));
+    setHTML("recipeTotalCost", totalCost.toFixed(2));
+    setHTML("recipeCostPerKg", (totalCost / totalKg).toFixed(2));
+}
 
     <div class="card">
         <h3>Добова норма</h3>
