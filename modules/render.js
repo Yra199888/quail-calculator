@@ -1,71 +1,87 @@
 /* ============================================================
-   MODULE: render.js
-   Оновлення інтерфейсу (UI) для всіх секцій
-   Викликається після:
-   - зміни DATA
-   - autosave()
-   - відновлення з бекапу
-   - початкового завантаження
+   RENDER.JS — Повний модуль відображення (Варіант 1)
+
+   ФУНКЦІЇ:
+   - Оновлюють UI у всіх секціях
+   - Викликаються після:
+       autosave(), зміни DATA, відновлення з Drive,
+       імпорту локальної копії, початкового завантаження
 ============================================================ */
 
-/* ------------------------------------------------------------
-   1. РЕНДЕР КОРМУ (feed)
------------------------------------------------------------- */
+/* ============================================
+   0. УТИЛІТИ
+============================================ */
+
+function setHTML(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = value;
+}
+
+function setValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+}
+
+/* ============================================
+   1. РЕНДЕР КОРМУ
+============================================ */
 
 function renderFeed() {
     try {
-        if (!DATA.feed) return;
+        const f = DATA.feed || {};
 
-        // === 3.4 Залишок комбікорму ===
-        const ready = Number(DATA.feed.ready || 0);
-        const daily = Number(DATA.feed.dailyNeed || 0);
+        // 1.1 Готовий комбікорм
+        setHTML("readyFeed", f.ready || 0);
+        setHTML("feedLeft", f.ready || 0);
 
-        setHTML("feedReadyStock", ready.toFixed(2));
-        setHTML("feedStockRemain", ready.toFixed(2));
-        setHTML("feedDaysLeft", daily > 0 ? Math.floor(ready / daily) : 0);
+        const daily = Number(f.dailyNeed || 0);
+        setHTML("daysLeft", daily > 0 ? Math.floor((f.ready || 0) / daily) : 0);
 
-        // === 3.3 Таблиця запасів компонентів ===
-        const stock = DATA.feed.stock || {};
-        const need = DATA.feed.need || {};
+        // 1.2 Таблиця запасів компонентів
+        let stockHTML = "";
+        if (f.stock) {
+            for (let key in f.stock) {
+                const have = Number(f.stock[key] || 0);
+                const need = Number(f.need?.[key] || 0);
+                const buy = Math.max(0, need - have);
 
-        let htmlStock = "";
-        for (let key in stock) {
-            const have = Number(stock[key] || 0);
-            const req = Number(need[key] || 0);
-            const buy = Math.max(req - have, 0);
-
-            htmlStock += `
-                <tr>
-                    <td>${key}</td>
-                    <td>${have}</td>
-                    <td>${req}</td>
-                    <td>${buy}</td>
-                </tr>
-            `;
-        }
-        setHTML("stockRows", htmlStock);
-
-        // === 3.5 Мені треба купити ===
-        let buyList = "";
-        for (let key in stock) {
-            const have = Number(stock[key] || 0);
-            const req = Number(need[key] || 0);
-            if (req > have) {
-                buyList += `<li>${key}: потрібно докупити ${req - have} кг</li>`;
+                stockHTML += `
+                    <tr>
+                        <td>${key}</td>
+                        <td>${have}</td>
+                        <td>${need}</td>
+                        <td>${buy}</td>
+                    </tr>
+                `;
             }
         }
+        setHTML("componentStockTable", `
+            <tr><th>Компонент</th><th>Є</th><th>Докупити</th></tr>
+            ${stockHTML}
+        `);
 
+        // 1.3 «Мені треба купити»
+        let buyList = "";
+        if (f.need && f.stock) {
+            for (let key in f.need) {
+                const need = Number(f.need[key]);
+                const have = Number(f.stock[key] || 0);
+
+                if (need > have) {
+                    buyList += `<li>${key}: треба докупити ${need - have} кг</li>`;
+                }
+            }
+        }
         setHTML("buySummary", buyList || "<li>Все є ✔</li>");
-    }
-    catch (e) {
-        console.error("Помилка renderFeed()", e);
+
+    } catch (e) {
+        console.error("renderFeed() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
-   2. РЕНДЕР ЯЄЦЬ (eggs)
------------------------------------------------------------- */
+/* ============================================
+   2. РЕНДЕР ЯЄЦЬ
+============================================ */
 
 function renderEggs() {
     try {
@@ -75,104 +91,96 @@ function renderEggs() {
         setHTML("eggsForSaleTotal", e.totalForSale || 0);
         setHTML("traysCount", e.trays || 0);
         setHTML("eggsRemainder", e.remainder || 0);
+
         setHTML("income", (e.income || 0).toFixed(2));
 
-        // Продуктивність
+        // продуктивність
         setHTML("hensTotal", e.hensTotal || 0);
         setHTML("productivityToday", (e.productivity || 0).toFixed(1));
 
-        // Підсумок по лотках
+        // підсумок лотків
         setHTML("totalTraysTodayLabel", e.trays || 0);
         setHTML("reservedTrays", e.reservedTrays || 0);
         setHTML("freeTrays", e.freeTrays || 0);
-    }
-    catch (e) {
-        console.error("Помилка renderEggs()", e);
+
+    } catch (e) {
+        console.error("renderEggs() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
-   3. РЕНДЕР ЗАМОВЛЕНЬ (orders)
------------------------------------------------------------- */
+/* ============================================
+   3. ЗАМОВЛЕННЯ
+============================================ */
 
 function renderOrders() {
     try {
-        const active = DATA.orders.filter(o => !o.done);
-        const done = DATA.orders.filter(o => o.done);
+        const orders = DATA.orders || [];
 
-        let htmlActive = "";
-        let htmlDone = "";
+        let active = "";
+        let done = "";
 
-        for (let o of active) {
-            htmlActive += `
-                <tr>
-                    <td>${o.name}</td>
-                    <td>${o.trays} лотків</td>
-                    <td>${o.date}</td>
-                    <td>${o.note || ""}</td>
-                    <td><button onclick="completeOrder(${o.id})">✔</button></td>
-                </tr>
-            `;
+        for (let o of orders) {
+            if (!o.done) {
+                active += `
+                    <tr>
+                        <td>${o.name}</td>
+                        <td>${o.trays} лотків</td>
+                        <td>${o.date}</td>
+                        <td>${o.note || ""}</td>
+                        <td><button onclick="completeOrder(${o.id})">✔</button></td>
+                    </tr>`;
+            } else {
+                done += `
+                    <tr>
+                        <td>${o.name}</td>
+                        <td>${o.trays} лотків</td>
+                        <td>${o.date}</td>
+                        <td>${o.note || ""}</td>
+                        <td>✓</td>
+                    </tr>`;
+            }
         }
 
-        for (let o of done) {
-            htmlDone += `
-                <tr>
-                    <td>${o.name}</td>
-                    <td>${o.trays} лотків</td>
-                    <td>${o.date}</td>
-                    <td>${o.note || ""}</td>
-                    <td>✓</td>
-                </tr>
-            `;
-        }
+        setHTML("ordersActive", active);
+        setHTML("ordersDone", done);
 
-        setHTML("ordersActive", htmlActive);
-        setHTML("ordersDone", htmlDone);
-    }
-    catch (e) {
-        console.error("renderOrders() error", e);
+    } catch (e) {
+        console.error("renderOrders() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
-   4. РЕНДЕР КЛІЄНТІВ (clients)
------------------------------------------------------------- */
+/* ============================================
+   4. КЛІЄНТИ
+============================================ */
 
 function renderClients() {
     try {
-        const table = document.getElementById("clientsBody");
-        if (!table) return;
+        const c = DATA.clients || {};
+        const list = Object.values(c);
 
-        const list = Object.values(DATA.clients || {});
         let html = "";
-
-        for (let c of list) {
+        for (let u of list) {
             html += `
                 <tr>
-                    <td>${c.name}</td>
-                    <td>${c.orders}</td>
-                    <td>${c.trays}</td>
-                    <td>${c.eggs}</td>
-                    <td>${c.income.toFixed(2)} грн</td>
-                    <td>${c.lastDate}</td>
+                    <td>${u.name}</td>
+                    <td>${u.orders}</td>
+                    <td>${u.trays}</td>
+                    <td>${u.eggs}</td>
+                    <td>${u.income.toFixed(2)} грн</td>
+                    <td>${u.lastDate}</td>
                 </tr>
             `;
         }
+        setHTML("clientsBody", html);
 
-        table.innerHTML = html;
-    }
-    catch (e) {
-        console.error("renderClients() error", e);
+    } catch (e) {
+        console.error("renderClients() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
-   5. РЕНДЕР ФІНАНСІВ (finance)
------------------------------------------------------------- */
+/* ============================================
+   5. ФІНАНСИ
+============================================ */
 
 function renderFinance() {
     try {
@@ -188,31 +196,28 @@ function renderFinance() {
         setHTML("repIncome", (f.repIncome || 0).toFixed(2));
         setHTML("repFeedCost", (f.repFeedCost || 0).toFixed(2));
         setHTML("repProfit", (f.repProfit || 0).toFixed(2));
-        setHTML("repProdAvg", (f.repProdAvg || 0).toFixed(1));
-        setHTML("repCostPerEgg", (f.repCostPerEgg || 0).toFixed(3));
-        setHTML("repProfitPerEgg", (f.repProfitPerEgg || 0).toFixed(3));
-        setHTML("repProfitPerHen", (f.repProfitPerHen || 0).toFixed(2));
-        setHTML("repOtherCost", (f.repOtherCost || 0).toFixed(2));
-        setHTML("repFullCostPerEgg", (f.repFullCostPerEgg || 0).toFixed(3));
-        setHTML("repProfitPerEggFull", (f.repProfitPerEggFull || 0).toFixed(3));
-    }
-    catch (e) {
-        console.error("renderFinance() error", e);
+
+    } catch (e) {
+        console.error("renderFinance() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
-   6. РЕНДЕР ІНКУБАЦІЇ (incub)
------------------------------------------------------------- */
+/* ============================================
+   6. ІНКУБАЦІЯ
+============================================ */
 
 function renderInc() {
     try {
-        const body = document.getElementById("incubationBody");
-        if (!body) return;
-
+        const list = DATA.incub || [];
         let html = "";
-        for (let inc of DATA.incub) {
+
+        for (let inc of list) {
+            const alive =
+                inc.eggs -
+                (inc.infertile || 0) -
+                (inc.diedInc || 0) -
+                (inc.diedBrooder || 0);
+
             html += `
                 <tr>
                     <td>${inc.name}</td>
@@ -223,48 +228,42 @@ function renderInc() {
                     <td>${inc.hatched}</td>
                     <td>${inc.diedInc}</td>
                     <td>${inc.diedBrooder}</td>
-                    <td>${inc.eggs - inc.infertile - inc.diedInc - inc.diedBrooder}</td>
+                    <td>${alive}</td>
                     <td>—</td>
                     <td>${inc.note || ""}</td>
                     <td>…</td>
-                </tr>
-            `;
+                </tr>`;
         }
 
-        body.innerHTML = html;
-    }
-    catch (e) {
-        console.error("renderInc() error", e);
+        setHTML("incubationBody", html);
+
+    } catch (e) {
+        console.error("renderInc() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
-   7. РЕНДЕР ПОГОЛІВ’Я (flock)
------------------------------------------------------------- */
+/* ============================================
+   7. ПОГОЛІВ’Я
+============================================ */
 
 function renderFlock() {
     try {
         const f = DATA.flock || {};
-        setHTML("flockTotal", (f.males || 0) + (f.females || 0) - (f.deaths || 0));
-    }
-    catch (e) {
-        console.error("renderFlock() error", e);
+        const total = (f.males || 0) + (f.females || 0) - (f.deaths || 0);
+        setHTML("flockTotal", total);
+    } catch (e) {
+        console.error("renderFlock() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
-   8. РЕНДЕР ЛОГІВ (logs)
------------------------------------------------------------- */
+/* ============================================
+   8. ЛОГИ
+============================================ */
 
 function renderLogs() {
     try {
-        const body = document.getElementById("logBody");
-        if (!body) return;
-
         let html = "";
-        for (let l of DATA.logs) {
+        for (let l of DATA.logs || []) {
             html += `
                 <tr>
                     <td>${l.date}</td>
@@ -272,20 +271,18 @@ function renderLogs() {
                     <td>${l.amount} грн</td>
                     <td>${l.comment || ""}</td>
                     <td><button onclick="deleteLog(${l.id})">🗑</button></td>
-                </tr>
-            `;
+                </tr>`;
         }
-        body.innerHTML = html;
-    }
-    catch (e) {
-        console.error("renderLogs() error", e);
+        setHTML("logBody", html);
+
+    } catch (e) {
+        console.error("renderLogs() error:", e);
     }
 }
 
-
-/* ------------------------------------------------------------
+/* ============================================
    9. ГЛОБАЛЬНИЙ РЕНДЕР
------------------------------------------------------------- */
+============================================ */
 
 function renderAll() {
     renderFeed();
@@ -296,14 +293,4 @@ function renderAll() {
     renderInc();
     renderFlock();
     renderLogs();
-}
-
-
-/* ------------------------------------------------------------
-   10. УТИЛІТИ
------------------------------------------------------------- */
-
-function setHTML(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = value;
 }
