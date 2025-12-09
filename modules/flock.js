@@ -1,22 +1,29 @@
 /* ============================================================
    MODULE: flock.js
    Відповідає за:
-   - Поголів’я (самці, самки, смертність, середній вік)
-   - Оновлення даних
-   - Рендер секції
-   - Автозбереження
-============================================================ */
+   - Облік поголів’я
+   - Самці, самки, смертність, середній вік
+   - Автоматичний перерахунок
+   - Оновлення DATA.flock
+   - Рендер секції "Поголів’я"
+=============================================================== */
 
 /* ------------------------------------------------------------
-   1. Оновлення даних поголів’я
+   1. Оновлення значень поголів’я
 ------------------------------------------------------------ */
 
 function updateFlock() {
+    const males = Number(document.getElementById("males")?.value || 0);
+    const females = Number(document.getElementById("females")?.value || 0);
+    const deaths = Number(document.getElementById("deaths")?.value || 0);
+    const avgAge = Number(document.getElementById("avgAge")?.value || 0);
+
     DATA.flock = {
-        males: Number(document.getElementById("males")?.value || 0),
-        females: Number(document.getElementById("females")?.value || 0),
-        deaths: Number(document.getElementById("deaths")?.value || 0),
-        avgAge: Number(document.getElementById("avgAge")?.value || 0)
+        males,
+        females,
+        deaths,
+        avgAge,
+        total: males + females - deaths
     };
 
     autosave();
@@ -25,56 +32,32 @@ function updateFlock() {
 
 
 /* ------------------------------------------------------------
-   2. Розрахунок загальної кількості
------------------------------------------------------------- */
-
-function calcFlockTotal() {
-    const f = DATA.flock || {};
-    const total = (f.males || 0) + (f.females || 0) - (f.deaths || 0);
-    return total < 0 ? 0 : total;
-}
-
-
-/* ------------------------------------------------------------
-   3. Рендер секції "Поголів’я"
+   2. Рендер секції "Поголів’я"
 ------------------------------------------------------------ */
 
 function renderFlock() {
-    const f = DATA.flock || {};
-    const total = calcFlockTotal();
+    if (!DATA.flock) return;
 
-    // Показуємо у HTML
-    const elTotal = document.getElementById("flockTotal");
-    if (elTotal) elTotal.textContent = total;
+    const t = DATA.flock.total || 0;
+    const el = document.getElementById("flockTotal");
 
-    // Відтворюємо значення у полях (на випадок відновлення)
-    if (document.getElementById("males")) 
-        document.getElementById("males").value = f.males || 0;
-
-    if (document.getElementById("females"))
-        document.getElementById("females").value = f.females || 0;
-
-    if (document.getElementById("deaths"))
-        document.getElementById("deaths").value = f.deaths || 0;
-
-    if (document.getElementById("avgAge"))
-        document.getElementById("avgAge").value = f.avgAge || 0;
+    if (el) el.textContent = t;
 }
 
 
 /* ------------------------------------------------------------
-   4. Підписка на події input
+   3. Ініціалізація (події input)
 ------------------------------------------------------------ */
 
 function initFlockModule() {
     const ids = ["males", "females", "deaths", "avgAge"];
 
-    for (let id of ids) {
+    ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("input", updateFlock);
-    }
+    });
 
     renderFlock();
 }
 
-initFlockModule();
+/* Викликається у modules/render.js → initAllModules() */
