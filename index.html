@@ -100,57 +100,74 @@
 <div id="feed" class="section-page" style="display:block;">
 
     <div class="m3-card">
-        <h2>Рецепт комбікорму</h2>
+        <h2>1. Рецепт комбікорму</h2>
 
-        <label>Вага партії (кг)</label>
-        <input id="feedBatchKg" type="number" value="25">
+        <label>Вага партії (кг):</label>
+        <input id="feedBatchKg" type="number" value="25" oninput="recalcFeed()">
 
         <table class="m3-table">
-    <thead>
-        <tr>
-            <th>Компонент</th>
-            <th>%</th>
-            <th>Кг</th>
-            <th>Ціна / кг</th>
-            <th>Сума</th>
-        </tr>
-    </thead>
-    <tbody id="feedRows"></tbody>
-</table>
+            <thead>
+                <tr>
+                    <th>Компонент</th>
+                    <th>%</th>
+                    <th>Кілограм</th>
+                    <th>Ціна за кг</th>
+                    <th>Сума</th>
+                </tr>
+            </thead>
+            <tbody id="feedTableRows"></tbody>
+        </table>
 
-<p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
-<p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
-<p><b>Середня ціна 1 кг:</b> <span id="feedAvgCost">0</span> грн</p>
-
-        <p><b>Середня ціна 1 кг:</b> <span id="feedAvgCost">0.00</span> грн</p>
+        <p><b>Загальна вартість партії:</b> <span id="feedTotalCost">0</span> грн</p>
+        <p><b>Середня ціна 1 кг:</b> <span id="feedAvgCost">0</span> грн</p>
     </div>
 
     <div class="m3-card">
-        <h2>Добова норма</h2>
-        <label>Грам на птицю</label>
-        <input id="feedDailyPerHen" type="number" value="30">
+        <h2>2. Добова норма</h2>
 
-        <p>Добова потреба: <b id="feedDailyKg">0</b> кг</p>
+        <label>Грам на 1 птицю:</label>
+        <input id="feedDailyPerHen" type="number" value="30" oninput="recalcFeed()">
+
+        <p>Добова потреба (кг): <span id="feedDailyNeed">0</span></p>
+        <p>Вартість доби: <span id="feedDailyCost">0</span> грн</p>
     </div>
 
     <div class="m3-card">
-        <h2>Партія комбікорму</h2>
-        <label>Виготовити (кг)</label>
+        <h2>3. Готовий корм</h2>
+
+        <p>Зараз на складі: <b id="feedReadyStock">0</b> кг</p>
+
+        <label>Виготовити партію (кг):</label>
         <input id="feedBatchSize" type="number" value="25">
+
         <button id="produceFeedBatch">Виготовити</button>
         <button id="consumeDailyFeed">Списати добову норму</button>
 
-        <p>Залишок комбікорму: <b id="feedStockRemain">0</b> кг</p>
-        <p>Хватить на: <b id="feedDaysLeft">0</b> днів</p>
+        <p>Залишок: <span id="feedStockRemain">0</span> кг</p>
+        <p>Хватить на: <span id="feedDaysLeft">0</span> днів</p>
     </div>
 
     <div class="m3-card">
-        <h2>Запаси компонентів</h2>
-        <table>
-            <thead><tr><th>Компонент</th><th>Є</th><th>Потрібно</th><th>Статус</th></tr></thead>
+        <h2>4. Аналіз запасів</h2>
+
+        <table class="m3-table">
+            <thead>
+                <tr>
+                    <th>Компонент</th>
+                    <th>Є (кг)</th>
+                    <th>Потрібно (кг)</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
             <tbody id="stockRows"></tbody>
         </table>
     </div>
+
+    <div class="m3-card">
+        <h2>5. Що треба докупити</h2>
+        <ul id="buySummary"></ul>
+    </div>
+
 </div>
 
 <!-- ================================================= -->
