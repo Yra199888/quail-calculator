@@ -1,98 +1,165 @@
 /* ============================================================
    MODULE: finance.js
-   Відповідає за:
-   - щоденні підсумки (витрати корму, прибутки від яєць)
-   - звіти за період (7 / 30 днів / весь час)
-   - автоматичний перерахунок при змінах у eggs.js, feed.js
+   Фінансова аналітика (FULL ENTERPRISE MODE)
+   - Підсумок дня
+   - Звіт за період
+   - Собівартість яйця
+   - Прибуток на 1 птицю
+   - Автоматичний перерахунок після кожної зміни
 ============================================================ */
 
 /* ------------------------------------------------------------
-   1. Розрахунок щоденних показників
+   1. Підрахунок підсумку дня
 ------------------------------------------------------------ */
 
-function updateDailySummary() {
-    const feedCost = Number(DATA.feed?.dailyCost || 0);
-    const eggIncome = Number(DATA.eggs?.income || 0);
-    const profit = eggIncome - feedCost;
+function calcDailySummary() {
+    const eggs = DATA.eggs || {};
+    const feed = DATA.feed || {};
+
+    const dailyIncome = (Number(eggs.traysToday || 0) * Number(eggs.trayPrice || 0));
+    const dailyFeedCost = Number(feed.dailyCost || 0);
 
     DATA.finance.daily = {
-        date: new Date().toISOString().split('T')[0],
-        feedCost,
-        eggIncome,
-        profit
+        feedCost: dailyFeedCost,
+        eggIncome: dailyIncome,
+        profit: dailyIncome - dailyFeedCost
     };
 
     autosave();
-    renderFinance();
 }
 
+
 /* ------------------------------------------------------------
-   2. Звіт за період
+   2. Генерація фінансового звіту за період
 ------------------------------------------------------------ */
 
-function recalcReport() {
+function calcFinanceReport() {
     const period = document.getElementById("reportPeriod")?.value || "30";
-    const days = period === "all" ? DATA.logs.length : Number(period);
+    const days = period === "all" ? (DATA.finance.daysLog?.length || 0) : Number(period);
 
-    let totalFeed = 0, totalIncome = 0, totalEggs = 0, totalTrays = 0;
+    const dailyLog = DATA.finance.daysLog || [];
 
-    for (let d of (DATA.logs || []).slice(-days)) {
-        totalFeed += d.feedCost || 0;
-        totalIncome += d.eggIncome || 0;
-        totalEggs += d.eggs || 0;
-        totalTrays += d.trays || 0;
-    }
-
-    const profit = totalIncome - totalFeed - Number(DATA.finance?.otherCostsMonthly || 0);
-
-    DATA.finance.report = {
-        days,
-        totalFeed,
-        totalIncome,
-        totalEggs,
-        totalTrays,
-        profit
+    let rep = {
+        days: 0,
+        eggs: 0,
+        trays: 0,
+        income: 0,
+        feedCost: 0,
+        prodAvg: 0,
+        profit: 0,
+        costPerEgg: 0,
+        fullCostPerEgg: 0,
+        profitPerEgg: 0,
+        profitPerHen: 0
     };
 
+    const hens = Number(DATA.eggs?.hensTotal || 0);
+    const otherCost = Number(document.getElementById("otherCostsMonthly")?.value || 0);
+    const dailyOtherCost = otherCost / 30;
+
+    const startIndex = Math.max(0, dailyLog.length - days);
+    const slice = dailyLog.slice(startIndex);
+
+    for (let d of slice) {
+        rep.days += 1;
+        rep.eggs += d.eggs;
+        rep.trays += d.trays;
+        rep.income += d.income;
+        rep.feedCost += d.feedCost;
+        rep.prodAvg += d.prod || 0;
+    }
+
+    if (rep.days > 0) {
+        rep.prodAvg = rep.prodAvg / rep.days;
+    }
+
+    rep.profit = rep.income - rep.feedCost - (dailyOtherCost * rep.days);
+
+    if (rep.eggs > 0) {
+        rep.costPerEgg = rep.feedCost / rep.eggs;
+        rep.fullCostPerEgg = (rep.feedCost + (rep.days * dailyOtherCost)) / rep.eggs;
+        rep.profitPerEgg = rep.income / rep.eggs - rep.fullCostPerEgg;
+    }
+
+    if (hens > 0) {
+        rep.profitPerHen = rep.profit / hens;
+    }
+
+    DATA.finance.report = rep;
     autosave();
-    renderFinance();
 }
 
+
 /* ------------------------------------------------------------
-   3. Рендер таблиці "Фінанси"
+   3. Збереження щоденного запису для фінансових графіків
+------------------------------------------------------------ */
+
+function financeDailyLog() {
+    const eggs = DATA.eggs || {};
+    const feed = DATA.feed || {};
+
+    if (!DATA.finance.daysLog) DATA.finance.daysLog = [];
+
+    DATA.finance.daysLog.push({
+        date: new Date().toISOString().slice(0, 10),
+        eggs: Number(eggs.collectedToday || 0),
+        trays: Number(eggs.traysToday || 0),
+        income: Number(eggs.traysToday || 0) * Number(eggs.trayPrice || 0),
+        feedCost: Number(feed.dailyCost || 0),
+        prod: Number(eggs.productivity || 0)
+    });
+
+    autosave();
+}
+
+
+/* ------------------------------------------------------------
+   4. Рендер у HTML (фінансова вкладка)
 ------------------------------------------------------------ */
 
 function renderFinance() {
-    const f = DATA.finance || {};
-    const rep = f.report || {};
+    const daily = DATA.finance?.daily || {};
+    const rep = DATA.finance?.report || {};
 
-    const elFeed = document.getElementById("summaryFeedCost");
-    const elIncome = document.getElementById("summaryEggIncome");
-    const elProfit = document.getElementById("summaryProfit");
+    set("summaryFeedCost", daily.feedCost);
+    set("summaryEggIncome", daily.eggIncome);
+    set("summaryProfit", daily.profit);
 
-    if (elFeed) elFeed.textContent = (f.daily?.feedCost || 0).toFixed(2);
-    if (elIncome) elIncome.textContent = (f.daily?.eggIncome || 0).toFixed(2);
-    if (elProfit) elProfit.textContent = (f.daily?.profit || 0).toFixed(2);
+    set("repDays", rep.days);
+    set("repEggs", rep.eggs);
+    set("repTrays", rep.trays);
+    set("repIncome", rep.income.toFixed(2));
+    set("repFeedCost", rep.feedCost.toFixed(2));
+    set("repProfit", rep.profit.toFixed(2));
+    set("repProdAvg", rep.prodAvg.toFixed(1));
+    set("repCostPerEgg", rep.costPerEgg.toFixed(3));
+    set("repProfitPerEgg", rep.profitPerEgg.toFixed(3));
+    set("repProfitPerHen", rep.profitPerHen.toFixed(2));
 
-    if (document.getElementById("repDays"))
-        document.getElementById("repDays").textContent = rep.days || 0;
-
-    if (document.getElementById("repIncome"))
-        document.getElementById("repIncome").textContent = rep.totalIncome?.toFixed(2) || 0;
-
-    if (document.getElementById("repFeedCost"))
-        document.getElementById("repFeedCost").textContent = rep.totalFeed?.toFixed(2) || 0;
-
-    if (document.getElementById("repProfit"))
-        document.getElementById("repProfit").textContent = rep.profit?.toFixed(2) || 0;
+    const fullCost = rep.fullCostPerEgg?.toFixed(3) || "0.000";
+    set("repFullCostPerEgg", fullCost);
 }
 
+
 /* ------------------------------------------------------------
-   4. Автоматичне оновлення після змін
+   5. Автоматичний перерахунок при будь-яких змінах
 ------------------------------------------------------------ */
 
 function financeAutoUpdate() {
-    updateDailySummary();
-    recalcReport();
+    calcDailySummary();
+    calcFinanceReport();
+    renderFinance();
     autosave();
 }
+
+
+/* ------------------------------------------------------------
+   6. Допоміжна функція set()
+------------------------------------------------------------ */
+
+function set(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+console.log("finance.js loaded");
