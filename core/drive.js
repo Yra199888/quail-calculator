@@ -1,204 +1,178 @@
 /* ============================================================
-   core/drive.js — FULL PRO MODE Google Drive Sync
-   Відповідає за:
-   - Авторизацію Google
-   - Створення/оновлення файлу data.json у Drive
-   - Завантаження резервної копії
-   - Автосинхронізацію при зміні даних
+   GOOGLE DRIVE — FULL PRO BACKUP MODE
+   Автоматичне збереження та відновлення data.json
+   Працює офлайн + синхронізація при появі мережі
 ============================================================ */
 
-import { DATA, loadAllData, saveLocal, autosave } from "./storage.js";
-import { syncQueue } from "./sync.js";
+import { DATA, loadLocal, saveLocal, autosave } from "./storage.js";
+import { applyAllRenders } from "../modules/render.js";
 
 /* ------------------------------------------------------------
-   0. Налаштування OAuth
+   ТВОЇ ДАНІ АВТОРИЗАЦІЇ
 ------------------------------------------------------------ */
 
 const CLIENT_ID = "764633127034-9t077tdhl7t1bcrsvml5nlil9vitdool.apps.googleusercontent.com";
-const API_KEY = "";
+const API_KEY = "AIzaSyD-placeholder"; // можна залишити заглушку
 const SCOPES = "https://www.googleapis.com/auth/drive.file";
-
-let tokenClient = null;
+let tokenClient;
 let gapiInited = false;
 let gisInited = false;
 
-let driveFileId = null;
+/* ------------------------------------------------------------
+   1. LOAD GAPI
+------------------------------------------------------------ */
 
-window.gapiLoaded = function () {
-    gapi.load("client", initGapiClient);
-};
-
-async function initGapiClient() {
-    try {
-        await gapi.client.init({
-            apiKey: API_KEY,
-            discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-        });
-        gapiInited = true;
-        updateDriveStatus("Google API готове ✔");
-    } catch (e) {
-        updateDriveStatus("Помилка ініціалізації GAPI");
-        console.error(e);
-    }
+export function gapiLoaded() {
+    gapi.load("client", initializeGapiClient);
 }
 
-window.gisLoaded = function () {
+async function initializeGapiClient() {
+    await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+    });
+    gapiInited = true;
+    maybeEnableButtons();
+}
+
+/* ------------------------------------------------------------
+   2. LOAD GIS (Google Identity)
+------------------------------------------------------------ */
+
+export function gisLoaded() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPES,
         callback: "",
     });
     gisInited = true;
-    updateDriveStatus("Google OAuth готове ✔");
-};
+    maybeEnableButtons();
+}
 
 /* ------------------------------------------------------------
-   1. Авторизація Google
+   3. ENABLE UI BUTTONS WHEN READY
 ------------------------------------------------------------ */
 
-export async function loginGoogle() {
-    return new Promise((resolve, reject) => {
-        if (!gisInited) return reject("GIS не ініціалізовано");
+function maybeEnableButtons() {
+    if (gapiInited && gisInited) {
+        document.getElementById("btnDriveLogin").disabled = false;
+        document.getElementById("btnBackup").disabled = false;
+        document.getElementById("btnRestore").disabled = false;
+    }
+}
 
-        tokenClient.callback = async (resp) => {
-            if (resp.error !== undefined) {
-                updateDriveStatus("Помилка входу ❌");
-                reject(resp);
-                return;
-            }
-            updateDriveStatus("Успішний вхід ✔");
-            resolve(resp);
+/* ------------------------------------------------------------
+   4. LOGIN TO GOOGLE
+------------------------------------------------------------ */
+
+export function driveLogin() {
+    tokenClient.callback = (resp) => {
+        if (resp.error) throw resp;
+        document.getElementById("driveStatus").innerText = "Увійшли ✔";
+    };
+    tokenClient.requestAccessToken({ prompt: "consent" });
+}
+
+/* ------------------------------------------------------------
+   5. CREATE BACKUP (UPLOAD data.json)
+------------------------------------------------------------ */
+
+export async function driveBackup() {
+    try {
+        const fileContent = JSON.stringify(DATA, null, 2);
+        const file = new Blob([fileContent], { type: "application/json" });
+
+        const metadata = {
+            name: "quail_data.json",
+            mimeType: "application/json",
         };
 
-        tokenClient.requestAccessToken({ prompt: "consent" });
-    });
-}
+        const form = new FormData();
+        form.append("metadata", new Blob([JSON.stringify(metadata)], { type: "application/json" }));
+        form.append("file", file);
 
-/* ------------------------------------------------------------
-   2. Пошук або створення файлу data.json у Drive
------------------------------------------------------------- */
+        const res = await fetch(
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+            {
+                method: "POST",
+                headers: new Headers({ Authorization: "Bearer " + gapi.client.getToken().access_token }),
+                body: form,
+            }
+        );
 
-async function getOrCreateDataFile() {
-    // 1) шукаємо файл
-    const res = await gapi.client.drive.files.list({
-        q: "name='quail_data.json'",
-        spaces: "drive",
-    });
-
-    if (res.result.files.length > 0) {
-        driveFileId = res.result.files[0].id;
-        return driveFileId;
+        document.getElementById("driveStatus").innerText = "Створено резервну копію ✔";
     }
-
-    // 2) створюємо, якщо не знайдено
-    const createRes = await gapi.client.drive.files.create({
-        resource: { name: "quail_data.json", mimeType: "application/json" },
-        fields: "id",
-    });
-
-    driveFileId = createRes.result.id;
-    return driveFileId;
+    catch (e) {
+        console.error(e);
+        document.getElementById("driveStatus").innerText = "Помилка створення";
+    }
 }
 
 /* ------------------------------------------------------------
-   3. Завантаження резервної копії з Drive
+   6. RESTORE BACKUP (DOWNLOAD data.json)
 ------------------------------------------------------------ */
 
-export async function restoreFromDrive() {
+export async function driveRestore() {
     try {
-        await loginGoogle();
-        const id = await getOrCreateDataFile();
+        const list = await gapi.client.drive.files.list({
+            q: "name='quail_data.json'",
+            fields: "files(id, name)",
+        });
 
-        const file = await gapi.client.drive.files.get({
-            fileId: id,
+        if (!list.result.files.length) {
+            document.getElementById("driveStatus").innerText = "Файл не знайдено";
+            return;
+        }
+
+        const fileId = list.result.files[0].id;
+
+        const res = await gapi.client.drive.files.get({
+            fileId,
             alt: "media",
         });
 
-        const json = JSON.parse(file.body);
+        const json = res.result;
 
         Object.assign(DATA, json);
         saveLocal();
-        autosave();
+        applyAllRenders();
 
-        updateDriveStatus("Дані успішно відновлено ✔");
-    } catch (e) {
-        updateDriveStatus("Помилка відновлення ❌");
+        document.getElementById("driveStatus").innerText = "Відновлено ✔";
+    }
+    catch (e) {
         console.error(e);
+        document.getElementById("driveStatus").innerText = "Помилка відновлення";
     }
 }
 
 /* ------------------------------------------------------------
-   4. Резервне копіювання у Drive
+   7. AUTO-SYNC (PRO MODE)
 ------------------------------------------------------------ */
 
-export async function backupToDrive() {
-    try {
-        await loginGoogle();
-        const id = await getOrCreateDataFile();
+export function autoSyncToDrive() {
+    if (!navigator.onLine) return;
 
-        const fileContent = new Blob([JSON.stringify(DATA)], {
-            type: "application/json",
-        });
+    // Якщо токена немає → не можемо синхронізувати
+    if (!gapi.client.getToken()) return;
 
-        await gapi.client.request({
-            path: `/upload/drive/v3/files/${id}`,
-            method: "PATCH",
-            params: { uploadType: "media" },
-            body: fileContent,
-        });
-
-        updateDriveStatus("Резервна копія створена ✔");
-    } catch (e) {
-        updateDriveStatus("Помилка резервного копіювання ❌");
-        console.error(e);
-    }
+    driveBackup();
 }
 
 /* ------------------------------------------------------------
-   5. Автосинхронізація змін через syncQueue
+   8. INIT — запускається в app.js
 ------------------------------------------------------------ */
 
-export async function driveAutoSync() {
-    if (!navigator.onLine) {
-        updateDriveStatus("Офлайн — зміни у черзі");
-        return;
-    }
+export function initDrive() {
+    document.getElementById("btnDriveLogin").onclick = driveLogin;
+    document.getElementById("btnBackup").onclick = driveBackup;
+    document.getElementById("btnRestore").onclick = driveRestore;
 
-    if (!driveFileId) {
-        try {
-            await loginGoogle();
-            await getOrCreateDataFile();
-        } catch (e) {
-            console.error("AutoSync login error:", e);
-            return;
-        }
-    }
+    window.addEventListener("online", () => {
+        document.getElementById("driveStatus").innerText = "Online — синхронізую…";
+        autoSyncToDrive();
+    });
 
-    while (syncQueue.length > 0) {
-        updateDriveStatus("Синхронізація…");
-
-        const op = syncQueue.shift();
-        await backupToDrive();
-    }
-
-    updateDriveStatus("Синхронізовано ✔");
-}
-
-/* ------------------------------------------------------------
-   6. Статус у інтерфейсі
------------------------------------------------------------- */
-
-export function updateDriveStatus(text) {
-    const el = document.getElementById("driveStatus");
-    if (el) el.innerText = "Статус: " + text;
-}
-
-/* ------------------------------------------------------------
-   7. Ініціалізація кнопок
------------------------------------------------------------- */
-
-export function initDriveModule() {
-    document.getElementById("btnDriveLogin").onclick = loginGoogle;
-    document.getElementById("btnBackup").onclick = backupToDrive;
-    document.getElementById("btnRestore").onclick = restoreFromDrive;
+    window.addEventListener("offline", () => {
+        document.getElementById("driveStatus").innerText = "Offline — збережено локально";
+    });
 }
