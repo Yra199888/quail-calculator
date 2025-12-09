@@ -17,38 +17,17 @@ import { renderFeed } from "./ui.js";
 
 export function recalcFeed() {
     const batchKg = Number(document.getElementById("feedBatchKg").value);
-    const perHen = Number(document.getElementById("feedDailyPerHen").value);
 
     DATA.feed.batchKg = batchKg;
-    DATA.feed.dailyPerHen = perHen;
 
-    // Основний компонентний масив рецепта
     const recipe = DATA.feed.recipe || {};
+    DATA.feed.components = {};
 
-    let total = 0;
-    for (let key in recipe) {
-        total += recipe[key];
-    }
-    DATA.feed.totalPercent = total;
-
-    let rows = "";
     for (let key in recipe) {
         const percent = recipe[key];
         const kg = (batchKg * percent) / 100;
-
-        if (!DATA.feed.components) DATA.feed.components = {};
         DATA.feed.components[key] = kg;
-
-        rows += `
-            <tr>
-                <td>${key}</td>
-                <td>${percent}%</td>
-                <td>${kg.toFixed(2)}</td>
-            </tr>
-        `;
     }
-
-    document.getElementById("feedTableRows").innerHTML = rows;
 
     autosave();
     renderFeed();
