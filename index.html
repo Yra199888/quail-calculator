@@ -8,38 +8,76 @@
     <!-- PWA -->
     <link rel="manifest" href="manifest.webmanifest">
 
-    <link rel="stylesheet" href="material.css">
-
+    <!-- BASIC STYLE A -->
     <style>
-        .tabs { display:flex; border-bottom:1px solid #ccc; }
-        .tab { padding:12px; flex:1; text-align:center; cursor:pointer; }
-        .tab.active { background:#d5f4c2; font-weight:bold; }
-        .page { display:none; }
-        .card {
-            background:white; padding:15px; margin:15px;
-            border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,.1);
+        body {
+            font-family: system-ui, sans-serif;
+            background:#f3f3f3;
+            margin:0;
+            padding:0;
         }
+        .tabs {
+            display:flex;
+            background:#e8e8e8;
+            border-bottom:1px solid #ccc;
+        }
+        .tab {
+            flex:1;
+            padding:12px;
+            text-align:center;
+            cursor:pointer;
+        }
+        .tab.active {
+            background:white;
+            font-weight:bold;
+            border-bottom:3px solid #2d6a1f;
+        }
+        .page {
+            display:none;
+            padding:15px;
+        }
+        .card {
+            background:white;
+            padding:15px;
+            margin-bottom:15px;
+            border-radius:10px;
+            box-shadow:0 1px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width:100%;
+            border-collapse:collapse;
+            margin-top:10px;
+        }
+        table th, table td {
+            padding:8px;
+            border-bottom:1px solid #ddd;
+        }
+        button {
+            padding:8px 14px;
+            background:#2d6a1f;
+            color:white;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+            margin:4px 0;
+        }
+        button:hover { opacity:0.8; }
     </style>
 </head>
 
 <body>
 
-<!-- ========================== -->
-<!--      PRO MODE BAR          -->
-<!-- ========================== -->
-<div class="card" style="background:#2d6a1f; color:white;">
-    <h3>🔥 PRO MODE активний</h3>
-    <p id="statusBar">Статус: offline</p>
+<!-- TOP BAR -->
+<div class="card" style="margin:0;border-radius:0;">
+    <h2>🔥 PRO MODE</h2>
+    <div id="statusBar">Статус: offline</div>
 
     <button id="saveLocal">💾 Зберегти локально</button>
     <button id="backupDrive">☁ Резервна копія Drive</button>
-    <button id="restoreDrive">🔄 Відновити із Drive</button>
+    <button id="restoreDrive">🔄 Відновити з Drive</button>
 </div>
 
-
-<!-- ========================== -->
-<!--       НАВІГАЦІЯ            -->
-<!-- ========================== -->
+<!-- NAVIGATION -->
 <div class="tabs">
     <div class="tab active" onclick="showPage('feed')">Корм</div>
     <div class="tab" onclick="showPage('eggs')">Яйця</div>
@@ -47,29 +85,23 @@
     <div class="tab" onclick="showPage('clients')">Клієнти</div>
     <div class="tab" onclick="showPage('finance')">Фінанси</div>
     <div class="tab" onclick="showPage('incub')">Інкубація</div>
-    <div class="tab" onclick="showPage('flock')">Поголів’я</div>
-    <div class="tab" onclick="showPage('logs')">Логи</div>
 </div>
 
-
-<!-- ========================== -->
-<!--         1. КОРМ            -->
-<!-- ========================== -->
+<!-- =============================== -->
+<!--             FEED                -->
+<!-- =============================== -->
 <div id="feed" class="page" style="display:block;">
 
     <div class="card">
-        <h2>Комбікорм</h2>
+        <h3>1. Комбікорм</h3>
+        <label>Вага партії (кг):</label>
+        <input id="targetKg" type="number" value="25" onchange="recalcFeed()">
 
-        <label>Бажана вага партії (кг):</label>
-        <input id="targetKg" type="number" value="25" oninput="recalcFeed()">
+        <button onclick="applyRecipePreset('starter')">Стартер</button>
+        <button onclick="applyRecipePreset('grower')">Гровер</button>
+        <button onclick="applyRecipePreset('layer')">Несучки</button>
 
-        <div>
-            <button onclick="applyRecipePreset('starter')">Стартер</button>
-            <button onclick="applyRecipePreset('grower')">Гровер</button>
-            <button onclick="applyRecipePreset('layer')">Несучки</button>
-        </div>
-
-        <table class="m3-table">
+        <table>
             <thead><tr><th>Компонент</th><th>Кг</th><th>Ціна</th><th>Сума</th></tr></thead>
             <tbody id="feedRows"></tbody>
         </table>
@@ -79,211 +111,187 @@
     </div>
 
     <div class="card">
-        <h2>Добова норма</h2>
-        <label>Г/птицю:</label><input id="dailyNormInput" type="number" value="30" oninput="recalcDailyFeed()">
-        <label>Кількість птахів:</label><input id="birdCountInput" type="number" value="0" oninput="recalcDailyFeed()">
+        <h3>Добова норма</h3>
+        <input id="dailyNormInput" type="number" value="30">
+        <input id="birdCountInput" type="number" value="0">
 
-        <p>Потреба: <span id="dailyNeedKg">0</span> кг</p>
-        <p>Ціна: <span id="dailyCost">0</span> грн</p>
+        <p>Потрібно: <span id="dailyNeedKg">0</span> кг</p>
+        <p>Вартість: <span id="dailyCost">0</span></p>
     </div>
 
     <div class="card">
-        <h2>Запаси компонентів</h2>
-        <table>
-            <tbody id="componentStockTable"></tbody>
+        <h3>Запаси компонентів</h3>
+        <table id="componentStockTable">
+            <thead><tr><th>Компонент</th><th>Є</th><th>Потрібно</th><th>Докупити</th></tr></thead>
+            <tbody id="stockRows"></tbody>
         </table>
     </div>
 
     <div class="card">
-        <h2>Готовий корм</h2>
+        <h3>Готовий комбікорм</h3>
+        <p>Готово: <span id="feedStockRemain">0</span> кг</p>
 
-        <p>Готово: <span id="readyFeed">0</span> кг</p>
-
-        <label>Вага партії:</label>
         <input id="batchSizeInput" type="number" value="25">
 
-        <button id="makeFeedBtn">Виготовити партію</button>
-        <button id="consumeDailyBtn">Списати добову норму</button>
+        <button id="makeFeedBtn">Виготовити</button>
+        <button id="consumeDailyBtn">Списати норму</button>
 
         <p>Залишок: <span id="feedLeft">0</span> кг</p>
-        <p>На днів: <span id="daysLeft">0</span></p>
+        <p>Хватить на: <span id="daysLeft">0</span> днів</p>
     </div>
 
     <div class="card">
-        <h2>Мені треба купити</h2>
+        <h3>Мені треба купити</h3>
         <ul id="buySummary"></ul>
     </div>
-
 </div>
 
-
-<!-- ========================== -->
-<!--          2. ЯЙЦЯ           -->
-<!-- ========================== -->
+<!-- =============================== -->
+<!--             EGGS                -->
+<!-- =============================== -->
 <div id="eggs" class="page">
 
     <div class="card">
-        <h2>Облік яєць</h2>
+        <h3>2. Яйця</h3>
 
-        <label>Зібрано:</label><input id="eggsTotal" type="number" oninput="updateEggs()">
-        <label>Брак:</label><input id="eggsBad" type="number" oninput="updateEggs()">
-        <label>Власні потреби:</label><input id="eggsOwn" type="number" oninput="updateEggs()">
-        <label>Залишок з учора:</label><input id="eggsCarry" type="number" oninput="updateEggs()">
+        <input id="eggsTotal" type="number" oninput="recalcEggsBalance(); recalcProductivity();" placeholder="Зібрано">
+        <input id="eggsBad" type="number" oninput="recalcEggsBalance();" placeholder="Брак">
+        <input id="eggsOwn" type="number" oninput="recalcEggsBalance();" placeholder="Для себе">
+        <input id="eggsCarry" type="number" oninput="recalcEggsBalance();" placeholder="Учора">
 
         <table>
-            <tr><td>Для продажу</td><td id="eggsForSale">0</td></tr>
-            <tr><td>Загальний залишок</td><td id="eggsForSaleTotal">0</td></tr>
+            <tr><td>Сьогодні для продажу</td><td id="eggsForSale">0</td></tr>
+            <tr><td>Загалом доступно</td><td id="eggsForSaleTotal">0</td></tr>
             <tr><td>Лотків</td><td id="traysCount">0</td></tr>
-            <tr><td>Залишок</td><td id="eggsRemainder">0</td></tr>
+            <tr><td>Залишок яєць</td><td id="eggsRemainder">0</td></tr>
+            <tr><td>Ціна</td><td><input id="trayPrice" type="number" oninput="recalcEggsBalance();"></td></tr>
+            <tr><td>Сума</td><td id="income">0</td></tr>
+        </table>
+
+        <h3>Продуктивність</h3>
+        <input id="hens1" type="number" oninput="recalcProductivity();" placeholder="Самок 1 партія">
+        <input id="hens2" type="number" oninput="recalcProductivity();" placeholder="Самок 2 партія">
+
+        <table>
+            <tr><td>Разом</td><td id="hensTotal">0</td></tr>
+            <tr><td>Продуктивність</td><td id="productivityToday">0</td></tr>
         </table>
     </div>
 
     <div class="card">
-        <h2>Продуктивність</h2>
-
-        <label>Самок партія 1:</label><input id="hens1" type="number" oninput="updateEggs()">
-        <label>Самок партія 2:</label><input id="hens2" type="number" oninput="updateEggs()">
-
+        <h3>2.3 Лотки</h3>
         <table>
-            <tr><td>Всього самок</td><td id="hensTotal">0</td></tr>
-            <tr><td>Продуктивність %</td><td id="productivityToday">0</td></tr>
+            <tr><td>Усього</td><td id="totalTraysTodayLabel">0</td></tr>
+            <tr><td>Заброньовано</td><td id="reservedTrays">0</td></tr>
+            <tr><td>Вільні</td><td id="freeTrays">0</td></tr>
         </table>
     </div>
-
 </div>
 
-
-<!-- ========================== -->
-<!--      3. ЗАМОВЛЕННЯ         -->
-<!-- ========================== -->
+<!-- =============================== -->
+<!--           ORDERS                -->
+<!-- =============================== -->
 <div id="orders" class="page">
-
     <div class="card">
-        <h2>Замовлення</h2>
+        <h3>5. Замовлення</h3>
 
-        <label>Клієнт:</label><input id="ordName">
-        <label>Лотків:</label><input id="ordTrays" type="number">
-        <label>Дата:</label><input id="ordDate" type="date">
-        <label>Примітка:</label><input id="ordNote">
+        <input id="ordName" placeholder="Клієнт">
+        <input id="ordEggs" type="number" placeholder="Яєць">
+        <input id="ordTrays" type="number" placeholder="Лотків">
+        <input id="ordDate" type="date">
+        <input id="ordNote" placeholder="Примітка">
 
         <button onclick="addOrder()">Додати</button>
 
-        <h3>Активні</h3>
+        <h4>Активні</h4>
         <table><tbody id="ordersActive"></tbody></table>
 
-        <h3>Виконані</h3>
+        <h4>Виконані</h4>
         <table><tbody id="ordersDone"></tbody></table>
     </div>
-
 </div>
 
-
-<!-- ========================== -->
-<!--         4. КЛІЄНТИ         -->
-<!-- ========================== -->
+<!-- =============================== -->
+<!--           CLIENTS               -->
+<!-- =============================== -->
 <div id="clients" class="page">
-
     <div class="card">
-        <h2>Клієнти</h2>
+        <h3>Клієнти</h3>
         <table>
+            <thead>
+                <tr>
+                    <th>Клієнт</th>
+                    <th>Замовлень</th>
+                    <th>Лотків</th>
+                    <th>Яєць</th>
+                    <th>Сума</th>
+                    <th>Останнє</th>
+                </tr>
+            </thead>
             <tbody id="clientsBody"></tbody>
         </table>
     </div>
-
 </div>
 
-
-<!-- ========================== -->
-<!--         5. ФІНАНСИ         -->
-<!-- ========================== -->
+<!-- =============================== -->
+<!--           FINANCE               -->
+<!-- =============================== -->
 <div id="finance" class="page">
-
     <div class="card">
-        <h2>Фінанси</h2>
-
+        <h3>Фінанси</h3>
         <table>
             <tr><td>Корм</td><td id="summaryFeedCost">0</td></tr>
             <tr><td>Виручка</td><td id="summaryEggIncome">0</td></tr>
             <tr><td>Прибуток</td><td id="summaryProfit">0</td></tr>
         </table>
-
     </div>
-
 </div>
 
-
-<!-- ========================== -->
-<!--       6. ІНКУБАЦІЯ         -->
-<!-- ========================== -->
+<!-- =============================== -->
+<!--          INCUBATION             -->
+<!-- =============================== -->
 <div id="incub" class="page">
-
     <div class="card">
-        <h2>Інкубація</h2>
+        <h3>Інкубація</h3>
 
-        <label>Назва партії:</label><input id="incBatchName">
-        <label>Дата:</label><input id="incStartDate" type="date">
-        <label>Кількість яєць:</label><input id="incEggsSet" type="number">
-        <label>Примітка:</label><textarea id="incNote"></textarea>
+        <input id="incBatchName" placeholder="Назва">
+        <input id="incStartDate" type="date">
+        <input id="incEggsSet" type="number" placeholder="Кількість яєць">
+        <textarea id="incNote" placeholder="Нотатка"></textarea>
 
         <button id="addIncubation">Додати</button>
 
+        <h4>Партії</h4>
         <table>
+            <thead>
+                <tr>
+                    <th>Партія</th>
+                    <th>Дата</th>
+                    <th>Днів</th>
+                    <th>Закладено</th>
+                    <th>Незапліднені</th>
+                    <th>Вилупилось</th>
+                    <th>Інк.</th>
+                    <th>Брудер</th>
+                    <th>Живі</th>
+                    <th>Нотатка</th>
+                </tr>
+            </thead>
             <tbody id="incubationBody"></tbody>
         </table>
     </div>
-
 </div>
 
+<!-- =============================== -->
+<!--   JS IMPORTS (ВАЖЛИВО)         -->
+<!-- =============================== -->
 
-<!-- ========================== -->
-<!--       7. ПОГОЛІВ’Я         -->
-<!-- ========================== -->
-<div id="flock" class="page">
-
-    <div class="card">
-        <h2>Поголів’я</h2>
-
-        <label>Самців:</label><input id="males" type="number" oninput="updateFlock()">
-        <label>Самок:</label><input id="females" type="number" oninput="updateFlock()">
-        <label>Смертність:</label><input id="deaths" type="number" oninput="updateFlock()">
-
-        <p>Разом: <span id="flockTotal">0</span></p>
-    </div>
-
-</div>
-
-
-<!-- ========================== -->
-<!--        8. ЛОГИ             -->
-<!-- ========================== -->
-<div id="logs" class="page">
-
-    <div class="card">
-        <h2>Логи витрат</h2>
-
-        <table>
-            <tbody id="logBody"></tbody>
-        </table>
-
-    </div>
-
-</div>
-
-
-<!-- ========================== -->
-<!--  GOOGLE SCRIPTS            -->
-<!-- ========================== -->
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://accounts.google.com/gsi/client"></script>
-
-<!-- CORE -->
 <script src="core/data.js"></script>
 <script src="core/storage.js"></script>
 <script src="core/sync.js"></script>
-<script src="core/pwa.js"></script>
 <script src="core/drive.js"></script>
+<script src="core/pwa.js"></script>
 
-<!-- MODULES -->
 <script src="modules/feed.js"></script>
 <script src="modules/eggs.js"></script>
 <script src="modules/orders.js"></script>
@@ -293,13 +301,19 @@
 <script src="modules/flock.js"></script>
 <script src="modules/logs.js"></script>
 <script src="modules/render.js"></script>
+<script src="modules/graphs.js"></script>
 
-<!-- MAIN -->
 <script src="app.js"></script>
 
 <script>
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
+function showPage(id) {
+    document.querySelectorAll(".page").forEach(p => p.style.display="none");
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+
+    document.getElementById(id).style.display="block";
+    event.target.classList.add("active");
+
+    renderAll();
 }
 </script>
 
