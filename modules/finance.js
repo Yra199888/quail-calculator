@@ -1,192 +1,168 @@
 /* ============================================================
-   MODULE: finance.js — FULL ENTERPRISE MODE
-   Фінансова аналітика: підсумок дня, звіт, прогноз
-   Залежить від:
-   - eggs.js (виручка)
-   - feed.js (витрати)
-   - orders.js (продані лотки)
+   MODULE: finance.js
+   Відповідає за:
+   - 9.1 Підсумок дня (корм + яйця)
+   - 9.2 Фінансовий звіт за період
+   - 9.3 Прогноз на 30 днів
+   - Автоматичну інтеграцію з eggs.js / feed.js / orders.js
 ============================================================ */
 
 
 /* ------------------------------------------------------------
-   1. ПЕРЕРАХУНОК ПІДСУМКУ ДНЯ
+   1. ПІДСУМОК ДНЯ (9.1)
 ------------------------------------------------------------ */
 
-function calcDailySummary() {
+function financeDailySummary() {
+    const trayPrice = Number(DATA.eggs?.trayPrice || 0);
+    const traysToday = Number(DATA.eggs?.traysToday || 0);
+    const dailyIncome = traysToday * trayPrice;
 
-    const feedCost = Number(DATA.feed?.dailyCost || 0);
-    const eggIncome = Number(DATA.eggs?.dailyIncome || 0);
+    const dailyFeedCost = Number(DATA.feed?.dailyCost || 0);
+
+    const profit = dailyIncome - dailyFeedCost;
 
     DATA.finance.daily = {
-        feedCost,
-        eggIncome,
-        profit: eggIncome - feedCost
+        feedCost: dailyFeedCost,
+        eggIncome: dailyIncome,
+        profit: profit
     };
 
     autosave();
+    return DATA.finance.daily;
 }
 
 
-
 /* ------------------------------------------------------------
-   2. ФІНАНСОВИЙ ЗВІТ ЗА ПЕРІОД
+   2. ЗВІТ ЗА ПЕРІОД (9.2)
 ------------------------------------------------------------ */
 
-function calcPeriodReport() {
-
-    const period = document.getElementById("reportPeriod")?.value || "30";
+function financeReport(periodDays) {
 
     const logs = DATA.logs || [];
-    let days = 0;
-    let eggs = 0;
-    let trays = 0;
-    let income = 0;
-    let feedCost = 0;
-
+    const eggsHistory = DATA.eggs?.history || [];
     const trayPrice = Number(DATA.eggs?.trayPrice || 0);
 
-    // ==== 2.1. Беремо записи останніх X днів ====
+    let totalEggs = 0;
+    let totalTrays = 0;
+    let totalIncome = 0;
+    let totalFeedCost = 0;
+    let totalProductivity = 0;
+    let daysCount = 0;
+
+    // Вибірка періоду
     const now = Date.now();
+    const periodMs = periodDays === "all" ? Infinity : periodDays * 86400000;
 
-    for (let log of logs) {
-        if (!log.time) continue;
+    for (let d of eggsHistory) {
+        const dayTime = new Date(d.date).getTime();
+        if (now - dayTime > periodMs) continue;
 
-        if (period !== "all") {
-            const diff = now - log.time;
-            const dayMs = 86400000;
-            if (diff > Number(period) * dayMs) continue;
-        }
+        daysCount++;
 
-        days++;
-        eggs += Number(log.eggsCollected || 0);
-        trays += Number(log.traysSold || 0);
-
-        income += Number(log.traysSold || 0) * trayPrice;
-        feedCost += Number(log.feedCost || 0);
+        totalEggs += Number(d.eggsTotal || 0);
+        totalTrays += Number(d.trays || 0);
+        totalIncome += Number(d.trays || 0) * trayPrice;
+        totalFeedCost += Number(d.feedCost || 0);
+        totalProductivity += Number(d.productivity || 0);
     }
 
-    const avgProd =
-        DATA.eggs?.hensTotal > 0
-            ? (eggs / DATA.eggs.hensTotal / days) * 100
-            : 0;
-
-    const costPerEgg = eggs > 0 ? feedCost / eggs : 0;
-    const profit = income - feedCost;
+    const avgProd = daysCount > 0 ? totalProductivity / daysCount : 0;
+    const costPerEgg = totalEggs > 0 ? totalFeedCost / totalEggs : 0;
+    const profit = totalIncome - totalFeedCost;
 
     DATA.finance.report = {
-        days,
-        eggs,
-        trays,
-        income,
-        feedCost,
-        profit,
-        avgProd,
-        costPerEgg,
-        profitPerEgg: eggs ? profit / eggs : 0
+        days: daysCount,
+        eggs: totalEggs,
+        trays: totalTrays,
+        income: totalIncome,
+        feedCost: totalFeedCost,
+        profit: profit,
+        prodAvg: avgProd,
+        costPerEgg: costPerEgg
     };
 
     autosave();
+    return DATA.finance.report;
 }
 
 
 
 /* ------------------------------------------------------------
-   3. ПРОГНОЗ НА 30 ДНІВ
+   3. ПРОГНОЗ НА 30 ДНІВ (9.3)
 ------------------------------------------------------------ */
 
-function calcForecast() {
-
+function financeForecast30() {
     const hens = Number(DATA.eggs?.hensTotal || 0);
-    const prod = Number(DATA.eggs?.productivityToday || 0) / 100;
+    const prod = Number(DATA.eggs?.productivityToday || 0); // %
     const trayPrice = Number(DATA.eggs?.trayPrice || 0);
-    const feedDaily = Number(DATA.feed?.dailyCost || 0);
+    const dailyFeedCost = Number(DATA.feed?.dailyCost || 0);
 
-    const eggs30 = hens * prod * 30;
-    const trays30 = Math.floor(eggs30 / 20);
+    // Прогноз: яєць на день
+    const eggsPerDay = hens * (prod / 100);
+    const traysPerDay = eggsPerDay / 20;
 
-    const income = trays30 * trayPrice;
-    const feedCost = feedDaily * 30;
+    const eggs30 = eggsPerDay * 30;
+    const trays30 = traysPerDay * 30;
+    const income30 = trays30 * trayPrice;
+    const feedCost30 = dailyFeedCost * 30;
+    const profit30 = income30 - feedCost30;
 
     DATA.finance.forecast = {
         eggs: eggs30,
         trays: trays30,
-        income,
-        feedCost,
-        profit: income - feedCost
+        income: income30,
+        feedCost: feedCost30,
+        profit: profit30
     };
+
+    autosave();
+    return DATA.finance.forecast;
+}
+
+
+/* ------------------------------------------------------------
+   4. ГОЛОВНИЙ РЕНДЕР СЕКЦІЇ "ФІНАНСИ"
+------------------------------------------------------------ */
+
+function renderFinance() {
+    // ПІДСУМОК ДНЯ
+    const day = financeDailySummary();
+    setText("summaryFeedCost", day.feedCost?.toFixed(2));
+    setText("summaryEggIncome", day.eggIncome?.toFixed(2));
+    setText("summaryProfit", day.profit?.toFixed(2));
+
+    // ЗВІТ ЗА ПЕРІОД
+    const period = document.getElementById("reportPeriod").value;
+    const report = financeReport(period === "all" ? "all" : Number(period));
+
+    setText("repDays", report.days);
+    setText("repEggs", report.eggs);
+    setText("repTrays", report.trays);
+    setText("repIncome", report.income.toFixed(2));
+    setText("repFeedCost", report.feedCost.toFixed(2));
+    setText("repProfit", report.profit.toFixed(2));
+    setText("repProdAvg", report.prodAvg.toFixed(1));
+    setText("repCostPerEgg", report.costPerEgg.toFixed(3));
+
+    // ПРОГНОЗ 30 ДНІВ
+    const fc = financeForecast30();
+    setText("fcastEggs", fc.eggs.toFixed(0));
+    setText("fcastTrays", fc.trays.toFixed(1));
+    setText("fcastIncome", fc.income.toFixed(2));
+    setText("fcastFeedCost", fc.feedCost.toFixed(2));
+    setText("fcastProfit", fc.profit.toFixed(2));
 
     autosave();
 }
 
 
-
 /* ------------------------------------------------------------
-   4. РЕНДЕР ФІНАНСОВИХ ДАНИХ
+   5. Допоміжна функція (як у feed.js/eggs.js)
 ------------------------------------------------------------ */
 
-function renderFinance() {
-
-    if (!DATA.finance) return;
-
-    const daily = DATA.finance.daily || {};
-    const rep = DATA.finance.report || {};
-    const fc = DATA.finance.forecast || {};
-
-    // ==== 9.1 Підсумок дня ====
-    setText("summaryFeedCost", daily.feedCost);
-    setText("summaryEggIncome", daily.eggIncome);
-    setText("summaryProfit", daily.profit);
-
-    // ==== 9.2 Звіт за період ====
-    setText("repDays", rep.days);
-    setText("repEggs", rep.eggs);
-    setText("repTrays", rep.trays);
-    setText("repIncome", rep.income);
-    setText("repFeedCost", rep.feedCost);
-    setText("repProfit", rep.profit);
-    setText("repProdAvg", rep.avgProd?.toFixed(1));
-    setText("repCostPerEgg", rep.costPerEgg?.toFixed(3));
-    setText("repProfitPerEgg", rep.profitPerEgg?.toFixed(3));
-
-    // ==== 9.3 Прогноз ====
-    setText("fcastEggs", Math.round(fc.eggs || 0));
-    setText("fcastTrays", fc.trays || 0);
-    setText("fcastIncome", fc.income || 0);
-    setText("fcastFeedCost", fc.feedCost || 0);
-    setText("fcastProfit", fc.profit || 0);
-}
-
-
-/* ------------------------------------------------------------
-   5. ЗАГАЛЬНИЙ ВИКЛИК ПЕРЕРАХУНКУ
------------------------------------------------------------- */
-
-function financeAutoRecalc() {
-    calcDailySummary();
-    calcPeriodReport();
-    calcForecast();
-    renderFinance();
-}
-
-
-
-/* ------------------------------------------------------------
-   6. ХЕЛПЕР
------------------------------------------------------------- */
-
-function setText(id, value) {
+function setText(id, txt) {
     const el = document.getElementById(id);
-    if (el) el.textContent = value;
+    if (el) el.textContent = txt;
 }
 
-
-
-/* ------------------------------------------------------------
-   7. ІНІЦІАЛІЗАЦІЯ МОДУЛЯ
------------------------------------------------------------- */
-
-function initFinance() {
-    financeAutoRecalc();
-}
-
-initFinance();
+console.log("finance.js loaded");
