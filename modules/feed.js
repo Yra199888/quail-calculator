@@ -54,6 +54,42 @@ export function recalcFeed() {
     renderFeed();
 }
 
+/* === 1.1 Рецепт — рендер таблиці === */
+if (DATA.feed.recipe && DATA.feed.components) {
+    let html = "";
+    let totalKg = 0;
+    let totalCost = 0;
+
+    for (let key in DATA.feed.recipe) {
+
+        const percent = DATA.feed.recipe[key];
+        const kg = DATA.feed.components[key] || 0;
+        const price = DATA.feed.prices?.[key] || 0;
+        const sum = kg * price;
+
+        totalKg += kg;
+        totalCost += sum;
+
+        html += `
+            <tr>
+                <td>${key}</td>
+                <td>${percent}%</td>
+                <td>${kg.toFixed(2)}</td>
+                <td>
+                    <input type="number" 
+                        value="${price}" 
+                        onchange="updateFeedPrice('${key}', this.value)">
+                </td>
+                <td>${sum.toFixed(2)}</td>
+            </tr>`;
+    }
+
+    setHTML("feedTableRows", html);
+    setHTML("recipeTotalKg", totalKg.toFixed(2));
+    setHTML("recipeTotalCost", totalCost.toFixed(2));
+    setHTML("recipeCostPerKg", (totalCost / totalKg).toFixed(2));
+}
+
 /* ------------------------------------------------------------
    2. Пресети рецептів (стартер, гровер, несучки)
 ------------------------------------------------------------ */
