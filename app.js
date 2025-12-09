@@ -215,108 +215,115 @@ function updateStatus(text) {
    (адаптовано під твої HTML-елементи)
 ------------------------------------------------------------ */
 
-/* ====== 3.2 ДОБОВА НОРМА ====== */
-
-function calcDailyNeed() {
-    const norm = Number(document.getElementById("dailyNorm").value);
-    const birds = Number(document.getElementById("birdsCount").value);
-
-    const needGr = norm * birds;
-    const needKg = needGr / 1000;
-
-    DATA.feed.dailyNeed = needKg;
-
-    document.getElementById("dailyNeedKg").textContent = needKg.toFixed(2);
-    document.getElementById("dailyNeedCost").textContent =
-        ((needKg * (DATA.feed.avgPrice || 0))).toFixed(2);
-
-    autosave();
-}
-
-/* ====== 3.3 ЗАПАСИ КОМПОНЕНТІВ ====== */
-
-function updateComponentsStock() {
-    const table = document.getElementById("componentsTable");
-    table.innerHTML = "";
-
-    for (const key in DATA.feed.components) {
-        const item = DATA.feed.components[key];
-
-        const need = item.need || 0;
-        const have = item.have || 0;
-
-        const row = `
-        <tr>
-            <td>${key}</td>
-            <td>${have} кг</td>
-            <td>${need > have ? (need - have).toFixed(2) + " кг" : "0"}</td>
-        </tr>`;
-
-        table.innerHTML += row;
-    }
-
-    autosave();
-}
-
-/* ====== 3.4 ГОТОВИЙ КОМБІКОРМ ====== */
-
-function produceFeed() {
-    const batchKg = Number(document.getElementById("feedBatchSize2").value);
-    DATA.feed.ready = (DATA.feed.ready || 0) + batchKg;
-
-    document.getElementById("feedReadyKg").textContent = DATA.feed.ready;
-    autosave();
-}
-
-function consumeDailyFeed2() {
-    const need = DATA.feed.dailyNeed || 0;
-    DATA.feed.ready -= need;
-
-    if (DATA.feed.ready < 0) DATA.feed.ready = 0;
-
-    document.getElementById("feedReadyKg").textContent = DATA.feed.ready;
-    autosave();
-}
-
-/* ====== 3.5 МЕНІ ТРЕБА КУПИТИ ====== */
-
-function updateShoppingList() {
-    const list = document.getElementById("shoppingList");
-    list.innerHTML = "";
-
-    for (const key in DATA.feed.components) {
-        const c = DATA.feed.components[key];
-
-        if (c.need > c.have) {
-            const missing = c.need - c.have;
-            list.innerHTML += `<li>${key}: потрібно докупити ${missing.toFixed(2)} кг</li>`;
-        }
-    }
-
-    if (list.innerHTML === "") {
-        list.innerHTML = "<li>Все є, купувати нічого не потрібно</li>";
-    }
-
-    autosave();
-}
-
 
 /* ---------------- FEED ---------------- */
 function recalcFeed() {
     autosave();
 }
 
-document.getElementById("produceFeedBatch").onclick = () => {
-    DATA.feed.ready = (DATA.feed.ready || 0) + Number(document.getElementById("feedBatchSize").value);
+/* ================================
+   FEED ENGINE (розрахунки комбікорму)
+   ================================ */
+
+const FEED_COMPONENTS = [
+    "corn", "wheat", "soy", "sunflower", "barley",
+    "fishmeal", "dicalcium", "yeast"
+];
+
+function recalcFeed() {
+    const batchKg = Number(document.getElementById("feedBatchKg").value);
+
+    if (!DATA.feed.recipe) DATA.feed.recipe = {};
+    if (!DATA.feed.stock) DATA.feed.stock = {};
+    if (!DATA.feed.need) DATA.feed.need = {};
+
+    // 3.1 (видалено на твоє прохання)
+
+    // -----------------------------
+    // 3.2 Добова норма
+    // -----------------------------
+    const dailyPerHen = Number(feedDailyPerHen.value) / 1000; // г → кг
+    const hens = (DATA.flock?.females || 0);
+    const dailyNeed = hens * dailyPerHen;
+
+    DATA.feed.dailyNeed = dailyNeed;
+
+    document.getElementById("dailyFeedNeed").textContent = dailyNeed.toFixed(3);
+    document.getElementById("dailyFeedCost").textContent =
+        (dailyNeed * (DATA.feed.avgPrice || 0)).toFixed(2);
+
+    // -----------------------------
+    // 3.3 Запаси компонентів
+    // -----------------------------
+    let rows = "";
+
+    FEED_COMPONENTS.forEach(c => {
+        const have = DATA.feed.stock[c] || 0;
+        const need = DATA.feed.need[c] || 0;
+        const buy = Math.max(0, need - have);
+
+        rows += `
+        <tr>
+            <td>${c}</td>
+            <td>${have.toFixed(2)}</td>
+            <td>${need.toFixed(2)}</td>
+            <td>${buy.toFixed(2)}</td>
+        </tr>`;
+    });
+
+    document.getElementById("stockRows").innerHTML = rows;
+
+    // -----------------------------
+    // 3.4 Склад готового комбікорму
+    // -----------------------------
+    const ready = DATA.feed.ready || 0;
+    document.getElementById("feedStockRemain").textContent = ready.toFixed(2);
+
+    const daysLeft = ready / dailyNeed || 0;
+    document.getElementById("feedDaysLeft").textContent = Math.floor(daysLeft);
+
+    // -----------------------------
+    // 3.5 Мені треба купити
+    // -----------------------------
+    let buyList = "";
+    FEED_COMPONENTS.forEach(c => {
+        const need = DATA.feed.need[c] || 0;
+        const have = DATA.feed.stock[c] || 0;
+        const buy = need - have;
+
+        if (buy > 0.1) {
+            buyList += `<li>${c}: <b>${buy.toFixed(2)} кг</b></li>`;
+        }
+    });
+
+    if (!buyList) buyList = "<li>Все є у достатній кількості ✔</li>";
+
+    document.getElementById("buySummary").innerHTML = buyList;
+
     autosave();
-    renderFeed();
+}
+
+document.getElementById("produceFeedBatch").onclick = () => {
+    const batch = Number(feedBatchSize.value);
+
+    DATA.feed.ready = (DATA.feed.ready || 0) + batch;
+
+    // додаємо потребу у компонентах
+    FEED_COMPONENTS.forEach(c => {
+        const need = DATA.feed.need[c] || 0;
+        DATA.feed.need[c] = need + (batch * (DATA.feed.recipe?.[c] || 0));
+    });
+
+    recalcFeed();
+    autosave();
 };
 
 document.getElementById("consumeDailyFeed").onclick = () => {
-    DATA.feed.ready = (DATA.feed.ready || 0) - (DATA.feed.dailyNeed || 0);
-    if (DATA.feed.ready < 0) DATA.feed.ready = 0;
+    const need = DATA.feed.dailyNeed || 0;
+    DATA.feed.ready = Math.max(0, (DATA.feed.ready || 0) - need);
+
+    recalcFeed();
     autosave();
-    renderFeed();
 };
 
 /* ------------- EGGS --------------- */
@@ -402,7 +409,9 @@ function recalcFlock() {
    7. Відображення (рендер)
 ------------------------------------------------------------ */
 
-function renderFeed() {}
+function renderFeed() {
+    recalcFeed();
+}
 function renderEggs() {}
 function renderOrders() {}
 function renderClients() {}
