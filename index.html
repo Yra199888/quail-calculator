@@ -8,319 +8,71 @@
     <!-- PWA -->
     <link rel="manifest" href="manifest.webmanifest">
 
-    <!-- BASIC STYLE A -->
     <style>
-        body {
-            font-family: system-ui, sans-serif;
-            background:#f3f3f3;
-            margin:0;
-            padding:0;
+        body { font-family: Arial; margin:0; padding:0; background:#f5f5f5; }
+        .tab-bar {
+            display:flex; background:#e5e5e5; padding:10px;
         }
-        .tabs {
-            display:flex;
-            background:#e8e8e8;
-            border-bottom:1px solid #ccc;
+        .tab-item {
+            flex:1; text-align:center; padding:10px; cursor:pointer;
+            border-right:1px solid #ccc;
         }
-        .tab {
-            flex:1;
-            padding:12px;
-            text-align:center;
-            cursor:pointer;
-        }
-        .tab.active {
-            background:white;
+        .tab-item.active {
+            background:#cfffbe;
             font-weight:bold;
-            border-bottom:3px solid #2d6a1f;
         }
-        .page {
-            display:none;
-            padding:15px;
-        }
-        .card {
-            background:white;
-            padding:15px;
-            margin-bottom:15px;
-            border-radius:10px;
-            box-shadow:0 1px 4px rgba(0,0,0,0.1);
-        }
-        table {
-            width:100%;
-            border-collapse:collapse;
-            margin-top:10px;
-        }
-        table th, table td {
-            padding:8px;
-            border-bottom:1px solid #ddd;
-        }
-        button {
-            padding:8px 14px;
-            background:#2d6a1f;
-            color:white;
-            border:none;
-            border-radius:6px;
-            cursor:pointer;
-            margin:4px 0;
-        }
-        button:hover { opacity:0.8; }
+        .page { display:none; padding:15px; }
     </style>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
-<div class="card" style="margin:0;border-radius:0;">
-    <h2>🔥 PRO MODE</h2>
-    <div id="statusBar">Статус: offline</div>
-
-    <button id="saveLocal">💾 Зберегти локально</button>
-    <button id="backupDrive">☁ Резервна копія Drive</button>
-    <button id="restoreDrive">🔄 Відновити з Drive</button>
+<!-- Навігація -->
+<div class="tab-bar">
+    <div class="tab-item active" onclick="showPage('feed')">Корм</div>
+    <div class="tab-item" onclick="showPage('eggs')">Яйця</div>
+    <div class="tab-item" onclick="showPage('orders')">Замовлення</div>
+    <div class="tab-item" onclick="showPage('clients')">Клієнти</div>
+    <div class="tab-item" onclick="showPage('finance')">Фінанси</div>
+    <div class="tab-item" onclick="showPage('incub')">Інкубація</div>
 </div>
 
-<!-- NAVIGATION -->
-<div class="tabs">
-    <div class="tab active" onclick="showPage('feed')">Корм</div>
-    <div class="tab" onclick="showPage('eggs')">Яйця</div>
-    <div class="tab" onclick="showPage('orders')">Замовлення</div>
-    <div class="tab" onclick="showPage('clients')">Клієнти</div>
-    <div class="tab" onclick="showPage('finance')">Фінанси</div>
-    <div class="tab" onclick="showPage('incub')">Інкубація</div>
-</div>
+<!-- Сторінки -->
+<div id="feed" class="page" style="display:block;"></div>
+<div id="eggs" class="page"></div>
+<div id="orders" class="page"></div>
+<div id="clients" class="page"></div>
+<div id="finance" class="page"></div>
+<div id="incub" class="page"></div>
 
-<!-- ================= -->
-<!--   РЕЦЕПТ КОМБІКОРМУ -->
-<!-- ================= -->
-<div id="feed" class="section-page" style="display:block;">
-    <div class="m3-card">
-        <h2>Рецепт комбікорму (моя формула №1)</h2>
+<!-- CORE -->
+<script type="module" src="core/data.js"></script>
+<script type="module" src="core/storage.js"></script>
+<script type="module" src="core/sync.js"></script>
+<script type="module" src="core/drive.js"></script>
+<script type="module" src="core/pwa.js"></script>
 
-        <label>Вага партії (кг)</label>
-        <input type="number" id="feedBatchKg" value="25" oninput="updateFeedRecipe()">
+<!-- MODULES -->
+<script type="module" src="modules/feed.js"></script>
+<script type="module" src="modules/eggs.js"></script>
+<script type="module" src="modules/orders.js"></script>
+<script type="module" src="modules/clients.js"></script>
+<script type="module" src="modules/finance.js"></script>
+<script type="module" src="modules/incub.js"></script>
+<script type="module" src="modules/flock.js"></script>
+<script type="module" src="modules/logs.js"></script>
+<script type="module" src="modules/render.js"></script>
 
-        <table class="m3-table">
-            <thead>
-                <tr>
-                    <th>Компонент</th>
-                    <th>К-сть кг</th>
-                    <th>Ціна за кг</th>
-                    <th>Сума</th>
-                </tr>
-            </thead>
-            <tbody id="feedTableRows"></tbody>
-        </table>
-
-        <p><b>Загальна вага:</b> <span id="feedTotalKg">0</span> кг</p>
-        <p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
-        <p><b>Середня ціна за 1 кг:</b> <span id="feedAvgCost">0</span> грн</p>
-    </div>
-</div>
-    
-
-
-    <div class="card">
-        <h3>Добова норма</h3>
-        <input id="dailyNormInput" type="number" value="30">
-        <input id="birdCountInput" type="number" value="0">
-
-        <p>Потрібно: <span id="dailyNeedKg">0</span> кг</p>
-        <p>Вартість: <span id="dailyCost">0</span></p>
-    </div>
-
-    <div class="card">
-        <h3>Запаси компонентів</h3>
-        <table id="componentStockTable">
-            <thead><tr><th>Компонент</th><th>Є</th><th>Потрібно</th><th>Докупити</th></tr></thead>
-            <tbody id="stockRows"></tbody>
-        </table>
-    </div>
-
-    <div class="card">
-        <h3>Готовий комбікорм</h3>
-        <p>Готово: <span id="feedStockRemain">0</span> кг</p>
-
-        <input id="batchSizeInput" type="number" value="25">
-
-        <button id="makeFeedBtn">Виготовити</button>
-        <button id="consumeDailyBtn">Списати норму</button>
-
-        <p>Залишок: <span id="feedLeft">0</span> кг</p>
-        <p>Хватить на: <span id="daysLeft">0</span> днів</p>
-    </div>
-
-    <div class="card">
-        <h3>Мені треба купити</h3>
-        <ul id="buySummary"></ul>
-    </div>
-</div>
-
-<!-- =============================== -->
-<!--             EGGS                -->
-<!-- =============================== -->
-<div id="eggs" class="page">
-
-    <div class="card">
-        <h3>2. Яйця</h3>
-
-        <input id="eggsTotal" type="number" oninput="recalcEggsBalance(); recalcProductivity();" placeholder="Зібрано">
-        <input id="eggsBad" type="number" oninput="recalcEggsBalance();" placeholder="Брак">
-        <input id="eggsOwn" type="number" oninput="recalcEggsBalance();" placeholder="Для себе">
-        <input id="eggsCarry" type="number" oninput="recalcEggsBalance();" placeholder="Учора">
-
-        <table>
-            <tr><td>Сьогодні для продажу</td><td id="eggsForSale">0</td></tr>
-            <tr><td>Загалом доступно</td><td id="eggsForSaleTotal">0</td></tr>
-            <tr><td>Лотків</td><td id="traysCount">0</td></tr>
-            <tr><td>Залишок яєць</td><td id="eggsRemainder">0</td></tr>
-            <tr><td>Ціна</td><td><input id="trayPrice" type="number" oninput="recalcEggsBalance();"></td></tr>
-            <tr><td>Сума</td><td id="income">0</td></tr>
-        </table>
-
-        <h3>Продуктивність</h3>
-        <input id="hens1" type="number" oninput="recalcProductivity();" placeholder="Самок 1 партія">
-        <input id="hens2" type="number" oninput="recalcProductivity();" placeholder="Самок 2 партія">
-
-        <table>
-            <tr><td>Разом</td><td id="hensTotal">0</td></tr>
-            <tr><td>Продуктивність</td><td id="productivityToday">0</td></tr>
-        </table>
-    </div>
-
-    <div class="card">
-        <h3>2.3 Лотки</h3>
-        <table>
-            <tr><td>Усього</td><td id="totalTraysTodayLabel">0</td></tr>
-            <tr><td>Заброньовано</td><td id="reservedTrays">0</td></tr>
-            <tr><td>Вільні</td><td id="freeTrays">0</td></tr>
-        </table>
-    </div>
-</div>
-
-<!-- =============================== -->
-<!--           ORDERS                -->
-<!-- =============================== -->
-<div id="orders" class="page">
-    <div class="card">
-        <h3>5. Замовлення</h3>
-
-        <input id="ordName" placeholder="Клієнт">
-        <input id="ordEggs" type="number" placeholder="Яєць">
-        <input id="ordTrays" type="number" placeholder="Лотків">
-        <input id="ordDate" type="date">
-        <input id="ordNote" placeholder="Примітка">
-
-        <button onclick="addOrder()">Додати</button>
-
-        <h4>Активні</h4>
-        <table><tbody id="ordersActive"></tbody></table>
-
-        <h4>Виконані</h4>
-        <table><tbody id="ordersDone"></tbody></table>
-    </div>
-</div>
-
-<!-- =============================== -->
-<!--           CLIENTS               -->
-<!-- =============================== -->
-<div id="clients" class="page">
-    <div class="card">
-        <h3>Клієнти</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Клієнт</th>
-                    <th>Замовлень</th>
-                    <th>Лотків</th>
-                    <th>Яєць</th>
-                    <th>Сума</th>
-                    <th>Останнє</th>
-                </tr>
-            </thead>
-            <tbody id="clientsBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- =============================== -->
-<!--           FINANCE               -->
-<!-- =============================== -->
-<div id="finance" class="page">
-    <div class="card">
-        <h3>Фінанси</h3>
-        <table>
-            <tr><td>Корм</td><td id="summaryFeedCost">0</td></tr>
-            <tr><td>Виручка</td><td id="summaryEggIncome">0</td></tr>
-            <tr><td>Прибуток</td><td id="summaryProfit">0</td></tr>
-        </table>
-    </div>
-</div>
-
-<!-- =============================== -->
-<!--          INCUBATION             -->
-<!-- =============================== -->
-<div id="incub" class="page">
-    <div class="card">
-        <h3>Інкубація</h3>
-
-        <input id="incBatchName" placeholder="Назва">
-        <input id="incStartDate" type="date">
-        <input id="incEggsSet" type="number" placeholder="Кількість яєць">
-        <textarea id="incNote" placeholder="Нотатка"></textarea>
-
-        <button id="addIncubation">Додати</button>
-
-        <h4>Партії</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Партія</th>
-                    <th>Дата</th>
-                    <th>Днів</th>
-                    <th>Закладено</th>
-                    <th>Незапліднені</th>
-                    <th>Вилупилось</th>
-                    <th>Інк.</th>
-                    <th>Брудер</th>
-                    <th>Живі</th>
-                    <th>Нотатка</th>
-                </tr>
-            </thead>
-            <tbody id="incubationBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- =============================== -->
-<!--   JS IMPORTS (ВАЖЛИВО)         -->
-<!-- =============================== -->
-
-<script src="core/data.js"></script>
-<script src="core/storage.js"></script>
-<script src="core/sync.js"></script>
-<script src="core/drive.js"></script>
-<script src="core/pwa.js"></script>
-
-<script src="modules/feed.js"></script>
-<script src="modules/eggs.js"></script>
-<script src="modules/orders.js"></script>
-<script src="modules/clients.js"></script>
-<script src="modules/finance.js"></script>
-<script src="modules/incub.js"></script>
-<script src="modules/flock.js"></script>
-<script src="modules/logs.js"></script>
-<script src="modules/render.js"></script>
-<script src="modules/graphs.js"></script>
-
-<script src="app.js"></script>
+<!-- MAIN -->
+<script type="module" src="app.js"></script>
 
 <script>
-function showPage(id) {
+function showPage(id){
     document.querySelectorAll(".page").forEach(p => p.style.display="none");
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-
     document.getElementById(id).style.display="block";
-    event.target.classList.add("active");
 
-    renderAll();
+    document.querySelectorAll(".tab-item").forEach(btn => btn.classList.remove("active"));
+    event.target.classList.add("active");
 }
 </script>
 
