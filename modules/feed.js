@@ -29,6 +29,15 @@ DATA.feed.recipe = DATA.feed.recipe || {
 DATA.feed.prices = DATA.feed.prices || {};   // ціна за 1 кг компонентів
 DATA.feed.components = DATA.feed.components || {}; // розрахунок у кг
 
+export function applyRecipePreset(type) {
+    if (type === "layer") {
+        DATA.feed.recipe = { ...DEFAULT_LAYER_FEED };
+    }
+
+    recalcFeed();
+    autosave();
+}
+
 
 /* ------------------------------------------------------------
    2. Головний перерахунок рецепта
