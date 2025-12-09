@@ -8,92 +8,60 @@
     <!-- PWA -->
     <link rel="manifest" href="manifest.webmanifest">
 
-    <!-- Material Styles (за бажанням) -->
     <link rel="stylesheet" href="material.css">
 
     <style>
-        /* PRO MODE BAR */
-        #probar {
-            background: #2d6a1f;
-            color: white;
-            padding: 12px;
-            text-align: center;
-            font-size: 16px;
+        .tabs { display:flex; border-bottom:1px solid #ccc; }
+        .tab { padding:12px; flex:1; text-align:center; cursor:pointer; }
+        .tab.active { background:#d5f4c2; font-weight:bold; }
+        .page { display:none; }
+        .card {
+            background:white; padding:15px; margin:15px;
+            border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,.1);
         }
-        #probar button {
-            margin: 4px;
-            padding: 10px 16px;
-            background: #D4F2A1;
-            color: #0D2601;
-            border-radius: 10px;
-            border: none;
-            font-weight: 600;
-        }
-        #statusBar {
-            font-weight: bold;
-            margin-top: 6px;
-        }
-
-        /* Навігація */
-        .m3-tabs {
-            display:flex;
-            background:#eee;
-            border-bottom:1px solid #ccc;
-        }
-        .m3-tab {
-            padding:12px;
-            flex:1;
-            text-align:center;
-            cursor:pointer;
-        }
-        .m3-tab.active {
-            background:#d5f4c2;
-            font-weight:bold;
-        }
-
-        .m3-card {
-            background:white;
-            padding:15px;
-            margin:15px;
-            border-radius:12px;
-            box-shadow:0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .section-page { display:none; }
     </style>
 </head>
 
 <body>
 
-<!-- 🔥 PRO MODE BAR -->
-<div id="probar">
-    <div>🔥 <b>PRO MODE активний</b></div>
-    <div id="statusBar">Статус: offline</div>
+<!-- ========================== -->
+<!--      PRO MODE BAR          -->
+<!-- ========================== -->
+<div class="card" style="background:#2d6a1f; color:white;">
+    <h3>🔥 PRO MODE активний</h3>
+    <p id="statusBar">Статус: offline</p>
 
     <button id="saveLocal">💾 Зберегти локально</button>
     <button id="backupDrive">☁ Резервна копія Drive</button>
     <button id="restoreDrive">🔄 Відновити із Drive</button>
 </div>
 
-<!-- Навігація -->
-<div class="m3-tabs">
-    <div class="m3-tab active" onclick="showPage('feed')">Корм</div>
-    <div class="m3-tab" onclick="showPage('eggs')">Яйця</div>
-    <div class="m3-tab" onclick="showPage('orders')">Замовлення</div>
-    <div class="m3-tab" onclick="showPage('clients')">Клієнти</div>
-    <div class="m3-tab" onclick="showPage('finance')">Фінанси</div>
-    <div class="m3-tab" onclick="showPage('incub')">Інкубація</div>
+
+<!-- ========================== -->
+<!--       НАВІГАЦІЯ            -->
+<!-- ========================== -->
+<div class="tabs">
+    <div class="tab active" onclick="showPage('feed')">Корм</div>
+    <div class="tab" onclick="showPage('eggs')">Яйця</div>
+    <div class="tab" onclick="showPage('orders')">Замовлення</div>
+    <div class="tab" onclick="showPage('clients')">Клієнти</div>
+    <div class="tab" onclick="showPage('finance')">Фінанси</div>
+    <div class="tab" onclick="showPage('incub')">Інкубація</div>
+    <div class="tab" onclick="showPage('flock')">Поголів’я</div>
+    <div class="tab" onclick="showPage('logs')">Логи</div>
 </div>
 
-<!-- =============== -->
-<!--   КОРМ          -->
-<!-- =============== -->
-<div id="feed" class="section-page" style="display:block;">
-    <div class="m3-card">
-        <h2>1. Комбікорм</h2>
 
-        <label>Бажана вага партії (кг)</label>
-        <input type="number" id="targetKg" value="25" onchange="recalcFeed()">
+<!-- ========================== -->
+<!--         1. КОРМ            -->
+<!-- ========================== -->
+<div id="feed" class="page" style="display:block;">
+
+    <div class="card">
+        <h2>Комбікорм</h2>
+
+        <label>Бажана вага партії (кг):</label>
+        <input id="targetKg" type="number" value="25" oninput="recalcFeed()">
 
         <div>
             <button onclick="applyRecipePreset('starter')">Стартер</button>
@@ -102,290 +70,218 @@
         </div>
 
         <table class="m3-table">
-            <thead>
-                <tr><th>Компонент</th><th>К-сть кг</th><th>Ціна</th><th>Сума</th></tr>
-            </thead>
+            <thead><tr><th>Компонент</th><th>Кг</th><th>Ціна</th><th>Сума</th></tr></thead>
             <tbody id="feedRows"></tbody>
         </table>
 
-        <p>Загальна вага: <b id="feedTotalKg">0</b> кг</p>
-        <p>Загальна вартість: <b id="feedTotalCost">0</b> грн</p>
+        <p>Вага: <b id="feedTotalKg">0</b> кг</p>
+        <p>Вартість: <b id="feedTotalCost">0</b> грн</p>
     </div>
 
-    <div class="m3-card">
-        <h2>3.2 Добова норма</h2>
-        <label>Г/птицю</label>
-        <input id="dailyNormInput" type="number" value="30">
-        <label>Кількість птахів</label>
-        <input id="birdCountInput" type="number" value="0">
+    <div class="card">
+        <h2>Добова норма</h2>
+        <label>Г/птицю:</label><input id="dailyNormInput" type="number" value="30" oninput="recalcDailyFeed()">
+        <label>Кількість птахів:</label><input id="birdCountInput" type="number" value="0" oninput="recalcDailyFeed()">
 
-        <p>Добова потреба: <span id="dailyNeedKg">0</span> кг</p>
-        <p>Вартість: <span id="dailyCost">0.00</span> грн</p>
+        <p>Потреба: <span id="dailyNeedKg">0</span> кг</p>
+        <p>Ціна: <span id="dailyCost">0</span> грн</p>
     </div>
 
-    <div class="m3-card">
-        <h2>3.3 Запаси компонентів</h2>
-        <table id="componentStockTable">
-            <tr><th>Компонент</th><th>Є</th><th>Докупити</th></tr>
+    <div class="card">
+        <h2>Запаси компонентів</h2>
+        <table>
+            <tbody id="componentStockTable"></tbody>
         </table>
     </div>
 
-    <div class="m3-card">
-        <h2>3.4 Готовий комбікорм</h2>
+    <div class="card">
+        <h2>Готовий корм</h2>
+
         <p>Готово: <span id="readyFeed">0</span> кг</p>
 
-        <label>Вага партії</label>
+        <label>Вага партії:</label>
         <input id="batchSizeInput" type="number" value="25">
 
         <button id="makeFeedBtn">Виготовити партію</button>
         <button id="consumeDailyBtn">Списати добову норму</button>
 
         <p>Залишок: <span id="feedLeft">0</span> кг</p>
-        <p>Хватить на: <span id="daysLeft">0</span> днів</p>
+        <p>На днів: <span id="daysLeft">0</span></p>
     </div>
 
-    <div class="m3-card">
-        <h2>3.5 Мені треба купити</h2>
+    <div class="card">
+        <h2>Мені треба купити</h2>
         <ul id="buySummary"></ul>
     </div>
+
 </div>
 
-<!-- ================= -->
-<!--   ЯЙЦЯ            -->
-<!-- ================= -->
-<div id="eggs" class="section-page">
 
-    <div class="m3-card">
-        <h2>2. Облік яєць</h2>
+<!-- ========================== -->
+<!--          2. ЯЙЦЯ           -->
+<!-- ========================== -->
+<div id="eggs" class="page">
 
-        <p>Зібрано: <input id="eggsTotal" type="number" oninput="recalcEggsBalance(); recalcProductivity();"></p>
-        <p>Брак: <input id="eggsBad" type="number" oninput="recalcEggsBalance();"></p>
-        <p>Власні потреби: <input id="eggsOwn" type="number" oninput="recalcEggsBalance();"></p>
-        <p>Залишок з учора: <input id="eggsCarry" type="number" oninput="recalcEggsBalance();"></p>
+    <div class="card">
+        <h2>Облік яєць</h2>
 
-        <table class="m3-table">
-            <tr><td>Для продажу</td><td><span id="eggsForSale">0</span></td></tr>
-            <tr><td>Залишок</td><td><span id="eggsForSaleTotal">0</span></td></tr>
-            <tr><td>Лотків</td><td><span id="traysCount">0</span></td></tr>
-            <tr><td>Залишок яєць</td><td><span id="eggsRemainder">0</span></td></tr>
-            <tr><td>Ціна лотка</td><td><input id="trayPrice" type="number" oninput="recalcEggsBalance();"></td></tr>
-            <tr><td>Сума</td><td><span id="income">0</span></td></tr>
-        </table>
+        <label>Зібрано:</label><input id="eggsTotal" type="number" oninput="updateEggs()">
+        <label>Брак:</label><input id="eggsBad" type="number" oninput="updateEggs()">
+        <label>Власні потреби:</label><input id="eggsOwn" type="number" oninput="updateEggs()">
+        <label>Залишок з учора:</label><input id="eggsCarry" type="number" oninput="updateEggs()">
 
-        <h3>2.2 Продуктивність</h3>
-        Самок 1 партія: <input id="hens1" type="number" oninput="recalcProductivity();">
-        Самок 2 партія: <input id="hens2" type="number" oninput="recalcProductivity();">
-
-        <table class="m3-table">
-            <tr><td>Всього</td><td><span id="hensTotal">0</span></td></tr>
-            <tr><td>Продуктивність</td><td><span id="productivityToday">0</span></td></tr>
+        <table>
+            <tr><td>Для продажу</td><td id="eggsForSale">0</td></tr>
+            <tr><td>Загальний залишок</td><td id="eggsForSaleTotal">0</td></tr>
+            <tr><td>Лотків</td><td id="traysCount">0</td></tr>
+            <tr><td>Залишок</td><td id="eggsRemainder">0</td></tr>
         </table>
     </div>
 
-    <div class="m3-card">
-        <h3>2.3 Лотки</h3>
-        <table class="m3-table">
-            <tr><td>Усього</td><td><span id="totalTraysTodayLabel">0</span></td></tr>
-            <tr><td>Заброньовано</td><td><span id="reservedTrays">0</span></td></tr>
-            <tr><td>Вільні</td><td><span id="freeTrays">0</span></td></tr>
+    <div class="card">
+        <h2>Продуктивність</h2>
+
+        <label>Самок партія 1:</label><input id="hens1" type="number" oninput="updateEggs()">
+        <label>Самок партія 2:</label><input id="hens2" type="number" oninput="updateEggs()">
+
+        <table>
+            <tr><td>Всього самок</td><td id="hensTotal">0</td></tr>
+            <tr><td>Продуктивність %</td><td id="productivityToday">0</td></tr>
         </table>
     </div>
 
 </div>
 
-<!-- ================= -->
-<!--   ЗАМОВЛЕННЯ     -->
-<!-- ================= -->
-<div id="orders" class="section-page">
 
-    <div class="m3-card">
-        <h2>5. Замовлення</h2>
+<!-- ========================== -->
+<!--      3. ЗАМОВЛЕННЯ         -->
+<!-- ========================== -->
+<div id="orders" class="page">
 
-        <label>Клієнт</label><input id="ordName">
-        <label>Яєць</label><input id="ordEggs" type="number">
-        <label>Лотків</label><input id="ordTrays" type="number">
-        <label>Дата</label><input id="ordDate" type="date">
-        <label>Примітка</label><input id="ordNote">
+    <div class="card">
+        <h2>Замовлення</h2>
+
+        <label>Клієнт:</label><input id="ordName">
+        <label>Лотків:</label><input id="ordTrays" type="number">
+        <label>Дата:</label><input id="ordDate" type="date">
+        <label>Примітка:</label><input id="ordNote">
 
         <button onclick="addOrder()">Додати</button>
 
         <h3>Активні</h3>
-        <table class="m3-table"><tbody id="ordersActive"></tbody></table>
+        <table><tbody id="ordersActive"></tbody></table>
 
         <h3>Виконані</h3>
-        <table class="m3-table"><tbody id="ordersDone"></tbody></table>
+        <table><tbody id="ordersDone"></tbody></table>
     </div>
 
 </div>
 
-<!-- ================= -->
-<!--   КЛІЄНТИ         -->
-<!-- ================= -->
-<div id="clients" class="section-page">
-    <div class="m3-card">
-        <h2>12. Клієнти</h2>
-        <table class="m3-table">
-            <thead>
-                <tr>
-                    <th>Клієнт</th>
-                    <th>Замовлень</th>
-                    <th>Лотків</th>
-                    <th>Яєць</th>
-                    <th>Сума</th>
-                    <th>Останнє</th>
-                </tr>
-            </thead>
+
+<!-- ========================== -->
+<!--         4. КЛІЄНТИ         -->
+<!-- ========================== -->
+<div id="clients" class="page">
+
+    <div class="card">
+        <h2>Клієнти</h2>
+        <table>
             <tbody id="clientsBody"></tbody>
         </table>
     </div>
+
 </div>
 
-<!-- ================= -->
-<!--   ФІНАНСИ        -->
-<!-- ================= -->
-<div id="finance" class="section-page">
 
-    <div class="m3-card">
-        <h2>9.1 Підсумок дня</h2>
-        <table class="m3-table">
-            <tr><td>Корм</td><td><span id="summaryFeedCost">0</span></td></tr>
-            <tr><td>Виручка</td><td><span id="summaryEggIncome">0</span></td></tr>
-            <tr><td>Прибуток</td><td><span id="summaryProfit">0</span></td></tr>
+<!-- ========================== -->
+<!--         5. ФІНАНСИ         -->
+<!-- ========================== -->
+<div id="finance" class="page">
+
+    <div class="card">
+        <h2>Фінанси</h2>
+
+        <table>
+            <tr><td>Корм</td><td id="summaryFeedCost">0</td></tr>
+            <tr><td>Виручка</td><td id="summaryEggIncome">0</td></tr>
+            <tr><td>Прибуток</td><td id="summaryProfit">0</td></tr>
         </table>
 
-        <h2>9.2 Звіт за період</h2>
-        <select id="reportPeriod" onchange="recalcReport()">
-            <option value="7">7 днів</option>
-            <option value="30" selected>30 днів</option>
-            <option value="all">Весь час</option>
-        </select>
-
-        <p>Інші витрати:
-            <input id="otherCostsMonthly" type="number" oninput="recalcReport()">
-        </p>
-
-        <table class="m3-table">
-            <tr><td>Днів</td><td><span id="repDays">0</span></td></tr>
-            <tr><td>Яєць</td><td><span id="repEggs">0</span></td></tr>
-            <tr><td>Лотків</td><td><span id="repTrays">0</span></td></tr>
-            <tr><td>Виручка</td><td><span id="repIncome">0</span></td></tr>
-            <tr><td>Витрати</td><td><span id="repFeedCost">0</span></td></tr>
-            <tr><td>Прибуток</td><td><span id="repProfit">0</span></td></tr>
-        </table>
     </div>
 
 </div>
 
-<!-- =============== -->
-<!--  ІНКУБАЦІЯ      -->
-<!-- =============== -->
-<div id="incub" class="section-page">
-    <div class="m3-card">
-        <h2>6. Інкубація</h2>
 
-        <h3>6.1 Нова партія</h3>
+<!-- ========================== -->
+<!--       6. ІНКУБАЦІЯ         -->
+<!-- ========================== -->
+<div id="incub" class="page">
 
-        <p>Назва: <input id="incBatchName"></p>
-        <p>Дата закладки: <input id="incStartDate" type="date"></p>
-        <p>Кількість яєць: <input id="incEggsSet" type="number"></p>
-        <p>Нотатка: <textarea id="incNote"></textarea></p>
+    <div class="card">
+        <h2>Інкубація</h2>
+
+        <label>Назва партії:</label><input id="incBatchName">
+        <label>Дата:</label><input id="incStartDate" type="date">
+        <label>Кількість яєць:</label><input id="incEggsSet" type="number">
+        <label>Примітка:</label><textarea id="incNote"></textarea>
+
         <button id="addIncubation">Додати</button>
 
-        <h3>6.2 Фільтр</h3>
-        <select id="incFilter" onchange="renderInc()">
-            <option value="all">Всі</option>
-            <option value="active">Активні</option>
-            <option value="done">Завершені</option>
-            <option value="candling">Овоскопія</option>
-            <option value="hatch">Виведення</option>
-        </select>
-
-        <h3>6.3 Список партій</h3>
-        <table class="m3-table">
-            <thead>
-                <tr>
-                    <th>Партія</th>
-                    <th>Дата</th>
-                    <th>Днів</th>
-                    <th>Закладено</th>
-                    <th>Незапліднені</th>
-                    <th>Вилупилось</th>
-                    <th>Померли (інк.)</th>
-                    <th>Померли (брудер)</th>
-                    <th>Живі</th>
-                    <th>Нагадування</th>
-                    <th>Нотатка</th>
-                    <th></th>
-                </tr>
-            </thead>
+        <table>
             <tbody id="incubationBody"></tbody>
         </table>
     </div>
-</div>
 
-<!-- =============== -->
-<!--   ГРАФІКИ       -->
-<!-- =============== -->
-<div class="m3-card">
-    <h2>7. Графіки</h2>
-    <canvas id="chartEggs"></canvas>
-    <canvas id="chartIncome"></canvas>
-</div>
-
-<!-- Поголів’я -->
-<div class="m3-card">
-    <h2>8. Поголів’я</h2>
-
-    Самців: <input id="males" type="number" onchange="recalcFlock()">
-    Самок: <input id="females" type="number" onchange="recalcFlock()">
-    Смертність: <input id="deaths" type="number" onchange="recalcFlock()">
-    Середній вік: <input id="avgAge" type="number" onchange="recalcFlock()">
-
-    <p><b>Разом:</b> <span id="flockTotal">0</span></p>
-</div>
-
-<!-- OFFLINE PWA -->
-<div class="m3-card">
-    <h2>PWA</h2>
-    <ul>
-        <li>Android → Install App</li>
-        <li>iOS → Поділитися → Add to Home Screen</li>
-    </ul>
-</div>
-
-<!-- Google BACKUP -->
-<div class="m3-card">
-    <h2>Google Drive — FULL PRO BACKUP MODE</h2>
-    <p>
-        Дані не губляться.  
-        Відновлюються автоматично.  
-        Працює офлайн.  
-        Синхронізується при кожній зміні.
-    </p>
-    <button id="btnDriveLogin">Увійти в Google</button>
-    <button id="btnBackup">Створити резервну копію</button>
-    <button id="btnRestore">Відновити дані</button>
-    <p id="driveStatus">Статус: очікування…</p>
-</div>
-
-<!-- Локальні копії -->
-<div class="m3-card">
-    <h2>Локальні копії</h2>
-    <button onclick="exportLocalBackup()">⬇️ Завантажити</button>
-    <input type="file" id="importBackupFile" onchange="importLocalBackup(event)">
 </div>
 
 
-<!-- GOOGLE SCRIPTS -->
-<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+<!-- ========================== -->
+<!--       7. ПОГОЛІВ’Я         -->
+<!-- ========================== -->
+<div id="flock" class="page">
+
+    <div class="card">
+        <h2>Поголів’я</h2>
+
+        <label>Самців:</label><input id="males" type="number" oninput="updateFlock()">
+        <label>Самок:</label><input id="females" type="number" oninput="updateFlock()">
+        <label>Смертність:</label><input id="deaths" type="number" oninput="updateFlock()">
+
+        <p>Разом: <span id="flockTotal">0</span></p>
+    </div>
+
+</div>
+
+
+<!-- ========================== -->
+<!--        8. ЛОГИ             -->
+<!-- ========================== -->
+<div id="logs" class="page">
+
+    <div class="card">
+        <h2>Логи витрат</h2>
+
+        <table>
+            <tbody id="logBody"></tbody>
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- ========================== -->
+<!--  GOOGLE SCRIPTS            -->
+<!-- ========================== -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
 
 <!-- CORE -->
 <script src="core/data.js"></script>
 <script src="core/storage.js"></script>
 <script src="core/sync.js"></script>
-<script src="core/drive.js"></script>
 <script src="core/pwa.js"></script>
+<script src="core/drive.js"></script>
 
 <!-- MODULES -->
 <script src="modules/feed.js"></script>
@@ -398,17 +294,13 @@
 <script src="modules/logs.js"></script>
 <script src="modules/render.js"></script>
 
-<!-- CHARTS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="modules/graphs.js"></script>
-
-<!-- MAIN LOGIC -->
+<!-- MAIN -->
 <script src="app.js"></script>
 
 <script>
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("service-worker.js");
-    }
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+}
 </script>
 
 </body>
