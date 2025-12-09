@@ -110,41 +110,35 @@
         <p>Вартість: <b id="feedTotalCost">0</b> грн</p>
     </div>
     
-/* === 1.1 Рецепт — рендер таблиці === */
-if (DATA.feed.recipe && DATA.feed.components) {
-    let html = "";
-    let totalKg = 0;
-    let totalCost = 0;
+<div class="m3-card">
+    <h2>1.1 Рецепт комбікорму</h2>
 
-    for (let key in DATA.feed.recipe) {
+    <label>Вага партії (кг):</label>
+    <input type="number" id="feedBatchKg" value="25" oninput="recalcFeed()">
 
-        const percent = DATA.feed.recipe[key];
-        const kg = DATA.feed.components[key] || 0;
-        const price = DATA.feed.prices?.[key] || 0;
-        const sum = kg * price;
+    <div style="margin-top:10px;">
+        <button onclick="applyRecipePreset('starter')">Стартер</button>
+        <button onclick="applyRecipePreset('grower')">Гровер</button>
+        <button onclick="applyRecipePreset('layer')">Несучки</button>
+    </div>
 
-        totalKg += kg;
-        totalCost += sum;
-
-        html += `
+    <table class="m3-table" style="margin-top:10px;">
+        <thead>
             <tr>
-                <td>${key}</td>
-                <td>${percent}%</td>
-                <td>${kg.toFixed(2)}</td>
-                <td>
-                    <input type="number" 
-                        value="${price}" 
-                        onchange="updateFeedPrice('${key}', this.value)">
-                </td>
-                <td>${sum.toFixed(2)}</td>
-            </tr>`;
-    }
+                <th>Компонент</th>
+                <th>%</th>
+                <th>К-сть кг</th>
+                <th>Ціна за 1 кг (грн)</th>
+                <th>Сума (грн)</th>
+            </tr>
+        </thead>
+        <tbody id="feedTableRows"></tbody>
+    </table>
 
-    setHTML("feedTableRows", html);
-    setHTML("recipeTotalKg", totalKg.toFixed(2));
-    setHTML("recipeTotalCost", totalCost.toFixed(2));
-    setHTML("recipeCostPerKg", (totalCost / totalKg).toFixed(2));
-}
+    <p><b>Загальна вага:</b> <span id="recipeTotalKg">0</span> кг</p>
+    <p><b>Загальна сума:</b> <span id="recipeTotalCost">0.00</span> грн</p>
+    <p><b>Собівартість 1 кг:</b> <span id="recipeCostPerKg">0.00</span> грн</p>
+</div>
 
     <div class="card">
         <h3>Добова норма</h3>
