@@ -1,63 +1,90 @@
 /* ============================================================
-   MODULE: flock.js
-   Відповідає за:
-   - Облік поголів’я
-   - Самці, самки, смертність, середній вік
-   - Автоматичний перерахунок
-   - Оновлення DATA.flock
-   - Рендер секції "Поголів’я"
-=============================================================== */
+   MODULE: flock.js  
+   Поголів’я (FULL ENTERPRISE MODE)
+
+   Функціонал:
+   - облік кількості самців / самок
+   - смертність
+   - середній вік
+   - автоматичний підрахунок загальної кількості
+   - інтеграція з DATA
+   - autosave + offline sync
+   - виклик renderFlock() у render.js
+============================================================ */
+
+import { DATA, autosave } from "../core/storage.js";
+import { syncQueuePush } from "../core/sync.js";
+import { renderFlock } from "./render.js";
 
 /* ------------------------------------------------------------
-   1. Оновлення значень поголів’я
+   1. Ініціалізація структури DATA.flock
 ------------------------------------------------------------ */
 
-function updateFlock() {
-    const males = Number(document.getElementById("males")?.value || 0);
-    const females = Number(document.getElementById("females")?.value || 0);
-    const deaths = Number(document.getElementById("deaths")?.value || 0);
-    const avgAge = Number(document.getElementById("avgAge")?.value || 0);
+export function initFlockModule() {
+    if (!DATA.flock) {
+        DATA.flock = {
+            males: 0,
+            females: 0,
+            deaths: 0,
+            avgAge: 0,
+            total: 0
+        };
+    }
 
-    DATA.flock = {
-        males,
-        females,
-        deaths,
-        avgAge,
-        total: males + females - deaths
-    };
-
-    autosave();
-    renderFlock();
+    // Під'єднуємо інпут-поля
+    bindUI();
+    updateFlock();
 }
 
-
 /* ------------------------------------------------------------
-   2. Рендер секції "Поголів’я"
+   2. Прив’язка UI → логіка
 ------------------------------------------------------------ */
 
-function renderFlock() {
-    if (!DATA.flock) return;
-
-    const t = DATA.flock.total || 0;
-    const el = document.getElementById("flockTotal");
-
-    if (el) el.textContent = t;
-}
-
-
-/* ------------------------------------------------------------
-   3. Ініціалізація (події input)
------------------------------------------------------------- */
-
-function initFlockModule() {
+function bindUI() {
     const ids = ["males", "females", "deaths", "avgAge"];
 
     ids.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener("input", updateFlock);
+        if (el) {
+            el.addEventListener("input", updateFlock);
+        }
     });
-
-    renderFlock();
 }
 
-/* Викликається у modules/render.js → initAllModules() */
+/* ------------------------------------------------------------
+   3. Основна логіка оновлення поголів’я
+------------------------------------------------------------ */
+
+export function updateFlock() {
+    try {
+        const males   = Number(document.getElementById("males")?.value || 0);
+        const females = Number(document.getElementById("females")?.value || 0);
+        const deaths  = Number(document.getElementById("deaths")?.value || 0);
+        const avgAge  = Number(document.getElementById("avgAge")?.value || 0);
+
+        DATA.flock.males = males;
+        DATA.flock.females = females;
+        DATA.flock.deaths = deaths;
+        DATA.flock.avgAge = avgAge;
+
+        // Загальна кількість
+        DATA.flock.total = Math.max(males + females - deaths, 0);
+
+        autosave();
+        syncQueuePush("flock_update", DATA.flock);
+
+        renderFlock();
+    }
+    catch (err) {
+        console.error("updateFlock() error:", err);
+    }
+}
+
+/* ------------------------------------------------------------
+   4. Експорт для глобального виклику
+------------------------------------------------------------ */
+
+export default {
+    initFlockModule,
+    updateFlock
+};
