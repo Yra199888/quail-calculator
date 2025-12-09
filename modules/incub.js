@@ -1,29 +1,36 @@
 /* ============================================================
-   MODULE: incub.js
+   MODULE: incub.js — Інкубація (FULL ENTERPRISE MODE)
    Відповідає за:
-   - Облік інкубаційних партій
-   - Підрахунок днів
-   - Статуси (active, done, candling, hatch)
-   - Овоскопія / вилуплення / втрати
-   - Рендер таблиці
+   - створення нової партії
+   - розрахунок днів
+   - оновлення статусу (активні / овоскопія / виведення / завершені)
+   - ведення статистики
+   - рендер таблиці
 ============================================================ */
+
+import { DATA, autosave } from "../core/data.js";
+import { renderAll } from "./render.js";
 
 /* ------------------------------------------------------------
    1. ДОДАТИ НОВУ ПАРТІЮ
 ------------------------------------------------------------ */
 
-function incubAdd() {
+export function addIncubation() {
+
     const name = document.getElementById("incBatchName").value.trim();
     const start = document.getElementById("incStartDate").value;
     const eggs = Number(document.getElementById("incEggsSet").value);
-    const note = document.getElementById("incNote").value.trim();
+    const note  = document.getElementById("incNote").value.trim();
 
     if (!name || !start || eggs <= 0) {
-        return alert("Заповніть всі поля");
+        alert("Заповни всі поля!");
+        return;
     }
 
+    const id = Date.now();
+
     DATA.incub.push({
-        id: Date.now(),
+        id,
         name,
         start,
         eggs,
@@ -32,139 +39,100 @@ function incubAdd() {
         diedInc: 0,
         diedBrooder: 0,
         note,
+        status: "active"
     });
 
     autosave();
     renderInc();
+    renderAll();
+
+    document.getElementById("incBatchName").value = "";
+    document.getElementById("incEggsSet").value = "";
+    document.getElementById("incNote").value = "";
 }
 
-
 /* ------------------------------------------------------------
-   2. ПІДРАХУНОК ДНІВ
+   2. ФІЛЬТР (active / done / candling / hatch / all)
 ------------------------------------------------------------ */
 
-function incubDaysBetween(dateStr) {
-    const start = new Date(dateStr);
-    const now = new Date();
+function filterIncubation(list) {
+    const filter = document.getElementById("incFilter").value;
 
-    return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+    if (filter === "all") return list;
+    return list.filter(i => i.status === filter);
 }
 
-
 /* ------------------------------------------------------------
-   3. ВИЗНАЧЕННЯ СТАТУСУ ПАРТІЇ
+   3. РОЗРАХУНОК КІЛЬКОСТІ ДНІВ
 ------------------------------------------------------------ */
 
-function incubStatus(batch) {
-    const d = incubDaysBetween(batch.start);
-
-    if (d < 7) return "active";
-    if (d >= 7 && d < 14) return "candling";
-    if (d >= 14 && d < 17) return "hatch";
-    if (d >= 17) return "done";
-
-    return "active";
+function calcDays(startDate) {
+    const d1 = new Date(startDate);
+    const d2 = new Date();
+    const diff = Math.floor((d2 - d1) / 86400000);
+    return diff;
 }
 
-
 /* ------------------------------------------------------------
-   4. ФІЛЬТР ПАРТІЙ
+   4. ОНОВИТИ СТАТУС ПАРТІЇ
 ------------------------------------------------------------ */
 
-function incubFilterList() {
-    const f = document.getElementById("incFilter").value;
-    const list = DATA.incub || [];
+export function updateIncStatus(id, field, value) {
+    const item = DATA.incub.find(x => x.id === id);
+    if (!item) return;
 
-    return list.filter(batch => {
-        const st = incubStatus(batch);
-        if (f === "all") return true;
-        return f === st;
-    });
-}
+    item[field] = value;
 
-
-/* ------------------------------------------------------------
-   5. ОНОВЛЕННЯ ЗАПИСІВ (овоскопія, вилуплення, втрати)
------------------------------------------------------------- */
-
-function incubUpdateField(id, field, value) {
-    const batch = DATA.incub.find(b => b.id === id);
-    if (!batch) return;
-
-    batch[field] = Number(value);
     autosave();
     renderInc();
+    renderAll();
 }
 
-
 /* ------------------------------------------------------------
-   6. ВИДАЛЕННЯ ПАРТІЇ (за бажанням)
+   5. РЕНДЕР СПИСКУ ПАРТІЙ
 ------------------------------------------------------------ */
 
-function incubDelete(id) {
-    if (!confirm("Видалити партію?")) return;
-
-    DATA.incub = DATA.incub.filter(x => x.id !== id);
-    autosave();
-    renderInc();
-}
-
-
-/* ------------------------------------------------------------
-   7. РЕНДЕР ТАБЛИЦІ
------------------------------------------------------------- */
-
-function renderInc() {
+export function renderInc() {
     const body = document.getElementById("incubationBody");
     if (!body) return;
 
-    const list = incubFilterList();
+    // Порахувати дні для всіх партій
+    DATA.incub.forEach(inc => {
+        inc.days = calcDays(inc.start);
+
+        // Автоматична зміна статусу за днями
+        if (inc.days >= 6 && inc.days < 14) inc.status = "candling"; // овоскопія
+        if (inc.days >= 15 && inc.days < 18) inc.status = "hatch";   // виведення
+        if (inc.days >= 19) inc.status = "done";                     // завершені
+    });
+
+    const list = filterIncubation(DATA.incub);
 
     let html = "";
-
-    for (let b of list) {
-        const days = incubDaysBetween(b.start);
-        const status = incubStatus(b);
-
+    for (let inc of list) {
         const alive =
-            b.eggs - b.infertile - b.diedInc - b.diedBrooder - (b.hatched || 0);
+            inc.eggs -
+            inc.infertile -
+            inc.diedInc -
+            inc.diedBrooder -
+            inc.hatched;
 
         html += `
         <tr>
-            <td>${b.name}</td>
-            <td>${b.start}</td>
-            <td>${days}</td>
-            <td>${b.eggs}</td>
+            <td>${inc.name}</td>
+            <td>${inc.start}</td>
+            <td>${inc.days}</td>
+            <td>${inc.eggs}</td>
 
-            <td>
-                <input type="number" value="${b.infertile}" min="0"
-                    onchange="incubUpdateField(${b.id}, 'infertile', this.value)">
-            </td>
+            <td><input type="number" value="${inc.infertile}" onchange="updateIncStatus(${inc.id}, 'infertile', this.value)"></td>
+            <td><input type="number" value="${inc.hatched}" onchange="updateIncStatus(${inc.id}, 'hatched', this.value)"></td>
+            <td><input type="number" value="${inc.diedInc}" onchange="updateIncStatus(${inc.id}, 'diedInc', this.value)"></td>
+            <td><input type="number" value="${inc.diedBrooder}" onchange="updateIncStatus(${inc.id}, 'diedBrooder', this.value)"></td>
 
-            <td>
-                <input type="number" value="${b.hatched}" min="0"
-                    onchange="incubUpdateField(${b.id}, 'hatched', this.value)">
-            </td>
-
-            <td>
-                <input type="number" value="${b.diedInc}" min="0"
-                    onchange="incubUpdateField(${b.id}, 'diedInc', this.value)">
-            </td>
-
-            <td>
-                <input type="number" value="${b.diedBrooder}" min="0"
-                    onchange="incubUpdateField(${b.id}, 'diedBrooder', this.value)">
-            </td>
-
-            <td>${alive < 0 ? 0 : alive}</td>
-
-            <td>${status}</td>
-
-            <td>${b.note || ""}</td>
-
-            <td>
-                <button onclick="incubDelete(${b.id})">🗑</button>
-            </td>
+            <td>${alive}</td>
+            <td>${inc.status}</td>
+            <td>${inc.note || ""}</td>
+            <td><button onclick="deleteInc(${inc.id})">🗑</button></td>
         </tr>
         `;
     }
@@ -172,13 +140,22 @@ function renderInc() {
     body.innerHTML = html;
 }
 
-
 /* ------------------------------------------------------------
-   8. ІНІЦІАЛІЗАЦІЯ
-      (викликається з app.js → renderAll())
+   6. ВИДАЛЕННЯ ПАРТІЇ
 ------------------------------------------------------------ */
 
-function incubInit() {
-    const btn = document.getElementById("addIncubation");
-    if (btn) btn.onclick = incubAdd;
+export function deleteInc(id) {
+    DATA.incub = DATA.incub.filter(x => x.id !== id);
+    autosave();
+    renderInc();
+    renderAll();
+}
+
+/* ------------------------------------------------------------
+   7. ІНІЦІАЛІЗАЦІЯ МОДУЛЯ
+------------------------------------------------------------ */
+
+export function initIncubModule() {
+    document.getElementById("addIncubation").onclick = addIncubation;
+    renderInc();
 }
