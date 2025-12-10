@@ -6,127 +6,186 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
+/* === ГЛОБАЛЬНІ ТЕМИ === */
 :root {
-    --bg: #0f0f0f;
-    --text: #ffffff;
-    --card: #1a1a1a;
+    --bg: #111;
+    --text: #fff;
+    --card: #181818;
     --border: #333;
-    --accent: #3ebd4c;
+    --accent: #37c055;
 }
-
-/* Світла тема */
 .light {
     --bg: #f5f5f5;
     --text: #111;
-    --card: #ffffff;
+    --card: #fff;
     --border: #ccc;
-    --accent: #2e8fdb;
+    --accent: #2a7cda;
 }
 
 body {
+    margin: 0;
     background: var(--bg);
     color: var(--text);
-    margin: 0;
     font-family: Arial, sans-serif;
 }
 
-/* Верхнє меню */
+/* === МЕНЮ З ІКОНКАМИ === */
 .topnav {
     display: flex;
     justify-content: space-around;
     align-items: center;
     background: var(--card);
-    border-bottom: 2px solid var(--border);
-    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
 }
 .tab-btn {
-    font-size: 26px;
-    opacity: 0.5;
-    transition: 0.2s;
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.25s;
+    padding: 4px 0;
 }
-.tab-btn.active {
-    transform: scale(1.20);
+.tab-btn img,
+.tab-btn span {
+    font-size: 24px;
+    opacity: 0.6;
+    transition: 0.25s;
+}
+.tab-btn.active img,
+.tab-btn.active span {
+    transform: scale(1.2);
     opacity: 1;
-    color: var(--accent);
 }
 
-/* Стилі контейнерів */
-.page { display: none; padding: 20px; }
-.active-page { display: block; }
+/* === КОНТЕЙНЕР === */
+.page {
+    display: none;
+    padding: 15px;
+    max-width: 900px;
+    margin: auto;
+}
+.active-page {
+    display: block;
+}
 .container {
     background: var(--card);
-    padding: 20px;
-    border-radius: 12px;
+    padding: 18px;
+    border-radius: 10px;
     border: 1px solid var(--border);
-    max-width: 900px;
-    margin: 20px auto;
 }
 
-/* Таблиця калькулятора */
+/* === ТАБЛИЦІ === */
 table {
     width: 100%;
     border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 15px; /* зменшений шрифт */
 }
 
 th {
     background: var(--accent);
     color: #fff;
-    padding: 12px 4px;
-    font-size: 18px;
-}
-
-td {
-    padding: 10px 6px;
-    border-bottom: 1px solid var(--border);
-}
-
-/* Вирівнювання колонок */
-.col-name { width: 35%; }
-.col-qty  { width: 15%; }
-.col-price{ width: 20%; }
-.col-sum  { width: 20%; }
-
-/* Інпути */
-input {
-    width: 95%;
-    background: #00000060;
-    border: 1px solid var(--border);
-    padding: 8px;
-    border-radius: 8px;
-    color: var(--text);
+    padding: 10px 5px;
     font-size: 16px;
 }
 
-.result {
-    margin-top: 20px;
-    font-size: 18px;
-    line-height: 1.5;
+td {
+    border: 1px solid var(--border);
+    padding: 6px 4px;
 }
 
-/* Сповіщення */
+/* Вирівнюємо колонки */
+td:nth-child(1) { width: 40%; }
+td:nth-child(2) { width: 20%; }
+td:nth-child(3) { width: 20%; }
+td:nth-child(4) { width: 20%; }
+
+/* Інпут в таблиці */
+td input {
+    width: 95%;
+    padding: 6px;
+    border-radius: 6px;
+    background: #0007;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 15px;
+    text-align: center;
+}
+
+/* Хедлайн сторінки */
+h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+/* === ФОРМИ === */
+label {
+    font-size: 16px;
+    display: block;
+    margin-top: 10px;
+}
+input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #0005;
+    color: var(--text);
+    margin-top: 5px;
+    font-size: 16px;
+}
+
+button {
+    margin-top: 12px;
+    background: var(--accent);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 16px;
+    width: 100%;
+}
+
+/* === СПОВІЩЕННЯ === */
 #saveAlert {
     position: fixed;
-    top: 15px;
-    right: 15px;
+    top: 10px;
+    right: 10px;
     background: var(--accent);
-    padding: 12px 20px;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    color: #fff;
     opacity: 0;
     transition: 0.3s;
 }
+#saveAlert.show {
+    opacity: 1;
+}
 
-/* Статуси замовлень */
-.status-active { color: #2ecc71; font-weight: bold; }
-.status-completed { color: #3498db; font-weight: bold; }
-.status-cancelled { color: #e74c3c; font-weight: bold; }
+/* === ЗАМОВЛЕННЯ === */
+.order-item {
+    background: #0004;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+}
 
-/* Іконка сонце/місяць */
-#themeToggle {
-    position: absolute;
-    right: 20px;
-    top: 14px;
-    font-size: 28px;
-    cursor: pointer;
+.status-active { color: #37c055; font-weight: bold; }
+.status-completed { color: #2a7cda; font-weight: bold; }
+.status-cancelled { color: #d9534f; font-weight: bold; }
+
+/* === ФІНАНСИ === */
+.finance-box {
+    background: var(--card);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.csv-btn {
+    background: #2196f3;
+    margin-top: 10px;
 }
 </style>
 </head>
@@ -148,15 +207,16 @@ input {
 <div id="page-calculator" class="page active-page">
   <h2>🧮 Калькулятор корму</h2>
   <div class="container">
-    <table>
+   <table class="feed-table">
     <tr>
         <th>Компонент</th>
         <th class="feed-col-qty">К-сть</th>
         <th class="feed-col-price">Ціна</th>
         <th class="feed-col-sum">Сума</th>
     </tr>
-    </table>
-    <table id="feedTable"></table>
+</table>
+
+<table id="feedTable" class="feed-table"></table>
 
     <h3>Обʼєм корму (кг):</h3>
     <input id="feedVolume" type="number" value="25">
