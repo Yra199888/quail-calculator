@@ -17,7 +17,7 @@
     .light {
         --bg: #f3f3f3;
         --text: #111;
-        --card: #fff;
+        --card: #ffffff;
         --border: #ccc;
         --accent: #2a7cda;
     }
@@ -26,69 +26,50 @@
         font-family: Arial;
         background: var(--bg);
         color: var(--text);
-        margin:0;
-        padding:20px;
+        margin: 0;
+        padding: 20px;
         transition: .3s;
     }
 
     h2 {
-        text-align:center;
-        margin-bottom:20px;
+        text-align: center;
+        margin-bottom: 20px;
     }
 
     .container {
-        max-width:900px;
-        margin:auto;
-        background:var(--card);
-        padding:20px;
-        border-radius:10px;
-        border:1px solid var(--border);
+        max-width: 900px;
+        margin: auto;
+        background: var(--card);
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
     }
 
     table {
-        width:100%;
-        border-collapse:collapse;
-        margin-bottom:20px;
-        font-size:16px;
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        font-size: 16px;
     }
 
     th {
         background: var(--accent);
-        color:#fff;
+        color: #fff;
     }
-    
-    #saveAlert {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--accent);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 16px;
-    opacity: 0;
-    pointer-events: none;
-    transition: 0.4s;
-    z-index: 9999;
-}
-#saveAlert.show {
-    opacity: 1;
-    transform: translateY(5px);
-}
 
     td, th {
-        border:1px solid var(--border);
-        padding:8px;
-        text-align:center;
+        border: 1px solid var(--border);
+        padding: 8px;
+        text-align: center;
     }
 
     input {
-        width:90px;
-        padding:5px;
-        border-radius:5px;
-        border:1px solid var(--border);
-        background:#0003;
-        color:var(--text);
+        width: 90px;
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: #0003;
+        color: var(--text);
     }
 
     .result {
@@ -99,34 +80,61 @@
 
     .theme-btn {
         background: var(--accent);
-        border:none;
-        padding:10px 20px;
-        font-size:16px;
-        color:#fff;
-        border-radius:5px;
-        cursor:pointer;
-        float:right;
-        margin-bottom:15px;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        color: #fff;
+        border-radius: 5px;
+        cursor: pointer;
+        float: right;
+        margin-bottom: 15px;
     }
 
-    .theme-btn:hover {
-        opacity:.85;
+    #saveAlert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--accent);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 16px;
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.4s;
+        z-index: 9999;
+    }
+
+    #saveAlert.show {
+        opacity: 1;
+        transform: translateY(5px);
+    }
+
+    .row-highlight {
+        background: #2ecc71 !important;
+        transition: background 0.6s ease;
     }
 
     @media(max-width:600px){
         table, td, th {
-            font-size:14px;
+            font-size: 14px;
         }
         input {
-            width:70px;
+            width: 70px;
         }
     }
 </style>
 </head>
 <body>
-    <div id="saveAlert">Ціни збережено ✔️</div>
 
 <button class="theme-btn" onclick="toggleTheme()">🌓 Тема</button>
+
+<div id="saveAlert">Ціни збережено ✔️</div>
+
+<!-- ЗВУК БЛІК -->
+<audio id="blipSound">
+    <source src="data:audio/wav;base64,UklGRuQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YcQAAACQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQ==" type="audio/wav">
+</audio>
 
 <h2>Feed Calculator PRO</h2>
 
@@ -139,7 +147,6 @@
         <th>Ціна за 1 кг</th>
         <th>Вартість</th>
     </tr>
-
 </table>
 
 <table id="tbl"></table>
@@ -156,26 +163,27 @@
 </div>
 
 <script>
+
 const components = [
-    ["Кукурудза",10],
-    ["Пшениця",5],
-    ["Ячмінь",1.5],
-    ["Соєва макуха",3],
-    ["Соняшникова макуха",2.5],
-    ["Рибне борошно",1],
-    ["Кормові дріжджі",0.7],
-    ["Трикальційфосфат",0.5],
-    ["Dolfos D",0.7],
-    ["Сіль",0.05]
+    ["Кукурудза", 10],
+    ["Пшениця", 5],
+    ["Ячмінь", 1.5],
+    ["Соєва макуха", 3],
+    ["Соняшникова макуха", 2.5],
+    ["Рибне борошно", 1],
+    ["Кормові дріжджі", 0.7],
+    ["Трикальційфосфат", 0.5],
+    ["Dolfos D", 0.7],
+    ["Сіль", 0.05]
 ];
 
 function loadTable(){
     let html = "";
-    components.forEach((c,i)=>{
+    components.forEach((c, i) => {
         const qty = c[1];
-        const price = localStorage.getItem("p"+(i+1)) || 0;
+        const price = localStorage.getItem("p" + (i+1)) || 0;
         html += `
-        <tr>
+        <tr id="row${i+1}">
             <td>${c[0]}</td>
             <td><input id="q${i+1}" type="number" value="${qty}" step="0.1"></td>
             <td><input id="p${i+1}" type="number" value="${price}" step="0.1"></td>
@@ -186,19 +194,47 @@ function loadTable(){
 }
 loadTable();
 
-function calc(){
+function showSaveAlert() {
+    const box = document.getElementById("saveAlert");
+    box.classList.add("show");
+    setTimeout(() => box.classList.remove("show"), 1500);
+}
+
+function playBlip() {
+    const s = document.getElementById("blipSound");
+    s.currentTime = 0;
+    s.volume = 0.25;
+    s.play();
+}
+
+function highlightRow(i) {
+    const row = document.getElementById("row" + i);
+    row.classList.add("row-highlight");
+
+    setTimeout(() => {
+        row.classList.remove("row-highlight");
+    }, 150);
+}
+
+function calc() {
     let total = 0;
     let totalKg = 0;
 
     for (let i = 1; i <= components.length; i++) {
-        let q = parseFloat(document.getElementById("q"+i).value) || 0;
-        let p = parseFloat(document.getElementById("p"+i).value) || 0;
 
-        localStorage.setItem("p"+i, p); // автозбереження
-        showSaveAlert();
-
+        let q = parseFloat(document.getElementById("q" + i).value) || 0;
+        let p = parseFloat(document.getElementById("p" + i).value) || 0;
         let sum = q * p;
-        document.getElementById("s"+i).innerText = sum.toFixed(2);
+
+        // Збереження
+        localStorage.setItem("p" + i, p);
+
+        // Ефекти
+        highlightRow(i);
+        showSaveAlert();
+        playBlip();
+
+        document.getElementById("s" + i).innerText = sum.toFixed(2);
 
         total += sum;
         totalKg += q;
@@ -216,21 +252,18 @@ function calc(){
 document.addEventListener("input", calc);
 calc();
 
-function showSaveAlert() {
-    const box = document.getElementById("saveAlert");
-    box.classList.add("show");
-    setTimeout(() => box.classList.remove("show"), 1500);
-}
-
-// ---- ТЕМА ----
-function toggleTheme(){
+function toggleTheme() {
     document.body.classList.toggle("light");
-    localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+    localStorage.setItem("theme",
+        document.body.classList.contains("light") ? "light" : "dark"
+    );
 }
 
-if(localStorage.getItem("theme")==="light"){
+// Завантаження теми
+if (localStorage.getItem("theme") === "light") {
     document.body.classList.add("light");
 }
+
 </script>
 
 </body>
