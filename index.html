@@ -7,18 +7,18 @@
 
 <style>
 
-/* === ТЕМИ === */
+/* === ГЛОБАЛЬНІ ТЕМИ === */
 :root {
     --bg: #111;
     --text: #fff;
-    --card: #1c1c1c;
+    --card: #1b1b1b;
     --border: #333;
     --accent: #4caf50;
 }
 .light {
-    --bg: #f2f2f2;
+    --bg: #f3f3f3;
     --text: #111;
-    --card: #ffffff;
+    --card: #fff;
     --border: #ccc;
     --accent: #2a7cda;
 }
@@ -28,19 +28,17 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: Arial, sans-serif;
-    transition: background 0.25s, color 0.25s;
+    transition: 0.3s;
 }
 
-/* === ВЕРХНЄ МЕНЮ (іконки, активна +20%) === */
+/* === ВЕРХНЄ МЕНЮ З ІКОНКАМИ === */
 .topnav {
     display: flex;
     justify-content: space-around;
-    padding: 12px 0;
+    align-items: center;
     background: var(--card);
+    padding: 10px 0;
     border-bottom: 2px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 50;
 }
 
 .tab-btn {
@@ -50,152 +48,136 @@ body {
 }
 
 .tab-btn.active {
-    transform: scale(1.20);
+    transform: scale(1.2);
     opacity: 1;
     color: var(--accent);
 }
 
-/* === ПЕРЕМИКАЧ ДЕНЬ/НІЧ === */
-#themeToggle {
+/* Перемикач теми */
+.theme-toggle {
     position: absolute;
     right: 15px;
     top: 10px;
-    font-size: 26px;
+    font-size: 28px;
     cursor: pointer;
+    opacity: 0.7;
+    transition: 0.2s;
+}
+.theme-toggle:hover {
+    opacity: 1;
 }
 
-/* === СТОРІНКИ === */
+/* === ГОЛОВНІ БЛОКИ === */
 .page {
     display: none;
     padding: 20px;
 }
-.page.active-page {
+.active-page {
     display: block;
 }
 
-/* === КАРТКИ === */
 .container {
     background: var(--card);
+    border: 1px solid var(--border);
     padding: 18px;
     border-radius: 12px;
-    border: 1px solid var(--border);
-    margin-bottom: 28px;
+    margin-bottom: 20px;
 }
 
-/* === ТАБЛИЦІ === */
+/* === СТИЛІ ТАБЛИЦІ КАЛЬКУЛЯТОРА === */
+
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
-}
-
-td, th {
-    border: 1px solid var(--border);
-    padding: 8px;
-    text-align: left;
-    font-size: 16px;
+    table-layout: fixed;     /* ← тепер нічого не буде з’їжджати */
 }
 
 th {
     background: var(--accent);
     color: #fff;
-    text-align: center;
+    padding: 10px;
+    border: 1px solid var(--border);
+    font-size: 17px;
 }
 
-/* === ІНПУТИ === */
-input, textarea, select {
-    width: 100%;
-    padding: 10px;
-    background: #0005;
+td {
+    padding: 8px;
     border: 1px solid var(--border);
+    word-wrap: break-word;
+}
+
+/* Ширини колонок */
+th:nth-child(1), td:nth-child(1) { width: 36%; }
+th:nth-child(2), td:nth-child(2) { width: 18%; }
+th:nth-child(3), td:nth-child(3) { width: 18%; }
+th:nth-child(4), td:nth-child(4) { width: 25%; }
+
+/* Інпути всередині таблиці */
+table input {
+    width: 100%;
+    padding: 6px;
     border-radius: 6px;
-    margin: 6px 0 14px;
+    background: #0008;
+    border: 1px solid var(--border);
     color: var(--text);
     font-size: 16px;
 }
 
 /* === КНОПКИ === */
 button {
-    width: 100%;
     background: var(--accent);
     border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
     color: #fff;
-    padding: 12px;
-    font-size: 17px;
-    border-radius: 6px;
     cursor: pointer;
-    margin-top: 5px;
+    font-size: 17px;
 }
 button:hover {
     opacity: 0.9;
 }
 
-/* === СПОВІЩЕННЯ "ЗБЕРЕЖЕНО" === */
+/* === ФОРМИ В СТОВПЧИК === */
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    background: #0006;
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-bottom: 14px;
+    font-size: 17px;
+}
+
+/* === СПОВІЩЕННЯ ЗБЕРЕЖЕНО === */
 #saveAlert {
     position: fixed;
     top: 15px;
-    right: 15px;
-    padding: 12px 20px;
+    right: 20px;
     background: var(--accent);
+    padding: 10px 20px;
     color: #fff;
-    border-radius: 6px;
+    border-radius: 8px;
     opacity: 0;
     transition: 0.3s;
-    z-index: 9999;
 }
 #saveAlert.show {
     opacity: 1;
 }
 
-/* === СТАТУСИ ЗАМОВЛЕНЬ === */
-.status-active {
-    color: #4caf50;
-    font-weight: bold;
-}
-.status-completed {
-    color: #2a7cda;
-    font-weight: bold;
-}
-.status-cancelled {
-    color: #e74c3c;
-    font-weight: bold;
-}
+/* === ВИРІВНЮВАННЯ ЗАМОВЛЕНЬ === */
 
 .order-item {
-    background: #0004;
-    border: 1px solid var(--border);
-    padding: 14px;
-    border-radius: 10px;
-    margin-bottom: 14px;
-}
-
-/* === КАЛЬКУЛЯТОР: 100% ШИРИНА, НІЧОГО НЕ НАКЛАДАЄТЬСЯ === */
-.calc-row {
-    display: grid;
-    grid-template-columns: 1fr 90px 90px 90px;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.calc-row input {
-    width: 100%;
-}
-
-/* Для маленьких екранів */
-@media (max-width: 480px) {
-    .calc-row {
-        grid-template-columns: 1fr 60px 60px 70px;
-    }
-}
-
-/* === ЯЙЦЯ — список записів === */
-.egg-record {
-    background: #0004;
     padding: 12px;
-    margin-bottom: 12px;
+    background: #0004;
     border-radius: 8px;
+    margin-bottom: 12px;
     border: 1px solid var(--border);
 }
+
+.status-active { color: #4caf50; font-weight: bold; }
+.status-completed { color: #3498db; font-weight: bold; }
+.status-cancelled { color: #e74c3c; font-weight: bold; }
 
 </style>
 </head>
