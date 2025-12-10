@@ -2,168 +2,254 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Feed Calculator PRO</title>
+<title>Quail Farm Tools PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-    :root {
-        --bg: #111;
-        --text: #fff;
-        --card: #1b1b1b;
-        --border: #333;
-        --accent: #4caf50;
-    }
+/* ========= ГЛОБАЛЬНІ ТЕМИ ========= */
+:root {
+    --bg: #111;
+    --text: #fff;
+    --card: #1b1b1b;
+    --border: #333;
+    --accent: #4caf50;
+}
+.light {
+    --bg: #f3f3f3;
+    --text: #111;
+    --card: #fff;
+    --border: #ccc;
+    --accent: #2a7cda;
+}
 
-    .light {
-        --bg: #f3f3f3;
-        --text: #111;
-        --card: #ffffff;
-        --border: #ccc;
-        --accent: #2a7cda;
-    }
+body {
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    font-family: Arial;
+    transition: .3s;
+}
 
-    body {
-        font-family: Arial;
-        background: var(--bg);
-        color: var(--text);
-        margin: 0;
-        padding: 20px;
-        transition: .3s;
-    }
+/* ========= КОНТЕЙНЕРИ ========= */
+.page {
+    display: none;
+    padding: 20px;
+    padding-bottom: 100px;
+}
+.active {
+    display: block;
+}
 
-    h2 {
-        text-align: center;
-        margin-bottom: 20px;
-    }
+.container {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    max-width: 900px;
+    margin: auto;
+    margin-top: 20px;
+}
 
-    .container {
-        max-width: 900px;
-        margin: auto;
-        background: var(--card);
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-    }
+/* ========= НАВІГАЦІЯ ЗНИЗУ ========= */
+.navbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-        font-size: 16px;
-    }
+.nav-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+}
 
-    th {
-        background: var(--accent);
-        color: #fff;
-    }
+.nav-btn.active {
+    color: var(--accent);
+    font-weight: bold;
+}
 
-    td, th {
-        border: 1px solid var(--border);
-        padding: 8px;
-        text-align: center;
-    }
+/* ========= СТИЛІ КАЛЬКУЛЯТОРА ========= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+td, th {
+    border: 1px solid var(--border);
+    padding: 8px;
+    text-align: center;
+}
+th {
+    background: var(--accent);
+    color: #fff;
+}
+input {
+    width: 90px;
+    padding: 5px;
+    border-radius: 5px;
+    background: #0003;
+    border: 1px solid var(--border);
+    color: var(--text);
+}
 
-    input {
-        width: 90px;
-        padding: 5px;
-        border-radius: 5px;
-        border: 1px solid var(--border);
-        background: #0003;
-        color: var(--text);
-    }
+.result {
+    font-size: 20px;
+    margin-top: 15px;
+    line-height: 30px;
+}
 
-    .result {
-        font-size: 20px;
-        margin-top: 15px;
-        line-height: 30px;
-    }
+/* ========= СПОВІЩЕННЯ ========= */
+#saveAlert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.4s;
+    z-index: 9999;
+}
+#saveAlert.show {
+    opacity: 1;
+    transform: translateY(5px);
+}
 
-    .theme-btn {
-        background: var(--accent);
-        border: none;
-        padding: 10px 20px;
-        font-size: 16px;
-        color: #fff;
-        border-radius: 5px;
-        cursor: pointer;
-        float: right;
-        margin-bottom: 15px;
-    }
+/* ========= ПІДСВІТКА ========= */
+.row-highlight {
+    background: #2ecc71 !important;
+    transition: background 0.6s ease;
+}
 
-    #saveAlert {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: var(--accent);
-        color: #fff;
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-size: 16px;
-        opacity: 0;
-        pointer-events: none;
-        transition: 0.4s;
-        z-index: 9999;
-    }
-
-    #saveAlert.show {
-        opacity: 1;
-        transform: translateY(5px);
-    }
-
-    .row-highlight {
-        background: #2ecc71 !important;
-        transition: background 0.6s ease;
-    }
-
-    @media(max-width:600px){
-        table, td, th {
-            font-size: 14px;
-        }
-        input {
-            width: 70px;
-        }
-    }
+/* ========= Облік яєць ========= */
+.stat {
+    font-size: 20px;
+    line-height: 32px;
+}
 </style>
 </head>
 <body>
 
-<button class="theme-btn" onclick="toggleTheme()">🌓 Тема</button>
-
-<div id="saveAlert">Ціни збережено ✔️</div>
+<!-- СПОВІЩЕННЯ -->
+<div id="saveAlert">Збережено ✔️</div>
 
 <!-- ЗВУК БЛІК -->
 <audio id="blipSound">
     <source src="data:audio/wav;base64,UklGRuQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YcQAAACQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQ==" type="audio/wav">
 </audio>
 
-<h2>Feed Calculator PRO</h2>
+<!-- ================= ВКЛАДКА: КАЛЬКУЛЯТОР ================= -->
+<div class="page active" id="page-calculator">
+    <h2 style="text-align:center;">🧮 Калькулятор корму</h2>
 
-<div class="container">
+    <div class="container">
+        <table>
+            <tr>
+                <th>Компонент</th>
+                <th>К-сть (кг)</th>
+                <th>Ціна за кг</th>
+                <th>Вартість</th>
+            </tr>
+        </table>
 
-<table>
-    <tr>
-        <th>Компонент</th>
-        <th>К-сть (кг)</th>
-        <th>Ціна за 1 кг</th>
-        <th>Вартість</th>
-    </tr>
-</table>
+        <table id="tbl"></table>
 
-<table id="tbl"></table>
+        <h3>Потрібний обʼєм корму (кг):</h3>
+        <input id="volume" type="number" value="25">
 
-<h3>Потрібний об'єм корму (кг):</h3>
-<input type="number" id="volume" value="25" step="1">
-
-<div class="result">
-    🔹 Загальна ціна: <span id="total">0</span> грн<br>
-    🔹 Ціна за 1 кг: <span id="perkg">0</span> грн<br>
-    🔹 Вартість обʼєму: <span id="totalVolume">0</span> грн
+        <div class="result">
+            Загальна ціна: <b id="total">0</b> грн<br>
+            Ціна за 1 кг: <b id="perkg">0</b> грн<br>
+            Вартість обʼєму: <b id="totalVolume">0</b> грн
+        </div>
+    </div>
 </div>
 
+<!-- ================= ВКЛАДКА: ОБЛІК ЯЄЦЬ ================= -->
+<div class="page" id="page-eggs">
+    <h2 style="text-align:center;">🥚 Облік яєць</h2>
+
+    <div class="container">
+
+        <label>Яйця за добу:</label><br>
+        <input id="eggsGood" type="number" value="0"><br><br>
+
+        <label>Браковані:</label><br>
+        <input id="eggsBad" type="number" value="0"><br><br>
+
+        <label>Для дому:</label><br>
+        <input id="eggsHome" type="number" value="0"><br><br>
+
+        <button onclick="saveEggs()" style="padding:10px 20px; background:var(--accent); color:#fff; border:none; border-radius:5px;">
+            Зберегти
+        </button>
+
+        <div class="stat">
+            <p>🥚 Комерційні яйця: <b id="eggsSell">0</b></p>
+            <p>📦 Лотків сьогодні: <b id="traysToday">0</b></p>
+            <p>➕ До повного лотка: <b id="trayRemainder">0</b></p>
+
+            <hr>
+
+            <p>📅 За тиждень: <b id="weekEggs">0</b></p>
+            <p>📆 За місяць: <b id="monthEggs">0</b></p>
+            <p>🔢 Всього: <b id="totalEggs">0</b></p>
+            <p>📦 Всього лотків: <b id="totalTrays">0</b></p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= НАВІГАЦІЯ ЗНИЗУ ================= -->
+<div class="navbar">
+    <div class="nav-btn active" onclick="openTab('calculator')">🧮 Калькулятор</div>
+    <div class="nav-btn" onclick="openTab('eggs')">🥚 Облік яєць</div>
 </div>
 
 <script>
+/* ========= ПЕРЕМИКАННЯ ВКЛАДОК ========= */
+function openTab(tab) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
 
+    document.getElementById("page-" + tab).classList.add("active");
+    event.target.classList.add("active");
+}
+
+/* ========= СПОВІЩЕННЯ ========= */
+function showSaveAlert() {
+    const box = document.getElementById("saveAlert");
+    box.classList.add("show");
+    setTimeout(() => box.classList.remove("show"), 1200);
+}
+
+function playBlip() {
+    const s = document.getElementById("blipSound");
+    s.currentTime = 0;
+    s.volume = 0.25;
+    s.play();
+}
+
+function highlightRow(i) {
+    const row = document.getElementById("row" + i);
+    row.classList.add("row-highlight");
+    setTimeout(() => row.classList.remove("row-highlight"), 150);
+}
+
+/* ========= КАЛЬКУЛЯТОР КОРМУ ========= */
 const components = [
     ["Кукурудза", 10],
     ["Пшениця", 5],
@@ -179,14 +265,15 @@ const components = [
 
 function loadTable(){
     let html = "";
-    components.forEach((c, i) => {
-        const qty = c[1];
-        const price = localStorage.getItem("p" + (i+1)) || 0;
+    components.forEach((c,i)=>{
+        let qty = c[1];
+        let price = localStorage.getItem("p"+(i+1)) || 0;
+
         html += `
         <tr id="row${i+1}">
             <td>${c[0]}</td>
-            <td><input id="q${i+1}" type="number" value="${qty}" step="0.1"></td>
-            <td><input id="p${i+1}" type="number" value="${price}" step="0.1"></td>
+            <td><input id="q${i+1}" value="${qty}" step="0.1"></td>
+            <td><input id="p${i+1}" value="${price}" step="0.1"></td>
             <td id="s${i+1}">0</td>
         </tr>`;
     });
@@ -194,47 +281,23 @@ function loadTable(){
 }
 loadTable();
 
-function showSaveAlert() {
-    const box = document.getElementById("saveAlert");
-    box.classList.add("show");
-    setTimeout(() => box.classList.remove("show"), 1500);
-}
-
-function playBlip() {
-    const s = document.getElementById("blipSound");
-    s.currentTime = 0;
-    s.volume = 0.25;
-    s.play();
-}
-
-function highlightRow(i) {
-    const row = document.getElementById("row" + i);
-    row.classList.add("row-highlight");
-
-    setTimeout(() => {
-        row.classList.remove("row-highlight");
-    }, 150);
-}
-
 function calc() {
     let total = 0;
     let totalKg = 0;
 
     for (let i = 1; i <= components.length; i++) {
 
-        let q = parseFloat(document.getElementById("q" + i).value) || 0;
-        let p = parseFloat(document.getElementById("p" + i).value) || 0;
+        let q = parseFloat(document.getElementById("q"+i).value) || 0;
+        let p = parseFloat(document.getElementById("p"+i).value) || 0;
         let sum = q * p;
 
-        // Збереження
-        localStorage.setItem("p" + i, p);
+        localStorage.setItem("p"+i, p);
 
-        // Ефекти
         highlightRow(i);
-        showSaveAlert();
         playBlip();
+        showSaveAlert();
 
-        document.getElementById("s" + i).innerText = sum.toFixed(2);
+        document.getElementById("s"+i).innerText = sum.toFixed(2);
 
         total += sum;
         totalKg += q;
@@ -252,18 +315,55 @@ function calc() {
 document.addEventListener("input", calc);
 calc();
 
-function toggleTheme() {
-    document.body.classList.toggle("light");
-    localStorage.setItem("theme",
-        document.body.classList.contains("light") ? "light" : "dark"
-    );
+/* ========= ОБЛІК ЯЄЦЬ ========= */
+function saveEggs() {
+    const good = +document.getElementById("eggsGood").value || 0;
+    const bad  = +document.getElementById("eggsBad").value || 0;
+    const home = +document.getElementById("eggsHome").value || 0;
+    const sell = Math.max(good - bad - home, 0);
+
+    const today = new Date().toISOString().split("T")[0];
+    let eggsData = JSON.parse(localStorage.getItem("eggsLog")) || {};
+
+    eggsData[today] = { good, bad, home, sell };
+
+    localStorage.setItem("eggsLog", JSON.stringify(eggsData));
+
+    playBlip();
+    showSaveAlert();
+    updateEggsStats();
 }
 
-// Завантаження теми
-if (localStorage.getItem("theme") === "light") {
-    document.body.classList.add("light");
+function updateEggsStats() {
+    let eggsData = JSON.parse(localStorage.getItem("eggsLog")) || {};
+    const today = new Date().toISOString().split("T")[0];
+
+    let d = eggsData[today] || {sell:0};
+    document.getElementById("eggsSell").innerText = d.sell;
+
+    document.getElementById("traysToday").innerText = (d.sell / 20).toFixed(2);
+    document.getElementById("trayRemainder").innerText = d.sell % 20;
+
+    let week = 0, month = 0, total = 0;
+    const now = new Date();
+
+    for (let date in eggsData) {
+        let diff = (now - new Date(date)) / 86400000;
+        let s = eggsData[date].sell;
+
+        if (diff <= 7) week += s;
+        if (diff <= 30) month += s;
+
+        total += s;
+    }
+
+    document.getElementById("weekEggs").innerText = week;
+    document.getElementById("monthEggs").innerText = month;
+    document.getElementById("totalEggs").innerText = total;
+    document.getElementById("totalTrays").innerText = (total / 20).toFixed(1);
 }
 
+updateEggsStats();
 </script>
 
 </body>
