@@ -1,346 +1,142 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quail Calculator — PRO FEED</title>
-
-    <style>
-        body {
-            margin: 0;
-            background: #f5f5f5;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-
-        .top-bar {
-            background: #225c1f;
-            color: #fff;
-            padding: 12px 16px;
-        }
-        .top-bar h1 {
-            margin: 0;
-            font-size: 18px;
-        }
-        .top-bar p {
-            margin: 4px 0 0;
-            font-size: 14px;
-        }
-
-        .tabs {
-            display: flex;
-            background: #e9e9e9;
-            border-bottom: 1px solid #ccc;
-        }
-        .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            user-select: none;
-        }
-        .tab.active {
-            background: #d0f0c0;
-        }
-
-        .card {
-            background: #fff;
-            margin: 12px;
-            padding: 12px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-        }
-
-        .section {
-            display: none;
-        }
-        .section.active {
-            display: block;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 14px;
-        }
-        th, td {
-            border-bottom: 1px solid #eee;
-            padding: 6px;
-            text-align: left;
-        }
-        th {
-            background: #fafafa;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 6px 8px;
-            margin: 4px 0 8px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-
-        button {
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: none;
-            background: #2d6a1f;
-            color: #fff;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        button.secondary {
-            background: #777;
-        }
-
-        .small {
-            font-size: 13px;
-            color: #555;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Калькулятор корму</title>
+<style>
+    body { font-family: Arial; background:#111; color:#fff; padding:20px; }
+    table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+    td, th { border:1px solid #555; padding:8px; text-align:center; }
+    input { width:80px; padding:5px; }
+    .result { font-size:20px; margin-top:15px; }
+</style>
 </head>
 <body>
 
-<div class="top-bar">
-    <h1>🔥 Quail Calculator — PRO MODE</h1>
-    <p id="statusBar">Статус: offline (тільки локальне збереження)</p>
+<h2>Калькулятор корму (25 кг)</h2>
+
+<table>
+    <tr>
+        <th>Компонент</th>
+        <th>К-сть (кг)</th>
+        <th>Ціна за 1 кг (грн)</th>
+        <th>Вартість (грн)</th>
+    </tr>
+
+    <tr>
+        <td>Кукурудза</td>
+        <td><input type="number" id="q1" value="10" step="0.1"></td>
+        <td><input type="number" id="p1" value="0" step="0.1"></td>
+        <td id="s1">0</td>
+    </tr>
+
+    <tr>
+        <td>Пшениця</td>
+        <td><input type="number" id="q2" value="5" step="0.1"></td>
+        <td><input type="number" id="p2" value="0" step="0.1"></td>
+        <td id="s2">0</td>
+    </tr>
+
+    <tr>
+        <td>Ячмінь</td>
+        <td><input type="number" id="q3" value="1.5" step="0.1"></td>
+        <td><input type="number" id="p3" value="0" step="0.1"></td>
+        <td id="s3">0</td>
+    </tr>
+
+    <tr>
+        <td>Соєва макуха</td>
+        <td><input type="number" id="q4" value="3" step="0.1"></td>
+        <td><input type="number" id="p4" value="0" step="0.1"></td>
+        <td id="s4">0</td>
+    </tr>
+
+    <tr>
+        <td>Соняшникова макуха</td>
+        <td><input type="number" id="q5" value="2.5" step="0.1"></td>
+        <td><input type="number" id="p5" value="0" step="0.1"></td>
+        <td id="s5">0</td>
+    </tr>
+
+    <tr>
+        <td>Рибне борошно</td>
+        <td><input type="number" id="q6" value="1" step="0.1"></td>
+        <td><input type="number" id="p6" value="0" step="0.1"></td>
+        <td id="s6">0</td>
+    </tr>
+
+    <tr>
+        <td>Кормові дріжджі</td>
+        <td><input type="number" id="q7" value="0.7" step="0.1"></td>
+        <td><input type="number" id="p7" value="0" step="0.1"></td>
+        <td id="s7">0</td>
+    </tr>
+
+    <tr>
+        <td>Трикальційфосфат</td>
+        <td><input type="number" id="q8" value="0.5" step="0.1"></td>
+        <td><input type="number" id="p8" value="0" step="0.1"></td>
+        <td id="s8">0</td>
+    </tr>
+
+    <tr>
+        <td>Dolfos D</td>
+        <td><input type="number" id="q9" value="0.7" step="0.1"></td>
+        <td><input type="number" id="p9" value="0" step="0.1"></td>
+        <td id="s9">0</td>
+    </tr>
+
+    <tr>
+        <td>Сіль</td>
+        <td><input type="number" id="q10" value="0.05" step="0.01"></td>
+        <td><input type="number" id="p10" value="0" step="0.1"></td>
+        <td id="s10">0</td>
+    </tr>
+</table>
+
+<h3>Введіть потрібний об'єм корму (кг):</h3>
+<input type="number" id="volume" value="25" step="1">
+
+<div class="result">
+    <p>🔹 Загальна ціна: <span id="total">0</span> грн</p>
+    <p>🔹 Ціна за 1 кг: <span id="perkg">0</span> грн</p>
+    <p>🔹 Ціна за об'єм: <span id="totalVolume">0</span> грн</p>
 </div>
 
-<div class="tabs">
-    <div class="tab active" onclick="showPage('feed', this)">Корм</div>
-    <div class="tab" onclick="showPage('eggs', this)">Яйця</div>
-    <div class="tab" onclick="showPage('orders', this)">Замовлення</div>
-    <div class="tab" onclick="showPage('clients', this)">Клієнти</div>
-    <div class="tab" onclick="showPage('finance', this)">Фінанси</div>
-    <div class="tab" onclick="showPage('incub', this)">Інкубація</div>
-    <div class="tab" onclick="showPage('flock', this)">Поголів’я</div>
-</div>
+<script>
+function calc() {
+    let total = 0;
 
-<!-- 1. КОРМ -->
-<div id="feed" class="section active">
-    <div class="card">
-        <h2>1. Рецепт комбікорму для несучок (25 кг)</h2>
-        <p class="small">
-            Рецепт зафіксований: ти змінюєш тільки <b>ціну за 1 кг</b>, калькулятор рахує:
-            <b>загальну вартість</b> і <b>собівартість 1 кг</b>.
-        </p>
+    for (let i = 1; i <= 10; i++) {
+        let q = parseFloat(document.getElementById("q" + i).value) || 0;
+        let p = parseFloat(document.getElementById("p" + i).value) || 0;
+        let sum = q * p;
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Компонент</th>
-                    <th>К-сть, кг</th>
-                    <th>Ціна за кг, грн</th>
-                    <th>Сума, грн</th>
-                </tr>
-            </thead>
-            <tbody id="feedRecipeBody"></tbody>
-        </table>
+        document.getElementById("s" + i).innerText = sum.toFixed(2);
+        total += sum;
+    }
 
-        <p>Вага партії: <b><span id="feedTotalKg">0</span> кг</b></p>
-        <p>Загальна вартість партії: <b><span id="feedTotalCost">0.00</span> грн</b></p>
-        <p>Собівартість 1 кг: <b><span id="feedCostPerKg">0.00</span> грн</b></p>
-    </div>
+    let totalKg = 0;
+    for (let i = 1; i <= 10; i++) {
+        totalKg += parseFloat(document.getElementById("q" + i).value) || 0;
+    }
 
-    <div class="card">
-        <h3>1.2 Добова норма (спрощено)</h3>
-        <label>Кількість птахів, шт</label>
-        <input type="number" id="feedBirds" value="0" />
+    let pricePerKg = totalKg ? total / totalKg : 0;
 
-        <label>Норма на 1 птицю, г/день</label>
-        <input type="number" id="feedPerBird" value="30" />
+    let volume = parseFloat(document.getElementById("volume").value) || 0;
+    let totalVolPrice = pricePerKg * volume;
 
-        <p>Добова потреба: <b><span id="feedDailyNeed">0.00</span> кг</b></p>
-        <p>Вартість добової норми: <b><span id="feedDailyCost">0.00</span> грн</b></p>
-    </div>
-</div>
+    document.getElementById("total").innerText = total.toFixed(2);
+    document.getElementById("perkg").innerText = pricePerKg.toFixed(2);
+    document.getElementById("totalVolume").innerText = totalVolPrice.toFixed(2);
+}
 
-<!-- 2. ЯЙЦЯ -->
-<div id="eggs" class="section">
-    <div class="card">
-        <h2>2. Облік яєць</h2>
+document.querySelectorAll("input").forEach(el => {
+    el.addEventListener("input", calc);
+});
 
-        <label>Зібрано за сьогодні, шт</label>
-        <input type="number" id="eggsTotal" />
-
-        <label>Брак, шт</label>
-        <input type="number" id="eggsBad" />
-
-        <label>На себе (їжа), шт</label>
-        <input type="number" id="eggsOwn" />
-
-        <label>Залишок з учора, шт</label>
-        <input type="number" id="eggsCarry" />
-
-        <label>Ціна 1 лотка (20 яєць), грн</label>
-        <input type="number" id="trayPrice" />
-
-        <h3>Підсумок</h3>
-        <table>
-            <tr><td>Для продажу сьогодні</td><td><span id="eggsForSale">0</span></td></tr>
-            <tr><td>Всього для продажу (з учора)</td><td><span id="eggsForSaleTotal">0</span></td></tr>
-            <tr><td>Лотків (20 шт)</td><td><span id="traysCount">0</span></td></tr>
-            <tr><td>Залишок яєць (неповний лоток)</td><td><span id="eggsRemainder">0</span></td></tr>
-            <tr><td>Дохід (сьогодні)</td><td><span id="income">0.00</span> грн</td></tr>
-        </table>
-    </div>
-
-    <div class="card">
-        <h3>2.2 Продуктивність</h3>
-        <label>Самок 1 партія</label>
-        <input type="number" id="hens1" />
-        <label>Самок 2 партія</label>
-        <input type="number" id="hens2" />
-
-        <table>
-            <tr><td>Всього самок</td><td><span id="hensTotal">0</span></td></tr>
-            <tr><td>Продуктивність сьогодні</td><td><span id="productivityToday">0.0</span> %</td></tr>
-        </table>
-    </div>
-
-    <div class="card">
-        <h3>2.3 Лотки: вільні / заброньовані</h3>
-        <table>
-            <tr><td>Всього лотків</td><td><span id="totalTraysTodayLabel">0</span></td></tr>
-            <tr><td>Заброньовано</td><td><span id="reservedTrays">0</span></td></tr>
-            <tr><td>Вільні</td><td><span id="freeTrays">0</span></td></tr>
-        </table>
-    </div>
-</div>
-
-<!-- 3. ЗАМОВЛЕННЯ -->
-<div id="orders" class="section">
-    <div class="card">
-        <h2>3. Замовлення</h2>
-
-        <label>Клієнт</label>
-        <input id="ordName" />
-
-        <label>Яєць (необов’язково)</label>
-        <input type="number" id="ordEggs" />
-
-        <label>Лотків</label>
-        <input type="number" id="ordTrays" />
-
-        <label>Дата</label>
-        <input type="date" id="ordDate" />
-
-        <label>Примітка</label>
-        <input id="ordNote" />
-
-        <button onclick="addOrder()">Додати замовлення</button>
-
-        <h3>Активні</h3>
-        <table>
-            <tbody id="ordersActive"></tbody>
-        </table>
-
-        <h3>Виконані</h3>
-        <table>
-            <tbody id="ordersDone"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- 4. КЛІЄНТИ -->
-<div id="clients" class="section">
-    <div class="card">
-        <h2>4. Клієнти</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Клієнт</th>
-                    <th>Замовлень</th>
-                    <th>Лотків</th>
-                    <th>Яєць</th>
-                    <th>Сума, грн</th>
-                    <th>Останнє замовлення</th>
-                </tr>
-            </thead>
-            <tbody id="clientsBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- 5. ФІНАНСИ (спрощено, поки тільки зведення) -->
-<div id="finance" class="section">
-    <div class="card">
-        <h2>5. Фінанси (спрощено)</h2>
-        <p class="small">Тут поки простий підсумок по яйцях + корму, без складних звітів.</p>
-        <table>
-            <tr><td>Собівартість 1 кг корму</td><td><span id="finFeedCostPerKg">0.00</span> грн</td></tr>
-            <tr><td>Дохід за сьогодні (яйця)</td><td><span id="finIncomeToday">0.00</span> грн</td></tr>
-            <tr><td>Орієнтовний прибуток (мінус корм за день)</td><td><span id="finProfitToday">0.00</span> грн</td></tr>
-        </table>
-    </div>
-</div>
-
-<!-- 6. ІНКУБАЦІЯ (спрощена версія) -->
-<div id="incub" class="section">
-    <div class="card">
-        <h2>6. Інкубація (базова)</h2>
-
-        <label>Назва партії</label>
-        <input id="incBatchName" />
-
-        <label>Дата закладки</label>
-        <input type="date" id="incStartDate" />
-
-        <label>Кількість яєць</label>
-        <input type="number" id="incEggsSet" />
-
-        <label>Нотатка</label>
-        <textarea id="incNote"></textarea>
-
-        <button onclick="addIncubation()">Додати партію</button>
-
-        <h3>Список партій</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Партія</th>
-                    <th>Дата</th>
-                    <th>Днів</th>
-                    <th>Яєць</th>
-                    <th>Нотатка</th>
-                    <th>🗑</th>
-                </tr>
-            </thead>
-            <tbody id="incubationBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<!-- 7. ПОГОЛІВ’Я -->
-<div id="flock" class="section">
-    <div class="card">
-        <h2>7. Поголів’я</h2>
-
-        <label>Самців</label>
-        <input type="number" id="males" />
-
-        <label>Самок</label>
-        <input type="number" id="females" />
-
-        <label>Смертність, шт</label>
-        <input type="number" id="deaths" />
-
-        <label>Середній вік, днів</label>
-        <input type="number" id="avgAge" />
-
-        <p>Разом живих: <b><span id="flockTotal">0</span></b></p>
-    </div>
-</div>
-
-<!-- JS -->
-<script src="data.js"></script>
-<script src="app.js"></script>
+calc();
+</script>
 
 </body>
 </html>
