@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Quail Farm Tools PRO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-/* ========= ГЛОБАЛЬНІ ТЕМИ ========= */
+/* === ГЛОБАЛЬНІ ТЕМИ === */
 :root {
     --bg: #111;
     --text: #fff;
@@ -23,15 +23,14 @@
 }
 
 body {
+    margin: 0;
     background: var(--bg);
     color: var(--text);
-    margin: 0;
-    padding: 0;
-    font-family: Arial;
-    transition: .3s;
+    font-family: Arial, sans-serif;
+    transition: 0.3s;
 }
 
-/* ========= ВЕРХНІ ВКЛАДКИ ========= */
+/* === ВЕРХНІ ВКЛАДКИ (C) === */
 .topnav {
     display: flex;
     justify-content: space-around;
@@ -40,24 +39,22 @@ body {
     border-bottom: 2px solid var(--border);
     padding-top: 10px;
 }
-
 .tab-btn {
     flex: 1;
     text-align: center;
-    padding: 14px 0;
-    cursor: pointer;
+    padding: 12px 0;
     font-size: 18px;
+    cursor: pointer;
     color: var(--text);
     border-bottom: 4px solid transparent;
 }
-
 .tab-btn.active {
     font-weight: bold;
     color: var(--accent);
     border-bottom: 4px solid var(--accent);
 }
 
-/* ========= СТОРІНКИ ========= */
+/* === КОНТЕЙНЕРИ СТОРІНОК === */
 .page {
     display: none;
     padding: 20px;
@@ -68,41 +65,61 @@ body {
 }
 
 .container {
-    max-width: 900px;
-    margin: auto;
     background: var(--card);
     padding: 20px;
     border-radius: 10px;
     border: 1px solid var(--border);
-    margin-top: 20px;
+    max-width: 900px;
+    margin: 20px auto;
 }
 
-/* ========= СПОВІЩЕННЯ ========= */
+/* === СПОВІЩЕННЯ ЗБЕРЕЖЕНО === */
 #saveAlert {
     position: fixed;
-    top: 20px;
+    top: 15px;
     right: 20px;
     background: var(--accent);
     color: #fff;
     padding: 10px 20px;
     border-radius: 6px;
     opacity: 0;
-    pointer-events: none;
     transition: 0.4s;
-    z-index: 9999;
+    z-index: 999;
 }
 #saveAlert.show {
     opacity: 1;
-    transform: translateY(10px);
 }
 
-/* ========= ТАБЛИЦІ ========= */
+/* === ПІДСВІТКА РЯДКА === */
+.row-highlight {
+    background: #2ecc71 !important;
+    transition: background 0.5s ease;
+}
+
+/* === КНОПКИ === */
+button, .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+button:hover, .btn:hover {
+    opacity: 0.9;
+}
+.btn-small {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+/* === ТАБЛИЦІ === */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
 }
-td, th {
+th, td {
     border: 1px solid var(--border);
     padding: 8px;
     text-align: center;
@@ -112,424 +129,659 @@ th {
     color: #fff;
 }
 
-input, textarea {
-    background: #0003;
+/* === ПОЛЯ ВВОДУ === */
+input, textarea, select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+    background: #0005;
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 6px;
-    border-radius: 6px;
-    width: 100%;
+    box-sizing: border-box;
 }
 
-.result {
-    font-size: 20px;
-    line-height: 1.6;
+/* === СТАТУСИ ЗАМОВЛЕНЬ === */
+.status-active {
+    color: #4caf50;
+    font-weight: bold;
+}
+.status-completed {
+    color: #3498db;
+    font-weight: bold;
+}
+.status-cancelled {
+    color: #e74c3c;
+    font-weight: bold;
 }
 
-.row-highlight {
-    background: #1fae4a !important;
-    transition: 0.4s;
-}
-
-/* ========= ОБЛІК ЯЄЦЬ ========= */
-.day-block {
-    background: #0005;
+.order-item {
     padding: 12px;
+    margin-bottom: 15px;
     border-radius: 8px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
-}
-
-/* ========= ЗАМОВЛЕННЯ ========= */
-.order-block {
     background: #0004;
-    padding: 12px;
+    border: 1px solid var(--border);
+}
+.order-date-title {
+    font-size: 20px;
+    margin-top: 25px;
+}
+
+/* === ФІНАНСИ === */
+.finance-summary p {
+    margin: 4px 0;
+}
+.csv-btn {
+    background: #2196f3;
+    margin-top: 10px;
+}
+
+/* === ЯЙЦЯ — звіт === */
+.eggs-day-block {
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #0004;
     border-radius: 8px;
     border: 1px solid var(--border);
-    margin-bottom: 12px;
 }
-
-.status-active { color: #4caf50; font-weight: bold; }
-.status-completed { color: #2196f3; font-weight: bold; }
-.status-cancelled { color: #f44336; font-weight: bold; }
-
-.btn-small {
-    padding: 5px 10px;
-    border-radius: 5px;
-    margin-right: 5px;
-    cursor: pointer;
-    border: none;
-    color: #fff;
+.eggs-day-header {
+    font-weight: bold;
+    margin-bottom: 5px;
 }
-.btn-complete { background: #2196f3; }
-.btn-cancel { background: #f44336; }
-.btn-delete { background: #555; }
-
 </style>
 </head>
+
 <body>
 
-<div id="saveAlert">Збережено ✔</div>
+<!-- Сповіщення -->
+<div id="saveAlert">Збережено ✔️</div>
 
-<!-- ЗВУК -->
+<!-- Звук -->
 <audio id="blipSound">
-    <source src="data:audio/wav;base64,
-    UklGRuQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YcQAAACQkJCQkJCQkJCQ
-    kJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJC
-    QkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJC" type="audio/wav">
+    <source src="data:audio/wav;base64,UklGRuQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YcQAAACQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQ==" type="audio/wav">
 </audio>
 
-<!-- ======== ВЕРХНІ ВКЛАДКИ ======== -->
+<!-- Верхні вкладки -->
 <div class="topnav">
     <div class="tab-btn active" onclick="openTab('calculator', this)">🧮 Калькулятор</div>
     <div class="tab-btn" onclick="openTab('eggs', this)">🥚 Яйця</div>
     <div class="tab-btn" onclick="openTab('orders', this)">📦 Замовлення</div>
+    <div class="tab-btn" onclick="openTab('finance', this)">💰 Фінанси</div>
 </div>
 
-<!-- ========= Вкладка: ОБЛІК ЯЄЦЬ ========= -->
-<div class="page" id="page-eggs">
-    <h2 style="text-align:center;">🥚 Облік яєць</h2>
+<!-- ========= СТОРІНКА 1: КАЛЬКУЛЯТОР ========= -->
+<div id="page-calculator" class="page active-page">
+    <h2 style="text-align:center;">🧮 Калькулятор корму</h2>
 
     <div class="container">
+        <table>
+            <tr>
+                <th>Компонент</th>
+                <th>К-сть (кг)</th>
+                <th>Ціна за кг</th>
+                <th>Сума</th>
+            </tr>
+        </table>
 
-        <label>Яйця за добу:</label><br>
-        <input id="eggsGood" type="number" value="0"><br><br>
+        <table id="feedTable"></table>
 
-        <label>Браковані:</label><br>
-        <input id="eggsBad" type="number" value="0"><br><br>
+        <h3>Обʼєм корму (кг):</h3>
+        <input id="feedVolume" type="number" value="25" />
 
-        <label>Для дому:</label><br>
-        <input id="eggsHome" type="number" value="0"><br><br>
-
-        <button onclick="saveEggs()" style="padding:10px 20px; background:var(--accent); color:#fff; border:none; border-radius:5px;">
-            Додати запис
-        </button>
-
-        <hr>
-        <h3>Щоденний звіт</h3>
-
-        <div id="eggsReport"></div>
-
+        <div class="result" style="margin-top:15px; font-size:18px; line-height:1.6;">
+            Загальна сума: <b id="feedTotal">0</b> грн<br />
+            Ціна за 1 кг: <b id="feedPerKg">0</b> грн<br />
+            Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн
+        </div>
     </div>
 </div>
 
+<!-- ========= СТОРІНКА 2: ЯЙЦЯ ========= -->
+<div id="page-eggs" class="page">
+    <h2 style="text-align:center;">🥚 Облік яєць</h2>
+
+    <div class="container">
+        <h3>Додати / оновити запис за сьогодні</h3>
+
+        <label>Яєць за добу (всього):</label>
+        <input id="eggsGood" type="number" min="0" />
+
+        <label>Браковані:</label>
+        <input id="eggsBad" type="number" min="0" />
+
+        <label>Для дому:</label>
+        <input id="eggsHome" type="number" min="0" />
+
+        <button onclick="saveEggRecord()">Зберегти запис</button>
+
+        <h3 style="margin-top:25px;">Звіт по днях</h3>
+        <div id="eggsReport"></div>
+    </div>
+</div>
+
+<!-- ========= СТОРІНКА 3: ЗАМОВЛЕННЯ ========= -->
+<div id="page-orders" class="page">
+    <h2 style="text-align:center;">📦 Замовлення</h2>
+
+    <div class="container">
+        <h3>Загальна інформація по лотках</h3>
+        <p>Повних лотків (по яйцях): <b id="summaryFullTrays">0</b></p>
+        <p>Заброньовано (active): <b id="summaryReservedTrays">0</b></p>
+        <p>Вільні лотки: <b id="summaryFreeTrays">0</b></p>
+        <p>Виконано лотків (completed): <b id="summaryCompletedTrays">0</b></p>
+    </div>
+
+    <div class="container">
+        <h3>Нове замовлення</h3>
+
+        <label>Дата замовлення:</label>
+        <input type="date" id="orderDate" />
+
+        <label>Ім'я замовника:</label>
+        <input type="text" id="orderName" placeholder="Наприклад: Оля" />
+
+        <label>Кількість лотків:</label>
+        <input type="number" id="orderTrays" min="1" />
+
+        <label>Деталі:</label>
+        <textarea id="orderDetails" rows="3" placeholder="Нотатки..."></textarea>
+
+        <button onclick="addOrder()">Додати замовлення</button>
+
+        <h3 style="margin-top:30px;">Усі замовлення</h3>
+        <div id="ordersList"></div>
+    </div>
+</div>
+
+<!-- ========= СТОРІНКА 4: ФІНАНСИ ========= -->
+<div id="page-finance" class="page">
+    <h2 style="text-align:center;">💰 Фінанси</h2>
+
+    <div class="container">
+        <h3>Налаштування</h3>
+        <label>Ціна за лоток (20 яєць), грн:</label>
+        <input id="trayPrice" type="number" min="0" placeholder="50" />
+        <button onclick="saveTrayPrice()">Зберегти</button>
+
+        <h3 style="margin-top:25px;">Фінансовий звіт</h3>
+        <div id="financeSummary" class="finance-summary"></div>
+
+        <h3 style="margin-top:25px;">Експорт звіту</h3>
+        <button class="csv-btn" onclick="exportCSV()">Експорт в CSV</button>
+    </div>
+</div>
 
 <script>
-/* ========= ОБЛІК ЯЄЦЬ ========= */
+/* ===================== СТАН ДАНИХ ===================== */
+let eggsLog = {};    // {date: {good,bad,home,sell}}
+let orders = [];     // [{id,date,name,trays,details,status}]
+let trayPrice = 0;   // грн за лоток
 
-function saveEggs() {
-    const good = +document.getElementById("eggsGood").value || 0;
-    const bad  = +document.getElementById("eggsBad").value || 0;
-    const home = +document.getElementById("eggsHome").value || 0;
+/* ===================== ВКЛАДКИ ===================== */
+function openTab(tab, btn) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
+    document.getElementById("page-" + tab).classList.add("active-page");
 
-    const sell = Math.max(good - bad - home, 0);
-    const fullTrays = Math.floor(sell / 20);
-
-    const today = new Date().toISOString().split("T")[0];
-
-    let eggsData = JSON.parse(localStorage.getItem("eggsLog")) || {};
-
-    eggsData[today] = {
-        good, bad, home,
-        sell,
-        fullTrays
-    };
-
-    localStorage.setItem("eggsLog", JSON.stringify(eggsData));
-
-    playBlip();
-    showSaveAlert();
-    updateEggsStats();
-    renderEggsReport();
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
 }
 
-function updateEggsStats() {
-    let eggsData = JSON.parse(localStorage.getItem("eggsLog")) || {};
-    const today = new Date().toISOString().split("T")[0];
-
-    let d = eggsData[today] || { sell: 0, fullTrays: 0 };
-
-    // Дані можна використати в інших місцях, зокрема в замовленнях
-}
-
-function renderEggsReport() {
-    let eggsData = JSON.parse(localStorage.getItem("eggsLog")) || {};
-
-    let html = "";
-    let dates = Object.keys(eggsData).sort().reverse();
-
-    dates.forEach(date => {
-        let d = eggsData[date];
-
-        html += `
-        <div class="container" style="margin-top:10px;">
-            <b>${date}</b><br>
-            Всього: ${d.good}<br>
-            Брак: ${d.bad}<br>
-            Для дому: ${d.home}<br>
-            Комерційні: ${d.sell}<br>
-            Повних лотків: ${d.fullTrays}<br><br>
-
-            <button onclick="deleteEggRecord('${date}')" 
-                style="padding:5px 10px; background:#c62828; color:#fff; border:none; border-radius:4px;">
-                Видалити запис
-            </button>
-        </div>
-        `;
-    });
-
-    document.getElementById("eggsReport").innerHTML = html;
-}
-
-function deleteEggRecord(date) {
-    let eggsData = JSON.parse(localStorage.getItem("eggsLog")) || {};
-
-    delete eggsData[date];
-
-    localStorage.setItem("eggsLog", JSON.stringify(eggsData));
-
-    playBlip();
-    showSaveAlert();
-    renderEggsReport();
-}
-
-renderEggsReport();
-updateEggsStats();
-</script>
-
-<script>
-/* ===========================
-   🌼 СПОВІЩЕННЯ + ЗВУК
-=========================== */
-function showSaveAlert(message = "Збережено ✔") {
-    const alert = document.getElementById("saveAlert");
-    alert.innerText = message;
-    alert.classList.add("show");
-    setTimeout(() => alert.classList.remove("show"), 1200);
-}
-
-function playBlip() {
+/* ===================== СПОВІЩЕННЯ + ЗВУК ===================== */
+function blip() {
     const s = document.getElementById("blipSound");
+    if (!s) return;
     s.currentTime = 0;
     s.volume = 0.25;
-    s.play();
+    s.play().catch(() => {});
+}
+function alertSaved() {
+    const box = document.getElementById("saveAlert");
+    box.classList.add("show");
+    setTimeout(() => box.classList.remove("show"), 900);
 }
 
-/* ===========================
-   🌼 ЯЙЦЯ — ЛОГІКА
-=========================== */
-// Формат A: 1 запис на день
+/* ===================== КАЛЬКУЛЯТОР КОРМУ ===================== */
+const feedComponents = [
+    ["Кукурудза", 10],
+    ["Пшениця", 5],
+    ["Ячмінь", 1.5],
+    ["Соєва макуха", 3],
+    ["Соняшникова макуха", 2.5],
+    ["Рибне борошно", 1],
+    ["Кормові дріжджі", 0.7],
+    ["Трикальційфосфат", 0.5],
+    ["Dolfos D", 0.7],
+    ["Сіль", 0.05]
+];
 
-function saveEggs() {
-    const good = +document.getElementById("eggsGood").value || 0;
-    const bad  = +document.getElementById("eggsBad").value || 0;
-    const home = +document.getElementById("eggsHome").value || 0;
-
-    const sell = Math.max(good - bad - home, 0);
-    const trayCount = Math.floor(sell / 20);
-
-    const today = new Date().toISOString().split("T")[0];
-
-    let eggs = JSON.parse(localStorage.getItem("eggsLog")) || {};
-    eggs[today] = { good, bad, home, sell, trays: trayCount };
-
-    localStorage.setItem("eggsLog", JSON.stringify(eggs));
-
-    playBlip();
-    showSaveAlert();
-
-    renderEggsReport();
-    updateOrderStats();
-}
-
-function deleteEggEntry(date) {
-    let eggs = JSON.parse(localStorage.getItem("eggsLog")) || {};
-    delete eggs[date];
-    localStorage.setItem("eggsLog", JSON.stringify(eggs));
-    renderEggsReport();
-    updateOrderStats();
-}
-
-function renderEggsReport() {
-    let eggs = JSON.parse(localStorage.getItem("eggsLog")) || {};
+function loadFeedTable() {
     let html = "";
-
-    const dates = Object.keys(eggs).sort((a,b)=> b.localeCompare(a));
-
-    dates.forEach(date => {
-        const e = eggs[date];
+    feedComponents.forEach((c, i) => {
+        let qty = c[1];
+        let price = localStorage.getItem("feed_p_" + i) || 0;
         html += `
-        <div class="egg-day">
-            <h3>${date}</h3>
-            <p>Всього: <b>${e.good}</b></p>
-            <p>Брак: <b>${e.bad}</b></p>
-            <p>Для дому: <b>${e.home}</b></p>
-            <p>Комерційні: <b>${e.sell}</b></p>
-            <p>Повних лотків: <b>${e.trays}</b></p>
-            <button onclick="deleteEggEntry('${date}')" class="small-btn delete">Видалити</button>
-        </div>`;
+        <tr id="feedRow${i}">
+            <td>${c[0]}</td>
+            <td><input id="feedQty${i}" type="number" value="${qty}" step="0.1" /></td>
+            <td><input id="feedPrice${i}" type="number" value="${price}" step="0.1" /></td>
+            <td id="feedSum${i}">0</td>
+        </tr>`;
+    });
+    document.getElementById("feedTable").innerHTML = html;
+}
+function calcFeed() {
+    let total = 0;
+    let kgTotal = 0;
+
+    feedComponents.forEach((c, i) => {
+        let qty = Number(document.getElementById("feedQty" + i).value) || 0;
+        let price = Number(document.getElementById("feedPrice" + i).value) || 0;
+        localStorage.setItem("feed_p_" + i, price);
+
+        let sum = qty * price;
+        document.getElementById("feedSum" + i).textContent = sum.toFixed(2);
+
+        total += sum;
+        kgTotal += qty;
+
+        const row = document.getElementById("feedRow" + i);
+        row.classList.add("row-highlight");
+        setTimeout(() => row.classList.remove("row-highlight"), 300);
     });
 
-    document.getElementById("eggReport").innerHTML = html;
+    const perkg = kgTotal ? total / kgTotal : 0;
+    const vol = Number(document.getElementById("feedVolume").value) || 0;
+    const volTotal = perkg * vol;
+
+    document.getElementById("feedTotal").textContent = total.toFixed(2);
+    document.getElementById("feedPerKg").textContent = perkg.toFixed(2);
+    document.getElementById("feedVolumeTotal").textContent = volTotal.toFixed(2);
+
+    blip();
+    alertSaved();
 }
 
-/* ===========================
-   📦 ЗАМОВЛЕННЯ — ЛОГІКА
-=========================== */
+/* ===================== ЯЙЦЯ ===================== */
+// зчитати eggsLog з localStorage
+function loadEggsLog() {
+    try {
+        eggsLog = JSON.parse(localStorage.getItem("eggsLog") || "{}");
+    } catch {
+        eggsLog = {};
+    }
+}
+function saveEggsLog() {
+    localStorage.setItem("eggsLog", JSON.stringify(eggsLog));
+}
 
-function addOrder() {
-    const name = document.getElementById("orderName").value.trim();
-    const trays = +document.getElementById("orderTrays").value || 0;
-    const details = document.getElementById("orderDetails").value.trim();
-    const date = document.getElementById("orderDate").value || 
-                 new Date().toISOString().split("T")[0];
+// загальні підрахунки по яйцях
+function getEggsTotals() {
+    let totalCommercial = 0;
+    for (const d in eggsLog) {
+        totalCommercial += eggsLog[d].sell || 0;
+    }
+    const totalFullTrays = Math.floor(totalCommercial / 20);
+    return { totalCommercial, totalFullTrays };
+}
 
-    if (!name || trays <= 0) {
-        showSaveAlert("Помилка: введіть імʼя і лотки");
+// зберегти запис за сьогодні (A — один запис на день)
+function saveEggRecord() {
+    const good = Math.max(0, Number(document.getElementById("eggsGood").value) || 0);
+    const bad  = Math.max(0, Number(document.getElementById("eggsBad").value) || 0);
+    const home = Math.max(0, Number(document.getElementById("eggsHome").value) || 0);
+
+    const sell = Math.max(0, good - bad - home);
+
+    const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    eggsLog[today] = { good, bad, home, sell };
+
+    saveEggsLog();
+    blip();
+    alertSaved();
+    renderEggsReport();
+    updateOrdersSummary();
+    renderFinance();
+}
+
+// видалити запис за день
+function deleteEggRecord(date) {
+    delete eggsLog[date];
+    saveEggsLog();
+    renderEggsReport();
+    updateOrdersSummary();
+    renderFinance();
+}
+
+// рендер звіту по днях
+function renderEggsReport() {
+    const container = document.getElementById("eggsReport");
+    container.innerHTML = "";
+
+    const dates = Object.keys(eggsLog).sort().reverse(); // від нових до старих
+
+    if (dates.length === 0) {
+        container.textContent = "Записів поки немає.";
         return;
     }
 
-    let orders = JSON.parse(localStorage.getItem("orders")) || {};
+    dates.forEach(date => {
+        const rec = eggsLog[date];
+        const sell = rec.sell || 0;
+        const fullTrays = Math.floor(sell / 20);
 
-    if (!orders[date]) orders[date] = [];
+        const div = document.createElement("div");
+        div.className = "eggs-day-block";
 
-    orders[date].push({
-        name, trays, details,
-        status: "active"
+        const humanDate = date.split("-").reverse().join(".");
+
+        div.innerHTML = `
+            <div class="eggs-day-header">📅 ${humanDate}</div>
+            <div>Всього: <b>${rec.good}</b></div>
+            <div>Брак: <b>${rec.bad}</b></div>
+            <div>Для дому: <b>${rec.home}</b></div>
+            <div>Комерційні: <b>${sell}</b></div>
+            <div>Повних лотків: <b>${fullTrays}</b></div>
+            <button class="btn-small" onclick="deleteEggRecord('${date}')">Видалити запис</button>
+        `;
+        container.appendChild(div);
     });
-
-    localStorage.setItem("orders", JSON.stringify(orders));
-    playBlip();
-    showSaveAlert("Додано ✔");
-
-    renderOrders();
-    updateOrderStats();
 }
 
-// ===== Зміна статусу =====
-function setOrderStatus(date, index, status) {
-    let orders = JSON.parse(localStorage.getItem("orders")) || {};
-    orders[date][index].status = status;
-    localStorage.setItem("orders", JSON.stringify(orders));
+/* ===================== ЗАМОВЛЕННЯ ===================== */
+function loadOrders() {
+    try {
+        orders = JSON.parse(localStorage.getItem("ordersLog") || "[]");
+    } catch {
+        orders = [];
+    }
+}
+function saveOrders() {
+    localStorage.setItem("ordersLog", JSON.stringify(orders));
+}
 
-    // Фінанси: Completed → додаємо в історію доходів
-    if (status === "completed") {
-        let history = JSON.parse(localStorage.getItem("financeHistory")) || [];
-        const trays = orders[date][index].trays;
-        const price = +(localStorage.getItem("trayPrice") || 0);
-        history.push({
-            date,
-            trays,
-            income: trays * price
-        });
-        localStorage.setItem("financeHistory", JSON.stringify(history));
+// додати замовлення
+function addOrder() {
+    const dateInput = document.getElementById("orderDate").value;
+    const name = (document.getElementById("orderName").value || "").trim();
+    const trays = Number(document.getElementById("orderTrays").value) || 0;
+    const details = (document.getElementById("orderDetails").value || "").trim();
+
+    if (!name || trays <= 0) {
+        alert("Введи імʼя і кількість лотків більше нуля.");
+        return;
     }
 
+    const date = dateInput || new Date().toISOString().slice(0,10);
+
+    const order = {
+        id: Date.now(),
+        date,
+        name,
+        trays,
+        details,
+        status: "active"
+    };
+
+    orders.push(order);
+    saveOrders();
+    blip();
+    alertSaved();
+
+    // очистити форму
+    document.getElementById("orderName").value = "";
+    document.getElementById("orderTrays").value = "";
+    document.getElementById("orderDetails").value = "";
+
     renderOrders();
-    updateOrderStats();
+    updateOrdersSummary();
+    renderFinance();
 }
 
-// ===== Видалити замовлення =====
-function deleteOrder(date, index) {
-    let orders = JSON.parse(localStorage.getItem("orders")) || {};
-    orders[date].splice(index,1);
-    if (orders[date].length === 0) delete orders[date];
-    localStorage.setItem("orders", JSON.stringify(orders));
-
+// змінити статус
+function setOrderStatus(id, status) {
+    orders = orders.map(o => o.id === id ? {...o, status} : o);
+    saveOrders();
+    blip();
+    alertSaved();
     renderOrders();
-    updateOrderStats();
+    updateOrdersSummary();
+    renderFinance();
 }
 
-// ===== Генерація HTML =====
+// видалити замовлення
+function deleteOrder(id) {
+    orders = orders.filter(o => o.id !== id);
+    saveOrders();
+    blip();
+    alertSaved();
+    renderOrders();
+    updateOrdersSummary();
+    renderFinance();
+}
+
+// отримати статистику по замовленнях
+function getOrdersStats() {
+    let reserved = 0;
+    let completed = 0;
+    let cancelled = 0;
+
+    orders.forEach(o => {
+        if (o.status === "active")    reserved  += o.trays;
+        if (o.status === "completed") completed += o.trays;
+        if (o.status === "cancelled") cancelled += o.trays;
+    });
+
+    return { reserved, completed, cancelled };
+}
+
+// рендер замовлень (B: по датах, деталі видно одразу, всі разом)
 function renderOrders() {
-    let orders = JSON.parse(localStorage.getItem("orders")) || {};
-    let html = "";
+    const container = document.getElementById("ordersList");
+    container.innerHTML = "";
 
-    const dates = Object.keys(orders).sort((a,b)=> b.localeCompare(a));
+    if (orders.length === 0) {
+        container.textContent = "Поки немає замовлень.";
+        return;
+    }
+
+    // групуємо по датах
+    const byDate = {};
+    orders.forEach(o => {
+        if (!byDate[o.date]) byDate[o.date] = [];
+        byDate[o.date].push(o);
+    });
+
+    const dates = Object.keys(byDate).sort().reverse();
 
     dates.forEach(date => {
-        html += `<h3>${date}</h3>`;
+        const humanDate = date.split("-").reverse().join(".");
+        const h = document.createElement("div");
+        h.className = "order-date-title";
+        h.textContent = "📅 " + humanDate;
+        container.appendChild(h);
 
-        orders[date].forEach((o, index) => {
+        byDate[date].forEach(o => {
+            const div = document.createElement("div");
+            div.className = "order-item";
 
-            const color = 
-                o.status === "active" ? "#4caf50" :
-                o.status === "completed" ? "#2196f3" :
-                "#f44336";
+            const statusClass =
+                o.status === "completed" ? "status-completed" :
+                o.status === "cancelled" ? "status-cancelled" :
+                "status-active";
 
-            html += `
-            <div class="order-entry">
-                <p><b>${o.name}</b> — ${o.trays} лотків</p>
-                <p style="color:${color};">Статус: ${o.status}</p>
-                <p>Деталі: ${o.details || "—"}</p>
+            const statusLabel =
+                o.status === "completed" ? "Completed" :
+                o.status === "cancelled" ? "Cancelled" :
+                "Active";
 
-                <button onclick="setOrderStatus('${date}', ${index}, 'completed')" class="small-btn good">Виконано</button>
-                <button onclick="setOrderStatus('${date}', ${index}, 'cancelled')" class="small-btn warn">Скасовано</button>
-                <button onclick="deleteOrder('${date}', ${index})" class="small-btn delete">Видалити</button>
-            </div>`;
+            div.innerHTML = `
+                <div><b>${o.name}</b> — ${o.trays} лотків</div>
+                <div>Деталі: ${o.details || "-"}</div>
+                <div>Статус: <span class="${statusClass}">${statusLabel}</span></div>
+                <div style="margin-top:8px;">
+                    <button class="btn-small" onclick="setOrderStatus(${o.id}, 'active')">Active</button>
+                    <button class="btn-small" onclick="setOrderStatus(${o.id}, 'completed')">Виконано</button>
+                    <button class="btn-small" onclick="setOrderStatus(${o.id}, 'cancelled')">Скасовано</button>
+                    <button class="btn-small" onclick="deleteOrder(${o.id})">Видалити</button>
+                </div>
+            `;
+            container.appendChild(div);
         });
     });
-
-    document.getElementById("ordersList").innerHTML = html;
 }
 
-/* ===========================
-   💰 ФІНАНСОВА ІСТОРІЯ
-=========================== */
-function updateFinanceHistory() {
-    let history = JSON.parse(localStorage.getItem("financeHistory")) || [];
-    let price = +(localStorage.getItem("trayPrice") || 0);
+// оновлення верхнього summary по лотках у вкладці Замовлення
+function updateOrdersSummary() {
+    const eggsTotals = getEggsTotals();
+    const orderStats = getOrdersStats();
 
-    let totalIncome = 0;
+    const fullTrays = eggsTotals.totalFullTrays;
+    const reserved  = orderStats.reserved;
+    const completed = orderStats.completed;
+    let free = fullTrays - reserved;
+    if (free < 0) free = 0;
 
-    let html = "";
-    history.forEach(h => {
-        totalIncome += h.income;
-        html += `
-        <div class="fin-entry">
-            <b>${h.date}</b> — ${h.trays} лотків × ${price} грн = <b>${h.income} грн</b>
-        </div>`;
+    document.getElementById("summaryFullTrays").textContent = fullTrays;
+    document.getElementById("summaryReservedTrays").textContent = reserved;
+    document.getElementById("summaryFreeTrays").textContent = free;
+    document.getElementById("summaryCompletedTrays").textContent = completed;
+}
+
+/* ===================== ФІНАНСИ ===================== */
+function loadFinanceSettings() {
+    try {
+        const obj = JSON.parse(localStorage.getItem("financeSettings") || "{}");
+        trayPrice = obj.trayPrice || 0;
+    } catch {
+        trayPrice = 0;
+    }
+}
+function saveFinanceSettings() {
+    localStorage.setItem("financeSettings", JSON.stringify({ trayPrice }));
+}
+
+// збереження ціни за лоток
+function saveTrayPrice() {
+    trayPrice = Number(document.getElementById("trayPrice").value) || 0;
+    saveFinanceSettings();
+    blip();
+    alertSaved();
+    renderFinance();
+}
+
+// рендер фінансового звіту (комбінований)
+function renderFinance() {
+    const div = document.getElementById("financeSummary");
+    div.innerHTML = "";
+
+    const eggsTotals = getEggsTotals();
+    const orderStats = getOrdersStats();
+
+    const totalCommercial = eggsTotals.totalCommercial;
+    const totalFullTrays  = eggsTotals.totalFullTrays;
+    const reserved        = orderStats.reserved;
+    const completed       = orderStats.completed;
+
+    const incomeCompleted = completed * trayPrice;
+    const potentialIncome = totalFullTrays * trayPrice;
+
+    const html = `
+        <p>Комерційних яєць всього: <b>${totalCommercial}</b></p>
+        <p>Повних лотків (по яйцях): <b>${totalFullTrays}</b></p>
+        <p>Заброньовано лотків (Active): <b>${reserved}</b></p>
+        <p>Виконано лотків (Completed): <b>${completed}</b></p>
+        <hr/>
+        <p>Ціна за лоток: <b>${trayPrice.toFixed(2)}</b> грн</p>
+        <p>Дохід з виконаних замовлень: <b>${incomeCompleted.toFixed(2)}</b> грн</p>
+        <p>Потенційний дохід (якщо продати всі лотки): <b>${potentialIncome.toFixed(2)}</b> грн</p>
+    `;
+    div.innerHTML = html;
+}
+
+// експорт CSV (яйця + замовлення + фінанси)
+function exportCSV() {
+    const lines = [];
+
+    // ЯЙЦЯ
+    lines.push("=== ЯЙЦЯ ===");
+    lines.push("Дата;Всього;Брак;Для дому;Комерційні;Повних лотків");
+    const dates = Object.keys(eggsLog).sort();
+    dates.forEach(d => {
+        const r = eggsLog[d];
+        const sell = r.sell || 0;
+        const full = Math.floor(sell / 20);
+        const humanDate = d.split("-").reverse().join(".");
+        lines.push(`${humanDate};${r.good};${r.bad};${r.home};${sell};${full}`);
     });
 
-    document.getElementById("financeHistory").innerHTML = html;
-    document.getElementById("totalIncome").innerText = totalIncome;
-}
-
-/* ===========================
-   🔄 СТАТИСТИКА ЛОТКІВ
-=========================== */
-function updateOrderStats() {
-    let eggs = JSON.parse(localStorage.getItem("eggsLog")) || {};
-    let orders = JSON.parse(localStorage.getItem("orders")) || {};
-
-    // Повні лотки
-    let traysTotal = 0;
-    Object.values(eggs).forEach(e => traysTotal += e.trays);
-
-    // Заброньовано (тільки active)
-    let reserved = 0;
-    Object.values(orders).forEach(arr => {
-        arr.forEach(o => {
-            if (o.status === "active") reserved += o.trays;
-        });
+    lines.push("");
+    lines.push("=== ЗАМОВЛЕННЯ ===");
+    lines.push("Дата;Імʼя;Лотки;Статус;Деталі");
+    orders.forEach(o => {
+        const humanDate = o.date.split("-").reverse().join(".");
+        lines.push(`${humanDate};${o.name};${o.trays};${o.status};${(o.details || "").replace(/;/g, ",")}`);
     });
 
-    let free = traysTotal - reserved;
+    const eggsTotals = getEggsTotals();
+    const orderStats = getOrdersStats();
+    const incomeCompleted = orderStats.completed * trayPrice;
+    const potentialIncome = eggsTotals.totalFullTrays * trayPrice;
 
-    document.getElementById("traysTotal").innerText = traysTotal;
-    document.getElementById("reserved").innerText = reserved;
-    document.getElementById("freeTrays").innerText = free;
+    lines.push("");
+    lines.push("=== ФІНАНСИ ===");
+    lines.push(`Ціна за лоток;${trayPrice}`);
+    lines.push(`Комерційних яєць всього;${eggsTotals.totalCommercial}`);
+    lines.push(`Повних лотків;${eggsTotals.totalFullTrays}`);
+    lines.push(`Заброньовано лотків;${orderStats.reserved}`);
+    lines.push(`Виконано лотків;${orderStats.completed}`);
+    lines.push(`Дохід з виконаних;${incomeCompleted.toFixed(2)}`);
+    lines.push(`Потенційний дохід;${potentialIncome.toFixed(2)}`);
+
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "quail_farm_report.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
-// ==========================
-// 🌼 ІНІЦІАЛІЗАЦІЯ
-// ==========================
+/* ===================== ІНІЦІАЛІЗАЦІЯ ===================== */
+document.addEventListener("DOMContentLoaded", () => {
+    // калькулятор
+    loadFeedTable();
+    document.addEventListener("input", (e) => {
+        if (e.target.id.startsWith("feedQty") || e.target.id.startsWith("feedPrice") || e.target.id === "feedVolume") {
+            calcFeed();
+        }
+    });
+    calcFeed();
 
-renderEggsReport();
-renderOrders();
-updateOrderStats();
-updateFinanceHistory();
+    // яйця
+    loadEggsLog();
+    renderEggsReport();
 
+    // замовлення
+    loadOrders();
+    renderOrders();
+
+    // фінанси
+    loadFinanceSettings();
+    document.getElementById("trayPrice").value = trayPrice || "";
+    updateOrdersSummary();
+    renderFinance();
+
+    // за замовчуванням — сьогоднішня дата в замовленнях
+    const today = new Date().toISOString().slice(0,10);
+    const dateInput = document.getElementById("orderDate");
+    if (dateInput && !dateInput.value) {
+        dateInput.value = today;
+    }
+});
 </script>
 
 </body>
