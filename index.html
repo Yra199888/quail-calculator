@@ -80,25 +80,23 @@
 
     <div id="feed" class="section-page" style="display:block;">
   <div class="m3-card">
-    <h2>1. Рецепт комбікорму (твій постійний)</h2>
+    <h2>1. Рецепт комбікорму (постійний)</h2>
 
-    <label for="feedBatchKg">Бажана вага партії (кг)</label>
-    <input type="number" id="feedBatchKg" value="25" oninput="recalcFeedRecipe()">
-
-    <table class="m3-table">
-      <thead>
+<table class="m3-table">
+    <thead>
         <tr>
-          <th>Компонент</th>
-          <th>К-сть (кг)</th>
-          <th>Ціна за кг</th>
-          <th>Сума</th>
+            <th>Компонент</th>
+            <th>К-сть (кг)</th>
+            <th>Ціна за кг</th>
+            <th>Сума</th>
         </tr>
-      </thead>
-      <tbody id="feedRecipeBody"></tbody>
-    </table>
+    </thead>
+    <tbody id="feedRecipeTable"></tbody>
+</table>
 
-    <p>Вага партії: <span id="feedBatchTotalKg">0</span> кг</p>
-    <p>Собівартість 1 кг: <span id="feedCostPerKg">0.00</span> грн</p>
+<p>Вага партії: <b id="feedTotalWeight">0</b> кг</p>
+<p>Собівартість 1 кг: <b id="feedCostPerKg">0</b> грн</p>
+<p>Загальна вартість: <b id="feedTotalCost">0</b> грн</p>
     <p>Загальна вартість: <span id="feedTotalCost">0.00</span> грн</p>
   </div>
 
