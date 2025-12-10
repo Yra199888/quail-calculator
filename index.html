@@ -79,25 +79,32 @@
 ============================================================ -->
 <div id="feed" class="section active">
 
-    <div class="card">
-        <h2>1. Рецепт комбікорму (твій постійний)</h2>
+    <div id="feed" class="section-page" style="display:block;">
+  <div class="m3-card">
+    <h2>1. Рецепт комбікорму (твій постійний)</h2>
 
-        <table class="m3-table">
-            <thead>
-                <tr>
-                    <th>Компонент</th>
-                    <th>К-сть (кг)</th>
-                    <th>Ціна за кг</th>
-                    <th>Сума</th>
-                </tr>
-            </thead>
-            <tbody id="feedRecipeRows"></tbody>
-        </table>
+    <label for="feedBatchKg">Бажана вага партії (кг)</label>
+    <input type="number" id="feedBatchKg" value="25" oninput="recalcFeedRecipe()">
 
-        <p><b>Вага партії:</b> <span id="feedTotalKg">0</span> кг</p>
-        <p><b>Собівартість 1 кг:</b> <span id="feedPricePerKg">0.00</span> грн</p>
-        <p><b>Загальна вартість:</b> <span id="feedTotalCost">0</span> грн</p>
-    </div>
+    <table class="m3-table">
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>К-сть (кг)</th>
+          <th>Ціна за кг</th>
+          <th>Сума</th>
+        </tr>
+      </thead>
+      <tbody id="feedRecipeBody"></tbody>
+    </table>
+
+    <p>Вага партії: <span id="feedBatchTotalKg">0</span> кг</p>
+    <p>Собівартість 1 кг: <span id="feedCostPerKg">0.00</span> грн</p>
+    <p>Загальна вартість: <span id="feedTotalCost">0.00</span> грн</p>
+  </div>
+
+  <!-- далі можуть йти твої блоки 2. Запаси, 3. Готовий корм і т.д. -->
+</div>
 
     <div class="card">
         <h2>2. Запаси компонентів</h2>
