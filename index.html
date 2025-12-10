@@ -6,381 +6,422 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-/* === ГЛОБАЛЬНІ ТЕМИ === */
+/* === ТЕМИ === */
 :root {
-    --bg: #111;
-    --text: #fff;
-    --card: #1b1b1b;
-    --border: #333;
-    --accent: #4caf50;
+  --bg: #111;
+  --text: #fff;
+  --card: #1d1d1d;
+  --border: #333;
+  --accent: #4caf50;
 }
 .light {
-    --bg: #f3f3f3;
-    --text: #111;
-    --card: #fff;
-    --border: #ccc;
-    --accent: #2a7cda;
+  --bg: #f4f4f4;
+  --text: #000;
+  --card: #fff;
+  --border: #bbb;
+  --accent: #2a7cda;
 }
+
 body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: Arial, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial;
+  transition: 0.4s;
 }
-/* === Верхні вкладки === */
+
+/* === ВЕРХНЄ МЕНЮ === */
 .topnav {
-    display: flex;
-    justify-content: space-around;
-    background: var(--card);
-    border-bottom: 2px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--card);
+  padding: 8px 0;
+  border-bottom: 2px solid var(--border);
 }
-.tab-btn {
-    flex: 1;
-    text-align: center;
-    padding: 12px;
-    font-size: 17px;
-    cursor: pointer;
-    border-bottom: 4px solid transparent;
+
+.tab-icon {
+  font-size: 26px;
+  cursor: pointer;
+  transition: 0.25s;
+  opacity: 0.6;
 }
-.tab-btn.active {
-    border-bottom: 4px solid var(--accent);
-    color: var(--accent);
-    font-weight: bold;
+.tab-icon.active {
+  font-size: 32px;
+  opacity: 1;
+  color: var(--accent);
 }
-/* === Сторінки === */
-.page { display: none; padding: 20px; }
-.active-page { display: block; }
+
+/* === ТЕМА === */
+.theme-btn {
+  position: fixed;
+  top: 10px;
+  right: 15px;
+  font-size: 26px;
+  cursor: pointer;
+  z-index: 999;
+  opacity: 0.8;
+}
+
+/* === КОНТЕЙНЕРИ === */
+.page {
+  display: none;
+  padding: 20px;
+}
+.active-page {
+  display: block;
+}
 .container {
-    background: var(--card);
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin-top: 20px;
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
 }
-/* === Кнопки === */
+
+/* === КНОПКИ === */
 button {
-    background: var(--accent);
-    color: #fff;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
 }
-.btn-small {
-    padding: 5px 8px;
-    font-size: 12px;
+
+/* === ІНПУТИ === */
+input, textarea, select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+  background: #0005;
+  border: 1px solid var(--border);
+  color: var(--text);
 }
-/* === Таблиці === */
-table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid var(--border); padding: 6px; text-align: center; }
-th { background: var(--accent); color: #fff; }
-/* === Статуси === */
-.status-active { color: #4caf50; font-weight: bold; }
-.status-completed { color: #3498db; font-weight: bold; }
-.status-cancelled { color: #e74c3c; font-weight: bold; }
-.order-item {
-    padding: 12px;
-    margin-bottom: 10px;
-    background: #0004;
-    border-radius: 8px;
+
+/* === ЗАМОВЛЕННЯ === */
+.order-block {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #0004;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
+.status-active {
+  color: #4caf50;
+  font-weight: bold;
+}
+.status-completed {
+  color: #3498db;
+  font-weight: bold;
+}
+.status-cancelled {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- === Вкладки === -->
+<!-- === КНОПКА ТЕМИ === -->
+<div class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</div>
+
+<!-- === НАВІГАЦІЯ ЗВЕРХУ === -->
 <div class="topnav">
-    <div class="tab-btn active" onclick="openTab('calculator', this)">🧮 Калькулятор</div>
-    <div class="tab-btn" onclick="openTab('eggs', this)">🥚 Яйця</div>
-    <div class="tab-btn" onclick="openTab('orders', this)">📦 Замовлення</div>
-    <div class="tab-btn" onclick="openTab('finance', this)">💰 Фінанси</div>
+  <div class="tab-icon active" onclick="openTab('calculator', this)">🧮</div>
+  <div class="tab-icon" onclick="openTab('eggs', this)">🥚</div>
+  <div class="tab-icon" onclick="openTab('orders', this)">📦</div>
+  <div class="tab-icon" onclick="openTab('finance', this)">💰</div>
 </div>
 
 <!-- === КАЛЬКУЛЯТОР === -->
 <div id="page-calculator" class="page active-page">
-    <h2>🧮 Калькулятор корму</h2>
-    <div class="container">
-        <table id="feedTable"></table>
+  <h2>🧮 Калькулятор корму</h2>
+  <div class="container">
+    <table>
+      <tr>
+        <th>Компонент</th>
+        <th>К-сть</th>
+        <th>Ціна</th>
+        <th>Сума</th>
+      </tr>
+    </table>
+    <table id="feedTable"></table>
 
-        <h3>Обʼєм корму (кг):</h3>
-        <input id="feedVolume" type="number" value="25" />
+    <h3>Обʼєм корму (кг):</h3>
+    <input id="feedVolume" type="number" value="25">
 
-        <h3>Результат:</h3>
-        <div>
-            Сума всього: <b id="feedTotal">0</b> грн<br>
-            Ціна за 1 кг: <b id="feedPerKg">0</b> грн<br>
-            Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн
-        </div>
-    </div>
+    <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
+    <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
+    <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
+  </div>
 </div>
 
 <!-- === ЯЙЦЯ === -->
 <div id="page-eggs" class="page">
-    <h2>🥚 Облік яєць (щоденний)</h2>
+  <h2>🥚 Облік яєць</h2>
 
-    <div class="container">
-        <label>Дата запису:</label>
-        <input type="date" id="eggsDate" />
+  <div class="container">
+    <label>Дата:</label>
+    <input type="date" id="eggsDate">
 
-        <label>Яєць за добу:</label>
-        <input id="eggsGood" type="number" min="0" />
+    <label>Яєць за добу:</label>
+    <input id="eggsGood" type="number">
 
-        <label>Браковані:</label>
-        <input id="eggsBad" type="number" min="0" />
+    <label>Браковані:</label>
+    <input id="eggsBad" type="number">
 
-        <label>Для дому:</label>
-        <input id="eggsHome" type="number" min="0" />
+    <label>Для дому:</label>
+    <input id="eggsHome" type="number">
 
-        <button onclick="saveEggRecord()">Додати запис</button>
+    <button onclick="saveEggRecord()">Зберегти</button>
+  </div>
 
-        <h3 style="margin-top:25px;">Звіт по днях</h3>
-        <div id="eggsReport"></div>
-    </div>
+  <h3>Щоденний звіт</h3>
+  <div id="eggsList"></div>
 </div>
 
 <!-- === ЗАМОВЛЕННЯ === -->
 <div id="page-orders" class="page">
-    <h2>📦 Замовлення</h2>
+  <h2>📦 Замовлення</h2>
 
-    <div class="container">
-        <label>Дата:</label>
-        <input type="date" id="orderDate" />
+  <div class="container">
+    <label>Дата:</label>
+    <input id="orderDate" type="date">
 
-        <label>Ім'я:</label>
-        <input type="text" id="orderName" />
+    <label>Ім'я клієнта:</label>
+    <input id="orderName">
 
-        <label>Лотки:</label>
-        <input type="number" id="orderTrays" min="1" />
+    <label>Лотків:</label>
+    <input id="orderTrays" type="number">
 
-        <label>Деталі:</label>
-        <textarea id="orderDetails" rows="2"></textarea>
+    <label>Деталі:</label>
+    <textarea id="orderDetails"></textarea>
 
-        <button onclick="addOrder()">Додати замовлення</button>
+    <button onclick="addOrder()">Додати</button>
+  </div>
 
-        <h3>Усі замовлення</h3>
-        <div id="ordersList"></div>
-    </div>
+  <h3>Список замовлень</h3>
+  <div id="ordersList"></div>
 </div>
 
 <!-- === ФІНАНСИ === -->
 <div id="page-finance" class="page">
-    <h2>💰 Фінанси</h2>
+  <h2>💰 Фінанси</h2>
 
-    <div class="container">
-        <label>Ціна за 1 лоток:</label>
-        <input id="trayPrice" type="number" min="0" />
+  <div class="container">
+    <label>Ціна за лоток:</label>
+    <input id="trayPrice" type="number" value="50">
 
-        <button onclick="saveFinanceSettings()">Зберегти</button>
+    <button onclick="saveFinanceSettings()">Зберегти</button>
 
-        <h3>Загальна історія</h3>
-        <div id="financeSummary"></div>
+    <h3>Звіт</h3>
+    <div id="financeReport"></div>
 
-        <button onclick="exportCSV()">Експорт CSV</button>
-    </div>
+    <button onclick="exportCSV()">Експорт CSV</button>
+  </div>
 </div>
 
 <script>
-/* === Вкладки === */
-function openTab(id, btn){
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
-    document.getElementById("page-"+id).classList.add("active-page");
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+/* === ТЕМА === */
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  const i = document.getElementById("themeIcon");
+  i.innerText = document.body.classList.contains("light") ? "☀️" : "🌙";
+}
+toggleTheme();
+
+/* === ВКЛАДКИ === */
+function openTab(page, el) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active-page"));
+  document.querySelector("#page-" + page).classList.add("active-page");
+
+  document.querySelectorAll(".tab-icon").forEach(i=>i.classList.remove("active"));
+  el.classList.add("active");
 }
 
 /* === КАЛЬКУЛЯТОР === */
 const feedComponents = [
-    ["Кукурудза", 10], ["Пшениця", 5], ["Ячмінь", 1.5],
-    ["Соєва макуха", 3], ["Соняшникова макуха", 2.5], ["Рибне борошно", 1],
-    ["Кормові дріжджі", 0.7], ["Трикальційфосфат", 0.5],
-    ["Dolfos D", 0.7], ["Сіль", 0.05]
+  ["Кукурудза",10],
+  ["Пшениця",5],
+  ["Ячмінь",1.5],
+  ["Соєва макуха",3],
+  ["Соняшникова макуха",2.5],
+  ["Рибне борошно",1],
+  ["Кормові дріжджі",0.7],
+  ["Трикальційфосфат",0.5],
+  ["Dolfos D",0.7],
+  ["Сіль",0.05]
 ];
 
-function loadFeedTable(){
-    let html = `
-        <tr><th>Компонент</th><th>К-сть</th><th>Ціна</th><th>Сума</th></tr>`;
-    feedComponents.forEach((c,i)=>{
-        let price = localStorage.getItem("fp"+i) || 0;
-        html += `
-        <tr>
-            <td>${c[0]}</td>
-            <td><input id="fq${i}" type="number" value="${c[1]}"></td>
-            <td><input id="fp${i}" type="number" value="${price}"></td>
-            <td id="fs${i}">0</td>
-        </tr>`;
-    });
-    document.getElementById("feedTable").innerHTML = html;
+function loadFeed() {
+  let html="";
+  feedComponents.forEach((c,i)=>{
+    let p = localStorage.getItem("p"+i) || 0;
+    html += `
+    <tr>
+      <td>${c[0]}</td>
+      <td><input id="qty${i}" value="${c[1]}"></td>
+      <td><input id="price${i}" value="${p}"></td>
+      <td id="sum${i}">0</td>
+    </tr>`;
+  });
+  document.getElementById("feedTable").innerHTML = html;
+  calcFeed();
 }
-loadFeedTable();
+loadFeed();
 
 function calcFeed(){
-    let total=0, kg=0;
-    feedComponents.forEach((c,i)=>{
-        let q = Number(document.getElementById("fq"+i).value);
-        let p = Number(document.getElementById("fp"+i).value);
-        localStorage.setItem("fp"+i,p);
-        let sum = q*p;
-        document.getElementById("fs"+i).innerHTML = sum.toFixed(2);
-        total += sum; kg += q;
-    });
-    document.getElementById("feedTotal").innerHTML = total.toFixed(2);
-    let perkg = kg ? total/kg : 0;
-    document.getElementById("feedPerKg").innerHTML = perkg.toFixed(2);
-    let vol = Number(document.getElementById("feedVolume").value);
-    document.getElementById("feedVolumeTotal").innerHTML = (vol*perkg).toFixed(2);
+  let total=0,kg=0;
+  feedComponents.forEach((c,i)=>{
+    let q = +document.getElementById("qty"+i).value;
+    let p = +document.getElementById("price"+i).value;
+    localStorage.setItem("p"+i,p);
+    let s=q*p;
+    total+=s; kg+=q;
+    document.getElementById("sum"+i).innerText=s.toFixed(2);
+  });
+  let per=kg?total/kg:0;
+  let vol=+document.getElementById("feedVolume").value;
+  document.getElementById("feedTotal").innerText=total.toFixed(2);
+  document.getElementById("feedPerKg").innerText=per.toFixed(2);
+  document.getElementById("feedVolumeTotal").innerText=(per*vol).toFixed(2);
 }
 document.addEventListener("input", calcFeed);
-calcFeed();
 
-/* === ЯЙЦЯ (один запис на день, вибір дати) ===*/
-let eggsLog = JSON.parse(localStorage.getItem("eggsLog") || "{}");
+/* === ЯЙЦЯ === */
+let eggs={};
 
 function saveEggRecord(){
-    let date = document.getElementById("eggsDate").value;
-    if(!date){
-        let d=new Date();
-        date = d.toISOString().slice(0,10);
-    }
-
-    eggsLog[date] = {
-        good: Number(document.getElementById("eggsGood").value),
-        bad: Number(document.getElementById("eggsBad").value),
-        home: Number(document.getElementById("eggsHome").value)
-    };
-
-    localStorage.setItem("eggsLog", JSON.stringify(eggsLog));
-    renderEggs();
+  let d=document.getElementById("eggsDate").value || new Date().toISOString().slice(0,10);
+  eggs[d]={
+    good:+eggsGood.value||0,
+    bad:+eggsBad.value||0,
+    home:+eggsHome.value||0
+  };
+  localStorage.setItem("eggs",JSON.stringify(eggs));
+  showEggs();
 }
+if(localStorage.getItem("eggs")) eggs=JSON.parse(localStorage.getItem("eggs"));
 
-function renderEggs(){
-    let html="";
-    let dates = Object.keys(eggsLog).sort().reverse();
-    let totalForFinance=0;
-
-    dates.forEach(d=>{
-        let e = eggsLog[d];
-        let commercial = Math.max(e.good - e.bad - e.home, 0);
-        let trays = Math.floor(commercial/20);
-
-        totalForFinance += commercial;
-
-        html+=`
-        <div class="order-item">
-            <b>${d}</b><br>
-            Яєць: ${e.good}<br>
-            Брак: ${e.bad}<br>
-            Для дому: ${e.home}<br>
-            Комерційні: ${commercial}<br>
-            Лотків: ${trays}<br>
-            <button class="btn-small" onclick="deleteEgg('${d}')">Видалити</button>
-        </div>`;
-    });
-
-    window.totalCommercialEggs = totalForFinance;
-    document.getElementById("eggsReport").innerHTML = html;
-    renderFinance();
+function showEggs(){
+  let box="";
+  Object.keys(eggs).sort().reverse().forEach(d=>{
+    let e=eggs[d];
+    let com=e.good-e.bad-e.home;
+    let trays=Math.floor(com/20);
+    box+=`
+    <div class="order-block">
+      <b>${d}</b><br>
+      Всього: ${e.good}<br>
+      Брак: ${e.bad}<br>
+      Дім: ${e.home}<br>
+      Комерційні: ${com}<br>
+      Лотки: ${trays}<br>
+      <button onclick="deleteEgg('${d}')">Видалити</button>
+    </div>`;
+  });
+  document.getElementById("eggsList").innerHTML=box;
 }
+showEggs();
+
 function deleteEgg(d){
-    delete eggsLog[d];
-    localStorage.setItem("eggsLog", JSON.stringify(eggsLog));
-    renderEggs();
+  delete eggs[d];
+  localStorage.setItem("eggs",JSON.stringify(eggs));
+  showEggs();
 }
-renderEggs();
 
-/* === ЗАМОВЛЕННЯ B (по датах + деталі) === */
-let orders = JSON.parse(localStorage.getItem("orders") || "[]");
+/* === ЗАМОВЛЕННЯ === */
+let orders={};
+
+if(localStorage.getItem("orders")) orders=JSON.parse(localStorage.getItem("orders"));
 
 function addOrder(){
-    let d = document.getElementById("orderDate").value;
-    if(!d){
-        let x=new Date();
-        d=x.toISOString().slice(0,10);
-    }
+  let d=orderDate.value || new Date().toISOString().slice(0,10);
+  if(!orders[d]) orders[d]=[];
+  orders[d].push({
+    name:orderName.value,
+    trays:+orderTrays.value,
+    details:orderDetails.value,
+    status:"active"
+  });
+  localStorage.setItem("orders",JSON.stringify(orders));
+  showOrders();
+}
 
-    orders.push({
-        date: d,
-        name: document.getElementById("orderName").value,
-        trays: Number(document.getElementById("orderTrays").value),
-        details: document.getElementById("orderDetails").value,
-        status: "active"
+function showOrders(){
+  let out="";
+  Object.keys(orders).sort().reverse().forEach(d=>{
+    out+=`<h3>${d}</h3>`;
+    orders[d].forEach((o,i)=>{
+      out+=`
+      <div class="order-block">
+        <b>${o.name}</b> — ${o.trays} лот.<br>
+        Деталі: ${o.details}<br>
+        Статус: <span class="status-${o.status}">${o.status}</span><br>
+        <button onclick="setStatus('${d}',${i},'completed')">Виконано</button>
+        <button onclick="setStatus('${d}',${i},'cancelled')">Скасовано</button>
+        <button onclick="deleteOrder('${d}',${i})">Видалити</button>
+      </div>`;
     });
-
-    localStorage.setItem("orders", JSON.stringify(orders));
-    renderOrders();
+  });
+  document.getElementById("ordersList").innerHTML=out;
 }
+showOrders();
 
-function renderOrders(){
-    let html="";
-    let sorted = [...orders].sort((a,b)=>b.date.localeCompare(a.date));
-
-    sorted.forEach((o,i)=>{
-        html += `
-        <div class="order-item">
-            <b>${o.date}</b><br>
-            ${o.name} — ${o.trays} лотків<br>
-            Деталі: ${o.details}<br>
-            Статус: <span class="status-${o.status}">${o.status}</span><br>
-            <button class="btn-small" onclick="setStatus(${i},'completed')">Виконано</button>
-            <button class="btn-small" onclick="setStatus(${i},'cancelled')">Скасовано</button>
-            <button class="btn-small" onclick="deleteOrder(${i})">Видалити</button>
-        </div>`;
-    });
-
-    document.getElementById("ordersList").innerHTML = html;
-    renderFinance();
+function setStatus(d,i,s){
+  orders[d][i].status=s;
+  localStorage.setItem("orders",JSON.stringify(orders));
+  showOrders();
 }
-
-function setStatus(i,status){
-    orders[i].status=status;
-    localStorage.setItem("orders", JSON.stringify(orders));
-    renderOrders();
+function deleteOrder(d,i){
+  orders[d].splice(i,1);
+  if(orders[d].length===0) delete orders[d];
+  localStorage.setItem("orders",JSON.stringify(orders));
+  showOrders();
 }
-function deleteOrder(i){
-    orders.splice(i,1);
-    localStorage.setItem("orders", JSON.stringify(orders));
-    renderOrders();
-}
-renderOrders();
 
 /* === ФІНАНСИ === */
 function saveFinanceSettings(){
-    localStorage.setItem("trayPrice", document.getElementById("trayPrice").value);
-    renderFinance();
+  localStorage.setItem("trayPrice",trayPrice.value);
+  showFinance();
 }
-function renderFinance(){
-    let price = Number(localStorage.getItem("trayPrice") || 0);
-    document.getElementById("trayPrice").value = price;
-
-    let completed = orders.filter(o=>o.status==="completed");
-    let totalTrays = completed.reduce((s,o)=>s+o.trays,0);
-    let totalMoney = totalTrays * price;
-
-    let eggIncome = Math.floor((window.totalCommercialEggs||0)/20)*price;
-
-    document.getElementById("financeSummary").innerHTML = `
-        <b>Виконані замовлення:</b> ${totalTrays} лотків → ${totalMoney} грн<br>
-        <b>Яйця (комерційні):</b> ${(window.totalCommercialEggs||0)} шт → ${eggIncome} грн<br>
-        <hr>
-        <b>Разом:</b> ${totalMoney + eggIncome} грн
-    `;
+function showFinance(){
+  let price=+(localStorage.getItem("trayPrice")||50);
+  trayPrice.value=price;
+  let income=0;
+  Object.keys(orders).forEach(d=>{
+    orders[d].forEach(o=>{
+      if(o.status==="completed") income += o.trays*price;
+    });
+  });
+  document.getElementById("financeReport").innerHTML=
+    `<b>Дохід:</b> ${income} грн`;
 }
-renderFinance();
+showFinance();
 
 /* === CSV === */
 function exportCSV(){
-    let csv="Дата,Клієнт,Лотки,Статус,Деталі\n";
-    orders.forEach(o=>{
-        csv += `${o.date},${o.name},${o.trays},${o.status},${o.details}\n`;
+  let rows=["Дата,Імʼя,Лотки,Деталі,Статус"];
+  Object.keys(orders).forEach(d=>{
+    orders[d].forEach(o=>{
+      rows.push(`${d},${o.name},${o.trays},${o.details},${o.status}`);
     });
+  });
 
-    let blob=new Blob([csv],{type:"text/csv"});
-    let url=URL.createObjectURL(blob);
-    let a=document.createElement("a");
-    a.href=url;
-    a.download="orders.csv";
-    a.click();
+  let csv=rows.join("\n");
+  let blob=new Blob([csv],{type:"text/csv"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="finance.csv";
+  a.click();
 }
+
 </script>
 
 </body>
