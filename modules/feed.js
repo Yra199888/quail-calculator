@@ -7,98 +7,94 @@
 import { DATA, autosave } from "../core/data.js";
 import { renderFeed } from "./render.js";
 
-/* ------------------------------------------------------------
-   1. Ініціалізація рецепта (твій рецепт для несучок)
------------------------------------------------------------- */
+/* ============================================================
+   РЕЦЕПТ КОРМУ ДЛЯ НЕСУЧОК (фіксований рецепт користувача)
+============================================================ */
 
-DATA.feed = DATA.feed || {};
-DATA.feed.recipe = DATA.feed.recipe || {
-        "Кукурудза": 40,
-        "Пшениця": 23,
-        "Ячмінь": 10,
-        "Макуха соєва": 8,
-        "Макуха соняшникова": 7,
-        "Дріжджі кормові": 3,
-        "Трикальційфосфат": 2,
-        "Крейда": 3,
-        "Рибне борошно": 2,
-        "Сіль": 1,
-        "Премікс": 1
+export const FEED_RECIPE = {
+    "Кукурудза": 10.0,
+    "Пшениця": 5.0,
+    "Ячмінь": 1.5,
+    "Макуха соєва": 3.0,
+    "Макуха соняшникова": 2.5,
+    "Рибне борошно": 1.0,
+    "Дріжджі кормові": 0.7,
+    "Трикальційфосфат": 0.5,
+    "Dolfos D": 0.7,
+    "Сіль": 0.05
 };
 
-DATA.feed.prices = DATA.feed.prices || {};   // ціна за 1 кг компонентів
-DATA.feed.components = DATA.feed.components || {}; // розрахунок у кг
 
-export function applyRecipePreset(type) {
-    if (type === "layer") {
-        DATA.feed.recipe = { ...DEFAULT_LAYER_FEED };
+/* ============================================================
+   1. Відображення рецепта у таблиці
+============================================================ */
+
+export function renderFeedRecipe() {
+    let html = "";
+
+    for (let key in FEED_RECIPE) {
+        const kg = FEED_RECIPE[key];
+
+        const price = DATA.feed.prices?.[key] || 0;
+        const cost = price * kg;
+
+        html += `
+        <tr>
+            <td>${key}</td>
+            <td>${kg.toFixed(2)}</td>
+            <td>
+                <input type="number" 
+                       value="${price}" 
+                       oninput="updateFeedPrice('${key}', this.value)">
+            </td>
+            <td>${cost.toFixed(2)}</td>
+        </tr>
+        `;
     }
 
-    recalcFeed();
-    autosave();
+    document.getElementById("feedRecipeRows").innerHTML = html;
+
+    recalcFeedRecipe();
 }
 
 
-/* ------------------------------------------------------------
-   2. Головний перерахунок рецепта
------------------------------------------------------------- */
+/* ============================================================
+   2. Оновлення ціни компоненту
+============================================================ */
 
-export function recalcFeed() {
-    const batchKg = Number(document.getElementById("feedBatchKg").value);
+export function updateFeedPrice(name, value) {
+    if (!DATA.feed.prices) DATA.feed.prices = {};
+    DATA.feed.prices[name] = Number(value);
+    recalcFeedRecipe();
+}
 
-    const recipe = DATA.feed.recipe;
-    const prices = DATA.feed.prices;
-    let rows = "";
-    let totalKg = 0;
+
+/* ============================================================
+   3. Перерахунок собівартості партії
+============================================================ */
+
+export function recalcFeedRecipe() {
     let totalCost = 0;
+    let totalKg = 0;
 
-    for (let comp in recipe) {
-        const percent = recipe[comp];
-        const kg = (batchKg * percent) / 100;
-        const price = Number(prices[comp] || 0);
-        const sum = kg * price;
+    for (let key in FEED_RECIPE) {
+        const kg = FEED_RECIPE[key];
+        const price = DATA.feed.prices?.[key] || 0;
+        const cost = price * kg;
 
-        DATA.feed.components[comp] = kg;
-
+        totalCost += cost;
         totalKg += kg;
-        totalCost += sum;
-
-        rows += `
-            <tr>
-                <td>${comp}</td>
-                <td>${percent}%</td>
-                <td><b>${kg.toFixed(2)}</b> кг</td>
-                <td>
-                    <input type="number" 
-                           value="${price}" 
-                           onchange="updateComponentPrice('${comp}', this.value)">
-                </td>
-                <td>${sum.toFixed(2)} грн</td>
-            </tr>
-        `;
     }
 
     DATA.feed.totalKg = totalKg;
     DATA.feed.totalCost = totalCost;
-    DATA.feed.costPerKg = totalKg > 0 ? totalCost / totalKg : 0;
+    DATA.feed.costPerKg = totalCost / totalKg;
 
-    document.getElementById("feedTableRows").innerHTML = rows;
-    document.getElementById("feedTotalKg").textContent = totalKg.toFixed(2);
-    document.getElementById("feedTotalCost").textContent = totalCost.toFixed(2);
-    document.getElementById("feedCostPerKg").textContent = DATA.feed.costPerKg.toFixed(2);
+    document.getElementById("feedTotalKg").innerText = totalKg.toFixed(2);
+    document.getElementById("feedTotalCost").innerText = totalCost.toFixed(2);
+    document.getElementById("feedCostPerKg").innerText = DATA.feed.costPerKg.toFixed(2);
 
     autosave();
-    renderFeed();
-}
-
-
-/* ------------------------------------------------------------
-   3. Оновлення ціни компоненту
------------------------------------------------------------- */
-
-export function updateComponentPrice(name, value) {
-    DATA.feed.prices[name] = Number(value);
-    recalcFeed();
 }
 
 
