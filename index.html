@@ -2,140 +2,208 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<title>Калькулятор корму</title>
+<title>Feed Calculator PRO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-    body { font-family: Arial; background:#111; color:#fff; padding:20px; }
-    table { width:100%; border-collapse:collapse; margin-bottom:20px; }
-    td, th { border:1px solid #555; padding:8px; text-align:center; }
-    input { width:80px; padding:5px; }
-    .result { font-size:20px; margin-top:15px; }
+    :root {
+        --bg: #111;
+        --text: #fff;
+        --card: #1b1b1b;
+        --border: #333;
+        --accent: #4caf50;
+    }
+
+    .light {
+        --bg: #f3f3f3;
+        --text: #111;
+        --card: #fff;
+        --border: #ccc;
+        --accent: #2a7cda;
+    }
+
+    body {
+        font-family: Arial;
+        background: var(--bg);
+        color: var(--text);
+        margin:0;
+        padding:20px;
+        transition: .3s;
+    }
+
+    h2 {
+        text-align:center;
+        margin-bottom:20px;
+    }
+
+    .container {
+        max-width:900px;
+        margin:auto;
+        background:var(--card);
+        padding:20px;
+        border-radius:10px;
+        border:1px solid var(--border);
+    }
+
+    table {
+        width:100%;
+        border-collapse:collapse;
+        margin-bottom:20px;
+        font-size:16px;
+    }
+
+    th {
+        background: var(--accent);
+        color:#fff;
+    }
+
+    td, th {
+        border:1px solid var(--border);
+        padding:8px;
+        text-align:center;
+    }
+
+    input {
+        width:90px;
+        padding:5px;
+        border-radius:5px;
+        border:1px solid var(--border);
+        background:#0003;
+        color:var(--text);
+    }
+
+    .result {
+        font-size: 20px;
+        margin-top: 15px;
+        line-height: 30px;
+    }
+
+    .theme-btn {
+        background: var(--accent);
+        border:none;
+        padding:10px 20px;
+        font-size:16px;
+        color:#fff;
+        border-radius:5px;
+        cursor:pointer;
+        float:right;
+        margin-bottom:15px;
+    }
+
+    .theme-btn:hover {
+        opacity:.85;
+    }
+
+    @media(max-width:600px){
+        table, td, th {
+            font-size:14px;
+        }
+        input {
+            width:70px;
+        }
+    }
 </style>
 </head>
 <body>
 
-<h2>Калькулятор корму (25 кг)</h2>
+<button class="theme-btn" onclick="toggleTheme()">🌓 Тема</button>
+
+<h2>Feed Calculator PRO</h2>
+
+<div class="container">
 
 <table>
     <tr>
         <th>Компонент</th>
         <th>К-сть (кг)</th>
-        <th>Ціна за 1 кг (грн)</th>
-        <th>Вартість (грн)</th>
+        <th>Ціна за 1 кг</th>
+        <th>Вартість</th>
     </tr>
 
-    <tr>
-        <td>Кукурудза</td>
-        <td><input type="number" id="q1" value="10" step="0.1"></td>
-        <td><input type="number" id="p1" value="0" step="0.1"></td>
-        <td id="s1">0</td>
-    </tr>
-
-    <tr>
-        <td>Пшениця</td>
-        <td><input type="number" id="q2" value="5" step="0.1"></td>
-        <td><input type="number" id="p2" value="0" step="0.1"></td>
-        <td id="s2">0</td>
-    </tr>
-
-    <tr>
-        <td>Ячмінь</td>
-        <td><input type="number" id="q3" value="1.5" step="0.1"></td>
-        <td><input type="number" id="p3" value="0" step="0.1"></td>
-        <td id="s3">0</td>
-    </tr>
-
-    <tr>
-        <td>Соєва макуха</td>
-        <td><input type="number" id="q4" value="3" step="0.1"></td>
-        <td><input type="number" id="p4" value="0" step="0.1"></td>
-        <td id="s4">0</td>
-    </tr>
-
-    <tr>
-        <td>Соняшникова макуха</td>
-        <td><input type="number" id="q5" value="2.5" step="0.1"></td>
-        <td><input type="number" id="p5" value="0" step="0.1"></td>
-        <td id="s5">0</td>
-    </tr>
-
-    <tr>
-        <td>Рибне борошно</td>
-        <td><input type="number" id="q6" value="1" step="0.1"></td>
-        <td><input type="number" id="p6" value="0" step="0.1"></td>
-        <td id="s6">0</td>
-    </tr>
-
-    <tr>
-        <td>Кормові дріжджі</td>
-        <td><input type="number" id="q7" value="0.7" step="0.1"></td>
-        <td><input type="number" id="p7" value="0" step="0.1"></td>
-        <td id="s7">0</td>
-    </tr>
-
-    <tr>
-        <td>Трикальційфосфат</td>
-        <td><input type="number" id="q8" value="0.5" step="0.1"></td>
-        <td><input type="number" id="p8" value="0" step="0.1"></td>
-        <td id="s8">0</td>
-    </tr>
-
-    <tr>
-        <td>Dolfos D</td>
-        <td><input type="number" id="q9" value="0.7" step="0.1"></td>
-        <td><input type="number" id="p9" value="0" step="0.1"></td>
-        <td id="s9">0</td>
-    </tr>
-
-    <tr>
-        <td>Сіль</td>
-        <td><input type="number" id="q10" value="0.05" step="0.01"></td>
-        <td><input type="number" id="p10" value="0" step="0.1"></td>
-        <td id="s10">0</td>
-    </tr>
 </table>
 
-<h3>Введіть потрібний об'єм корму (кг):</h3>
+<table id="tbl"></table>
+
+<h3>Потрібний об'єм корму (кг):</h3>
 <input type="number" id="volume" value="25" step="1">
 
 <div class="result">
-    <p>🔹 Загальна ціна: <span id="total">0</span> грн</p>
-    <p>🔹 Ціна за 1 кг: <span id="perkg">0</span> грн</p>
-    <p>🔹 Ціна за об'єм: <span id="totalVolume">0</span> грн</p>
+    🔹 Загальна ціна: <span id="total">0</span> грн<br>
+    🔹 Ціна за 1 кг: <span id="perkg">0</span> грн<br>
+    🔹 Вартість обʼєму: <span id="totalVolume">0</span> грн
+</div>
+
 </div>
 
 <script>
-function calc() {
+const components = [
+    ["Кукурудза",10],
+    ["Пшениця",5],
+    ["Ячмінь",1.5],
+    ["Соєва макуха",3],
+    ["Соняшникова макуха",2.5],
+    ["Рибне борошно",1],
+    ["Кормові дріжджі",0.7],
+    ["Трикальційфосфат",0.5],
+    ["Dolfos D",0.7],
+    ["Сіль",0.05]
+];
+
+function loadTable(){
+    let html = "";
+    components.forEach((c,i)=>{
+        const qty = c[1];
+        const price = localStorage.getItem("p"+(i+1)) || 0;
+        html += `
+        <tr>
+            <td>${c[0]}</td>
+            <td><input id="q${i+1}" type="number" value="${qty}" step="0.1"></td>
+            <td><input id="p${i+1}" type="number" value="${price}" step="0.1"></td>
+            <td id="s${i+1}">0</td>
+        </tr>`;
+    });
+    document.getElementById("tbl").innerHTML = html;
+}
+loadTable();
+
+function calc(){
     let total = 0;
-
-    for (let i = 1; i <= 10; i++) {
-        let q = parseFloat(document.getElementById("q" + i).value) || 0;
-        let p = parseFloat(document.getElementById("p" + i).value) || 0;
-        let sum = q * p;
-
-        document.getElementById("s" + i).innerText = sum.toFixed(2);
-        total += sum;
-    }
-
     let totalKg = 0;
-    for (let i = 1; i <= 10; i++) {
-        totalKg += parseFloat(document.getElementById("q" + i).value) || 0;
+
+    for (let i = 1; i <= components.length; i++) {
+        let q = parseFloat(document.getElementById("q"+i).value) || 0;
+        let p = parseFloat(document.getElementById("p"+i).value) || 0;
+
+        localStorage.setItem("p"+i, p); // автозбереження
+
+        let sum = q * p;
+        document.getElementById("s"+i).innerText = sum.toFixed(2);
+
+        total += sum;
+        totalKg += q;
     }
 
-    let pricePerKg = totalKg ? total / totalKg : 0;
-
-    let volume = parseFloat(document.getElementById("volume").value) || 0;
-    let totalVolPrice = pricePerKg * volume;
+    let perkg = totalKg ? total / totalKg : 0;
+    let vol = parseFloat(document.getElementById("volume").value) || 0;
+    let totalVol = perkg * vol;
 
     document.getElementById("total").innerText = total.toFixed(2);
-    document.getElementById("perkg").innerText = pricePerKg.toFixed(2);
-    document.getElementById("totalVolume").innerText = totalVolPrice.toFixed(2);
+    document.getElementById("perkg").innerText = perkg.toFixed(2);
+    document.getElementById("totalVolume").innerText = totalVol.toFixed(2);
 }
 
-document.querySelectorAll("input").forEach(el => {
-    el.addEventListener("input", calc);
-});
-
+document.addEventListener("input", calc);
 calc();
+
+// ---- ТЕМА ----
+function toggleTheme(){
+    document.body.classList.toggle("light");
+    localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+}
+
+if(localStorage.getItem("theme")==="light"){
+    document.body.classList.add("light");
+}
 </script>
 
 </body>
