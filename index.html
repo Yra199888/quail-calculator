@@ -31,13 +31,39 @@ body {
     transition: .3s;
 }
 
+/* ========= ВЕРХНЯ НАВІГАЦІЯ ========= */
+.topnav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: var(--card);
+    border-bottom: 2px solid var(--border);
+    padding-top: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text);
+    border-bottom: 4px solid transparent;
+}
+
+.tab-btn.active {
+    font-weight: bold;
+    color: var(--accent);
+    border-bottom: 4px solid var(--accent);
+}
+
 /* ========= КОНТЕЙНЕРИ ========= */
 .page {
     display: none;
     padding: 20px;
-    padding-bottom: 100px;
+    padding-bottom: 50px;
 }
-.active {
+.active-page {
     display: block;
 }
 
@@ -51,35 +77,7 @@ body {
     margin-top: 20px;
 }
 
-/* ========= НАВІГАЦІЯ ЗНИЗУ ========= */
-.navbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    background: var(--card);
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-}
-
-.nav-btn {
-    flex: 1;
-    text-align: center;
-    padding: 10px;
-    color: var(--text);
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.nav-btn.active {
-    color: var(--accent);
-    font-weight: bold;
-}
-
-/* ========= СТИЛІ КАЛЬКУЛЯТОРА ========= */
+/* ========= КАЛЬКУЛЯТОР ========= */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -118,7 +116,6 @@ input {
     color: #fff;
     padding: 10px 20px;
     border-radius: 6px;
-    font-size: 16px;
     opacity: 0;
     pointer-events: none;
     transition: 0.4s;
@@ -144,16 +141,21 @@ input {
 </head>
 <body>
 
-<!-- СПОВІЩЕННЯ -->
 <div id="saveAlert">Збережено ✔️</div>
 
-<!-- ЗВУК БЛІК -->
+<!-- ЗВУК -->
 <audio id="blipSound">
     <source src="data:audio/wav;base64,UklGRuQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YcQAAACQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQ==" type="audio/wav">
 </audio>
 
-<!-- ================= ВКЛАДКА: КАЛЬКУЛЯТОР ================= -->
-<div class="page active" id="page-calculator">
+<!-- ========= ВЕРХНЄ МЕНЮ ========= -->
+<div class="topnav">
+    <div class="tab-btn active" onclick="openTab('calculator', this)">🧮 Калькулятор</div>
+    <div class="tab-btn" onclick="openTab('eggs', this)">🥚 Облік яєць</div>
+</div>
+
+<!-- ========= Вкладка: КАЛЬКУЛЯТОР ========= -->
+<div class="page active-page" id="page-calculator">
     <h2 style="text-align:center;">🧮 Калькулятор корму</h2>
 
     <div class="container">
@@ -179,7 +181,7 @@ input {
     </div>
 </div>
 
-<!-- ================= ВКЛАДКА: ОБЛІК ЯЄЦЬ ================= -->
+<!-- ========= Вкладка: ОБЛІК ЯЄЦЬ ========= -->
 <div class="page" id="page-eggs">
     <h2 style="text-align:center;">🥚 Облік яєць</h2>
 
@@ -199,7 +201,7 @@ input {
         </button>
 
         <div class="stat">
-            <p>🥚 Комерційні яйця: <b id="eggsSell">0</b></p>
+            <p>🥚 Комерційні: <b id="eggsSell">0</b></p>
             <p>📦 Лотків сьогодні: <b id="traysToday">0</b></p>
             <p>➕ До повного лотка: <b id="trayRemainder">0</b></p>
 
@@ -213,20 +215,14 @@ input {
     </div>
 </div>
 
-<!-- ================= НАВІГАЦІЯ ЗНИЗУ ================= -->
-<div class="navbar">
-    <div class="nav-btn active" onclick="openTab('calculator')">🧮 Калькулятор</div>
-    <div class="nav-btn" onclick="openTab('eggs')">🥚 Облік яєць</div>
-</div>
-
 <script>
 /* ========= ПЕРЕМИКАННЯ ВКЛАДОК ========= */
-function openTab(tab) {
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+function openTab(tab, btn) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
+    document.querySelector("#page-" + tab).classList.add("active-page");
 
-    document.getElementById("page-" + tab).classList.add("active");
-    event.target.classList.add("active");
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
 }
 
 /* ========= СПОВІЩЕННЯ ========= */
@@ -249,7 +245,7 @@ function highlightRow(i) {
     setTimeout(() => row.classList.remove("row-highlight"), 150);
 }
 
-/* ========= КАЛЬКУЛЯТОР КОРМУ ========= */
+/* ========= КАЛЬКУЛЯТОР ========= */
 const components = [
     ["Кукурудза", 10],
     ["Пшениця", 5],
