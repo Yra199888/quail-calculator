@@ -1,125 +1,125 @@
 /* ============================================================
-   MODULE: feed.js
-   FULL ENTERPRISE MODE (C2)
-   Рецепт → Кілограми → Ціна → Сума → Середня вартість 1 кг
+   MODULE: feed.js — FULL ENTERPRISE MODE
+   Комбікорм:
+   - рецепт
+   - розрахунок кг
+   - розрахунок вартості
+   - середня ціна за 1 кг
+   - виробництво партії
+   - списання добової норми
 ============================================================ */
 
 import { DATA, autosave } from "../core/data.js";
 import { renderFeed } from "./render.js";
 
-/* ============================================================
-   РЕЦЕПТ КОРМУ ДЛЯ НЕСУЧОК (фіксований рецепт користувача)
-============================================================ */
+/* ------------------------------------------------------------
+   1. Стартовий рецепт (твій фінальний)
+------------------------------------------------------------ */
 
-export const FEED_RECIPE = {
-    "Кукурудза": 10.0,
-    "Пшениця": 5.0,
+DATA.feed = DATA.feed || {};
+DATA.feed.recipe = {
+    "Кукурудза": 10,
+    "Пшениця": 5,
     "Ячмінь": 1.5,
-    "Макуха соєва": 3.0,
+    "Макуха соєва": 3,
     "Макуха соняшникова": 2.5,
-    "Рибне борошно": 1.0,
+    "Рибне борошно": 1,
     "Дріжджі кормові": 0.7,
     "Трикальційфосфат": 0.5,
     "Dolfos D": 0.7,
     "Сіль": 0.05
 };
 
+/* ------------------------------------------------------------
+   2. Розрахунок рецепту
+------------------------------------------------------------ */
 
-/* ============================================================
-   1. Відображення рецепта у таблиці
-============================================================ */
+export function recalcFeedRecipe() {
+    const rows = document.getElementById("feedRecipeRows");
+    const costRow = document.getElementById("feedCostRows");
+    const avgCostEl = document.getElementById("avgCostKg");
 
-export function renderFeedRecipe() {
-    let html = "";
+    if (!rows || !costRow) return;
 
-    for (let key in FEED_RECIPE) {
-        const kg = FEED_RECIPE[key];
+    let totalKg = 0;
+    let totalCost = 0;
 
-        const price = DATA.feed.prices?.[key] || 0;
-        const cost = price * kg;
+    let htmlRecipe = "";
+    let htmlCost = "";
 
-        html += `
-        <tr>
-            <td>${key}</td>
-            <td>${kg.toFixed(2)}</td>
-            <td>
-                <input type="number" 
-                       value="${price}" 
-                       oninput="updateFeedPrice('${key}', this.value)">
-            </td>
-            <td>${cost.toFixed(2)}</td>
-        </tr>
+    for (let name in DATA.feed.recipe) {
+        const kg = Number(DATA.feed.recipe[name]);
+        const price = Number(DATA.feed.prices?.[name] || 0);
+        const sum = kg * price;
+
+        totalKg += kg;
+        totalCost += sum;
+
+        htmlRecipe += `
+            <tr>
+                <td>${name}</td>
+                <td><input type="number" value="${kg}" step="0.01"
+                    onchange="updateRecipeValue('${name}', this.value)"></td>
+            </tr>
+        `;
+
+        htmlCost += `
+            <tr>
+                <td>${name}</td>
+                <td>${kg} кг</td>
+                <td><input type="number" value="${price}" step="0.01"
+                    onchange="updatePrice('${name}', this.value)"></td>
+                <td>${sum.toFixed(2)} грн</td>
+            </tr>
         `;
     }
 
-    document.getElementById("feedRecipeRows").innerHTML = html;
-
-    recalcFeedRecipe();
-}
-
-
-/* ============================================================
-   2. Оновлення ціни компоненту
-============================================================ */
-
-export function updateFeedPrice(name, value) {
-    if (!DATA.feed.prices) DATA.feed.prices = {};
-    DATA.feed.prices[name] = Number(value);
-    recalcFeedRecipe();
-}
-
-
-/* ============================================================
-   3. Перерахунок собівартості партії
-============================================================ */
-
-export function recalcFeedRecipe() {
-    let totalCost = 0;
-    let totalKg = 0;
-
-    for (let key in FEED_RECIPE) {
-        const kg = FEED_RECIPE[key];
-        const price = DATA.feed.prices?.[key] || 0;
-        const cost = price * kg;
-
-        totalCost += cost;
-        totalKg += kg;
-    }
+    rows.innerHTML = htmlRecipe;
+    costRow.innerHTML = htmlCost;
 
     DATA.feed.totalKg = totalKg;
     DATA.feed.totalCost = totalCost;
     DATA.feed.costPerKg = totalCost / totalKg;
 
-    document.getElementById("feedTotalKg").innerText = totalKg.toFixed(2);
-    document.getElementById("feedTotalCost").innerText = totalCost.toFixed(2);
-    document.getElementById("feedCostPerKg").innerText = DATA.feed.costPerKg.toFixed(2);
+    avgCostEl.innerHTML = DATA.feed.costPerKg.toFixed(2);
 
-    autosave();
-}
-
-
-/* ------------------------------------------------------------
-   4. Виготовлення партії комбікорму
------------------------------------------------------------- */
-
-export function produceFeedBatch() {
-    const batch = Number(document.getElementById("feedBatchKg").value);
-
-    DATA.feed.ready = (DATA.feed.ready || 0) + batch;
     autosave();
     renderFeed();
 }
 
+window.updateRecipeValue = function (name, value) {
+    DATA.feed.recipe[name] = Number(value);
+    recalcFeedRecipe();
+};
+
+window.updatePrice = function (name, val) {
+    if (!DATA.feed.prices) DATA.feed.prices = {};
+    DATA.feed.prices[name] = Number(val);
+    recalcFeedRecipe();
+};
 
 /* ------------------------------------------------------------
-   5. Списання добової норми
+   3. Виробництво партії
+------------------------------------------------------------ */
+
+export function makeFeedBatch() {
+    const size = Number(document.getElementById("batchKg").value);
+
+    DATA.feed.ready = (DATA.feed.ready || 0) + size;
+
+    autosave();
+    renderFeed();
+}
+
+/* ------------------------------------------------------------
+   4. Добова норма (списання)
 ------------------------------------------------------------ */
 
 export function consumeDailyFeed() {
     const hens = Number(DATA.flock?.females || 0);
-    const perHen = Number(document.getElementById("feedDailyPerHen").value); // г/день
+    const perHen = Number(DATA.feed.dailyPerHen || 30);
 
-    const needKg = (hens * perHen) / 1000;
+    const needKg = hens * perHen / 1000;
 
     DATA.feed.ready = Math.max(0, (DATA.feed.ready || 0) - needKg);
 
@@ -127,16 +127,15 @@ export function consumeDailyFeed() {
     renderFeed();
 }
 
-
 /* ------------------------------------------------------------
-   6. Ініціалізація модуля
+   5. Ініціалізація блоку комбікорму
 ------------------------------------------------------------ */
 
 export function initFeedModule() {
-    document.getElementById("feedBatchKg").oninput = recalcFeed;
+    // кнопки
+    document.getElementById("btnMakeFeed").onclick = makeFeedBatch;
+    document.getElementById("btnConsumeDaily").onclick = consumeDailyFeed;
 
-    document.getElementById("produceFeedBtn").onclick = produceFeedBatch;
-    document.getElementById("consumeDailyBtn").onclick = consumeDailyFeed;
-
-    recalcFeed();
+    // розрахунок рецепту
+    recalcFeedRecipe();
 }
