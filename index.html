@@ -1,24 +1,31 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quail Calculator — PRO MODE</title>
-
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.webmanifest">
-
-    <!-- Material 3 Styles -->
-    <link rel="stylesheet" href="material.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quail Calculator — PRO FEED</title>
 
     <style>
         body {
             margin: 0;
             background: #f5f5f5;
-            font-family: Arial, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        /* ============ NAVIGATION ============ */
+        .top-bar {
+            background: #225c1f;
+            color: #fff;
+            padding: 12px 16px;
+        }
+        .top-bar h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .top-bar p {
+            margin: 4px 0 0;
+            font-size: 14px;
+        }
+
         .tabs {
             display: flex;
             background: #e9e9e9;
@@ -26,218 +33,314 @@
         }
         .tab {
             flex: 1;
-            padding: 14px;
+            padding: 10px;
             text-align: center;
             cursor: pointer;
             font-weight: 600;
+            font-size: 14px;
+            user-select: none;
         }
         .tab.active {
             background: #d0f0c0;
         }
 
-        /* ============ CARDS ============ */
         .card {
-            background: white;
-            padding: 16px;
+            background: #fff;
             margin: 12px;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
 
-        .section { display: none; }
-        .section.active { display: block; }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        th, td {
+            border-bottom: 1px solid #eee;
+            padding: 6px;
+            text-align: left;
+        }
+        th {
+            background: #fafafa;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 6px 8px;
+            margin: 4px 0 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: none;
+            background: #2d6a1f;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button.secondary {
+            background: #777;
+        }
+
+        .small {
+            font-size: 13px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
 
-<!-- ============================================================
-      🔥 PRO MODE BAR + STATUS
-============================================================ -->
-<div class="card" style="background:#225c1f; color:white;">
-    <h2>🔥 PRO MODE Активний</h2>
-    <p id="statusBar">Статус: offline</p>
-
-    <button id="saveLocal">💾 Зберегти локально</button>
-    <button id="backupDrive">☁ Резервна копія Drive</button>
-    <button id="restoreDrive">🔄 Відновити із Drive</button>
+<div class="top-bar">
+    <h1>🔥 Quail Calculator — PRO MODE</h1>
+    <p id="statusBar">Статус: offline (тільки локальне збереження)</p>
 </div>
 
-<!-- ============================================================
-      📌 НАВІГАЦІЯ
-============================================================ -->
 <div class="tabs">
-    <div class="tab active" onclick="showPage('feed')">Корм</div>
-    <div class="tab" onclick="showPage('eggs')">Яйця</div>
-    <div class="tab" onclick="showPage('orders')">Замовлення</div>
-    <div class="tab" onclick="showPage('clients')">Клієнти</div>
-    <div class="tab" onclick="showPage('finance')">Фінанси</div>
-    <div class="tab" onclick="showPage('incub')">Інкубація</div>
+    <div class="tab active" onclick="showPage('feed', this)">Корм</div>
+    <div class="tab" onclick="showPage('eggs', this)">Яйця</div>
+    <div class="tab" onclick="showPage('orders', this)">Замовлення</div>
+    <div class="tab" onclick="showPage('clients', this)">Клієнти</div>
+    <div class="tab" onclick="showPage('finance', this)">Фінанси</div>
+    <div class="tab" onclick="showPage('incub', this)">Інкубація</div>
+    <div class="tab" onclick="showPage('flock', this)">Поголів’я</div>
 </div>
 
-<!-- ============================================================
-      🟩 1. КОМБІКОРМ — НОВА СЕКЦІЯ (ТОЧНО ПІД feed.js)
-============================================================ -->
-
-    <div id="feed" class="section-page" style="display:block;">
-  <div class="m3-card">
-    <h2>1. Рецепт комбікорму (постійний)</h2>
-
-<table class="m3-table">
-    <thead>
-        <tr>
-            <th>Компонент</th>
-            <th>К-сть (кг)</th>
-            <th>Ціна за кг</th>
-            <th>Сума</th>
-        </tr>
-    </thead>
-    <tbody id="feedRecipeTable"></tbody>
-</table>
-
-<p>Вага партії: <b id="feedTotalWeight">0</b> кг</p>
-<p>Собівартість 1 кг: <b id="feedCostPerKg">0</b> грн</p>
-<p>Загальна вартість: <b id="feedTotalCost">0</b> грн</p>
-    <p>Загальна вартість: <span id="feedTotalCost">0.00</span> грн</p>
-  </div>
-
-  <!-- далі можуть йти твої блоки 2. Запаси, 3. Готовий корм і т.д. -->
-</div>
-
+<!-- 1. КОРМ -->
+<div id="feed" class="section active">
     <div class="card">
-        <h2>2. Запаси компонентів</h2>
-        <table class="m3-table">
+        <h2>1. Рецепт комбікорму для несучок (25 кг)</h2>
+        <p class="small">
+            Рецепт зафіксований: ти змінюєш тільки <b>ціну за 1 кг</b>, калькулятор рахує:
+            <b>загальну вартість</b> і <b>собівартість 1 кг</b>.
+        </p>
+
+        <table>
             <thead>
-                <tr><th>Компонент</th><th>Є</th><th>Потрібно</th><th>Статус</th></tr>
+                <tr>
+                    <th>Компонент</th>
+                    <th>К-сть, кг</th>
+                    <th>Ціна за кг, грн</th>
+                    <th>Сума, грн</th>
+                </tr>
             </thead>
-            <tbody id="stockRows"></tbody>
+            <tbody id="feedRecipeBody"></tbody>
         </table>
+
+        <p>Вага партії: <b><span id="feedTotalKg">0</span> кг</b></p>
+        <p>Загальна вартість партії: <b><span id="feedTotalCost">0.00</span> грн</b></p>
+        <p>Собівартість 1 кг: <b><span id="feedCostPerKg">0.00</span> грн</b></p>
     </div>
 
     <div class="card">
-        <h2>3. Готовий корм</h2>
-        <p>Готово: <span id="feedReady">0</span> кг</p>
+        <h3>1.2 Добова норма (спрощено)</h3>
+        <label>Кількість птахів, шт</label>
+        <input type="number" id="feedBirds" value="0" />
 
-        <label>Виготовити партію (кг):</label>
-        <input id="produceKg" type="number" value="25">
+        <label>Норма на 1 птицю, г/день</label>
+        <input type="number" id="feedPerBird" value="30" />
 
-        <button id="btnProduce">🔧 Виготовити партію</button>
-        <button id="btnConsume">🍽️ Списати добову норму</button>
-
-        <p>Залишок: <span id="feedRemain">0</span> кг</p>
-        <p>Хватить на: <span id="feedDaysLeft">0</span> днів</p>
+        <p>Добова потреба: <b><span id="feedDailyNeed">0.00</span> кг</b></p>
+        <p>Вартість добової норми: <b><span id="feedDailyCost">0.00</span> грн</b></p>
     </div>
 </div>
 
-<!-- ============================================================
-      2. ЯЙЦЯ
-============================================================ -->
+<!-- 2. ЯЙЦЯ -->
 <div id="eggs" class="section">
-
     <div class="card">
         <h2>2. Облік яєць</h2>
-        <label>Зібрано:</label> <input id="eggsTotal" type="number">
-        <label>Брак:</label> <input id="eggsBad" type="number">
-        <label>На себе:</label> <input id="eggsOwn" type="number">
-        <label>Залишок учора:</label> <input id="eggsCarry" type="number">
+
+        <label>Зібрано за сьогодні, шт</label>
+        <input type="number" id="eggsTotal" />
+
+        <label>Брак, шт</label>
+        <input type="number" id="eggsBad" />
+
+        <label>На себе (їжа), шт</label>
+        <input type="number" id="eggsOwn" />
+
+        <label>Залишок з учора, шт</label>
+        <input type="number" id="eggsCarry" />
+
+        <label>Ціна 1 лотка (20 яєць), грн</label>
+        <input type="number" id="trayPrice" />
 
         <h3>Підсумок</h3>
-        <table class="m3-table">
-            <tr><td>Для продажу</td><td><span id="eggsForSale"></span></td></tr>
-            <tr><td>Всього</td><td><span id="eggsForSaleTotal"></span></td></tr>
-            <tr><td>Лотків</td><td><span id="traysCount"></span></td></tr>
-            <tr><td>Залишок</td><td><span id="eggsRemainder"></span></td></tr>
+        <table>
+            <tr><td>Для продажу сьогодні</td><td><span id="eggsForSale">0</span></td></tr>
+            <tr><td>Всього для продажу (з учора)</td><td><span id="eggsForSaleTotal">0</span></td></tr>
+            <tr><td>Лотків (20 шт)</td><td><span id="traysCount">0</span></td></tr>
+            <tr><td>Залишок яєць (неповний лоток)</td><td><span id="eggsRemainder">0</span></td></tr>
+            <tr><td>Дохід (сьогодні)</td><td><span id="income">0.00</span> грн</td></tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3>2.2 Продуктивність</h3>
+        <label>Самок 1 партія</label>
+        <input type="number" id="hens1" />
+        <label>Самок 2 партія</label>
+        <input type="number" id="hens2" />
+
+        <table>
+            <tr><td>Всього самок</td><td><span id="hensTotal">0</span></td></tr>
+            <tr><td>Продуктивність сьогодні</td><td><span id="productivityToday">0.0</span> %</td></tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h3>2.3 Лотки: вільні / заброньовані</h3>
+        <table>
+            <tr><td>Всього лотків</td><td><span id="totalTraysTodayLabel">0</span></td></tr>
+            <tr><td>Заброньовано</td><td><span id="reservedTrays">0</span></td></tr>
+            <tr><td>Вільні</td><td><span id="freeTrays">0</span></td></tr>
         </table>
     </div>
 </div>
 
-<!-- ============================================================
-      3. ЗАМОВЛЕННЯ
-============================================================ -->
+<!-- 3. ЗАМОВЛЕННЯ -->
 <div id="orders" class="section">
-
     <div class="card">
-        <h2>Замовлення</h2>
+        <h2>3. Замовлення</h2>
 
-        <label>Клієнт</label> <input id="ordName">
-        <label>Лотків</label> <input id="ordTrays" type="number">
-        <label>Дата</label> <input id="ordDate" type="date">
+        <label>Клієнт</label>
+        <input id="ordName" />
 
-        <button onclick="addOrder()">Додати</button>
+        <label>Яєць (необов’язково)</label>
+        <input type="number" id="ordEggs" />
+
+        <label>Лотків</label>
+        <input type="number" id="ordTrays" />
+
+        <label>Дата</label>
+        <input type="date" id="ordDate" />
+
+        <label>Примітка</label>
+        <input id="ordNote" />
+
+        <button onclick="addOrder()">Додати замовлення</button>
 
         <h3>Активні</h3>
-        <table class="m3-table"><tbody id="ordersActive"></tbody></table>
+        <table>
+            <tbody id="ordersActive"></tbody>
+        </table>
 
         <h3>Виконані</h3>
-        <table class="m3-table"><tbody id="ordersDone"></tbody></table>
+        <table>
+            <tbody id="ordersDone"></tbody>
+        </table>
     </div>
 </div>
 
-<!-- ============================================================
-      4. КЛІЄНТИ
-============================================================ -->
+<!-- 4. КЛІЄНТИ -->
 <div id="clients" class="section">
     <div class="card">
-        <h2>Клієнти</h2>
-        <table class="m3-table">
+        <h2>4. Клієнти</h2>
+        <table>
             <thead>
-                <tr><th>Клієнт</th><th>Замовлень</th><th>Лотків</th><th>Яєць</th><th>Сума</th></tr>
+                <tr>
+                    <th>Клієнт</th>
+                    <th>Замовлень</th>
+                    <th>Лотків</th>
+                    <th>Яєць</th>
+                    <th>Сума, грн</th>
+                    <th>Останнє замовлення</th>
+                </tr>
             </thead>
             <tbody id="clientsBody"></tbody>
         </table>
     </div>
 </div>
 
-<!-- ============================================================
-      5. ФІНАНСИ
-============================================================ -->
+<!-- 5. ФІНАНСИ (спрощено, поки тільки зведення) -->
 <div id="finance" class="section">
     <div class="card">
-        <h2>Фінанси</h2>
-        <p>Скоро…</p>
+        <h2>5. Фінанси (спрощено)</h2>
+        <p class="small">Тут поки простий підсумок по яйцях + корму, без складних звітів.</p>
+        <table>
+            <tr><td>Собівартість 1 кг корму</td><td><span id="finFeedCostPerKg">0.00</span> грн</td></tr>
+            <tr><td>Дохід за сьогодні (яйця)</td><td><span id="finIncomeToday">0.00</span> грн</td></tr>
+            <tr><td>Орієнтовний прибуток (мінус корм за день)</td><td><span id="finProfitToday">0.00</span> грн</td></tr>
+        </table>
     </div>
 </div>
 
-<!-- ============================================================
-      6. ІНКУБАЦІЯ
-============================================================ -->
+<!-- 6. ІНКУБАЦІЯ (спрощена версія) -->
 <div id="incub" class="section">
     <div class="card">
-        <h2>Інкубація</h2>
-        <p>Скоро…</p>
+        <h2>6. Інкубація (базова)</h2>
+
+        <label>Назва партії</label>
+        <input id="incBatchName" />
+
+        <label>Дата закладки</label>
+        <input type="date" id="incStartDate" />
+
+        <label>Кількість яєць</label>
+        <input type="number" id="incEggsSet" />
+
+        <label>Нотатка</label>
+        <textarea id="incNote"></textarea>
+
+        <button onclick="addIncubation()">Додати партію</button>
+
+        <h3>Список партій</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Партія</th>
+                    <th>Дата</th>
+                    <th>Днів</th>
+                    <th>Яєць</th>
+                    <th>Нотатка</th>
+                    <th>🗑</th>
+                </tr>
+            </thead>
+            <tbody id="incubationBody"></tbody>
+        </table>
     </div>
 </div>
 
-<!-- ============================================================
-      SCRIPT IMPORTS (ВАЖЛИВО!)
-============================================================ -->
+<!-- 7. ПОГОЛІВ’Я -->
+<div id="flock" class="section">
+    <div class="card">
+        <h2>7. Поголів’я</h2>
 
-<!-- CORE -->
-<script type="module" src="core/data.js"></script>
-<script type="module" src="core/storage.js"></script>
-<script type="module" src="core/sync.js"></script>
-<script type="module" src="core/drive.js"></script>
-<script type="module" src="core/pwa.js"></script>
+        <label>Самців</label>
+        <input type="number" id="males" />
 
-<!-- MODULES -->
-<script type="module" src="modules/feed.js"></script>
-<script type="module" src="modules/eggs.js"></script>
-<script type="module" src="modules/orders.js"></script>
-<script type="module" src="modules/clients.js"></script>
-<script type="module" src="modules/finance.js"></script>
-<script type="module" src="modules/incub.js"></script>
-<script type="module" src="modules/flock.js"></script>
-<script type="module" src="modules/logs.js"></script>
-<script type="module" src="modules/render.js"></script>
+        <label>Самок</label>
+        <input type="number" id="females" />
 
-<script>
-function showPage(id){
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+        <label>Смертність, шт</label>
+        <input type="number" id="deaths" />
 
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-}
-</script>
+        <label>Середній вік, днів</label>
+        <input type="number" id="avgAge" />
+
+        <p>Разом живих: <b><span id="flockTotal">0</span></b></p>
+    </div>
+</div>
+
+<!-- JS -->
+<script src="data.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
