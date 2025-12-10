@@ -7,7 +7,7 @@
 
 <style>
 
-/* === ТЕМИ === */
+/* === ГЛОБАЛЬНІ ТЕМИ === */
 :root {
     --bg: #111;
     --text: #fff;
@@ -31,49 +31,17 @@ body {
     transition: 0.3s;
 }
 
-/* === ФІКС: КНОПКА ТЕМИ — СТАЦІОНАРНА === */
+/* === КНОПКА ТЕМИ === */
 .theme-btn {
     position: fixed;
-    top: 10px;
-    right: 14px;
-    font-size: 26px;
-    z-index: 99;
+    top: 12px;
+    right: 16px;   /* <<< ТУТ ВИПРАВЛЕНО */
+    font-size: 30px;
     cursor: pointer;
+    z-index: 9999;
 }
 
-/* === ВЕРХНЄ МЕНЮ ІКОНКИ === */
-.topnav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: var(--card);
-    padding: 12px 0;
-    border-bottom: 2px solid var(--border);
-}
-
-.tab-icon {
-    font-size: 26px;
-    opacity: 0.6;
-    transform: scale(1);
-    transition: 0.2s ease;
-}
-.tab-icon.active {
-    opacity: 1;
-    transform: scale(1.22);
-    color: var(--accent);
-}
-
-/* === КАРТОЧКИ / КОНТЕЙНЕРИ === */
-.container {
-    background: var(--card);
-    padding: 16px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin: 20px auto;
-    max-width: 900px;
-}
-
-/* === ТАБЛИЦЯ КОРМУ — ВИРІВНЮВАННЯ === */
+/* === ТАБЛИЦЯ КАЛЬКУЛЯТОРА === */
 
 table {
     width: 100%;
@@ -85,57 +53,89 @@ th {
     color: white;
     padding: 10px 5px;
     font-size: 15px;
-    text-align: center;
 }
 
-/* Загальний стиль клітинок */
 td {
     border: 1px solid var(--border);
-    padding: 8px 4px;
-    font-size: 14px;
-}
-
-/* Колонка "Компонент" */
-td:first-child {
-    width: 38%;
+    padding: 8px 6px;
     font-size: 15px;
 }
 
-/* Колонка К-сть */
-td:nth-child(2) {
-    width: 22%;
+/* Компонент */
+td:first-child {
+    width: 40%;
+    font-size: 16px;
+}
+
+/* Червона область — зменшено */
+.qty-cell input,
+.price-cell input {
+    width: 65px !important;
+    font-size: 15px;
     text-align: center;
 }
 
-/* Колонка Ціна */
-td:nth-child(3) {
-    width: 22%;
-    text-align: center;
-}
-
-/* Колонка Сума */
-td:nth-child(4) {
-    width: 18%;
-    text-align: right;
-    padding-right: 10px;
+/* Синя область — вирівняно вправо */
+.sum-cell {
+    width: 95px !important;
+    text-align: right !important;
+    padding-right: 14px !important;
     font-weight: bold;
 }
 
-/* Інпути в таблиці */
-table input {
-    width: 75px !important;
-    padding: 6px 6px;
+/* Інпути */
+input {
+    width: 100%;
+    padding: 6px 8px;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: #0005;
     color: var(--text);
-    text-align: center;
-    font-size: 15px;
+    box-sizing: border-box;
 }
 
-/* Заголовки */
+/* Блок таблиці — щоб інпути НЕ виходили за межі */
+.feed-table td input {
+    width: 100%;
+    max-width: 80px;   /* <<< ГОЛОВНИЙ ФІКС ДЛЯ МОБІЛОК */
+}
+
+/* Контейнер */
+.container {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    max-width: 900px;
+    margin: 20px auto;
+}
+
+/* Заголовок */
 h2 {
     font-size: 26px;
+}
+
+/* === МЕНЮ === */
+.topnav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: var(--card);
+    padding: 14px 0;
+    border-bottom: 2px solid var(--border);
+}
+
+.tab-icon {
+    font-size: 26px;
+    opacity: 0.6;
+    transform: scale(1);
+    transition: 0.2s ease;
+}
+
+.tab-icon.active {
+    opacity: 1;
+    transform: scale(1.20);
+    color: var(--accent);
 }
 
 /* Сторінки */
@@ -158,20 +158,19 @@ button {
     margin-top: 10px;
 }
 
-/* Блоки замовлень */
-.order-block {
-    background: #0003;
-    border: 1px solid var(--border);
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-}
-
 /* Статуси */
 .status-active { color: #4caf50; font-weight: bold; }
 .status-completed { color: #2196f3; font-weight: bold; }
 .status-cancelled { color: #e53935; font-weight: bold; }
 
+/* Блок замовлення */
+.order-block {
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    background: #0003;
+    border: 1px solid var(--border);
+}
 </style>
 </head>
 
