@@ -56,6 +56,25 @@
         background: var(--accent);
         color:#fff;
     }
+    
+    #saveAlert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.4s;
+    z-index: 9999;
+}
+#saveAlert.show {
+    opacity: 1;
+    transform: translateY(5px);
+}
 
     td, th {
         border:1px solid var(--border);
@@ -105,6 +124,7 @@
 </style>
 </head>
 <body>
+    <div id="saveAlert">Ціни збережено ✔️</div>
 
 <button class="theme-btn" onclick="toggleTheme()">🌓 Тема</button>
 
@@ -175,6 +195,7 @@ function calc(){
         let p = parseFloat(document.getElementById("p"+i).value) || 0;
 
         localStorage.setItem("p"+i, p); // автозбереження
+        showSaveAlert();
 
         let sum = q * p;
         document.getElementById("s"+i).innerText = sum.toFixed(2);
@@ -194,6 +215,12 @@ function calc(){
 
 document.addEventListener("input", calc);
 calc();
+
+function showSaveAlert() {
+    const box = document.getElementById("saveAlert");
+    box.classList.add("show");
+    setTimeout(() => box.classList.remove("show"), 1500);
+}
 
 // ---- ТЕМА ----
 function toggleTheme(){
