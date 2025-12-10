@@ -6,21 +6,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-
-/* === ГЛОБАЛЬНІ ТЕМИ === */
+/* === ТЕМИ (Dark / Light) === */
 :root {
     --bg: #111;
     --text: #fff;
     --card: #1b1b1b;
     --border: #333;
     --accent: #4caf50;
+    --header: #000;
 }
 .light {
-    --bg: #f3f3f3;
-    --text: #111;
+    --bg: #f5f5f5;
+    --text: #000;
     --card: #fff;
     --border: #ccc;
     --accent: #2a7cda;
+    --header: #fff;
 }
 
 body {
@@ -28,157 +29,167 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: Arial, sans-serif;
-    transition: 0.3s;
+    transition: 0.25s;
 }
 
-/* === ВЕРХНЄ МЕНЮ З ІКОНКАМИ === */
+/* === ВЕРХНЄ МЕНЮ — ІКОНИ + активна 20% більша === */
 .topnav {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background: var(--card);
-    padding: 10px 0;
+    background: var(--header);
     border-bottom: 2px solid var(--border);
+    padding: 10px 0;
 }
 
-.tab-btn {
+.nav-icon {
     font-size: 26px;
     opacity: 0.6;
-    transition: 0.2s;
+    transition: 0.25s;
+    cursor: pointer;
 }
 
-.tab-btn.active {
-    transform: scale(1.2);
+.nav-icon.active {
+    transform: scale(1.20);
     opacity: 1;
     color: var(--accent);
 }
 
-/* Перемикач теми */
+/* === Перемикач ТЕМИ === */
 .theme-toggle {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 28px;
+    font-size: 26px;
     cursor: pointer;
-    opacity: 0.7;
-    transition: 0.2s;
+    opacity: 0.8;
 }
 .theme-toggle:hover {
     opacity: 1;
 }
 
-/* === ГОЛОВНІ БЛОКИ === */
+/* === КОНТЕЙНЕРИ === */
 .page {
     display: none;
     padding: 20px;
 }
-.active-page {
+.page.active-page {
     display: block;
 }
 
 .container {
     background: var(--card);
-    border: 1px solid var(--border);
     padding: 18px;
     border-radius: 12px;
-    margin-bottom: 20px;
-}
-
-/* === СТИЛІ ТАБЛИЦІ КАЛЬКУЛЯТОРА === */
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;     /* ← тепер нічого не буде з’їжджати */
-}
-
-th {
-    background: var(--accent);
-    color: #fff;
-    padding: 10px;
     border: 1px solid var(--border);
-    font-size: 17px;
-}
-
-td {
-    padding: 8px;
-    border: 1px solid var(--border);
-    word-wrap: break-word;
-}
-
-/* Ширини колонок */
-th:nth-child(1), td:nth-child(1) { width: 36%; }
-th:nth-child(2), td:nth-child(2) { width: 18%; }
-th:nth-child(3), td:nth-child(3) { width: 18%; }
-th:nth-child(4), td:nth-child(4) { width: 25%; }
-
-/* Інпути всередині таблиці */
-table input {
-    width: 100%;
-    padding: 6px;
-    border-radius: 6px;
-    background: #0008;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-size: 16px;
+    max-width: 900px;
+    margin: auto;
 }
 
 /* === КНОПКИ === */
 button {
     background: var(--accent);
     border: none;
-    padding: 10px 20px;
+    padding: 10px 16px;
     border-radius: 8px;
     color: #fff;
     cursor: pointer;
-    font-size: 17px;
+    font-size: 16px;
+    margin-top: 10px;
+    transition: 0.2s;
 }
 button:hover {
-    opacity: 0.9;
+    opacity: 0.85;
 }
 
-/* === ФОРМИ В СТОВПЧИК === */
-input, textarea {
+/* === ІНПУТИ === */
+input, textarea, select {
     width: 100%;
     padding: 10px;
-    border-radius: 8px;
-    background: #0006;
-    border: 1px solid var(--border);
+    margin-top: 6px;
+    border-radius: 6px;
+    background: #0004;
     color: var(--text);
-    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    font-size: 16px;
+}
+
+/* === ТАБЛИЦЯ КАЛЬКУЛЯТОРА — ВИРІВНЯНО! === */
+.feed-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.feed-table th {
+    background: var(--accent);
+    color: white;
+    padding: 10px;
     font-size: 17px;
 }
 
-/* === СПОВІЩЕННЯ ЗБЕРЕЖЕНО === */
+.feed-table td {
+    padding: 8px;
+    border: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+.feed-table input {
+    width: 100%;
+    text-align: center;
+}
+
+.col-qty { width: 90px; }
+.col-price { width: 90px; }
+.col-sum { width: 90px; }
+
+/* === ПІДСВІТКА ТА СПОВІЩЕННЯ === */
+.row-highlight {
+    background: rgba(46, 204, 113, 0.25);
+}
+
 #saveAlert {
     position: fixed;
-    top: 15px;
-    right: 20px;
+    top: 12px;
+    right: 12px;
     background: var(--accent);
     padding: 10px 20px;
-    color: #fff;
-    border-radius: 8px;
+    border-radius: 6px;
     opacity: 0;
-    transition: 0.3s;
+    color: #fff;
+    transition: 0.4s;
+    z-index: 999;
 }
-#saveAlert.show {
-    opacity: 1;
-}
+#saveAlert.show { opacity: 1; }
 
-/* === ВИРІВНЮВАННЯ ЗАМОВЛЕНЬ === */
-
-.order-item {
+/* === ЗАМОВЛЕННЯ === */
+.order-box {
     padding: 12px;
-    background: #0004;
-    border-radius: 8px;
-    margin-bottom: 12px;
+    border-radius: 10px;
+    background: #00000030;
     border: 1px solid var(--border);
+    margin-bottom: 15px;
 }
 
 .status-active { color: #4caf50; font-weight: bold; }
 .status-completed { color: #3498db; font-weight: bold; }
 .status-cancelled { color: #e74c3c; font-weight: bold; }
 
+/* === ФІНАНСИ === */
+.finance-row {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.csv-btn {
+    background: #2196f3;
+}
+
+/* === АДАПТАЦІЯ ДЛЯ ТЕЛЕФОНА === */
+@media (max-width: 480px) {
+    th { font-size: 15px; padding: 8px; }
+    td { font-size: 15px; }
+    input { font-size: 15px; }
+    .nav-icon { font-size: 24px; }
+    .nav-icon.active { transform: scale(1.22); }
+}
 </style>
 </head>
 
@@ -200,12 +211,12 @@ input, textarea {
   <h2>🧮 Калькулятор корму</h2>
   <div class="container">
     <table>
-      <tr>
+    <tr>
         <th>Компонент</th>
-        <th>К-сть</th>
-        <th>Ціна</th>
-        <th>Сума</th>
-      </tr>
+        <th class="feed-col-qty">К-сть</th>
+        <th class="feed-col-price">Ціна</th>
+        <th class="feed-col-sum">Сума</th>
+    </tr>
     </table>
     <table id="feedTable"></table>
 
