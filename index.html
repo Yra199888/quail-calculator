@@ -6,16 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
+
 /* === ГЛОБАЛЬНІ ТЕМИ === */
 :root {
     --bg: #111;
     --text: #fff;
-    --card: #181818;
+    --card: #1b1b1b;
     --border: #333;
-    --accent: #37c055;
+    --accent: #4caf50;
 }
 .light {
-    --bg: #f5f5f5;
+    --bg: #f3f3f3;
     --text: #111;
     --card: #fff;
     --border: #ccc;
@@ -27,134 +28,141 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: Arial, sans-serif;
+    transition: 0.3s;
 }
 
-/* === МЕНЮ З ІКОНКАМИ === */
+/* === ТАБЛИЦЯ КАЛЬКУЛЯТОРА === */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: var(--accent);
+    color: white;
+    padding: 10px 5px;
+    font-size: 15px;
+}
+
+td {
+    border: 1px solid var(--border);
+    padding: 8px 6px;
+    font-size: 15px;
+}
+
+/* Колонка "Компонент" */
+td:first-child {
+    width: 38%;
+}
+
+/* Колонка "К-сть" — червона область: робимо менше */
+.qty-cell input {
+    width: 70px !important;
+    text-align: center;
+    font-size: 15px;
+}
+
+/* Колонка "Ціна" — теж менше */
+.price-cell input {
+    width: 70px !important;
+    text-align: center;
+    font-size: 15px;
+}
+
+/* Колонка "Сума" — синя область: зміщуємо вправо */
+.sum-cell {
+    width: 90px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+    font-weight: bold;
+}
+
+/* Інпути */
+input {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #0005;
+    color: var(--text);
+}
+
+/* Контейнер */
+.container {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    max-width: 900px;
+    margin: 20px auto;
+}
+
+/* Шрифт заголовку */
+h2 {
+    font-size: 26px;
+}
+
+/* === Верхнє меню іконок === */
+
 .topnav {
     display: flex;
     justify-content: space-around;
     align-items: center;
     background: var(--card);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 0;
-}
-.tab-btn {
-    flex: 1;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.25s;
-    padding: 4px 0;
-}
-.tab-btn img,
-.tab-btn span {
-    font-size: 24px;
-    opacity: 0.6;
-    transition: 0.25s;
-}
-.tab-btn.active img,
-.tab-btn.active span {
-    transform: scale(1.2);
-    opacity: 1;
+    padding: 14px 0;
+    border-bottom: 2px solid var(--border);
 }
 
-/* === КОНТЕЙНЕР === */
+.tab-btn {
+    font-size: 24px;
+    opacity: 0.6;
+    transform: scale(1);
+    transition: 0.2s ease;
+}
+
+.tab-btn.active {
+    opacity: 1;
+    transform: scale(1.20);
+    color: var(--accent);
+}
+
+/* Сторінки */
 .page {
     display: none;
-    padding: 15px;
-    max-width: 900px;
-    margin: auto;
+    padding: 20px;
 }
 .active-page {
     display: block;
 }
-.container {
-    background: var(--card);
-    padding: 18px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-}
 
-/* === ТАБЛИЦІ === */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 10px;
-    font-size: 15px; /* зменшений шрифт */
-}
-
-th {
+/* Кнопки */
+button {
     background: var(--accent);
-    color: #fff;
-    padding: 10px 5px;
-    font-size: 16px;
-}
-
-td {
-    border: 1px solid var(--border);
-    padding: 6px 4px;
-}
-
-/* Вирівнюємо колонки */
-td:nth-child(1) { width: 40%; }
-td:nth-child(2) { width: 20%; }
-td:nth-child(3) { width: 20%; }
-td:nth-child(4) { width: 20%; }
-
-/* Інпут в таблиці */
-td input {
-    width: 95%;
-    padding: 6px;
-    border-radius: 6px;
-    background: #0007;
-    border: 1px solid var(--border);
-    color: var(--text);
+    color: white;
+    border: none;
+    padding: 10px 16px;
     font-size: 15px;
-    text-align: center;
-}
-
-/* Хедлайн сторінки */
-h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-/* === ФОРМИ === */
-label {
-    font-size: 16px;
-    display: block;
+    border-radius: 6px;
     margin-top: 10px;
 }
-input, textarea, select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 6px;
+
+/* Фінанси */
+.finance-box {
+    margin-top: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    background: var(--card);
     border: 1px solid var(--border);
-    background: #0005;
-    color: var(--text);
-    margin-top: 5px;
-    font-size: 16px;
 }
 
-button {
-    margin-top: 12px;
-    background: var(--accent);
-    border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
-    color: #fff;
-    font-size: 16px;
-    width: 100%;
-}
-
-/* === СПОВІЩЕННЯ === */
+/* Сповіщення */
 #saveAlert {
     position: fixed;
-    top: 10px;
-    right: 10px;
+    right: 20px;
+    top: 15px;
     background: var(--accent);
-    padding: 10px 20px;
+    padding: 10px 15px;
     border-radius: 6px;
-    color: #fff;
     opacity: 0;
     transition: 0.3s;
 }
@@ -162,31 +170,20 @@ button {
     opacity: 1;
 }
 
-/* === ЗАМОВЛЕННЯ === */
+/* Статуси */
+.status-active { color: #4caf50; font-weight: bold; }
+.status-completed { color: #2196f3; font-weight: bold; }
+.status-cancelled { color: #e53935; font-weight: bold; }
+
+/* Замовлення */
 .order-item {
-    background: #0004;
     padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
     margin-bottom: 12px;
-}
-
-.status-active { color: #37c055; font-weight: bold; }
-.status-completed { color: #2a7cda; font-weight: bold; }
-.status-cancelled { color: #d9534f; font-weight: bold; }
-
-/* === ФІНАНСИ === */
-.finance-box {
-    background: var(--card);
-    padding: 15px;
-    border-radius: 10px;
+    border-radius: 8px;
+    background: #0003;
     border: 1px solid var(--border);
 }
 
-.csv-btn {
-    background: #2196f3;
-    margin-top: 10px;
-}
 </style>
 </head>
 
