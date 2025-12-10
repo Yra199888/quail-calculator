@@ -6,189 +6,127 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-/* === ТЕМИ (Dark / Light) === */
 :root {
-    --bg: #111;
-    --text: #fff;
-    --card: #1b1b1b;
+    --bg: #0f0f0f;
+    --text: #ffffff;
+    --card: #1a1a1a;
     --border: #333;
-    --accent: #4caf50;
-    --header: #000;
+    --accent: #3ebd4c;
 }
+
+/* Світла тема */
 .light {
     --bg: #f5f5f5;
-    --text: #000;
-    --card: #fff;
+    --text: #111;
+    --card: #ffffff;
     --border: #ccc;
-    --accent: #2a7cda;
-    --header: #fff;
+    --accent: #2e8fdb;
 }
 
 body {
-    margin: 0;
     background: var(--bg);
     color: var(--text);
+    margin: 0;
     font-family: Arial, sans-serif;
-    transition: 0.25s;
 }
 
-/* === ВЕРХНЄ МЕНЮ — ІКОНИ + активна 20% більша === */
+/* Верхнє меню */
 .topnav {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background: var(--header);
+    background: var(--card);
     border-bottom: 2px solid var(--border);
     padding: 10px 0;
 }
-
-.nav-icon {
+.tab-btn {
     font-size: 26px;
-    opacity: 0.6;
-    transition: 0.25s;
-    cursor: pointer;
+    opacity: 0.5;
+    transition: 0.2s;
 }
-
-.nav-icon.active {
+.tab-btn.active {
     transform: scale(1.20);
     opacity: 1;
     color: var(--accent);
 }
 
-/* === Перемикач ТЕМИ === */
-.theme-toggle {
-    font-size: 26px;
-    cursor: pointer;
-    opacity: 0.8;
-}
-.theme-toggle:hover {
-    opacity: 1;
-}
-
-/* === КОНТЕЙНЕРИ === */
-.page {
-    display: none;
-    padding: 20px;
-}
-.page.active-page {
-    display: block;
-}
-
+/* Стилі контейнерів */
+.page { display: none; padding: 20px; }
+.active-page { display: block; }
 .container {
     background: var(--card);
-    padding: 18px;
+    padding: 20px;
     border-radius: 12px;
     border: 1px solid var(--border);
     max-width: 900px;
-    margin: auto;
+    margin: 20px auto;
 }
 
-/* === КНОПКИ === */
-button {
-    background: var(--accent);
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 10px;
-    transition: 0.2s;
-}
-button:hover {
-    opacity: 0.85;
-}
-
-/* === ІНПУТИ === */
-input, textarea, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 6px;
-    border-radius: 6px;
-    background: #0004;
-    color: var(--text);
-    border: 1px solid var(--border);
-    font-size: 16px;
-}
-
-/* === ТАБЛИЦЯ КАЛЬКУЛЯТОРА — ВИРІВНЯНО! === */
-.feed-table {
+/* Таблиця калькулятора */
+table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
 }
 
-.feed-table th {
+th {
     background: var(--accent);
-    color: white;
-    padding: 10px;
-    font-size: 17px;
-}
-
-.feed-table td {
-    padding: 8px;
-    border: 1px solid var(--border);
-    vertical-align: middle;
-}
-
-.feed-table input {
-    width: 100%;
-    text-align: center;
-}
-
-.col-qty { width: 90px; }
-.col-price { width: 90px; }
-.col-sum { width: 90px; }
-
-/* === ПІДСВІТКА ТА СПОВІЩЕННЯ === */
-.row-highlight {
-    background: rgba(46, 204, 113, 0.25);
-}
-
-#saveAlert {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    background: var(--accent);
-    padding: 10px 20px;
-    border-radius: 6px;
-    opacity: 0;
     color: #fff;
-    transition: 0.4s;
-    z-index: 999;
-}
-#saveAlert.show { opacity: 1; }
-
-/* === ЗАМОВЛЕННЯ === */
-.order-box {
-    padding: 12px;
-    border-radius: 10px;
-    background: #00000030;
-    border: 1px solid var(--border);
-    margin-bottom: 15px;
+    padding: 12px 4px;
+    font-size: 18px;
 }
 
-.status-active { color: #4caf50; font-weight: bold; }
-.status-completed { color: #3498db; font-weight: bold; }
-.status-cancelled { color: #e74c3c; font-weight: bold; }
-
-/* === ФІНАНСИ === */
-.finance-row {
-    padding: 12px;
+td {
+    padding: 10px 6px;
     border-bottom: 1px solid var(--border);
 }
 
-.csv-btn {
-    background: #2196f3;
+/* Вирівнювання колонок */
+.col-name { width: 35%; }
+.col-qty  { width: 15%; }
+.col-price{ width: 20%; }
+.col-sum  { width: 20%; }
+
+/* Інпути */
+input {
+    width: 95%;
+    background: #00000060;
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 16px;
 }
 
-/* === АДАПТАЦІЯ ДЛЯ ТЕЛЕФОНА === */
-@media (max-width: 480px) {
-    th { font-size: 15px; padding: 8px; }
-    td { font-size: 15px; }
-    input { font-size: 15px; }
-    .nav-icon { font-size: 24px; }
-    .nav-icon.active { transform: scale(1.22); }
+.result {
+    margin-top: 20px;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+/* Сповіщення */
+#saveAlert {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: var(--accent);
+    padding: 12px 20px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+/* Статуси замовлень */
+.status-active { color: #2ecc71; font-weight: bold; }
+.status-completed { color: #3498db; font-weight: bold; }
+.status-cancelled { color: #e74c3c; font-weight: bold; }
+
+/* Іконка сонце/місяць */
+#themeToggle {
+    position: absolute;
+    right: 20px;
+    top: 14px;
+    font-size: 28px;
+    cursor: pointer;
 }
 </style>
 </head>
