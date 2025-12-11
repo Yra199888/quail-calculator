@@ -5,375 +5,46 @@
 <title>Quail Farm Tools PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-
-/* === ГЛОБАЛЬНІ ТЕМИ === */
-:root {
-    --bg: #111;
-    --text: #fff;
-    --card: #1b1b1b;
-    --border: #333;
-    --accent: #4caf50;
-}
-.light {
-    --bg: #f3f3f3;
-    --text: #111;
-    --card: #fff;
-    --border: #ccc;
-    --accent: #2a7cda;
-}
-
-body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: Arial, sans-serif;
-    transition: 0.3s;
-}
-
-/* === КНОПКА ТЕМИ === */
-.theme-btn {
-    position: fixed;
-    top: 12px;
-    right: 16px;   /* <<< ТУТ ВИПРАВЛЕНО */
-    font-size: 30px;
-    cursor: pointer;
-    z-index: 9999;
-}
-
-/* === ТАБЛИЦЯ КАЛЬКУЛЯТОРА === */
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th {
-    background: var(--accent);
-    color: white;
-    padding: 10px 5px;
-    font-size: 15px;
-}
-
-td {
-    border: 1px solid var(--border);
-    padding: 8px 6px;
-    font-size: 15px;
-}
-
-/* Компонент */
-td:first-child {
-    width: 40%;
-    font-size: 16px;
-}
-
-/* Червона область — зменшено */
-.qty-cell input,
-.price-cell input {
-    width: 65px !important;
-    font-size: 15px;
-    text-align: center;
-}
-
-/* Синя область — вирівняно вправо */
-.sum-cell {
-    width: 95px !important;
-    text-align: right !important;
-    padding-right: 14px !important;
-    font-weight: bold;
-}
-
-/* Інпути */
-input {
-    width: 100%;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: #0005;
-    color: var(--text);
-    box-sizing: border-box;
-}
-
-/* Блок таблиці — щоб інпути НЕ виходили за межі */
-.feed-table td input {
-    width: 100%;
-    max-width: 80px;   /* <<< ГОЛОВНИЙ ФІКС ДЛЯ МОБІЛОК */
-}
-
-/* Контейнер */
-.container {
-    background: var(--card);
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    max-width: 900px;
-    margin: 20px auto;
-}
-
-/* Заголовок */
-h2 {
-    font-size: 26px;
-}
-
-/* === МЕНЮ === */
-.topnav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: var(--card);
-    padding: 14px 0;
-    border-bottom: 2px solid var(--border);
-}
-
-.tab-icon {
-    font-size: 26px;
-    opacity: 0.6;
-    transform: scale(1);
-    transition: 0.2s ease;
-}
-
-.tab-icon.active {
-    opacity: 1;
-    transform: scale(1.20);
-    color: var(--accent);
-}
-
-/* === Верхнє меню іконок (tab-icon) === */
-.topnav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: var(--card);
-    padding: 10px 0;
-    border-bottom: 2px solid var(--border);
-}
-
-/* бо в HTML у тебе class="tab-icon", а не tab-btn */
-.tab-icon {
-    flex: 1;
-    text-align: center;
-    font-size: 24px;
-    opacity: 0.6;
-    transform: scale(1);
-    transition: 0.2s ease;
-}
-.tab-icon.active {
-    opacity: 1;
-    transform: scale(1.2);  /* +20% */
-    color: var(--accent);
-}
-
-/* === Нижнє меню під верхнім === */
-.subnav {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    padding: 6px 0 10px;
-    gap: 4px;
-}
-
-.subnav-icon {
-    flex: 1;
-    text-align: center;
-    font-size: 20px;
-    opacity: 0.7;
-}
-
-.subnav-icon.theme-icon {
-    font-size: 20px;
-    cursor: pointer;
-}
-
-/* Сторінки */
-.page {
-    display: none;
-    padding: 20px;
-}
-.active-page {
-    display: block;
-}
-
-/* Кнопки */
-button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    font-size: 15px;
-    border-radius: 6px;
-    margin-top: 10px;
-}
-
-/* Статуси */
-.status-active { color: #4caf50; font-weight: bold; }
-.status-completed { color: #2196f3; font-weight: bold; }
-.status-cancelled { color: #e53935; font-weight: bold; }
-
-/* Блок замовлення */
-.order-block {
-    padding: 12px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-    background: #0003;
-    border: 1px solid var(--border);
-}
-/* =======================================================
-   ===   СКЛАД (СТИЛЬ C — Комбінований)               ===
-   ======================================================= */
-
-/* Загальний контейнер */
-.stock-container {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
-    margin: 20px auto;
-    max-width: 900px;
-}
-
-/* Заголовки категорій */
-.stock-category-title {
-    font-size: 19px;
-    font-weight: bold;
-    margin: 18px 0 10px;
-    color: var(--accent);
-}
-
-/* Одна позиція */
-.stock-item {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    align-items: center;
-    padding: 10px;
-    background: #0004;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
-}
-
-/* Назва продукту */
-.stock-item-name {
-    font-size: 15px;
-    font-weight: bold;
-}
-
-/* Поля */
-.stock-item input {
-    width: 90px;
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: #0005;
-    color: var(--text);
-    text-align: center;
-}
-
-/* Підписи */
-.stock-item-label {
-    font-size: 13px;
-    opacity: 0.8;
-}
-
-/* Дві колонки значень */
-.stock-values {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    gap: 10px;
-    text-align: center;
-}
-
-/* Кнопка списання */
-.stock-writeoff-btn {
-    width: 100%;
-    margin-top: 20px;
-    padding: 12px;
-    font-size: 17px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-/* Контейнер "Нове поповнення" */
-.stock-add-box {
-    margin-top: 20px;
-    padding: 14px;
-    border-radius: 8px;
-    background: #0003;
-    border: 1px solid var(--border);
-}
-
-/* Кнопка додавання поповнення */
-.stock-add-btn {
-    background: #2962ff;
-    color: #fff;
-    padding: 8px 14px;
-    border: none;
-    border-radius: 6px;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-/* Роздільна лінія між категоріями */
-.stock-divider {
-    width: 100%;
-    height: 1px;
-    background: var(--border);
-    margin: 25px 0;
-}
-
-/* Мобільна адаптація */
-@media (max-width: 480px) {
-    .stock-values {
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 6px;
-    }
-    .stock-item input {
-        width: 75px;
-        font-size: 14px;
-    }
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- === НАВІГАЦІЯ ЗВЕРХУ === -->
+<!-- === ВЕРХНЯ ПАНЕЛЬ === -->
 <div class="topnav">
-  <div class="tab-icon active" onclick="openTab('calculator', this)">🧮</div>
-  <div class="tab-icon" onclick="openTab('eggs', this)">🥚</div>
-  <div class="tab-icon" onclick="openTab('orders', this)">📦</div>
-  <div class="tab-icon" onclick="openTab('finance', this)">💰</div>
+  <div class="nav-btn top-btn active" data-page="calculator">🧮</div>
+  <div class="nav-btn top-btn" data-page="eggs">🥚</div>
+  <div class="nav-btn top-btn" data-page="orders">📦</div>
+  <div class="nav-btn top-btn" data-page="finance">💰</div>
 </div>
 
-<!-- === НИЖНЄ МЕНЮ (Склад / Налаштування / запас / Перемикач теми) === -->
-<div class="subnav">
-  <div class="subnav-icon" onclick="openWarehouse()" title="Склад">🏚️</div>
-  <div class="subnav-icon" onclick="openSettings()" title="Налаштування">⚙️</div>
-  <div class="subnav-icon" title="На потім"></div>
-  <div class="subnav-icon theme-icon" id="themeIcon" onclick="toggleTheme()" title="Тема">🌙</div>
+<!-- === НИЖНЯ ПАНЕЛЬ === -->
+<div class="bottomnav">
+  <div class="nav-btn bottom-btn" data-page="warehouse">🏚️</div>
+  <div class="nav-btn bottom-btn" data-page="tools">🔧</div>
+  <div class="nav-btn bottom-btn" data-page="settings">⚙️</div>
+  <div class="nav-btn bottom-btn theme-btn" onclick="toggleTheme()">🌙</div>
 </div>
 
-<!-- === КАЛЬКУЛЯТОР === -->
+<!-- === СТОРІНКИ === -->
+
+<!-- КАЛЬКУЛЯТОР -->
 <div id="page-calculator" class="page active-page">
   <h2>🧮 Калькулятор корму</h2>
   <div class="container">
-   <table class="feed-table">
-    <tr>
+
+    <table class="feed-table">
+      <tr>
         <th>Компонент</th>
-        <th class="feed-col-qty">К-сть</th>
-        <th class="feed-col-price">Ціна</th>
-        <th class="feed-col-sum">Сума</th>
-    </tr>
-</table>
+        <th>К-сть</th>
+        <th>Ціна</th>
+        <th>Сума</th>
+      </tr>
+    </table>
 
-<table id="feedTable" class="feed-table"></table>
+    <table id="feedTable" class="feed-table"></table>
 
-    <h3>Обʼєм корму (кг):</h3>
+    <h3>Обʼєм (кг):</h3>
     <input id="feedVolume" type="number" value="25">
 
     <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
@@ -382,7 +53,7 @@ button {
   </div>
 </div>
 
-<!-- === ЯЙЦЯ === -->
+<!-- ЯЙЦЯ -->
 <div id="page-eggs" class="page">
   <h2>🥚 Облік яєць</h2>
 
@@ -402,11 +73,10 @@ button {
     <button onclick="saveEggRecord()">Зберегти</button>
   </div>
 
-  <h3>Щоденний звіт</h3>
   <div id="eggsList"></div>
 </div>
 
-<!-- === ЗАМОВЛЕННЯ === -->
+<!-- ЗАМОВЛЕННЯ -->
 <div id="page-orders" class="page">
   <h2>📦 Замовлення</h2>
 
@@ -414,7 +84,7 @@ button {
     <label>Дата:</label>
     <input id="orderDate" type="date">
 
-    <label>Ім'я клієнта:</label>
+    <label>Ім'я:</label>
     <input id="orderName">
 
     <label>Лотків:</label>
@@ -426,11 +96,10 @@ button {
     <button onclick="addOrder()">Додати</button>
   </div>
 
-  <h3>Список замовлень</h3>
   <div id="ordersList"></div>
 </div>
 
-<!-- === ФІНАНСИ === -->
+<!-- ФІНАНСИ -->
 <div id="page-finance" class="page">
   <h2>💰 Фінанси</h2>
 
@@ -440,513 +109,36 @@ button {
 
     <button onclick="saveFinanceSettings()">Зберегти</button>
 
-    <h3>Звіт</h3>
     <div id="financeReport"></div>
 
-    <button onclick="exportCSV()">Експорт CSV</button>
+    <button onclick="exportCSV()">CSV</button>
   </div>
 </div>
 
-<!-- === СТОРІНКА 5: СКЛАД === -->
-<div id="page-stock" class="page">
+<!-- СКЛАД -->
+<div id="page-warehouse" class="page">
   <h2>🏚️ Склад</h2>
 
-  <!-- Внутрішні вкладки складу -->
-  <div class="stock-tabs">
-      <div class="stock-tab active" onclick="openStockTab('feed')">Готовий корм</div>
-      <div class="stock-tab" onclick="openStockTab('grain')">Зерно</div>
-      <div class="stock-tab" onclick="openStockTab('cake')">Макуха / Шроти</div>
-      <div class="stock-tab" onclick="openStockTab('minerals')">Мінерали / Добавки</div>
-      <div class="stock-tab" onclick="openStockTab('pack')">Упаковка</div>
-      <div class="stock-tab" onclick="openStockTab('product')">Готова продукція</div>
-  </div>
-
-  <!-- === БЛОКИ КАТЕГОРІЙ СКЛАДУ === -->
-
-  <!-- Готовий корм -->
-  <div id="stock-feed" class="stock-section active-stock">
-      <h3>Готовий корм</h3>
-
-      <div class="container stock-box">
-          <label>Залишок (кг):</label>
-          <input type="number" id="feedLeft" />
-
-          <label>Нове поступлення (кг):</label>
-          <input type="number" id="feedAdd" />
-
-          <label>Списати на заміс (кг):</label>
-          <input type="number" id="feedUse" />
-
-          <button onclick="saveStock('feed')">Зберегти</button>
-      </div>
-
-      <div class="stock-output" id="feedOutput"></div>
-  </div>
-
-  <!-- Зерно -->
-  <div id="stock-grain" class="stock-section">
-      <h3>Зерно</h3>
-
-      <div class="container stock-box">
-          <label>Залишок (кг):</label>
-          <input type="number" id="grainLeft" />
-
-          <label>Нове поступлення (кг):</label>
-          <input type="number" id="grainAdd" />
-
-          <label>Списати на заміс (кг):</label>
-          <input type="number" id="grainUse" />
-
-          <button onclick="saveStock('grain')">Зберегти</button>
-      </div>
-
-      <div class="stock-output" id="grainOutput"></div>
-  </div>
-
-  <!-- Макуха / Шроти -->
-  <div id="stock-cake" class="stock-section">
-      <h3>Макуха / Шроти</h3>
-
-      <div class="container stock-box">
-          <label>Залишок (кг):</label>
-          <input type="number" id="cakeLeft" />
-
-          <label>Нове поступлення (кг):</label>
-          <input type="number" id="cakeAdd" />
-
-          <label>Списати на заміс (кг):</label>
-          <input type="number" id="cakeUse" />
-
-          <button onclick="saveStock('cake')">Зберегти</button>
-      </div>
-
-      <div class="stock-output" id="cakeOutput"></div>
-  </div>
-
-  <!-- Мінерали -->
-  <div id="stock-minerals" class="stock-section">
-      <h3>Мінерали / Добавки</h3>
-
-      <div class="container stock-box">
-          <label>Залишок (кг):</label>
-          <input type="number" id="mineralsLeft" />
-
-          <label>Нове поступлення (кг):</label>
-          <input type="number" id="mineralsAdd" />
-
-          <label>Списати на заміс (кг):</label>
-          <input type="number" id="mineralsUse" />
-
-          <button onclick="saveStock('minerals')">Зберегти</button>
-      </div>
-
-      <div class="stock-output" id="mineralsOutput"></div>
-  </div>
-
-  <!-- Упаковка — штуки -->
-  <div id="stock-pack" class="stock-section">
-      <h3>Упаковка</h3>
-
-      <div class="container stock-box">
-          <label>Залишок (шт):</label>
-          <input type="number" id="packLeft" />
-
-          <label>Нове поступлення (шт):</label>
-          <input type="number" id="packAdd" />
-
-          <label>Списати (шт):</label>
-          <input type="number" id="packUse" />
-
-          <button onclick="saveStock('pack')">Зберегти</button>
-      </div>
-
-      <div class="stock-output" id="packOutput"></div>
-  </div>
-
-  <!-- Готова продукція -->
-  <div id="stock-product" class="stock-section">
-      <h3>Готова продукція</h3>
-
-      <div class="container stock-box">
-          <label>Лотки (шт):</label>
-          <input type="number" id="prodLeft" />
-
-          <label>Нове поступлення (шт):</label>
-          <input type="number" id="prodAdd" />
-
-          <label>Списати / Видати (шт):</label>
-          <input type="number" id="prodUse" />
-
-          <button onclick="saveStock('product')">Зберегти</button>
-      </div>
-
-      <div class="stock-output" id="productOutput"></div>
-  </div>
-
+  <div id="warehouseList" class="container"></div>
 </div>
 
-<script>
-/* === ТЕМА === */
-function toggleTheme() {
-  document.body.classList.toggle("light");
-  const i = document.getElementById("themeIcon");
-  i.innerText = document.body.classList.contains("light") ? "☀️" : "🌙";
-}
-toggleTheme();
+<!-- ІНСТРУМЕНТИ -->
+<div id="page-tools" class="page">
+  <h2>🔧 Інструменти</h2>
+  <div class="container">
+    <p><i>Тут буде майбутній функціонал…</i></p>
+  </div>
+</div>
 
-/* === ВКЛАДКИ === */
-function openTab(page, el) {
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active-page"));
-  document.querySelector("#page-" + page).classList.add("active-page");
+<!-- НАЛАШТУВАННЯ -->
+<div id="page-settings" class="page">
+  <h2>⚙️ Налаштування</h2>
+  <div class="container">
+    <p><i>Сторінка готується…</i></p>
+  </div>
+</div>
 
-  document.querySelectorAll(".tab-icon").forEach(i=>i.classList.remove("active"));
-  el.classList.add("active");
-}
-
-/* === КАЛЬКУЛЯТОР === */
-const feedComponents = [
-  ["Кукурудза",10],
-  ["Пшениця",5],
-  ["Ячмінь",1.5],
-  ["Соєва макуха",3],
-  ["Соняшникова макуха",2.5],
-  ["Рибне борошно",1],
-  ["Кормові дріжджі",0.7],
-  ["Трикальційфосфат",0.5],
-  ["Dolfos D",0.7],
-  ["Сіль",0.05]
-];
-
-function loadFeed() {
-  let html="";
-  feedComponents.forEach((c,i)=>{
-    let p = localStorage.getItem("p"+i) || 0;
-    html += `
-    <tr>
-      <td>${c[0]}</td>
-      <td><input id="qty${i}" value="${c[1]}"></td>
-      <td><input id="price${i}" value="${p}"></td>
-      <td id="sum${i}">0</td>
-    </tr>`;
-  });
-  document.getElementById("feedTable").innerHTML = html;
-  calcFeed();
-}
-loadFeed();
-
-function calcFeed(){
-  let total=0,kg=0;
-  feedComponents.forEach((c,i)=>{
-    let q = +document.getElementById("qty"+i).value;
-    let p = +document.getElementById("price"+i).value;
-    localStorage.setItem("p"+i,p);
-    let s=q*p;
-    total+=s; kg+=q;
-    document.getElementById("sum"+i).innerText=s.toFixed(2);
-  });
-  let per=kg?total/kg:0;
-  let vol=+document.getElementById("feedVolume").value;
-  document.getElementById("feedTotal").innerText=total.toFixed(2);
-  document.getElementById("feedPerKg").innerText=per.toFixed(2);
-  document.getElementById("feedVolumeTotal").innerText=(per*vol).toFixed(2);
-}
-document.addEventListener("input", calcFeed);
-
-/* === ЯЙЦЯ === */
-let eggs={};
-
-function saveEggRecord(){
-  let d=document.getElementById("eggsDate").value || new Date().toISOString().slice(0,10);
-  eggs[d]={
-    good:+eggsGood.value||0,
-    bad:+eggsBad.value||0,
-    home:+eggsHome.value||0
-  };
-  localStorage.setItem("eggs",JSON.stringify(eggs));
-  showEggs();
-}
-if(localStorage.getItem("eggs")) eggs=JSON.parse(localStorage.getItem("eggs"));
-
-function showEggs(){
-  let box="";
-  Object.keys(eggs).sort().reverse().forEach(d=>{
-    let e=eggs[d];
-    let com=e.good-e.bad-e.home;
-    let trays=Math.floor(com/20);
-    box+=`
-    <div class="order-block">
-      <b>${d}</b><br>
-      Всього: ${e.good}<br>
-      Брак: ${e.bad}<br>
-      Дім: ${e.home}<br>
-      Комерційні: ${com}<br>
-      Лотки: ${trays}<br>
-      <button onclick="deleteEgg('${d}')">Видалити</button>
-    </div>`;
-  });
-  document.getElementById("eggsList").innerHTML=box;
-}
-showEggs();
-
-function deleteEgg(d){
-  delete eggs[d];
-  localStorage.setItem("eggs",JSON.stringify(eggs));
-  showEggs();
-}
-
-/* === ЗАМОВЛЕННЯ === */
-let orders={};
-
-if(localStorage.getItem("orders")) orders=JSON.parse(localStorage.getItem("orders"));
-
-function addOrder(){
-  let d=orderDate.value || new Date().toISOString().slice(0,10);
-  if(!orders[d]) orders[d]=[];
-  orders[d].push({
-    name:orderName.value,
-    trays:+orderTrays.value,
-    details:orderDetails.value,
-    status:"active"
-  });
-  localStorage.setItem("orders",JSON.stringify(orders));
-  showOrders();
-}
-
-function showOrders(){
-  let out="";
-  Object.keys(orders).sort().reverse().forEach(d=>{
-    out+=`<h3>${d}</h3>`;
-    orders[d].forEach((o,i)=>{
-      out+=`
-      <div class="order-block">
-        <b>${o.name}</b> — ${o.trays} лот.<br>
-        Деталі: ${o.details}<br>
-        Статус: <span class="status-${o.status}">${o.status}</span><br>
-        <button onclick="setStatus('${d}',${i},'completed')">Виконано</button>
-        <button onclick="setStatus('${d}',${i},'cancelled')">Скасовано</button>
-        <button onclick="deleteOrder('${d}',${i})">Видалити</button>
-      </div>`;
-    });
-  });
-  document.getElementById("ordersList").innerHTML=out;
-}
-showOrders();
-
-function setStatus(d,i,s){
-  orders[d][i].status=s;
-  localStorage.setItem("orders",JSON.stringify(orders));
-  showOrders();
-}
-function deleteOrder(d,i){
-  orders[d].splice(i,1);
-  if(orders[d].length===0) delete orders[d];
-  localStorage.setItem("orders",JSON.stringify(orders));
-  showOrders();
-}
-
-/* === ФІНАНСИ === */
-function saveFinanceSettings(){
-  localStorage.setItem("trayPrice",trayPrice.value);
-  showFinance();
-}
-function showFinance(){
-  let price=+(localStorage.getItem("trayPrice")||50);
-  trayPrice.value=price;
-  let income=0;
-  Object.keys(orders).forEach(d=>{
-    orders[d].forEach(o=>{
-      if(o.status==="completed") income += o.trays*price;
-    });
-  });
-  document.getElementById("financeReport").innerHTML=
-    `<b>Дохід:</b> ${income} грн`;
-}
-showFinance();
-
-/* === CSV === */
-function exportCSV(){
-  let rows=["Дата,Імʼя,Лотки,Деталі,Статус"];
-  Object.keys(orders).forEach(d=>{
-    orders[d].forEach(o=>{
-      rows.push(`${d},${o.name},${o.trays},${o.details},${o.status}`);
-    });
-  });
-
-  let csv=rows.join("\n");
-  let blob=new Blob([csv],{type:"text/csv"});
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="finance.csv";
-  a.click();
-}
-
-/* ============================================================
-   === СКЛАД — ЛОГІКА (3/3) ===================================
-   ============================================================ */
-
-/*
-Структура зберігання складу:
-
-warehouse = {
-  "grain": { name: "Зерно", unit: "кг", items: { "Кукурудза": 120, "Пшениця": 80 } },
-  "cake": { name: "Макуха / шроти", unit: "кг", items: { "Соєва макуха": 50 } },
-  "minerals": { name: "Мінерали", unit: "кг", items: { "Dolfos D": 10 } },
-  "packing": { name: "Упаковка", unit: "шт", items: { "Лотки 20шт": 140 } },
-  "ready": { name: "Готова продукція", unit: "шт", items: {} }
-};
-*/
-
-let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
-
-// Якщо порожній — створюємо структуру
-if (Object.keys(warehouse).length === 0) {
-    warehouse = {
-        grain:    { name: "Зерно", unit: "кг", items: {} },
-        cake:     { name: "Макуха / шроти", unit: "кг", items: {} },
-        minerals: { name: "Мінерали / добавки", unit: "кг", items: {} },
-        packing:  { name: "Упаковка", unit: "шт", items: {} },
-        ready:    { name: "Готова продукція", unit: "шт", items: {} }
-    };
-    saveWarehouse();
-}
-
-function saveWarehouse() {
-    localStorage.setItem("warehouse", JSON.stringify(warehouse));
-}
-
-/* ============================================================
-   === Вивід складу на екран ==================================
-   ============================================================ */
-
-function renderWarehouse() {
-    let box = "";
-
-    for (let key in warehouse) {
-        const cat = warehouse[key];
-
-        box += `
-            <div class="w-cat">
-                <h3>${cat.name} <span class="unit">(${cat.unit})</span></h3>
-
-                <div class="w-items">
-                    ${Object.keys(cat.items).length === 0 ? "<i>Порожньо</i>" : ""}
-        `;
-
-        Object.entries(cat.items).forEach(([item, qty]) => {
-            box += `
-                <div class="w-row">
-                    <div class="w-item-name">${item}</div>
-                    <div class="w-item-qty">${qty} ${cat.unit}</div>
-                </div>
-            `;
-        });
-
-        box += `
-                </div>
-
-                <!-- Додавання нового товару -->
-                <div class="w-add">
-                    <input type="text" placeholder="Назва" id="name-${key}">
-                    <input type="number" placeholder="К-сть" id="qty-${key}">
-                    <button onclick="addToWarehouse('${key}')">Додати</button>
-                </div>
-            </div>
-        `;
-    }
-
-    document.getElementById("warehouseList").innerHTML = box;
-}
-
-renderWarehouse();
-
-/* ============================================================
-   === Додавання товару =======================================
-   ============================================================ */
-
-function addToWarehouse(catKey) {
-    let name = document.getElementById("name-" + catKey).value.trim();
-    let qty = Number(document.getElementById("qty-" + catKey).value);
-
-    if (!name || qty <= 0) {
-        alert("Введіть назву та кількість!");
-        return;
-    }
-
-    if (!warehouse[catKey].items[name]) warehouse[catKey].items[name] = 0;
-    warehouse[catKey].items[name] += qty;
-
-    saveWarehouse();
-    renderWarehouse();
-}
-
-/* ============================================================
-   === СПИСАННЯ НА ЗАМІС (ОБЩА КНОПКА) =========================
-   ============================================================ */
-
-function subtractForMix(recipe) {
-    /*
-      recipe = {
-        "Кукурудза": 10,
-        "Пшениця": 5,
-        "Соєва макуха": 3,
-        ...
-      }
-    */
-
-    // Перевіряємо наявність
-    for (let comp in recipe) {
-        let need = recipe[comp];
-        let found = false;
-
-        for (let cat of Object.values(warehouse)) {
-            if (cat.items[comp] !== undefined) {
-                if (cat.items[comp] < need) {
-                    alert(`Недостатньо компоненту: ${comp}`);
-                    return;
-                }
-                found = true;
-            }
-        }
-
-        if (!found) {
-            alert(`Компонент "${comp}" не знайдено на складі!`);
-            return;
-        }
-    }
-
-    // Списуємо
-    for (let comp in recipe) {
-        let need = recipe[comp];
-
-        for (let cat of Object.values(warehouse)) {
-            if (cat.items[comp] !== undefined) {
-                cat.items[comp] -= need;
-            }
-        }
-    }
-
-    saveWarehouse();
-    renderWarehouse();
-    alert("Компоненти списано на заміс!");
-}
-
-/* ============================================================
-   === ДОДАВАННЯ ГОТОВОГО КОРМУ ===============================
-   ============================================================ */
-
-function addReadyFeed(kg) {
-    if (kg <= 0) return;
-
-    if (!warehouse.ready.items["Готовий корм"]) {
-        warehouse.ready.items["Готовий корм"] = 0;
-    }
-
-    warehouse.ready.items["Готовий корм"] += kg;
-    saveWarehouse();
-    renderWarehouse();
-}
-
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
