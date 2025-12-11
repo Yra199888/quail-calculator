@@ -6,28 +6,33 @@ body {
     margin: 0;
     padding: 0;
     background: #0e0e0e;
-    color: #fff;
-    transform: scale(0.95);
+    color: white;
+
+    /* ТРОХИ ВІДДАЛЕНО ВСЮ СТОРІНКУ */
+    transform: scale(0.94);
     transform-origin: top center;
 }
 
-/* Вкладки */
+/* ===== СТОРІНКИ (ВАЖЛИВО ДЛЯ ВКЛАДОК!) ===== */
 .page {
     display: none;
     padding: 20px;
 }
-.active-page {
+.page.active-page {
     display: block;
 }
 
 /* Заголовки */
 h2 {
-    margin: 10px 0 20px 10px;
+    margin-left: 5px;
+    margin-bottom: 20px;
     font-size: 26px;
 }
+
 h3 {
-    margin: 20px 0 10px 15px;
-    font-size: 20px;
+    margin-left: 10px;
+    margin-top: 25px;
+    margin-bottom: 10px;
 }
 
 /* ============================
@@ -36,13 +41,9 @@ h3 {
 .topnav, .subnav {
     display: flex;
     justify-content: space-around;
-    align-items: center;
     background: #141414;
     padding: 10px 0;
     border-bottom: 1px solid #222;
-    position: sticky;
-    top: 0;
-    z-index: 999;
 }
 
 .nav-btn {
@@ -50,18 +51,16 @@ h3 {
     padding: 5px 12px;
     border-radius: 10px;
     cursor: pointer;
-    transition: 0.2s;
 }
 
 .nav-btn.active {
     background: #2a2a2a;
-    color: #32c44d;
-    transform: scale(1.15);
 }
 
 /* ============================
    ФОРМИ (ЯЙЦЯ + ЗАМОВЛЕННЯ)
 ============================ */
+
 .egg-form,
 .order-form {
     background: #111;
@@ -69,43 +68,47 @@ h3 {
     margin: 10px auto;
     border-radius: 14px;
     border: 1px solid #222;
-    max-width: 550px;
-    box-shadow: 0 0 12px #00000055;
+    max-width: 520px; /* щоб красиво по центру на широких екранах */
 }
 
-/* Рядок */
+/* Рядок у формі */
 .egg-row,
 .order-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 18px;
-    gap: 10px;
 }
 
-/* Текст і поля */
 .egg-row label,
 .order-row label {
-    width: 38%;
+    width: 40%;
     font-size: 18px;
-    color: #ccc;
 }
 
 .egg-row input,
 .order-row input,
 .order-row textarea {
-    width: 60%;
+    width: 58%;
     padding: 10px;
     border-radius: 10px;
     background: #151515;
     border: 1px solid #333;
-    color: #fff;
+    color: white;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 .order-row textarea {
     height: 70px;
     resize: none;
+}
+
+/* Інфо блок під кнопкою у ЯЙЦЯХ */
+.egg-info {
+    margin-top: 12px;
+    font-size: 15px;
+    opacity: 0.9;
 }
 
 /* Кнопки */
@@ -120,89 +123,82 @@ h3 {
     border-radius: 12px;
     border: none;
     margin-top: 10px;
-    color: #fff;
+    color: white;
     font-weight: 600;
-    cursor: pointer;
-    transition: 0.25s;
-}
-.egg-save:hover,
-.order-save:hover,
-.main-btn:hover {
-    background: #3edd5b;
-    transform: translateY(-2px);
 }
 
 /* ============================
-   ТАБЛИЦІ
+   ТАБЛИЦІ (Калькулятор + Склад)
 ============================ */
+
 .feed-table {
     width: 100%;
     border-collapse: collapse;
     margin: 15px 0;
-    overflow: hidden;
-    border-radius: 10px;
+    table-layout: fixed; /* щоб колонки не розповзалися */
 }
 
 .feed-table th {
     background: #2ea043;
-    padding: 12px;
-    font-size: 18px;
-    color: #fff;
-    border-bottom: 1px solid #222;
+    padding: 10px;
+    font-size: 16px;
 }
 
 .feed-table td {
-    padding: 10px;
+    padding: 8px;
     background: #111;
     border-bottom: 1px solid #222;
-    text-align: center;
 }
 
+/* інпути всередині таблиць */
 .feed-table td input {
-    width: 90%;
-    padding: 8px;
+    width: 100%;
+    padding: 6px;
     border-radius: 8px;
     border: 1px solid #333;
     background: #151515;
-    color: #fff;
-    text-align: center;
+    color: white;
+    font-size: 14px;
+    box-sizing: border-box;
 }
+
+/* чітке вирівнювання всіх колонок */
+.feed-table th:nth-child(1),
+.feed-table td:nth-child(1) { width: 30%; }
+
+.feed-table th:nth-child(2),
+.feed-table td:nth-child(2) { width: 23%; }
+
+.feed-table th:nth-child(3),
+.feed-table td:nth-child(3) { width: 23%; }
+
+.feed-table th:nth-child(4),
+.feed-table td:nth-child(4) { width: 24%; }
 
 /* ============================
    Список замовлень
 ============================ */
+
 #ordersList div {
     background: #131313;
-    margin: 10px auto;
+    margin: 10px;
     padding: 12px;
     border-radius: 10px;
     border: 1px solid #222;
-    max-width: 550px;
-    box-shadow: 0 0 10px #00000040;
 }
 
 #ordersList button {
     margin-right: 10px;
     margin-top: 8px;
     border-radius: 8px;
-    padding: 6px 12px;
+    padding: 6px 10px;
     border: none;
     background: #2ea043;
-    color: #fff;
-    font-weight: 600;
+    color: white;
     cursor: pointer;
-    transition: 0.2s;
+    font-size: 14px;
 }
 
-#ordersList button:hover {
-    background: #3edd5b;
-}
-
-/* ============================
-   Інші елементи
-============================ */
-#eggsInfo {
-    margin-top: 10px;
-    font-size: 16px;
-    color: #ddd;
+#ordersList button:last-child {
+    background: #c43636;
 }
