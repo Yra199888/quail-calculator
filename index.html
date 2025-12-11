@@ -1,37 +1,47 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>Quail Farm Tools PRO</title>
-
-<link rel="stylesheet" href="style.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<!-- === ВЕРХНЯ ПАНЕЛЬ === -->
+<!-- ===== ВЕРХНЄ МЕНЮ ===== -->
 <div class="topnav">
-  <div class="nav-btn" data-page="calculator">🧮</div>
-  <div class="nav-btn" data-page="eggs">🥚</div>
-  <div class="nav-btn" data-page="orders">📦</div>
-  <div class="nav-btn" data-page="finance">💰</div>
+    <div class="nav-btn" data-page="calculator">🧮</div>
+    <div class="nav-btn" data-page="eggs">🥚</div>
+    <div class="nav-btn" data-page="orders">📦</div>
+    <div class="nav-btn" data-page="finance">💰</div>
 </div>
 
-<!-- === НИЖНЯ ПАНЕЛЬ === -->
-<div class="bottomnav">
-  <div class="nav-btn" data-page="warehouse">🏚️</div>
-  <div class="nav-btn" data-page="tools">🔧</div>
-  <div class="nav-btn" data-page="settings">⚙️</div>
-  <div class="nav-btn theme-switch">🌙</div>
+<!-- ===== НИЖНЄ МЕНЮ ===== -->
+<div class="subnav">
+    <div class="nav-btn" data-page="warehouse">🏚️</div>
+    <div class="nav-btn" data-page="tools">🔧</div>
+    <div class="nav-btn" data-page="settings">⚙️</div>
+    <div class="nav-btn theme-switch" id="themeSwitch">🌙</div>
 </div>
 
-<!-- === СТОРІНКИ === -->
-<div id="calculator" class="page active">
+<!-- ===== СТОРІНКИ ===== -->
+
+<!-- КАЛЬКУЛЯТОР -->
+<div id="page-calculator" class="page active-page">
     <h2>🧮 Калькулятор корму</h2>
     <div class="container">
-        <table id="feedTable"></table>
+        <table class="feed-table">
+            <tr>
+                <th>Компонент</th>
+                <th>К-сть</th>
+                <th>Ціна</th>
+                <th>Сума</th>
+            </tr>
+            <tbody id="feedTable"></tbody>
+        </table>
 
-        <h3>Обʼєм корму (кг):</h3>
+        <label>Обʼєм корму (кг):</label>
         <input type="number" id="feedVolume" value="25">
 
         <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
@@ -40,35 +50,37 @@
     </div>
 </div>
 
-<div id="eggs" class="page">
+<!-- ЯЙЦЯ -->
+<div id="page-eggs" class="page">
     <h2>🥚 Облік яєць</h2>
     <div class="container">
         <label>Дата:</label>
         <input type="date" id="eggsDate">
 
         <label>Яєць за добу:</label>
-        <input type="number" id="eggsGood">
+        <input id="eggsGood" type="number">
 
         <label>Браковані:</label>
-        <input type="number" id="eggsBad">
+        <input id="eggsBad" type="number">
 
         <label>Для дому:</label>
-        <input type="number" id="eggsHome">
+        <input id="eggsHome" type="number">
 
         <button onclick="saveEggRecord()">Зберегти</button>
     </div>
+
     <h3>Щоденний звіт</h3>
     <div id="eggsList"></div>
 </div>
 
-<div id="orders" class="page">
+<!-- ЗАМОВЛЕННЯ -->
+<div id="page-orders" class="page">
     <h2>📦 Замовлення</h2>
-
     <div class="container">
         <label>Дата:</label>
-        <input type="date" id="orderDate">
+        <input id="orderDate" type="date">
 
-        <label>Імʼя:</label>
+        <label>Імʼя клієнта:</label>
         <input id="orderName">
 
         <label>Лотків:</label>
@@ -80,15 +92,16 @@
         <button onclick="addOrder()">Додати</button>
     </div>
 
-    <h3>Всі замовлення</h3>
+    <h3>Список замовлень</h3>
     <div id="ordersList"></div>
 </div>
 
-<div id="finance" class="page">
+<!-- ФІНАНСИ -->
+<div id="page-finance" class="page">
     <h2>💰 Фінанси</h2>
     <div class="container">
         <label>Ціна за лоток:</label>
-        <input type="number" id="trayPrice" value="50">
+        <input id="trayPrice" type="number" value="50">
 
         <button onclick="saveFinanceSettings()">Зберегти</button>
 
@@ -99,21 +112,30 @@
     </div>
 </div>
 
-<div id="warehouse" class="page">
+<!-- СКЛАД -->
+<div id="page-warehouse" class="page">
     <h2>🏚️ Склад</h2>
-    <div class="container" id="warehouseList"></div>
+
+    <div id="warehouseList" class="container"></div>
 </div>
 
-<div id="tools" class="page">
+<!-- ІНСТРУМЕНТИ -->
+<div id="page-tools" class="page">
     <h2>🔧 Інструменти</h2>
-    <p>Створено як заготовка для майбутніх функцій.</p>
+    <div class="container">
+        <p>Поки що порожньо (заготовка).</p>
+    </div>
 </div>
 
-<div id="settings" class="page">
+<!-- НАЛАШТУВАННЯ -->
+<div id="page-settings" class="page">
     <h2>⚙️ Налаштування</h2>
-    <p>Майбутні опції будуть тут.</p>
+    <div class="container">
+        <p>Тут буде меню конфігурації.</p>
+    </div>
 </div>
 
 <script src="script.js"></script>
+
 </body>
 </html>
