@@ -138,6 +138,54 @@ h2 {
     color: var(--accent);
 }
 
+/* === Верхнє меню іконок (tab-icon) === */
+.topnav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: var(--card);
+    padding: 10px 0;
+    border-bottom: 2px solid var(--border);
+}
+
+/* бо в HTML у тебе class="tab-icon", а не tab-btn */
+.tab-icon {
+    flex: 1;
+    text-align: center;
+    font-size: 24px;
+    opacity: 0.6;
+    transform: scale(1);
+    transition: 0.2s ease;
+}
+.tab-icon.active {
+    opacity: 1;
+    transform: scale(1.2);  /* +20% */
+    color: var(--accent);
+}
+
+/* === Нижнє меню під верхнім === */
+.subnav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 0 10px;
+    gap: 4px;
+}
+
+.subnav-icon {
+    flex: 1;
+    text-align: center;
+    font-size: 20px;
+    opacity: 0.7;
+}
+
+.subnav-icon.theme-icon {
+    font-size: 20px;
+    cursor: pointer;
+}
+
 /* Сторінки */
 .page {
     display: none;
@@ -176,15 +224,20 @@ button {
 
 <body>
 
-<!-- === КНОПКА ТЕМИ === -->
-<div class="theme-btn" onclick="toggleTheme()" id="themeIcon">🌙</div>
-
 <!-- === НАВІГАЦІЯ ЗВЕРХУ === -->
 <div class="topnav">
   <div class="tab-icon active" onclick="openTab('calculator', this)">🧮</div>
   <div class="tab-icon" onclick="openTab('eggs', this)">🥚</div>
   <div class="tab-icon" onclick="openTab('orders', this)">📦</div>
   <div class="tab-icon" onclick="openTab('finance', this)">💰</div>
+</div>
+
+<!-- === НИЖНЄ МЕНЮ (Склад / Налаштування / запас / Перемикач теми) === -->
+<div class="subnav">
+  <div class="subnav-icon" onclick="openWarehouse()" title="Склад">🏚️</div>
+  <div class="subnav-icon" onclick="openSettings()" title="Налаштування">⚙️</div>
+  <div class="subnav-icon" title="На потім"></div>
+  <div class="subnav-icon theme-icon" id="themeIcon" onclick="toggleTheme()" title="Тема">🌙</div>
 </div>
 
 <!-- === КАЛЬКУЛЯТОР === -->
