@@ -222,7 +222,6 @@ function saveEggRecord() {
     const home = Number(eggsHome.value);
 
     const commercial = good - bad - home;
-
     const trays20 = Math.floor(commercial / 20);
 
     warehouse.readyTrays += trays20;
@@ -236,5 +235,9 @@ function saveEggRecord() {
     eggs[date] = { good, bad, home, commercial, trays: trays20 };
 
     localStorage.setItem("eggs", JSON.stringify(eggs));
+
+    // 🔥 Вивід інформації про яйця
+    renderEggsInfo(good, bad, home);
+
     saveWarehouse();
 }
