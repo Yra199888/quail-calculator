@@ -250,3 +250,120 @@ function updateTrayStock() {
 }
 
 updateTrayStock();
+
+/* ============================================================
+   === ДАНІ ДЛЯ СКЛАДУ =========================================
+   ============================================================ */
+
+const warehouseComponents = [
+    "Кукурудза",
+    "Пшениця",
+    "Ячмінь",
+    "Соєва макуха",
+    "Соняшникова макуха",
+    "Рибне борошно",
+    "Дріжджі",
+    "Трикальційфосфат",
+    "Dolfos D",
+    "Сіль"
+];
+
+// Структура для зберігання залишків
+let warehouseStock = JSON.parse(localStorage.getItem("warehouseStock") || "{}");
+
+// Якщо порожньо — створюємо
+warehouseComponents.forEach(name => {
+    if (!warehouseStock[name]) {
+        warehouseStock[name] = {
+            incoming: 0,
+            perMix: 0,
+            left: 0
+        };
+    }
+});
+
+saveWarehouseStock();
+renderWarehouseTable();
+
+function saveWarehouseStock() {
+    localStorage.setItem("warehouseStock", JSON.stringify(warehouseStock));
+}
+
+/* ============================================================
+   === ВИВІД ТАБЛИЦІ СКЛАДУ ====================================
+   ============================================================ */
+
+function renderWarehouseTable() {
+    let html = `
+        <table class="feed-table">
+            <tr>
+                <th>Компонент</th>
+                <th>Прихід (кг)</th>
+                <th>На 1 заміс (кг)</th>
+                <th>Залишок (кг)</th>
+            </tr>
+    `;
+
+    warehouseComponents.forEach(name => {
+        const item = warehouseStock[name];
+
+        html += `
+            <tr>
+                <td>${name}</td>
+                <td><input type="number" value="${item.incoming}" onchange="updateIncoming('${name}', this.value)"></td>
+                <td><input type="number" value="${item.perMix}" onchange="updatePerMix('${name}', this.value)"></td>
+                <td>${item.left.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    html += `</table>
+    <button class="make-feed-btn" onclick="makeFeed()">⚙️ Зробити корм</button>
+    `;
+
+    document.getElementById("warehouseList").innerHTML = html;
+}
+
+/* ============================================================
+   === ОНОВЛЕННЯ ПОЛІВ ========================================
+   ============================================================ */
+
+function updateIncoming(name, value) {
+    warehouseStock[name].incoming = Number(value);
+    warehouseStock[name].left += Number(value);
+    saveWarehouseStock();
+    renderWarehouseTable();
+}
+
+function updatePerMix(name, value) {
+    warehouseStock[name].perMix = Number(value);
+    saveWarehouseStock();
+}
+
+/* ============================================================
+   === ЗАМІС КОРМУ =============================================
+   ============================================================ */
+
+function makeFeed() {
+    let insufficient = [];
+
+    warehouseComponents.forEach(name => {
+        const comp = warehouseStock[name];
+        if (comp.left < comp.perMix) {
+            insufficient.push(name);
+        }
+    });
+
+    if (insufficient.length > 0) {
+        alert("Недостатньо компонентів: " + insufficient.join(", "));
+        return;
+    }
+
+    // списуємо
+    warehouseComponents.forEach(name => {
+        warehouseStock[name].left -= warehouseStock[name].perMix;
+    });
+
+    saveWarehouseStock();
+    renderWarehouseTable();
+}
