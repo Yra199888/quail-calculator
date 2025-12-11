@@ -4,19 +4,22 @@
 :root {
     --bg: #111;
     --text: #fff;
-    --card: #1c1c1c;
+    --card: #1b1b1b;
     --border: #333;
     --accent: #4caf50;
     --accent2: #2a7cda;
 }
 .light {
-    --bg: #f5f5f5;
+    --bg: #f2f2f2;
     --text: #111;
-    --card: #ffffff;
+    --card: #fff;
     --border: #ccc;
-    --accent: #2a7cda;
+    --accent: #1e8f40;
 }
 
+/* ============================================================
+   ОСНОВНІ СТИЛІ
+   ============================================================ */
 body {
     margin: 0;
     background: var(--bg);
@@ -25,10 +28,34 @@ body {
     transition: 0.25s;
 }
 
+h2 {
+    text-align: center;
+    font-size: 24px;
+    margin: 20px 0 10px;
+}
+
+.page {
+    display: none;
+    padding: 15px;
+}
+.active-page {
+    display: block;
+}
+
+.container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin: 15px auto;
+    max-width: 900px;
+}
+
 /* ============================================================
-   ВЕРХНЯ ПАНЕЛЬ ВКЛАДОК
+   ВЕРХНЯ ТА НИЖНЯ ПАНЕЛЬ НАВІГАЦІЇ (Варіант C)
    ============================================================ */
-.topnav {
+
+.navbar {
     display: flex;
     justify-content: space-around;
     background: var(--card);
@@ -36,101 +63,38 @@ body {
     padding: 10px 0;
 }
 
+.bottombar {
+    display: flex;
+    justify-content: space-around;
+    background: var(--card);
+    border-top: 2px solid var(--border);
+    padding: 10px 0;
+}
+
 .nav-btn {
     flex: 1;
     text-align: center;
-    font-size: 26px;
-    opacity: 0.6;
-    transform: scale(1);
-    transition: 0.2s;
+    font-size: 24px;
+    opacity: 0.55;
+    transition: 0.25s;
     cursor: pointer;
 }
 
 .nav-btn.active {
     opacity: 1;
-    color: var(--accent);
-    transform: scale(1.22); /* +20% */
+    transform: scale(1.20);
+    color: var(--accent2);
+}
+
+/* Тема у нижній панелі */
+.nav-btn.theme-switch {
+    font-size: 26px;
 }
 
 /* ============================================================
-   НИЖНЯ ПАНЕЛЬ
+   ТАБЛИЦЯ КАЛЬКУЛЯТОРА
    ============================================================ */
-.bottomnav {
-    display: flex;
-    justify-content: space-around;
-    background: var(--card);
-    border-bottom: 2px solid var(--border);
-    padding: 10px 0 12px;
-}
 
-.bottomnav .nav-btn {
-    font-size: 22px;
-}
-
-/* Перемикач теми */
-.bottomnav .theme-btn {
-    cursor: pointer;
-    font-size: 24px;
-}
-
-/* ============================================================
-   СТОРІНКИ
-   ============================================================ */
-.page {
-    display: none;
-    padding: 20px;
-}
-.page.active-page {
-    display: block;
-}
-
-/* ============================================================
-   КОНТЕЙНЕРИ
-   ============================================================ */
-.container {
-    background: var(--card);
-    padding: 18px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin-bottom: 20px;
-}
-
-/* ============================================================
-   ІНПУТИ
-   ============================================================ */
-input, textarea {
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: #0004;
-    color: var(--text);
-    box-sizing: border-box;
-    margin-top: 6px;
-}
-
-/* ============================================================
-   КНОПКИ
-   ============================================================ */
-button {
-    background: var(--accent);
-    border: none;
-    padding: 10px 16px;
-    font-size: 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #fff;
-    margin-top: 10px;
-    width: 100%;
-}
-
-button:hover {
-    opacity: 0.9;
-}
-
-/* ============================================================
-   ТАБЛИЦІ (КАЛЬКУЛЯТОР Корми)
-   ============================================================ */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -138,40 +102,90 @@ table {
 
 th {
     background: var(--accent);
-    padding: 9px;
     color: white;
-    font-size: 15px;
+    padding: 8px;
+    font-size: 14px;
 }
 
 td {
     border: 1px solid var(--border);
-    padding: 8px;
+    padding: 6px;
     font-size: 15px;
 }
 
-.feed-table td input {
-    width: 80px;
-    text-align: center;
+td:first-child {
+    width: 40%;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #0004;
+    color: var(--text);
     font-size: 14px;
+    box-sizing: border-box;
+}
+
+.feed-table td input {
+    max-width: 75px;
+    text-align: center;
+}
+
+.sum-cell {
+    text-align: right;
+    padding-right: 12px;
+    font-weight: bold;
 }
 
 /* ============================================================
-   Блоки списків (Яйця, замовлення)
+   КНОПКИ
    ============================================================ */
-.order-block, .egg-block {
-    background: #0004;
+
+button {
+    padding: 10px 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+button:hover {
+    opacity: 0.85;
+}
+
+/* ============================================================
+   БЛОКИ ДАНИХ (Яйця, Замовлення)
+   ============================================================ */
+
+.data-block {
+    background: #0003;
     border: 1px solid var(--border);
     padding: 12px;
-    border-radius: 10px;
+    border-radius: 8px;
     margin-bottom: 12px;
 }
 
-.status-active { color: #4caf50; font-weight: bold; }
-.status-completed { color: #2196f3; font-weight: bold; }
-.status-cancelled { color: #e53935; font-weight: bold; }
+.status-active {
+    color: #4caf50;
+    font-weight: bold;
+}
+.status-completed {
+    color: #2a7cda;
+    font-weight: bold;
+}
+.status-cancelled {
+    color: #d62828;
+    font-weight: bold;
+}
 
 /* ============================================================
-   СКЛАД (СТИЛЬ C: Комбінований)
+   СКЛАД (Комбінований стиль)
    ============================================================ */
 
 .w-cat {
@@ -179,13 +193,13 @@ td {
     border: 1px solid var(--border);
     padding: 14px;
     border-radius: 10px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .w-cat h3 {
-    margin-bottom: 12px;
-    font-size: 20px;
+    margin: 0 0 12px 0;
     color: var(--accent);
+    font-size: 18px;
 }
 
 .w-items {
@@ -196,46 +210,44 @@ td {
     display: flex;
     justify-content: space-between;
     background: #0003;
-    border: 1px solid var(--border);
     padding: 8px;
-    border-radius: 8px;
+    border-radius: 6px;
     margin-bottom: 6px;
 }
 
 .w-item-name {
     font-size: 15px;
+    font-weight: bold;
 }
 
 .w-item-qty {
     font-size: 15px;
-    opacity: 0.9;
 }
 
-/* Додавання товару */
 .w-add {
-    display: grid;
-    grid-template-columns: 1fr 120px auto;
+    display: flex;
     gap: 8px;
 }
 .w-add input {
-    font-size: 14px;
-}
-.w-add button {
-    padding: 8px;
-    font-size: 14px;
+    max-width: 140px;
 }
 
 /* ============================================================
-   Мобільна адаптація
+   АДАПТАЦІЯ ДЛЯ МОБІЛОК
    ============================================================ */
+
 @media (max-width: 480px) {
     .nav-btn {
-        font-size: 24px;
+        font-size: 22px;
     }
-    .bottomnav .nav-btn {
-        font-size: 20px;
+    .nav-btn.active {
+        transform: scale(1.18);
     }
-    .w-add {
-        grid-template-columns: 1fr 90px auto;
+    table td,
+    table th {
+        font-size: 13px;
+    }
+    .feed-table td input {
+        max-width: 65px;
     }
 }
