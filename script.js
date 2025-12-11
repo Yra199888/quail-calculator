@@ -217,3 +217,66 @@ function setStatus(date, idx, newStatus) {
 }
 
 showOrders();
+
+// === КАЛЬКУЛЯТОР КОРМУ ===
+
+const calculatorComponents = [
+  "Кукурудза",
+  "Пшениця",
+  "Ячмінь",
+  "Соева макуха",
+  "Соняшникова макуха",
+  "Рибне борошно",
+  "Дріжджі",
+  "Трикальційфосфат",
+  "Dolfos D",
+  "Сіль"
+];
+
+function renderFeedTable() {
+    let html = "";
+
+    calculatorComponents.forEach(name => {
+        html += `
+        <tr>
+            <td>${name}</td>
+            <td><input type="number" class="calcQty" data-name="${name}" value="0"></td>
+            <td><input type="number" class="calcPrice" data-name="${name}" value="0"></td>
+            <td class="calcSum" data-name="${name}">0</td>
+        </tr>`;
+    });
+
+    document.getElementById("feedTable").innerHTML = html;
+
+    document.querySelectorAll(".calcQty, .calcPrice").forEach(inp => {
+        inp.addEventListener("input", calculateFeed);
+    });
+}
+
+function calculateFeed() {
+    let total = 0;
+
+    calculatorComponents.forEach(name => {
+        const qty = Number(document.querySelector(`.calcQty[data-name="${name}"]`).value || 0);
+        const price = Number(document.querySelector(`.calcPrice[data-name="${name}"]`).value || 0);
+
+        const sum = qty * price;
+        document.querySelector(`.calcSum[data-name="${name}"]`).textContent = sum.toFixed(2);
+
+        total += sum;
+    });
+
+    document.getElementById("feedTotal").textContent = total.toFixed(2);
+
+    const volume = Number(document.getElementById("feedVolume").value || 1);
+    const perKg = total / volume;
+
+    document.getElementById("feedPerKg").textContent = perKg.toFixed(2);
+    document.getElementById("feedVolumeTotal").textContent = (perKg * volume).toFixed(2);
+}
+
+document.getElementById("feedVolume").addEventListener("input", calculateFeed);
+
+// стартове заповнення
+renderFeedTable();
+calculateFeed();
