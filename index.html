@@ -52,21 +52,28 @@
 
 <!-- ЯЙЦЯ -->
 <div id="page-eggs" class="page">
-    <h2>🥚 Облік яєць</h2>
-    <div class="container">
-        <label>Дата:</label>
-        <input type="date" id="eggsDate">
+    <h2 class="egg-title">🥚 Облік яєць</h2>
 
-        <label>Яєць за добу:</label>
-        <input id="eggsGood" type="number">
+    <div class="egg-block">
+        <div class="egg-form">
+            <label>Дата:
+                <input type="date" id="eggsDate">
+            </label>
 
-        <label>Браковані:</label>
-        <input id="eggsBad" type="number">
+            <label>Яєць за добу:
+                <input id="eggsGood" type="number">
+            </label>
 
-        <label>Для дому:</label>
-        <input id="eggsHome" type="number">
+            <label>Браковані:
+                <input id="eggsBad" type="number">
+            </label>
 
-        <button onclick="saveEggRecord()">Зберегти</button>
+            <label>Для дому:
+                <input id="eggsHome" type="number">
+            </label>
+
+            <button class="save-btn" onclick="saveEggRecord()">Зберегти</button>
+        </div>
     </div>
 
     <h3>Щоденний звіт</h3>
