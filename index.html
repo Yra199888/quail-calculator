@@ -25,21 +25,20 @@
     <div class="nav-btn theme-switch" id="themeSwitch">🌙</div>
 </div>
 
-<!-- ===== СТОРІНКИ ===== -->
-
-<!-- КАЛЬКУЛЯТОР -->
+<!-- ===== КАЛЬКУЛЯТОР ===== -->
 <div id="page-calculator" class="page active-page">
     <h2>🧮 Калькулятор корму</h2>
     <div class="container">
-       <table class="feed-table">
-    <tr>
-        <th>Компонент</th>
-        <th>К-сть</th>
-        <th>Ціна</th>
-        <th>Сума</th>
-    </tr>
-    <tbody id="feedTable"></tbody>
-</table>
+
+        <table class="feed-table">
+            <tr>
+                <th>Компонент</th>
+                <th>К-сть</th>
+                <th>Ціна</th>
+                <th>Сума</th>
+            </tr>
+            <tbody id="feedTable"></tbody>
+        </table>
 
         <label>Обʼєм корму (кг):</label>
         <input type="number" id="feedVolume" value="25">
@@ -50,9 +49,9 @@
     </div>
 </div>
 
-<!-- ЯЙЦЯ -->
+<!-- ===== ЯЙЦЯ ===== -->
 <div id="page-eggs" class="page">
-    <h2 class="egg-title">🥚 Облік яєць</h2>
+    <h2>🥚 Облік яєць</h2>
 
     <div class="egg-form">
 
@@ -78,7 +77,6 @@
 
         <button class="egg-save" onclick="saveEggRecord()">Зберегти</button>
 
-        <!-- Інформація про залишок -->
         <div id="eggsInfo" class="egg-info"></div>
     </div>
 
@@ -86,9 +84,10 @@
     <div id="eggsList"></div>
 </div>
 
-<!-- ЗАМОВЛЕННЯ -->
+<!-- ===== ЗАМОВЛЕННЯ ===== -->
 <div id="page-orders" class="page">
     <h2>📦 Замовлення</h2>
+
     <div class="container">
         <label>Дата:</label>
         <input id="orderDate" type="date">
@@ -109,9 +108,10 @@
     <div id="ordersList"></div>
 </div>
 
-<!-- ФІНАНСИ -->
+<!-- ===== ФІНАНСИ ===== -->
 <div id="page-finance" class="page">
     <h2>💰 Фінанси</h2>
+
     <div class="container">
         <label>Ціна за лоток:</label>
         <input id="trayPrice" type="number" value="50">
@@ -125,12 +125,12 @@
     </div>
 </div>
 
-<!-- СКЛАД -->
+<!-- ===== СКЛАД ===== -->
 <div id="page-warehouse" class="page">
     <h2>🏚️ Склад</h2>
 
     <div id="warehouseList" class="container">
-        
+
         <h3>Таблиця складу</h3>
         <table class="feed-table">
             <tr>
@@ -147,39 +147,26 @@
         <h3>📘 Історія замісів</h3>
         <div id="mixHistory"></div>
 
-        <h3>🗄️ Запаси лотків</h3>
-        <table class="feed-table">
-            <tr>
-                <th>Тип</th>
-                <th>Кількість (шт)</th>
-            </tr>
-            <tr>
-                <td>Лотки 20 шт</td>
-                <td><input type="number" id="trayStock"></td>
-            </tr>
-        </table>
+        <h3>🗄 Запаси лотків</h3>
+        <input type="number" id="trayStock">
 
         <h3>🥚 Повні лотки</h3>
-        <p>Готові лотки: <b id="fullTrays">0</b></p>
+        <p>Готові: <b id="fullTrays">0</b></p>
         <p>Заброньовані: <b id="reservedTrays">0</b></p>
 
     </div>
 </div>
 
-<!-- ІНСТРУМЕНТИ -->
+<!-- ===== ІНСТРУМЕНТИ ===== -->
 <div id="page-tools" class="page">
     <h2>🔧 Інструменти</h2>
-    <div class="container">
-        <p>Поки що порожньо (заготовка).</p>
-    </div>
+    <div class="container">Пусто.</div>
 </div>
 
-<!-- НАЛАШТУВАННЯ -->
+<!-- ===== НАЛАШТУВАННЯ ===== -->
 <div id="page-settings" class="page">
     <h2>⚙️ Налаштування</h2>
-    <div class="container">
-        <p>Тут буде меню конфігурації.</p>
-    </div>
+    <div class="container">Поки що нічого.</div>
 </div>
 
 <script src="script.js"></script>
