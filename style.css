@@ -1,77 +1,90 @@
 /* ============================
-   Глобальні параметри
+   Тема (темна + світла)
+============================ */
+:root {
+    --bg: #0e0e0e;
+    --text: #ffffff;
+    --card: #111;
+    --border: #222;
+    --input: #151515;
+    --accent: #32c44d;
+}
+
+body.light {
+    --bg: #f2f2f2;
+    --text: #1a1a1a;
+    --card: #ffffff;
+    --border: #ccc;
+    --input: #e7e7e7;
+    --accent: #2a7cda;
+}
+
+/* ============================
+   Базові параметри
 ============================ */
 body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     margin: 0;
     padding: 0;
-    background: #0e0e0e;
-    color: white;
+    background: var(--bg);
+    color: var(--text);
 
-    /* ТРОХИ ВІДДАЛЕНО ВСЮ СТОРІНКУ */
+    /* трішки віддалено */
     transform: scale(0.94);
     transform-origin: top center;
 }
 
-/* ===== СТОРІНКИ (ВАЖЛИВО ДЛЯ ВКЛАДОК!) ===== */
 .page {
-    display: none;
     padding: 20px;
 }
-.page.active-page {
-    display: block;
-}
 
-/* Заголовки */
+/* ============================
+   Заголовки
+============================ */
 h2 {
-    margin-left: 5px;
     margin-bottom: 20px;
     font-size: 26px;
 }
 
 h3 {
-    margin-left: 10px;
     margin-top: 25px;
     margin-bottom: 10px;
 }
 
 /* ============================
-   Навігація
+   Меню
 ============================ */
 .topnav, .subnav {
     display: flex;
     justify-content: space-around;
-    background: #141414;
+    background: var(--card);
     padding: 10px 0;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid var(--border);
 }
 
 .nav-btn {
     font-size: 28px;
     padding: 5px 12px;
-    border-radius: 10px;
     cursor: pointer;
+    border-radius: 10px;
 }
 
 .nav-btn.active {
-    background: #2a2a2a;
+    background: rgba(255,255,255,0.1);
 }
 
 /* ============================
    ФОРМИ (ЯЙЦЯ + ЗАМОВЛЕННЯ)
 ============================ */
-
 .egg-form,
 .order-form {
-    background: #111;
+    background: var(--card);
     padding: 20px;
-    margin: 10px auto;
+    margin: 10px;
     border-radius: 14px;
-    border: 1px solid #222;
-    max-width: 520px; /* щоб красиво по центру на широких екранах */
+    border: 1px solid var(--border);
 }
 
-/* Рядок у формі */
 .egg-row,
 .order-row {
     display: flex;
@@ -82,33 +95,25 @@ h3 {
 
 .egg-row label,
 .order-row label {
-    width: 40%;
+    width: 35%;
     font-size: 18px;
 }
 
 .egg-row input,
 .order-row input,
 .order-row textarea {
-    width: 58%;
+    width: 60%;
     padding: 10px;
     border-radius: 10px;
-    background: #151515;
-    border: 1px solid #333;
-    color: white;
+    background: var(--input);
+    border: 1px solid var(--border);
+    color: var(--text);
     font-size: 16px;
-    box-sizing: border-box;
 }
 
 .order-row textarea {
     height: 70px;
     resize: none;
-}
-
-/* Інфо блок під кнопкою у ЯЙЦЯХ */
-.egg-info {
-    margin-top: 12px;
-    font-size: 15px;
-    opacity: 0.9;
 }
 
 /* Кнопки */
@@ -119,7 +124,7 @@ h3 {
     text-align: center;
     padding: 14px;
     font-size: 20px;
-    background: #32c44d;
+    background: var(--accent);
     border-radius: 12px;
     border: none;
     margin-top: 10px;
@@ -128,49 +133,45 @@ h3 {
 }
 
 /* ============================
-   ТАБЛИЦІ (Калькулятор + Склад)
+   Таблиці
 ============================ */
-
 .feed-table {
     width: 100%;
     border-collapse: collapse;
     margin: 15px 0;
-    table-layout: fixed; /* щоб колонки не розповзалися */
 }
 
 .feed-table th {
-    background: #2ea043;
-    padding: 10px;
-    font-size: 16px;
+    background: var(--accent);
+    padding: 12px;
+    font-size: 18px;
+    color: #fff;
 }
 
 .feed-table td {
-    padding: 8px;
-    background: #111;
-    border-bottom: 1px solid #222;
+    padding: 10px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
 }
 
-/* інпути всередині таблиць */
 .feed-table td input {
     width: 100%;
-    padding: 6px;
+    padding: 8px;
     border-radius: 8px;
-    border: 1px solid #333;
-    background: #151515;
-    color: white;
-    font-size: 14px;
-    box-sizing: border-box;
+    border: 1px solid var(--border);
+    background: var(--input);
+    color: var(--text);
 }
 
-/* чітке вирівнювання всіх колонок */
+/* Рівні ширини колонок */
 .feed-table th:nth-child(1),
-.feed-table td:nth-child(1) { width: 30%; }
+.feed-table td:nth-child(1) { width: 32%; }
 
 .feed-table th:nth-child(2),
-.feed-table td:nth-child(2) { width: 23%; }
+.feed-table td:nth-child(2) { width: 22%; }
 
 .feed-table th:nth-child(3),
-.feed-table td:nth-child(3) { width: 23%; }
+.feed-table td:nth-child(3) { width: 22%; }
 
 .feed-table th:nth-child(4),
 .feed-table td:nth-child(4) { width: 24%; }
@@ -178,13 +179,12 @@ h3 {
 /* ============================
    Список замовлень
 ============================ */
-
 #ordersList div {
-    background: #131313;
+    background: var(--card);
     margin: 10px;
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid #222;
+    border: 1px solid var(--border);
 }
 
 #ordersList button {
@@ -192,13 +192,4 @@ h3 {
     margin-top: 8px;
     border-radius: 8px;
     padding: 6px 10px;
-    border: none;
-    background: #2ea043;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-#ordersList button:last-child {
-    background: #c43636;
 }
