@@ -7,7 +7,10 @@ body {
     padding: 0;
     background: #0e0e0e;
     color: white;
-    zoom: 0.92; /* 🔥 ТРОХИ ВІДДАЛЕНО ВСЮ СТОРІНКУ */
+
+    /* 🔥 Акуратне зменшення без ламання таблиць */
+    transform: scale(0.94);
+    transform-origin: top center;
 }
 
 /* Контейнер сторінок */
@@ -63,7 +66,6 @@ h3 {
     border: 1px solid #222;
 }
 
-/* Рядок у формі */
 .egg-row,
 .order-row {
     display: flex;
@@ -88,6 +90,11 @@ h3 {
     border: 1px solid #333;
     color: white;
     font-size: 16px;
+}
+
+.order-row textarea {
+    height: 70px;
+    resize: none;
 }
 
 /* Кнопки */
@@ -120,7 +127,6 @@ h3 {
     background: #2ea043;
     padding: 12px;
     font-size: 18px;
-    border-radius: 6px;
 }
 
 .feed-table td {
@@ -129,7 +135,6 @@ h3 {
     border-bottom: 1px solid #222;
 }
 
-/* 🔥 Вирівнювання таблиць */
 .feed-table td input {
     width: 100%;
     padding: 8px;
@@ -139,9 +144,9 @@ h3 {
     color: white;
 }
 
-/* Рівні стовпці */
+/* 🔥 чітке вирівнювання всіх колонок */
 .feed-table th:nth-child(1),
-.feed-table td:nth-child(1) { width: 34%; }
+.feed-table td:nth-child(1) { width: 32%; }
 
 .feed-table th:nth-child(2),
 .feed-table td:nth-child(2) { width: 22%; }
@@ -150,7 +155,7 @@ h3 {
 .feed-table td:nth-child(3) { width: 22%; }
 
 .feed-table th:nth-child(4),
-.feed-table td:nth-child(4) { width: 22%; }
+.feed-table td:nth-child(4) { width: 24%; }
 
 /* ============================
    Список замовлень
