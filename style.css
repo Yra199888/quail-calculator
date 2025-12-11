@@ -53,7 +53,7 @@ body {
 }
 
 /* ===========================================
-      PREMIUM PAGES
+      PAGES + CONTAINER
 =========================================== */
 .page {
     display: none;
@@ -69,11 +69,11 @@ body {
     border-radius: 14px;
     border: 1px solid var(--border);
     box-shadow: 0 0 20px #00000040;
-    margin-bottom: 26px;
+    margin-bottom: 20px;
 }
 
 /* ===========================================
-      PREMIUM TABLE DESIGN (WIDER)
+      TABLES (WIDER)
 =========================================== */
 
 .feed-table {
@@ -81,7 +81,8 @@ body {
     border-collapse: collapse;
     border-radius: 12px;
     overflow: hidden;
-    margin-top: 12px;
+    margin-top: 10px;
+    table-layout: auto;
 }
 
 .feed-table th {
@@ -102,12 +103,8 @@ body {
 
 .feed-table td:first-child {
     text-align: left;
-    padding-left: 14px;
-}
-
-/* трохи ширші поля */
-.feed-table input {
-    max-width: 140px !important;
+    padding-left: 12px;
+    width: 40%;
 }
 
 /* ===========================================
@@ -116,9 +113,9 @@ body {
 
 input {
     width: 100%;
-    max-width: 240px;
-    height: 40px;
-    padding: 6px 12px;
+    max-width: 150px;   /* ← розширені */
+    height: 42px;
+    padding: 6px 10px;
     font-size: 17px;
     border-radius: 10px;
     border: 1px solid var(--border);
@@ -126,6 +123,7 @@ input {
     color: var(--text);
     outline: none;
     transition: 0.25s;
+    text-align: center;
 }
 
 input:focus {
@@ -134,8 +132,9 @@ input:focus {
 }
 
 /* ===========================================
-      PREMIUM BUTTONS
+      BUTTONS
 =========================================== */
+
 button {
     background: var(--accent);
     color: #fff;
@@ -152,6 +151,7 @@ button {
 button:hover {
     background: var(--accent-light);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px #00000060;
 }
 
 button:active {
@@ -161,36 +161,71 @@ button:active {
 /* ===========================================
       TITLES
 =========================================== */
-h2 {
-    font-size: 30px;
+
+h2, h3 {
+    margin-bottom: 12px;
     font-weight: 700;
+}
+
+h2 {
+    font-size: 28px;
 }
 
 h3 {
     font-size: 23px;
-    margin-top: 28px;
-    margin-bottom: 12px;
+    margin-top: 25px;
+}
+
+/* ===========================================
+      LISTS
+=========================================== */
+
+ul {
+    padding-left: 20px;
+}
+
+li {
+    padding: 4px 0;
+    opacity: 0.85;
+    font-size: 15px;
+}
+
+/* ===========================================
+      ЕGG PAGE FIXED LAYOUT (1 COLUMN FORM)
+=========================================== */
+
+.egg-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.egg-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.egg-row label {
+    font-size: 18px;
     font-weight: 600;
 }
 
-/* ===========================================
-      EGGS FORM (PREMIUM ALIGNMENT)
-=========================================== */
-
-#page-eggs label {
-    display: block;
-    font-size: 18px;
-    margin: 10px 0 6px;
-}
-
-#page-eggs input {
-    width: 100%;
-    max-width: 320px;
+.egg-save {
+    width: 160px;
+    align-self: center;
+    margin-top: 10px;
 }
 
 /* ===========================================
-      LIST / LOGS
+   FORCE TABLE TO BE WIDER
 =========================================== */
 
-ul { padding-left: 20px; }
-li { padding: 5px 0; opacity: 0.85; }
+.feed-table input {
+    max-width: 130px !important;
+}
+
+.feed-table td {
+    min-width: 90px;
+}
