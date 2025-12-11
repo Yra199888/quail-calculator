@@ -100,19 +100,18 @@ body {
     font-size: 16px;
 }
 
-/* Вирівнюємо текст активів */
 .feed-table td:first-child {
     text-align: left;
     padding-left: 12px;
 }
 
 /* ===========================================
-      PREMIUM INPUTS (UNIVERSAL)
+      PREMIUM INPUTS
 =========================================== */
 
-input {
+input, select, textarea {
     width: 100%;
-    max-width: 110px;
+    max-width: 140px;
     height: 40px;
     padding: 6px 10px;
     font-size: 16px;
@@ -125,7 +124,7 @@ input {
     text-align: center;
 }
 
-input:focus {
+input:focus, textarea:focus {
     border-color: var(--accent-light);
     box-shadow: 0 0 8px var(--accent-light);
 }
@@ -158,7 +157,7 @@ button:active {
 }
 
 /* ===========================================
-      SECTIONS TITLES
+      HEADERS
 =========================================== */
 
 h2, h3 {
@@ -176,15 +175,50 @@ h3 {
 }
 
 /* ===========================================
-      LIST / LOGS
+      LISTS / LOGS
 =========================================== */
 
 ul {
     padding-left: 20px;
 }
-
 li {
     padding: 4px 0;
     opacity: 0.85;
     font-size: 15px;
+}
+
+/* ===========================================
+      PREMIUM "ОБЛІК ЯЄЦЬ" FORM
+=========================================== */
+
+.eggs-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 18px;
+    align-items: center;
+}
+
+.eggs-form label {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.eggs-form input {
+    max-width: 100%;
+}
+
+@media (max-width: 520px) {
+    .eggs-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* блок щоденного звіту */
+.egg-record-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 0 10px #00000030;
 }
