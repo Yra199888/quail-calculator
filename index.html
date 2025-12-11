@@ -88,20 +88,30 @@
 <div id="page-orders" class="page">
     <h2>📦 Замовлення</h2>
 
-    <div class="container">
-        <label>Дата:</label>
-        <input id="orderDate" type="date">
+    <div class="order-form">
 
-        <label>Імʼя клієнта:</label>
-        <input id="orderName">
+        <div class="order-row">
+            <label>Дата:</label>
+            <input id="orderDate" type="date">
+        </div>
 
-        <label>Лотків:</label>
-        <input id="orderTrays" type="number">
+        <div class="order-row">
+            <label>Імʼя клієнта:</label>
+            <input id="orderName">
+        </div>
 
-        <label>Деталі:</label>
-        <textarea id="orderDetails"></textarea>
+        <div class="order-row">
+            <label>Лотків:</label>
+            <input id="orderTrays" type="number">
+        </div>
 
-        <button onclick="addOrder()">Додати</button>
+        <div class="order-row">
+            <label>Деталі:</label>
+            <textarea id="orderDetails"></textarea>
+        </div>
+
+        <button class="order-save" onclick="addOrder()">Додати</button>
+
     </div>
 
     <h3>Список замовлень</h3>
