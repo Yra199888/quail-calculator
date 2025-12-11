@@ -2,143 +2,118 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8" />
-<title>Quail Farm Tools PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quail Farm Tools PRO</title>
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
 <!-- === ВЕРХНЯ ПАНЕЛЬ === -->
 <div class="topnav">
-  <div class="nav-btn top-btn active" data-page="calculator">🧮</div>
-  <div class="nav-btn top-btn" data-page="eggs">🥚</div>
-  <div class="nav-btn top-btn" data-page="orders">📦</div>
-  <div class="nav-btn top-btn" data-page="finance">💰</div>
+  <div class="nav-btn" data-page="calculator">🧮</div>
+  <div class="nav-btn" data-page="eggs">🥚</div>
+  <div class="nav-btn" data-page="orders">📦</div>
+  <div class="nav-btn" data-page="finance">💰</div>
 </div>
 
 <!-- === НИЖНЯ ПАНЕЛЬ === -->
 <div class="bottomnav">
-  <div class="nav-btn bottom-btn" data-page="warehouse">🏚️</div>
-  <div class="nav-btn bottom-btn" data-page="tools">🔧</div>
-  <div class="nav-btn bottom-btn" data-page="settings">⚙️</div>
-  <div class="nav-btn bottom-btn theme-btn" onclick="toggleTheme()">🌙</div>
+  <div class="nav-btn" data-page="warehouse">🏚️</div>
+  <div class="nav-btn" data-page="tools">🔧</div>
+  <div class="nav-btn" data-page="settings">⚙️</div>
+  <div class="nav-btn theme-switch">🌙</div>
 </div>
 
 <!-- === СТОРІНКИ === -->
+<div id="calculator" class="page active">
+    <h2>🧮 Калькулятор корму</h2>
+    <div class="container">
+        <table id="feedTable"></table>
 
-<!-- КАЛЬКУЛЯТОР -->
-<div id="page-calculator" class="page active-page">
-  <h2>🧮 Калькулятор корму</h2>
-  <div class="container">
+        <h3>Обʼєм корму (кг):</h3>
+        <input type="number" id="feedVolume" value="25">
 
-    <table class="feed-table">
-      <tr>
-        <th>Компонент</th>
-        <th>К-сть</th>
-        <th>Ціна</th>
-        <th>Сума</th>
-      </tr>
-    </table>
-
-    <table id="feedTable" class="feed-table"></table>
-
-    <h3>Обʼєм (кг):</h3>
-    <input id="feedVolume" type="number" value="25">
-
-    <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
-    <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
-    <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
-  </div>
+        <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
+        <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
+        <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
+    </div>
 </div>
 
-<!-- ЯЙЦЯ -->
-<div id="page-eggs" class="page">
-  <h2>🥚 Облік яєць</h2>
+<div id="eggs" class="page">
+    <h2>🥚 Облік яєць</h2>
+    <div class="container">
+        <label>Дата:</label>
+        <input type="date" id="eggsDate">
 
-  <div class="container">
-    <label>Дата:</label>
-    <input type="date" id="eggsDate">
+        <label>Яєць за добу:</label>
+        <input type="number" id="eggsGood">
 
-    <label>Яєць за добу:</label>
-    <input id="eggsGood" type="number">
+        <label>Браковані:</label>
+        <input type="number" id="eggsBad">
 
-    <label>Браковані:</label>
-    <input id="eggsBad" type="number">
+        <label>Для дому:</label>
+        <input type="number" id="eggsHome">
 
-    <label>Для дому:</label>
-    <input id="eggsHome" type="number">
-
-    <button onclick="saveEggRecord()">Зберегти</button>
-  </div>
-
-  <div id="eggsList"></div>
+        <button onclick="saveEggRecord()">Зберегти</button>
+    </div>
+    <h3>Щоденний звіт</h3>
+    <div id="eggsList"></div>
 </div>
 
-<!-- ЗАМОВЛЕННЯ -->
-<div id="page-orders" class="page">
-  <h2>📦 Замовлення</h2>
+<div id="orders" class="page">
+    <h2>📦 Замовлення</h2>
 
-  <div class="container">
-    <label>Дата:</label>
-    <input id="orderDate" type="date">
+    <div class="container">
+        <label>Дата:</label>
+        <input type="date" id="orderDate">
 
-    <label>Ім'я:</label>
-    <input id="orderName">
+        <label>Імʼя:</label>
+        <input id="orderName">
 
-    <label>Лотків:</label>
-    <input id="orderTrays" type="number">
+        <label>Лотків:</label>
+        <input id="orderTrays" type="number">
 
-    <label>Деталі:</label>
-    <textarea id="orderDetails"></textarea>
+        <label>Деталі:</label>
+        <textarea id="orderDetails"></textarea>
 
-    <button onclick="addOrder()">Додати</button>
-  </div>
+        <button onclick="addOrder()">Додати</button>
+    </div>
 
-  <div id="ordersList"></div>
+    <h3>Всі замовлення</h3>
+    <div id="ordersList"></div>
 </div>
 
-<!-- ФІНАНСИ -->
-<div id="page-finance" class="page">
-  <h2>💰 Фінанси</h2>
+<div id="finance" class="page">
+    <h2>💰 Фінанси</h2>
+    <div class="container">
+        <label>Ціна за лоток:</label>
+        <input type="number" id="trayPrice" value="50">
 
-  <div class="container">
-    <label>Ціна за лоток:</label>
-    <input id="trayPrice" type="number" value="50">
+        <button onclick="saveFinanceSettings()">Зберегти</button>
 
-    <button onclick="saveFinanceSettings()">Зберегти</button>
+        <h3>Звіт</h3>
+        <div id="financeReport"></div>
 
-    <div id="financeReport"></div>
-
-    <button onclick="exportCSV()">CSV</button>
-  </div>
+        <button onclick="exportCSV()">Експорт CSV</button>
+    </div>
 </div>
 
-<!-- СКЛАД -->
-<div id="page-warehouse" class="page">
-  <h2>🏚️ Склад</h2>
-
-  <div id="warehouseList" class="container"></div>
+<div id="warehouse" class="page">
+    <h2>🏚️ Склад</h2>
+    <div class="container" id="warehouseList"></div>
 </div>
 
-<!-- ІНСТРУМЕНТИ -->
-<div id="page-tools" class="page">
-  <h2>🔧 Інструменти</h2>
-  <div class="container">
-    <p><i>Тут буде майбутній функціонал…</i></p>
-  </div>
+<div id="tools" class="page">
+    <h2>🔧 Інструменти</h2>
+    <p>Створено як заготовка для майбутніх функцій.</p>
 </div>
 
-<!-- НАЛАШТУВАННЯ -->
-<div id="page-settings" class="page">
-  <h2>⚙️ Налаштування</h2>
-  <div class="container">
-    <p><i>Сторінка готується…</i></p>
-  </div>
+<div id="settings" class="page">
+    <h2>⚙️ Налаштування</h2>
+    <p>Майбутні опції будуть тут.</p>
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
