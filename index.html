@@ -31,15 +31,15 @@
 <div id="page-calculator" class="page active-page">
     <h2>🧮 Калькулятор корму</h2>
     <div class="container">
-        <table class="feed-table">
-            <tr>
-                <th>Компонент</th>
-                <th>К-сть</th>
-                <th>Ціна</th>
-                <th>Сума</th>
-            </tr>
-            <tbody id="feedTable"></tbody>
-        </table>
+       <table class="feed-table">
+    <tr>
+        <th>Компонент</th>
+        <th>К-сть</th>
+        <th>Ціна</th>
+        <th>Сума</th>
+    </tr>
+    <tbody id="feedTable"></tbody>
+</table>
 
         <label>Обʼєм корму (кг):</label>
         <input type="number" id="feedVolume" value="25">
@@ -78,11 +78,14 @@
 
         <button class="egg-save" onclick="saveEggRecord()">Зберегти</button>
 
+        <!-- інформація про залишок -->
         <div id="eggsInfo" class="egg-info"></div>
     </div>
 
+    <!-- ЄДИНЕ правильне місце для звіту -->
     <h3>Щоденний звіт</h3>
     <div id="eggsList"></div>
+
 </div>
 
     <h3>Щоденний звіт</h3>
