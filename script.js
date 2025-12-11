@@ -10,7 +10,6 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         const page = btn.dataset.page;
         if (!page) return;
-
         document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
         document.getElementById("page-" + page).classList.add("active-page");
 
@@ -19,7 +18,7 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
     });
 });
 
-// === Дані корму ===
+// ========== СКЛАД ==========
 const feedComponents = [
   ["Кукурудза", 10],
   ["Пшениця", 5],
@@ -33,33 +32,27 @@ const feedComponents = [
   ["Сіль", 0.05]
 ];
 
-// === Склад ===
 let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
-
 if (!warehouse.feed) {
     warehouse = {
-        feed:{},
-        trays:0,
-        ready:0,
-        reserved:0,
-        history:[]
+        feed: {},
+        trays: 0,
+        ready: 0,
+        reserved: 0,
+        history: []
     };
+    saveWarehouse();
 }
-saveWarehouse();
 
 function saveWarehouse() {
     localStorage.setItem("warehouse", JSON.stringify(warehouse));
 }
 
-// === Відображення складу ===
 function renderWarehouse() {
     let html = "";
-
     feedComponents.forEach(item => {
-        const name = item[0];
-        const need = item[1];
+        const name = item[0], need = item[1];
         const stock = warehouse.feed[name] || 0;
-
         html += `
         <tr>
             <td>${name}</td>
@@ -68,17 +61,14 @@ function renderWarehouse() {
             <td>${stock.toFixed(2)}</td>
         </tr>`;
     });
-
     document.getElementById("warehouseTable").innerHTML = html;
 
-    // Додавання корму
     document.querySelectorAll(".addStock").forEach(inp => {
         inp.addEventListener("change", e => {
-            const n = e.target.dataset.name;
-            const v = +e.target.value;
-
-            if (v > 0) {
-                warehouse.feed[n] = (warehouse.feed[n] || 0) + v;
+            const name = e.target.dataset.name;
+            const val = +e.target.value;
+            if (val > 0) {
+                warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
                 saveWarehouse();
                 renderWarehouse();
             }
@@ -89,62 +79,64 @@ function renderWarehouse() {
     document.getElementById("fullTrays").textContent = warehouse.ready;
     document.getElementById("reservedTrays").textContent = warehouse.reserved;
 
-    document.getElementById("mixHistory").innerHTML =
-        warehouse.history.length === 0 ? "<i>Порожньо</i>" :
-        warehouse.history.map(x => `<li>${x}</li>`).join("");
+    // історія замісів
+    const list = warehouse.history.map(x => `<li>${x}</li>`).join("");
+    document.getElementById("mixHistory").innerHTML = list ? `<ul>${list}</ul>` : "<i>Порожньо</i>";
 }
 
 renderWarehouse();
 
-// === Зробити корм ===
+// Зробити корм
 document.getElementById("makeFeedBtn").addEventListener("click", () => {
     for (let i of feedComponents) {
-        const name = i[0];
-        const need = i[1];
+        const name = i[0], need = i[1];
         if ((warehouse.feed[name] || 0) < need) {
-            alert(`Недостатньо: ${name}`);
+            alert(`Недостатньо складового: ${name}`);
             return;
         }
     }
-
     feedComponents.forEach(i => warehouse.feed[i[0]] -= i[1]);
 
-    warehouse.history.push("Заміс " + new Date().toLocaleString());
+    const now = new Date().toLocaleString();
+    warehouse.history.push("Заміс: " + now);
+
+    // якщо після замісу всі компоненти наявні
+    warehouse.ready += 1;
     saveWarehouse();
     renderWarehouse();
 });
 
+// зміна кількості лотків на складі
 document.getElementById("trayStock").addEventListener("change", e => {
     warehouse.trays = +e.target.value;
     saveWarehouse();
 });
 
-// === ЯЙЦЯ ===
+// ========== ЯЙЦЯ ==========
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
-
 function saveEggRecord() {
     const d = eggsDate.value || new Date().toISOString().slice(0, 10);
-
     const good = +eggsGood.value || 0;
-    const bad  = +eggsBad.value  || 0;
+    const bad = +eggsBad.value || 0;
     const home = +eggsHome.value || 0;
 
-    const com = good - bad - home;
-    const trays = Math.floor(com / 20);
-    const left = com % 20;
+    const commercial = good - bad - home;
+    const trays20 = Math.floor(commercial / 20);
+    const leftoverEggs = commercial % 20;
 
-    eggs[d] = { good, bad, home, com, trays, left };
+    eggs[d] = {
+        good, bad, home, commercial, trays20, leftoverEggs
+    };
     localStorage.setItem("eggs", JSON.stringify(eggs));
 
-    // Додати повні лотки на склад
-    warehouse.ready += trays;
-    saveWarehouse();
-    renderWarehouse();
-
-    document.getElementById("eggsInfo").innerHTML =
-        com < 20 ?
-        `Зібрано ${com} яєць — до повного лотка не вистачає ${20 - com}.` :
-        `Повних лотків: ${trays}, залишок: ${left} яєць`;
+    // ------------ Вивід info ------------
+    let infoHTML = "";
+    if (commercial < 20) {
+        infoHTML = `Зібрано ${commercial} яєць, до повного лотка не вистачає ${20 - commercial} шт.`;
+    } else {
+        infoHTML = `Повні лотки: ${trays20}, залишок: ${leftoverEggs} яєць`;
+    }
+    document.getElementById("eggsInfo").innerHTML = `<p>${infoHTML}</p>`;
 
     showEggs();
 }
@@ -153,31 +145,30 @@ function showEggs() {
     let out = "";
     Object.keys(eggs).sort().reverse().forEach(d => {
         const e = eggs[d];
-        out += `<div class="egg-entry">
-            <b>${d}</b>: ${e.good} / ${e.bad} / ${e.home} → ${e.trays} лотків
-        </div>`;
+        out += `<div><b>${d}</b> — всього: ${e.good}, брак: ${e.bad}, для дому: ${e.home} → <b>${e.trays20}</b> лотків</div>`;
     });
     document.getElementById("eggsList").innerHTML = out;
 }
+
 showEggs();
 
-// === Замовлення ===
+// ========== ЗАМОВЛЕННЯ ==========
 let orders = JSON.parse(localStorage.getItem("orders") || "{}");
 
 function addOrder() {
-    const d = orderDate.value || new Date().toISOString().slice(0,10);
-    const name = orderName.value;
-    const trays = +orderTrays.value;
-    const details = orderDetails.value;
-
+    const d = orderDate.value || new Date().toISOString().slice(0, 10);
     if (!orders[d]) orders[d] = [];
 
-    orders[d].push({
-        name, trays, details, status:"активне"
-    });
+    const traysNum = +orderTrays.value;
+    const ord = {
+        name: orderName.value,
+        trays: traysNum,
+        details: orderDetails.value,
+        status: "активне"
+    };
 
-    // авто-резервування (може бути негативним — дозволяємо)
-    warehouse.reserved += trays;
+    orders[d].push(ord);
+    warehouse.reserved += traysNum;
 
     saveWarehouse();
     localStorage.setItem("orders", JSON.stringify(orders));
@@ -188,39 +179,35 @@ function addOrder() {
 
 function showOrders() {
     let html = "";
-
     Object.keys(orders).sort().reverse().forEach(d => {
-        html += `<h3>${d}</h3>`;
-
-        orders[d].forEach((o, i) => {
+        html += `<h4>${d}</h4>`;
+        orders[d].forEach((o, index) => {
             html += `
-            <div class="orderBox">
-                <b>${o.name}</b> — ${o.trays} лотків (${o.status})
-                <br>${o.details}
-
-                <br>
-                <button onclick="setStatus('${d}', ${i}, 'виконано')">✅ Виконано</button>
-                <button onclick="setStatus('${d}', ${i}, 'скасовано')">❌ Скасовано</button>
+            <div class="order-entry">
+                <b>${o.name}</b> — ${o.trays} лотків (${o.status})<br>
+                <i>${o.details}</i><br>
+                <button onclick="setStatus('${d}',${index},'виконано')">✅ Виконано</button>
+                <button onclick="setStatus('${d}',${index},'скасовано')">❌ Скасовано</button>
             </div>`;
         });
     });
-
     document.getElementById("ordersList").innerHTML = html;
 }
 
-function setStatus(d,i,newStatus){
-    const o = orders[d][i];
+function setStatus(date, idx, newStatus) {
+    const ord = orders[date][idx];
+    if (ord.status === newStatus) return;
 
-    if(newStatus === "виконано"){
-        warehouse.ready -= o.trays;
-        warehouse.reserved -= o.trays;
+    // Update reserved/ready counts
+    if (newStatus === "виконано") {
+        warehouse.ready += ord.trays;
+        warehouse.reserved -= ord.trays;
+    }
+    if (newStatus === "скасовано") {
+        warehouse.reserved -= ord.trays;
     }
 
-    if(newStatus === "скасовано"){
-        warehouse.reserved -= o.trays;
-    }
-
-    o.status = newStatus;
+    orders[date][idx].status = newStatus;
 
     saveWarehouse();
     localStorage.setItem("orders", JSON.stringify(orders));
