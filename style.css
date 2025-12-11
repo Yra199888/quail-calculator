@@ -244,38 +244,38 @@ h3 {
     margin-top: 25px;
 }
 
-/* === ФОРМА ЗАМОВЛЕНЬ (як у вкладці Яйця) === */
+/* ===== ФОРМА ЗАМОВЛЕНЬ (так само як яйця) ===== */
 
 .order-form {
-    background: var(--card-bg);
+    background: #111;
     padding: 20px;
-    border-radius: 16px;
-    margin-top: 20px;
-    box-shadow: 0 0 10px #00000033;
+    border-radius: 15px;
+    margin-top: 15px;
+    margin-bottom: 25px;
 }
 
 .order-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 18px;
 }
 
 .order-row label {
     font-size: 18px;
-    color: var(--text-color);
-    width: 40%;
+    color: #fff;
+    flex-basis: 35%;
 }
 
 .order-row input,
 .order-row textarea {
-    width: 55%;
-    padding: 12px;
+    flex-basis: 60%;
+    background: #222;
+    border: 1px solid #333;
+    padding: 10px 12px;
+    border-radius: 10px;
     font-size: 18px;
-    background: var(--input-bg);
-    border: 1px solid var(--input-border);
-    border-radius: 12px;
-    color: var(--text-color);
+    color: #fff;
 }
 
 .order-row textarea {
@@ -285,11 +285,12 @@ h3 {
 
 .order-save {
     width: 100%;
-    background: #32cd32;
-    color: #fff;
+    background: #34c759;
+    border: none;
     padding: 14px;
     font-size: 20px;
-    border-radius: 14px;
-    border: none;
+    border-radius: 12px;
     margin-top: 10px;
+    color: black;
+    font-weight: bold;
 }
