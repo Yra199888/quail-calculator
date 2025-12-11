@@ -1,55 +1,60 @@
-/* =========================
-      ТЕМИ
-========================= */
+/* ===========================================
+   PREMIUM UI THEME (Dark + Light)
+=========================================== */
 :root {
-    --bg: #111;
-    --text: #fff;
-    --card: #1b1b1b;
-    --border: #333;
+    --bg: #0e0e0e;
+    --text: #ffffff;
+    --card: #1a1a1a;
+    --border: #2b2b2b;
     --accent: #4caf50;
+    --accent-light: #66d46c;
+    --input-bg: #111;
 }
 .light {
-    --bg: #eee;
+    --bg: #f5f5f7;
     --text: #111;
-    --card: #fff;
-    --border: #ccc;
+    --card: #ffffff;
+    --border: #d3d3d3;
     --accent: #2a7cda;
+    --accent-light: #4da2ff;
+    --input-bg: #f0f0f0;
 }
 
 body {
     background: var(--bg);
     color: var(--text);
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+    letter-spacing: 0.3px;
 }
 
-/* =========================
-      МЕНЮ
-========================= */
-.topnav,
-.subnav {
+/* ===========================================
+      PREMIUM MENU
+=========================================== */
+.topnav, .subnav {
     display: flex;
     justify-content: space-around;
+    padding: 12px 0;
     background: var(--card);
-    padding: 10px 0;
-    border-bottom: 2px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
 }
 
 .nav-btn {
-    font-size: 26px;
-    opacity: 0.6;
-    transition: 0.2s;
+    font-size: 28px;
+    opacity: 0.5;
     cursor: pointer;
+    transition: 0.25s;
 }
 .nav-btn.active {
     opacity: 1;
-    transform: scale(1.2);
-    color: var(--accent);
+    transform: scale(1.23);
+    color: var(--accent-light);
 }
 
-/* =========================
-      СТОРІНКИ
-========================= */
+/* ===========================================
+      PREMIUM PAGES
+=========================================== */
 .page {
     display: none;
     padding: 20px;
@@ -60,95 +65,126 @@ body {
 
 .container {
     background: var(--card);
-    padding: 20px;
-    margin: 20px 0;
+    padding: 22px;
+    border-radius: 14px;
     border: 1px solid var(--border);
-    border-radius: 12px;
+    box-shadow: 0 0 20px #00000040;
+    margin-bottom: 20px;
 }
 
-/* =========================
-      ТАБЛИЦІ (ГОЛОВНИЙ ФІКС)
-========================= */
+/* ===========================================
+      PREMIUM TABLE DESIGN
+=========================================== */
 
 .feed-table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;          /* ← ГОЛОВНИЙ ФІКС! */
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
 }
 
 .feed-table th {
     background: var(--accent);
-    padding: 10px;
+    color: #fff;
+    padding: 12px 6px;
     font-size: 16px;
-    border: 1px solid var(--border);
+    font-weight: 600;
     text-align: center;
 }
 
 .feed-table td {
-    padding: 6px;
-    border: 1px solid var(--border);
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--border);
     text-align: center;
+    font-size: 16px;
 }
 
-/* === Ширина колонок === */
-.feed-table th:nth-child(1),
-.feed-table td:nth-child(1) {
-    width: 40%;
+/* Вирівнюємо текст активів */
+.feed-table td:first-child {
     text-align: left;
-    padding-left: 10px;
+    padding-left: 12px;
 }
 
-.feed-table th:nth-child(2),
-.feed-table td:nth-child(2) {
-    width: 20%;
-}
+/* ===========================================
+      PREMIUM INPUTS (UNIVERSAL)
+=========================================== */
 
-.feed-table th:nth-child(3),
-.feed-table td:nth-child(3) {
-    width: 20%;
-}
-
-.feed-table th:nth-child(4),
-.feed-table td:nth-child(4) {
-    width: 20%;
-}
-
-/* === Інпути в таблиці === */
-.feed-table input {
-    width: 90%;
+input {
+    width: 100%;
     max-width: 110px;
-    padding: 6px;
-    background: #0006;
-    color: var(--text);
+    height: 40px;
+    padding: 6px 10px;
+    font-size: 16px;
+    border-radius: 10px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--text);
+    outline: none;
+    transition: 0.25s;
     text-align: center;
-    font-size: 15px;
 }
 
-/* =========================
-      § СКЛАД
-========================= */
-
-h3 {
-    margin-top: 25px;
+input:focus {
+    border-color: var(--accent-light);
+    box-shadow: 0 0 8px var(--accent-light);
 }
+
+/* ===========================================
+      PREMIUM BUTTONS
+=========================================== */
 
 button {
     background: var(--accent);
+    color: #fff;
     border: none;
-    padding: 10px 18px;
-    font-size: 16px;
-    border-radius: 8px;
-    color: white;
-    margin-top: 10px;
+    padding: 12px 22px;
+    font-size: 17px;
+    border-radius: 12px;
     cursor: pointer;
+    margin-top: 12px;
+    font-weight: 600;
+    transition: 0.25s;
 }
+
+button:hover {
+    background: var(--accent-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px #00000060;
+}
+
+button:active {
+    transform: scale(0.96);
+}
+
+/* ===========================================
+      SECTIONS TITLES
+=========================================== */
+
+h2, h3 {
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 28px;
+}
+
+h3 {
+    font-size: 22px;
+    margin-top: 25px;
+}
+
+/* ===========================================
+      LIST / LOGS
+=========================================== */
 
 ul {
     padding-left: 20px;
 }
 
-.w-section {
-    margin-top: 20px;
+li {
+    padding: 4px 0;
+    opacity: 0.85;
+    font-size: 15px;
 }
