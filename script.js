@@ -1,261 +1,32 @@
-/* ============================  
-      ТЕМА  
-============================ */
-const themeBtn = document.getElementById("themeSwitch");
-themeBtn.addEventListener("click", () => {
+/* =========================
+   ТЕМА
+========================= */
+const themeSwitch = document.getElementById("themeSwitch");
+themeSwitch.addEventListener("click", () => {
     document.body.classList.toggle("light");
-    themeBtn.textContent = document.body.classList.contains("light") ? "☀️" : "🌙";
+    themeSwitch.textContent = document.body.classList.contains("light") ? "☀️" : "🌙";
 });
 
-/* ============================  
-      ПЕРЕМИКАННЯ ВКЛАДОК  
-============================ */
+/* =========================
+   НАВІГАЦІЯ
+========================= */
 document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         const page = btn.dataset.page;
         if (!page) return;
 
-        document.querySelectorAll(".page").forEach(p =>
-            p.classList.remove("active-page")
-        );
-        document.getElementById("page-" + page).classList.add("active-page");
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
+        document.querySelector("#page-" + page).classList.add("active-page");
 
         document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
     });
 });
 
-/* ============================  
-      КАЛЬКУЛЯТОР  
-============================ */
-
+/* =========================
+   ДАНІ КОМПОНЕНТІВ
+========================= */
 const feedComponents = [
-    ["Кукурудза", 10],
-    ["Пшениця", 5],
-    ["Ячмінь", 1.5],
-    ["Соєва макуха", 3],
-    ["Соняшникова макуха", 2.5],
-    ["Рибне борошно", 1],
-    ["Кормові дріжджі", 0.7],
-    ["Трикальційфосфат", 0.5],
-    ["Dolfos D", 0.7],
-    ["Сіль", 0.05]
-];
-
-function loadFeed() {
-    let html = "";
-
-    feedComponents.forEach((comp, i) => {
-        let price = localStorage.getItem("p" + i) || 0;
-
-        html += `
-        <tr>
-            <td>${comp[0]}</td>
-            <td><input type="number" id="qty${i}" value="${comp[1]}"></td>
-            <td><input type="number" id="price${i}" value="${price}"></td>
-            <td id="sum${i}">0</td>
-        </tr>`;
-    });
-
-    document.getElementById("feedTable").innerHTML = html;
-    calcFeed();
-}
-
-function calcFeed() {
-    let total = 0;
-    let kg = 0;
-
-    feedComponents.forEach((c, i) => {
-        let qty = +document.getElementById("qty" + i).value;
-        let price = +document.getElementById("price" + i).value;
-
-        localStorage.setItem("p" + i, price);
-
-        let s = qty * price;
-        document.getElementById("sum" + i).textContent = s.toFixed(2);
-
-        total += s;
-        kg += qty;
-    });
-
-    let perKg = kg ? total / kg : 0;
-    let vol = +document.getElementById("feedVolume").value;
-
-    document.getElementById("feedTotal").textContent = total.toFixed(2);
-    document.getElementById("feedPerKg").textContent = perKg.toFixed(2);
-    document.getElementById("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
-}
-
-document.addEventListener("input", calcFeed);
-loadFeed();
-
-/* ============================  
-          ЯЙЦЯ  
-============================ */
-
-let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
-
-function saveEggRecord() {
-    let d = eggsDate.value || new Date().toISOString().slice(0, 10);
-
-    eggs[d] = {
-        good: +eggsGood.value || 0,
-        bad: +eggsBad.value || 0,
-        home: +eggsHome.value || 0
-    };
-
-    localStorage.setItem("eggs", JSON.stringify(eggs));
-    renderEggs();
-    updateTrayStock();
-}
-
-function renderEggs() {
-    let out = "";
-
-    Object.keys(eggs).sort().reverse().forEach(d => {
-        let e = eggs[d];
-        let commercial = e.good - e.bad - e.home;
-        let trays = Math.floor(commercial / 20);
-
-        out += `
-        <div class="order-block">
-            <b>${d}</b><br>
-            Всього: ${e.good}<br>
-            Брак: ${e.bad}<br>
-            Дім: ${e.home}<br>
-            Комерційні: ${commercial}<br>
-            Лотки: ${trays}<br>
-        </div>`;
-    });
-
-    document.getElementById("eggsList").innerHTML = out;
-}
-
-renderEggs();
-
-/* ============================  
-      ЛОГІКА СКЛАДУ  
-============================ */
-
-let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
-
-// Якщо порожній — шаблон
-if (!warehouse.components) {
-    warehouse = {
-        components: {},
-        readyFeed: 0,
-        feedHistory: [],
-        trays: 0,
-        bookedTrays: 0
-    };
-    feedComponents.forEach(c => warehouse.components[c[0]] = { incoming: 0, need: c[1], left: 0 });
-    saveWarehouse();
-}
-
-function saveWarehouse() {
-    localStorage.setItem("warehouse", JSON.stringify(warehouse));
-}
-
-function renderWarehouse() {
-    let html = `
-        <table class="feed-table">
-            <tr>
-                <th>Компонент</th>
-                <th>Прихід</th>
-                <th>Норма</th>
-                <th>Залишок</th>
-            </tr>
-    `;
-
-    for (let name in warehouse.components) {
-        let item = warehouse.components[name];
-        html += `
-            <tr>
-                <td>${name}</td>
-                <td><input type="number" data-in="${name}" value="${item.incoming}"></td>
-                <td>${item.need}</td>
-                <td>${item.left}</td>
-            </tr>
-        `;
-    }
-
-    html += `</table>
-    <button id="makeFeedBtn">Зробити корм</button>
-    <h3>Історія виробництва</h3>
-    <div>${warehouse.feedHistory.map(h => `<div>🔧 ${h}</div>`).join("")}</div>
-
-    <h3>Лотки</h3>
-    <p>Всього: ${warehouse.trays}</p>
-    <p>Заброньовано: ${warehouse.bookedTrays}</p>
-    `;
-
-    document.getElementById("warehouseList").innerHTML = html;
-
-    document.querySelectorAll("[data-in]").forEach(inp => {
-        inp.addEventListener("input", () => {
-            warehouse.components[inp.dataset.in].incoming = +inp.value;
-            saveWarehouse();
-        });
-    });
-
-    document.getElementById("makeFeedBtn").addEventListener("click", makeFeed);
-}
-
-renderWarehouse();
-
-/* ============================  
-     ЗРОБИТИ КОРМ  
-============================ */
-
-function makeFeed() {
-    // Перевірка залишку
-    for (let name in warehouse.components) {
-        let comp = warehouse.components[name];
-        if (comp.left + comp.incoming < comp.need) {
-            alert("Недостатньо компоненту: " + name);
-            return;
-        }
-    }
-
-    // Списання
-    for (let name in warehouse.components) {
-        let c = warehouse.components[name];
-        c.left = c.left + c.incoming - c.need;
-        c.incoming = 0;
-    }
-
-    warehouse.readyFeed += 1;
-    warehouse.feedHistory.push(new Date().toLocaleString());
-
-    saveWarehouse();
-    renderWarehouse();
-}
-
-/* ============================  
-   АВТО-СПИСАННЯ ЛОТКІВ  
-============================ */
-
-function updateTrayStock() {
-    let totalCommercialEggs = 0;
-
-    Object.values(eggs).forEach(r => {
-        totalCommercialEggs += (r.good - r.bad - r.home);
-    });
-
-    let trays = Math.floor(totalCommercialEggs / 20);
-
-    warehouse.trays = trays;
-    saveWarehouse();
-    renderWarehouse();
-}
-
-updateTrayStock();
-
-/* ============================================================
-   === ДАНІ ДЛЯ СКЛАДУ =========================================
-   ============================================================ */
-
-const warehouseComponents = [
     "Кукурудза",
     "Пшениця",
     "Ячмінь",
@@ -268,102 +39,169 @@ const warehouseComponents = [
     "Сіль"
 ];
 
-// Структура для зберігання залишків
-let warehouseStock = JSON.parse(localStorage.getItem("warehouseStock") || "{}");
+/*
+Структура складу:
 
-// Якщо порожньо — створюємо
-warehouseComponents.forEach(name => {
-    if (!warehouseStock[name]) {
-        warehouseStock[name] = {
+warehouse = {
+  "Кукурудза": { incoming: 0, perBatch: 10, left: 0 }
+}
+*/
+
+let warehouse = JSON.parse(localStorage.getItem("warehouse")) || {};
+let mixHistory = JSON.parse(localStorage.getItem("mixHistory")) || [];
+let trayStock = JSON.parse(localStorage.getItem("trayStock")) || { count: 100 };
+let fullTrays = JSON.parse(localStorage.getItem("fullTrays")) || { ready: 0, booked: 0 };
+
+/* =========================
+   1. СТВОРЕННЯ ПУСТОЇ СТРУКТУРИ
+========================= */
+feedComponents.forEach(name => {
+    if (!warehouse[name]) {
+        warehouse[name] = {
             incoming: 0,
-            perMix: 0,
+            perBatch: 0,
             left: 0
         };
     }
 });
+saveWarehouse();
 
-saveWarehouseStock();
-renderWarehouseTable();
-
-function saveWarehouseStock() {
-    localStorage.setItem("warehouseStock", JSON.stringify(warehouseStock));
+/* =========================
+   ЗБЕРЕЖЕННЯ
+========================= */
+function saveWarehouse() {
+    localStorage.setItem("warehouse", JSON.stringify(warehouse));
+}
+function saveHistory() {
+    localStorage.setItem("mixHistory", JSON.stringify(mixHistory));
+}
+function saveTrayStock() {
+    localStorage.setItem("trayStock", JSON.stringify(trayStock));
+}
+function saveFullTrays() {
+    localStorage.setItem("fullTrays", JSON.stringify(fullTrays));
 }
 
-/* ============================================================
-   === ВИВІД ТАБЛИЦІ СКЛАДУ ====================================
-   ============================================================ */
-
-function renderWarehouseTable() {
+/* =========================
+   РЕНДЕР ТАБЛИЦІ СКЛАДУ
+========================= */
+function renderWarehouse() {
     let html = `
-        <table class="feed-table">
-            <tr>
-                <th>Компонент</th>
-                <th>Прихід (кг)</th>
-                <th>На 1 заміс (кг)</th>
-                <th>Залишок (кг)</th>
-            </tr>
+    <table class="feed-table">
+        <tr>
+            <th>Компонент</th>
+            <th>Прихід (кг)</th>
+            <th>На 1 заміс (кг)</th>
+            <th>Залишок (кг)</th>
+        </tr>
     `;
 
-    warehouseComponents.forEach(name => {
-        const item = warehouseStock[name];
-
+    feedComponents.forEach(name => {
         html += `
-            <tr>
-                <td>${name}</td>
-                <td><input type="number" value="${item.incoming}" onchange="updateIncoming('${name}', this.value)"></td>
-                <td><input type="number" value="${item.perMix}" onchange="updatePerMix('${name}', this.value)"></td>
-                <td>${item.left.toFixed(2)}</td>
-            </tr>
-        `;
+        <tr>
+            <td>${name}</td>
+            <td><input type="number" step="0.1" value="${warehouse[name].incoming}" onchange="updateIncoming('${name}', this.value)"></td>
+            <td><input type="number" step="0.1" value="${warehouse[name].perBatch}" onchange="updatePerBatch('${name}', this.value)"></td>
+            <td>${warehouse[name].left.toFixed(2)}</td>
+        </tr>`;
     });
 
     html += `</table>
-    <button class="make-feed-btn" onclick="makeFeed()">⚙️ Зробити корм</button>
+    <button class="btn-make" onclick="makeFeed()">🔄 Зробити корм</button>
+
+    <h3>📘 Історія замісів</h3>
+    <div id="mixHistoryBox"></div>
+
+    <h3>📦 Запаси лотків</h3>
+    <table class="feed-table">
+        <tr><th>Тип</th><th>Кількість (шт)</th></tr>
+        <tr>
+            <td>Лотки 20 шт</td>
+            <td><input type="number" value="${trayStock.count}" onchange="updateTrayStock(this.value)"></td>
+        </tr>
+    </table>
+
+    <h3>🥚 Повні лотки</h3>
+    Готові лотки: <b>${fullTrays.ready}</b><br>
+    Заброньовані: <b>${fullTrays.booked}</b>
     `;
 
     document.getElementById("warehouseList").innerHTML = html;
+
+    renderHistory();
 }
 
-/* ============================================================
-   === ОНОВЛЕННЯ ПОЛІВ ========================================
-   ============================================================ */
-
-function updateIncoming(name, value) {
-    warehouseStock[name].incoming = Number(value);
-    warehouseStock[name].left += Number(value);
-    saveWarehouseStock();
-    renderWarehouseTable();
+/* =========================
+   ОНОВЛЕННЯ ПОЛІВ
+========================= */
+function updateIncoming(name, val) {
+    warehouse[name].incoming = Number(val);
+    warehouse[name].left += Number(val);
+    saveWarehouse();
+    renderWarehouse();
 }
 
-function updatePerMix(name, value) {
-    warehouseStock[name].perMix = Number(value);
-    saveWarehouseStock();
+function updatePerBatch(name, val) {
+    warehouse[name].perBatch = Number(val);
+    saveWarehouse();
 }
 
-/* ============================================================
-   === ЗАМІС КОРМУ =============================================
-   ============================================================ */
-
+/* =========================
+   ЗРОБИТИ КОРМ
+========================= */
 function makeFeed() {
-    let insufficient = [];
-
-    warehouseComponents.forEach(name => {
-        const comp = warehouseStock[name];
-        if (comp.left < comp.perMix) {
-            insufficient.push(name);
+    // Перевірка чи вистачає всіх компонентів
+    for (let name of feedComponents) {
+        let need = warehouse[name].perBatch;
+        if (warehouse[name].left < need) {
+            alert("Недостатньо компоненту: " + name);
+            return;
         }
+    }
+
+    // Списання
+    feedComponents.forEach(name => {
+        warehouse[name].left -= warehouse[name].perBatch;
     });
 
-    if (insufficient.length > 0) {
-        alert("Недостатньо компонентів: " + insufficient.join(", "));
+    saveWarehouse();
+
+    // Додаємо запис в історію
+    let d = new Date().toLocaleString("uk-UA");
+    mixHistory.push(d);
+    saveHistory();
+
+    renderWarehouse();
+
+    alert("Корм успішно зроблено!");
+}
+
+/* =========================
+   РЕНДЕР ІСТОРІЇ ЗАМІСІВ
+========================= */
+function renderHistory() {
+    if (mixHistory.length === 0) {
+        document.getElementById("mixHistoryBox").innerHTML = "<i>Поки що немає записів</i>";
         return;
     }
 
-    // списуємо
-    warehouseComponents.forEach(name => {
-        warehouseStock[name].left -= warehouseStock[name].perMix;
+    let html = "";
+    mixHistory.slice().reverse().forEach(h => {
+        html += `<div class="history-row">🔹 ${h}</div>`;
     });
 
-    saveWarehouseStock();
-    renderWarehouseTable();
+    document.getElementById("mixHistoryBox").innerHTML = html;
 }
+
+/* =========================
+   ЛОТКИ
+========================= */
+function updateTrayStock(val) {
+    trayStock.count = Number(val);
+    saveTrayStock();
+}
+
+/* =========================
+   СТАРТОВИЙ РЕНДЕР
+========================= */
+renderWarehouse();
