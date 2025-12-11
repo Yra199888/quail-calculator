@@ -37,6 +37,8 @@ body {
     opacity: 0.6;
     transition: 0.2s;
     cursor: pointer;
+    text-align: center;
+    flex: 1;
 }
 .nav-btn.active {
     opacity: 1;
@@ -61,53 +63,53 @@ body {
     border-radius: 10px;
 }
 
-/* ===========================================================
-   ==========    ТАБЛИЦЯ КАЛЬКУЛЯТОРА — ФІКС   ===============
-   =========================================================== */
+/* ===== ТАБЛИЦЯ КАЛЬКУЛЯТОРА ===== */
 
 .feed-table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed; /* ← ГОЛОВНЕ! Рівні стовпці */
+    table-layout: fixed;          /* ВАЖЛИВО – фіксує ширини! */
 }
 
 .feed-table th {
     background: var(--accent);
     padding: 8px;
-    text-align: center;
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .feed-table td {
     border: 1px solid var(--border);
-    padding: 4px;
-}
-
-/* Назва компоненту */
-.feed-table td:first-child {
-    width: 38%;
-    font-size: 15px;
-}
-
-/* Інпути всередині таблиці */
-.feed-table td input {
-    width: 100%;
-    max-width: 80px;       /* ← НЕ ДАЄ їм рости */
     padding: 6px;
+    text-align: center;
+}
+
+/* Стовпці — фіксовані пропорції */
+.feed-table th:nth-child(1),
+.feed-table td:nth-child(1) {
+    width: 40%;
+    text-align: left;
+    padding-left: 8px;
+}
+
+.feed-table th:nth-child(2),
+.feed-table td:nth-child(2),
+.feed-table th:nth-child(3),
+.feed-table td:nth-child(3),
+.feed-table th:nth-child(4),
+.feed-table td:nth-child(4) {
+    width: 20%;
+}
+
+/* Інпути — однакові розміри */
+.feed-table input {
+    width: 70px;
+    max-width: 70px;
+    text-align: center;
+    padding: 5px;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: #0005;
     color: var(--text);
-    text-align: center;
-    font-size: 15px;
-    box-sizing: border-box;
-}
-
-/* Сума — найбільш правий стовпець */
-.sum-cell {
-    text-align: right !important;
-    padding-right: 10px !important;
-    font-weight: bold;
 }
 
 /* ===== СКЛАД ===== */
@@ -126,14 +128,27 @@ body {
 }
 
 .w-add input {
-    width: 100px;
-    margin-right: 4px;
+    width: 110px;
+    margin-right: 6px;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #0005;
+    color: var(--text);
 }
 
-/* Мобільна адаптація */
-@media (max-width: 480px) {
-    .feed-table td input {
-        max-width: 70px;
-        font-size: 14px;
-    }
+/* ===== КНОПКИ ===== */
+
+button {
+    background: var(--accent);
+    border: none;
+    padding: 10px 16px;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 15px;
+}
+button:hover {
+    opacity: 0.9;
 }
