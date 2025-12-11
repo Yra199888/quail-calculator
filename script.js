@@ -1,44 +1,28 @@
-/* ============================================================
-   === ТЕМА (🌙 / ☀️) ==========================================
-   ============================================================ */
-
-function toggleTheme() {
+/* ========= ТЕМА ========= */
+document.querySelector(".theme-switch").onclick = () => {
     document.body.classList.toggle("light");
-    localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
-}
+};
 
-(function initTheme() {
-    if (localStorage.getItem("theme") === "light") {
-        document.body.classList.add("light");
-    }
-})();
+/* ========= НАВІГАЦІЯ ========= */
+const pages = document.querySelectorAll(".page");
+const navBtns = document.querySelectorAll(".nav-btn");
 
-/* ============================================================
-   === НАВІГАЦІЙНІ ПАНЕЛІ (верх + низ) =========================
-   ============================================================ */
-
-document.querySelectorAll(".nav-btn").forEach(btn => {
+navBtns.forEach(btn => {
     btn.addEventListener("click", () => {
         const page = btn.dataset.page;
 
-        if (page === "theme") {
-            toggleTheme();
-            return;
-        }
+        if (!page) return;
 
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
-        document.getElementById("page-" + page).classList.add("active-page");
-
-        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        navBtns.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
+
+        pages.forEach(p => p.classList.remove("active"));
+        document.getElementById(page).classList.add("active");
     });
 });
 
-/* ============================================================
-   === КАЛЬКУЛЯТОР ============================================
-   ============================================================ */
-
-const feedComponents = [
+/* ========= КАЛЬКУЛЯТОР ========= */
+const feed = [
     ["Кукурудза", 10],
     ["Пшениця", 5],
     ["Ячмінь", 1.5],
@@ -48,66 +32,61 @@ const feedComponents = [
     ["Кормові дріжджі", 0.7],
     ["Трикальційфосфат", 0.5],
     ["Dolfos D", 0.7],
-    ["Сіль", 0.05]
+    ["Сіль", 0.05],
 ];
 
-function loadFeed() {
-    let html = "";
-    feedComponents.forEach((c, i) => {
-        let price = localStorage.getItem("price_" + i) || 0;
+function renderFeed() {
+    let html = "<tr><th>Компонент</th><th>К-сть</th><th>Ціна</th><th>Сума</th></tr>";
 
+    feed.forEach((c, i) => {
+        let price = localStorage.getItem("p" + i) || 0;
         html += `
         <tr>
             <td>${c[0]}</td>
-            <td><input id="qty_${i}" value="${c[1]}" type="number"></td>
-            <td><input id="price_${i}" value="${price}" type="number"></td>
-            <td id="sum_${i}">0</td>
+            <td><input id="qty${i}" value="${c[1]}"></td>
+            <td><input id="price${i}" value="${price}"></td>
+            <td id="sum${i}">0</td>
         </tr>`;
     });
 
     document.getElementById("feedTable").innerHTML = html;
     calcFeed();
 }
-
-loadFeed();
+renderFeed();
 
 function calcFeed() {
-    let total = 0, kg = 0;
+    let total = 0;
+    let kg = 0;
 
-    feedComponents.forEach((c, i) => {
-        let qty = +document.getElementById("qty_" + i).value;
-        let price = +document.getElementById("price_" + i).value;
+    feed.forEach((c, i) => {
+        let q = +document.getElementById("qty" + i).value;
+        let p = +document.getElementById("price" + i).value;
 
-        localStorage.setItem("price_" + i, price);
+        localStorage.setItem("p" + i, p);
 
-        let sum = qty * price;
+        total += q * p;
+        kg += q;
 
-        kg += qty;
-        total += sum;
-
-        document.getElementById("sum_" + i).innerText = sum.toFixed(2);
+        document.getElementById("sum" + i).innerText = (q * p).toFixed(2);
     });
 
-    let perkg = kg ? total / kg : 0;
-    let volume = +document.getElementById("feedVolume").value;
+    let per = kg ? total / kg : 0;
+    let vol = +document.getElementById("feedVolume").value;
 
     document.getElementById("feedTotal").innerText = total.toFixed(2);
-    document.getElementById("feedPerKg").innerText = perkg.toFixed(2);
-    document.getElementById("feedVolumeTotal").innerText = (perkg * volume).toFixed(2);
+    document.getElementById("feedPerKg").innerText = per.toFixed(2);
+    document.getElementById("feedVolumeTotal").innerText = (per * vol).toFixed(2);
 }
 
 document.addEventListener("input", calcFeed);
 
-/* ============================================================
-   === ЯЙЦЯ ====================================================
-   ============================================================ */
-
+/* ========= ЯЙЦЯ ========= */
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
 
 function saveEggRecord() {
-    let date = document.getElementById("eggsDate").value || new Date().toISOString().slice(0, 10);
+    let d = eggsDate.value || new Date().toISOString().slice(0, 10);
 
-    eggs[date] = {
+    eggs[d] = {
         good: +eggsGood.value || 0,
         bad: +eggsBad.value || 0,
         home: +eggsHome.value || 0
@@ -118,52 +97,40 @@ function saveEggRecord() {
 }
 
 function renderEggs() {
-    let html = "";
+    let out = "";
 
-    Object.keys(eggs).sort().reverse().forEach(date => {
-        let e = eggs[date];
-        let commercial = e.good - e.bad - e.home;
-        let trays = Math.floor(commercial / 20);
+    Object.keys(eggs).sort().reverse().forEach(d => {
+        let e = eggs[d];
+        let com = e.good - e.bad - e.home;
+        let trays = Math.floor(com / 20);
 
-        html += `
-        <div class="block">
-            <b>${date}</b><br>
+        out += `
+        <div class="container">
+            <b>${d}</b><br>
             Всього: ${e.good}<br>
             Брак: ${e.bad}<br>
             Дім: ${e.home}<br>
-            Комерційні: ${commercial}<br>
-            Лотків: ${trays}<br>
-            <button onclick="deleteEgg('${date}')">Видалити</button>
+            Комерційні: ${com}<br>
+            Лотки: ${trays}
         </div>`;
     });
 
-    document.getElementById("eggsList").innerHTML = html;
+    eggsList.innerHTML = out;
 }
-
 renderEggs();
 
-function deleteEgg(date) {
-    delete eggs[date];
-    localStorage.setItem("eggs", JSON.stringify(eggs));
-    renderEggs();
-}
-
-/* ============================================================
-   === ЗАМОВЛЕННЯ =============================================
-   ============================================================ */
-
+/* ========= ЗАМОВЛЕННЯ ========= */
 let orders = JSON.parse(localStorage.getItem("orders") || "{}");
 
 function addOrder() {
-    let date = orderDate.value || new Date().toISOString().slice(0, 10);
+    let d = orderDate.value || new Date().toISOString().slice(0, 10);
 
-    if (!orders[date]) orders[date] = [];
+    if (!orders[d]) orders[d] = [];
 
-    orders[date].push({
+    orders[d].push({
         name: orderName.value,
         trays: +orderTrays.value,
-        details: orderDetails.value,
-        status: "active"
+        details: orderDetails.value
     });
 
     localStorage.setItem("orders", JSON.stringify(orders));
@@ -171,82 +138,69 @@ function addOrder() {
 }
 
 function renderOrders() {
-    let html = "";
+    let out = "";
 
-    Object.keys(orders).sort().reverse().forEach(date => {
-        html += `<h3>${date}</h3>`;
+    Object.keys(orders).sort().reverse().forEach(d => {
+        out += `<h3>${d}</h3>`;
 
-        orders[date].forEach((o, i) => {
-            html += `
-            <div class="block">
-                <b>${o.name}</b> — ${o.trays} лотків<br>
-                Деталі: ${o.details}<br>
-                Статус: <span class="status-${o.status}">${o.status}</span><br>
-                <button onclick="setStatus('${date}', ${i}, 'completed')">Виконано</button>
-                <button onclick="setStatus('${date}', ${i}, 'cancelled')">Скасовано</button>
-                <button onclick="deleteOrder('${date}', ${i})">Видалити</button>
+        orders[d].forEach(o => {
+            out += `
+            <div class="container">
+                <b>${o.name}</b> — ${o.trays} лот.<br>
+                ${o.details}
             </div>`;
         });
     });
 
-    document.getElementById("ordersList").innerHTML = html;
+    ordersList.innerHTML = out;
 }
-
 renderOrders();
 
-function setStatus(date, index, status) {
-    orders[date][index].status = status;
-    localStorage.setItem("orders", JSON.stringify(orders));
-    renderOrders();
-}
-
-function deleteOrder(date, index) {
-    orders[date].splice(index, 1);
-    if (orders[date].length === 0) delete orders[date];
-    localStorage.setItem("orders", JSON.stringify(orders));
-    renderOrders();
-}
-
-/* ============================================================
-   === ФІНАНСИ ================================================
-   ============================================================ */
-
+/* ========= ФІНАНСИ ========= */
 function saveFinanceSettings() {
     localStorage.setItem("trayPrice", trayPrice.value);
     renderFinance();
 }
 
 function renderFinance() {
-    let price = +(localStorage.getItem("trayPrice") || 50);
+    let price = +localStorage.getItem("trayPrice") || 50;
     trayPrice.value = price;
 
     let income = 0;
 
     Object.values(orders).forEach(arr => {
-        arr.forEach(o => {
-            if (o.status === "completed") {
-                income += o.trays * price;
-            }
+        arr.forEach(o => income += o.trays * price);
+    });
+
+    financeReport.innerHTML = `<b>Дохід:</b> ${income} грн`;
+}
+renderFinance();
+
+/* ========= CSV ========= */
+function exportCSV() {
+    let rows = ["Дата,Імʼя,Лотки,Деталі"];
+
+    Object.keys(orders).forEach(d => {
+        orders[d].forEach(o => {
+            rows.push(`${d},${o.name},${o.trays},${o.details}`);
         });
     });
 
-    document.getElementById("financeReport").innerHTML =
-        `<b>Дохід:</b> ${income} грн`;
+    let blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "orders.csv";
+    a.click();
 }
 
-renderFinance();
-
-/* ============================================================
-   === СКЛАД (комбінований стиль) ==============================
-   ============================================================ */
-
+/* ========= СКЛАД ========= */
 let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
 
 if (Object.keys(warehouse).length === 0) {
     warehouse = {
         grain: { name: "Зерно", unit: "кг", items: {} },
         cake: { name: "Макуха / шроти", unit: "кг", items: {} },
-        minerals: { name: "Мінерали", unit: "кг", items: {} },
+        minerals: { name: "Мінерали / добавки", unit: "кг", items: {} },
         packing: { name: "Упаковка", unit: "шт", items: {} },
         ready: { name: "Готова продукція", unit: "шт", items: {} }
     };
@@ -260,54 +214,43 @@ function saveWarehouse() {
 function renderWarehouse() {
     let html = "";
 
-    for (let catKey in warehouse) {
-        const cat = warehouse[catKey];
+    for (let key in warehouse) {
+        let c = warehouse[key];
 
         html += `
-        <div class="block">
-            <h3>${cat.name} (${cat.unit})</h3>
+        <div class="container w-cat">
+            <h3>${c.name} (${c.unit})</h3>
 
-            ${Object.keys(cat.items).length === 0 ? "<i>Порожньо</i>" : ""}
+            ${Object.keys(c.items).length === 0 ? "<i>Порожньо</i>" : ""}
 
-            <div class="w-items">
-        `;
-
-        Object.entries(cat.items).forEach(([name, qty]) => {
-            html += `
-                <div class="w-row">
+            ${Object.entries(c.items).map(([name, qty]) =>
+                `<div class='w-row'>
                     <div>${name}</div>
-                    <div>${qty} ${cat.unit}</div>
-                </div>`;
-        });
+                    <div>${qty} ${c.unit}</div>
+                </div>`
+            ).join("")}
 
-        html += `
-            </div>
             <div class="w-add">
-                <input type="text" id="addName-${catKey}" placeholder="Назва">
-                <input type="number" id="addQty-${catKey}" placeholder="К-сть">
-                <button onclick="addStock('${catKey}')">Додати</button>
+                <input id="name-${key}" placeholder="Назва">
+                <input id="qty-${key}" type="number" placeholder="К-сть">
+                <button onclick="addToWarehouse('${key}')">Додати</button>
             </div>
         </div>`;
     }
 
-    document.getElementById("warehouseList").innerHTML = html;
+    warehouseList.innerHTML = html;
 }
-
 renderWarehouse();
 
-function addStock(catKey) {
-    let name = document.getElementById("addName-" + catKey).value.trim();
-    let qty = Number(document.getElementById("addQty-" + catKey).value);
+function addToWarehouse(cat) {
+    let name = document.getElementById("name-" + cat).value.trim();
+    let qty = +document.getElementById("qty-" + cat).value;
 
-    if (!name || qty <= 0) {
-        alert("Введіть назву та кількість");
-        return;
-    }
+    if (!name || qty <= 0) return alert("Помилка вводу!");
 
-    if (!warehouse[catKey].items[name]) warehouse[catKey].items[name] = 0;
-    warehouse[catKey].items[name] += qty;
+    if (!warehouse[cat].items[name]) warehouse[cat].items[name] = 0;
+    warehouse[cat].items[name] += qty;
 
     saveWarehouse();
     renderWarehouse();
 }
-
