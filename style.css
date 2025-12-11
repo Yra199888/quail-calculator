@@ -1,150 +1,119 @@
-/* ===========================
-   THEME
-=========================== */
+/* ===========================================
+   PREMIUM UI THEME (Dark + Light)
+=========================================== */
 :root {
-    --bg: #0d0d0d;
-    --text: #fff;
-    --card: #161616;
-    --border: #2d2d2d;
-    --accent: #45c451;
-    --accent-light: #6dec74;
+    --bg: #0e0e0e;
+    --text: #ffffff;
+    --card: #1a1a1a;
+    --border: #2b2b2b;
+    --accent: #4caf50;
+    --accent-light: #66d46c;
     --input-bg: #111;
 }
 .light {
-    --bg: #f6f6f8;
+    --bg: #f5f5f7;
     --text: #111;
     --card: #ffffff;
-    --border: #cfcfcf;
-    --accent: #2a82dd;
+    --border: #d3d3d3;
+    --accent: #2a7cda;
     --accent-light: #4da2ff;
-    --input-bg: #ececec;
+    --input-bg: #f0f0f0;
 }
 
 body {
-    margin: 0;
     background: var(--bg);
     color: var(--text);
+    margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
-    letter-spacing: 0.2px;
 }
 
-/* ===========================
-   NAVIGATION
-=========================== */
-
+/* ===========================================
+      PREMIUM MENU
+=========================================== */
 .topnav, .subnav {
     display: flex;
     justify-content: space-around;
     padding: 12px 0;
     background: var(--card);
     border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
 }
 
 .nav-btn {
-    font-size: 30px;
-    opacity: 0.55;
-    transition: 0.25s;
+    font-size: 28px;
+    opacity: 0.5;
     cursor: pointer;
+    transition: 0.25s;
 }
 .nav-btn.active {
     opacity: 1;
+    transform: scale(1.23);
     color: var(--accent-light);
-    transform: scale(1.22);
 }
 
-/* ===========================
-   PAGES
-=========================== */
-
+/* ===========================================
+      PAGES
+=========================================== */
 .page {
     display: none;
-    padding: 18px;
+    padding: 20px;
 }
 .active-page {
     display: block;
 }
 
-h2 {
-    font-size: 28px;
-    margin-bottom: 18px;
-    font-weight: 700;
-}
-
-/* ===========================
-   CONTAINER
-=========================== */
 .container {
     background: var(--card);
-    padding: 20px;
-    border: 1px solid var(--border);
+    padding: 22px;
     border-radius: 14px;
-    box-shadow: 0 0 18px #00000055;
-    margin-bottom: 25px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
 }
 
-/* ===========================
-   TABLE — FIXED WIDTH
-=========================== */
+/* ===========================================
+      TABLES (ширші!)
+=========================================== */
 
 .feed-table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;   /* ВАЖЛИВО. Тепер колонки не розлазяться */
-    overflow: hidden;
+    margin-top: 10px;
 }
 
 .feed-table th {
     background: var(--accent);
-    padding: 12px 4px;
     color: #fff;
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.feed-table td {
-    border-bottom: 1px solid var(--border);
-    padding: 10px 4px;
-    font-size: 16px;
+    padding: 12px 6px;
+    font-size: 17px;
     text-align: center;
 }
 
-/* Ширина колонок */
-.feed-table th:nth-child(1),
-.feed-table td:nth-child(1) {
-    width: 40%;
+.feed-table td {
+    padding: 11px 6px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+}
+
+.feed-table td:first-child {
     text-align: left;
-    padding-left: 10px;
 }
 
-.feed-table th:nth-child(2),
-.feed-table td:nth-child(2) {
-    width: 20%;
-}
-
-.feed-table th:nth-child(3),
-.feed-table td:nth-child(3) {
-    width: 20%;
-}
-
-.feed-table th:nth-child(4),
-.feed-table td:nth-child(4) {
-    width: 20%;
-}
-
-/* ===========================
-   INPUTS
-=========================== */
+/* ===========================================
+      UNIVERSAL INPUTS
+=========================================== */
 
 input, textarea {
     width: 100%;
-    padding: 8px 12px;
-    font-size: 16px;
+    max-width: 160px;
+    height: 42px;
+    padding: 6px 10px;
+    font-size: 17px;
     border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--input-bg);
     color: var(--text);
     outline: none;
-    transition: 0.25s;
+    text-align: center;
 }
 
 input:focus {
@@ -152,69 +121,65 @@ input:focus {
     box-shadow: 0 0 8px var(--accent-light);
 }
 
-/* В таблицях — фіксована ширина */
-.feed-table input {
-    width: 85%;
-    max-width: 85px;
-}
-
-/* ===========================
-   BUTTONS
-=========================== */
+/* ===========================================
+      BUTTONS
+=========================================== */
 
 button {
     background: var(--accent);
     color: #fff;
     border: none;
     padding: 12px 22px;
+    font-size: 18px;
     border-radius: 12px;
-    font-size: 17px;
     cursor: pointer;
-    margin-top: 14px;
+    margin-top: 12px;
     transition: 0.25s;
-    font-weight: 600;
 }
 
 button:hover {
     background: var(--accent-light);
-    transform: translateY(-2px);
 }
 
-button:active {
-    transform: scale(0.96);
-}
-
-/* ===========================
-   EGGS PAGE — FIXED FORM
-=========================== */
+/* ===========================================
+      ЯЙЦЯ: ОФОРМЛЕННЯ ФОРМИ
+=========================================== */
 
 .egg-form {
     background: var(--card);
-    border: 1px solid var(--border);
     padding: 20px;
-    border-radius: 14px;
-    box-shadow: 0 0 18px #00000040;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 25px;
 }
 
 .egg-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 15px;
 }
 
 .egg-row label {
-    width: 45%;
     font-size: 18px;
+    font-weight: 600;
 }
 
 .egg-row input {
-    width: 50%;
+    width: 55%;
+    max-width: 220px;
 }
 
-/* ===========================
-   LISTS
-=========================== */
+.egg-save {
+    width: 60%;
+    font-size: 20px;
+}
 
-ul { padding-left: 18px; }
-li { padding: 4px 0; opacity: 0.8; }
+/* ===========================================
+      DAILY EGG REPORT
+=========================================== */
+
+#eggsList {
+    margin-top: 10px;
+    font-size: 18px;
+}
