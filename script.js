@@ -1,5 +1,5 @@
 /* =========================
-      ПЕРЕМИКАННЯ ТЕМИ
+      ТЕМА
 ========================= */
 const themeSwitch = document.getElementById("themeSwitch");
 themeSwitch.addEventListener("click", () => {
@@ -20,8 +20,6 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 
         document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-
-        if (page === "warehouse") renderWarehouse();
     });
 });
 
@@ -89,16 +87,16 @@ document.addEventListener("input", calculateFeed);
 loadFeedTable();
 
 /* =========================
-      СКЛАД — СТРУКТУРА
+      СКЛАД
 ========================= */
 
 let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
 
 if (!warehouse.feed) {
     warehouse = {
-        feed: {},                 
+        feed: {},
         trays: { "Лотки 20 шт": 0 },
-        mixHistory: [],           
+        mixHistory: [],
         readyTrays: 0,
         reservedTrays: 0
     };
@@ -110,109 +108,8 @@ function saveWarehouse() {
 }
 
 /* =========================
-      ВИВІД СКЛАДУ
+      ЯЙЦЯ — ЛОГІКА
 ========================= */
-
-function renderWarehouse() {
-    let html = `
-        <h3>Таблиця складу</h3>
-        <table class="feed-table">
-            <tr>
-                <th>Компонент</th>
-                <th>Прихід (кг)</th>
-                <th>На 1 заміс (кг)</th>
-                <th>Залишок (кг)</th>
-            </tr>
-    `;
-
-    feedComponents.forEach(item => {
-        const name = item[0];
-        const perMix = item[1];
-        const stock = warehouse.feed[name] || 0;
-
-        html += `
-            <tr>
-                <td>${name}</td>
-                <td><input class="warehouse-add" data-name="${name}" type="number" value="0"></td>
-                <td>${perMix}</td>
-                <td>${stock.toFixed(2)}</td>
-            </tr>
-        `;
-    });
-
-    html += `</table>
-
-        <button id="makeFeedBtn">♻️ Зробити корм</button>
-
-        <h3>📘 Історія замісів</h3>
-        ${warehouse.mixHistory.length === 0 ? "<i>Порожньо</i>" : ""}
-        <ul>${warehouse.mixHistory.map(h => `<li>${h}</li>`).join("")}</ul>
-
-        <h3>🗄️ Запаси лотків</h3>
-        <table class="feed-table">
-            <tr><th>Тип</th><th>Кількість (шт)</th></tr>
-            <tr>
-                <td>Лотки 20 шт</td>
-                <td><input id="trayInput" type="number" value="${warehouse.trays["Лотки 20 шт"]}"></td>
-            </tr>
-        </table>
-
-        <h3>🥚 Повні лотки</h3>
-        Готові лотки: <b>${warehouse.readyTrays}</b><br>
-        Заброньовані: <b>${warehouse.reservedTrays}</b><br>
-    `;
-
-    document.getElementById("warehouseList").innerHTML = html;
-
-    document.querySelectorAll(".warehouse-add").forEach(inp => {
-        inp.addEventListener("change", e => {
-            const name = e.target.dataset.name;
-            const val = Number(e.target.value);
-            if (val > 0) {
-                warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
-                saveWarehouse();
-                renderWarehouse();
-            }
-        });
-    });
-
-    document.getElementById("trayInput").addEventListener("change", e => {
-        warehouse.trays["Лотки 20 шт"] = Number(e.target.value);
-        saveWarehouse();
-    });
-
-    document.getElementById("makeFeedBtn").addEventListener("click", makeFeed);
-}
-
-/* =========================
-      ЗРОБИТИ КОРМ
-========================= */
-
-function makeFeed() {
-    for (let item of feedComponents) {
-        const name = item[0];
-        const need = item[1];
-
-        if (!warehouse.feed[name] || warehouse.feed[name] < need) {
-            alert(`Недостатньо компоненту: ${name}`);
-            return;
-        }
-    }
-
-    feedComponents.forEach(item => {
-        const name = item[0];
-        warehouse.feed[name] -= item[1];
-    });
-
-    warehouse.mixHistory.push("Заміс: " + new Date().toLocaleString());
-    saveWarehouse();
-    renderWarehouse();
-}
-
-/* =========================
-     ЯЙЦЯ → АВТО ЛОТКИ
-========================= */
-
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
 
 function saveEggRecord() {
@@ -222,22 +119,34 @@ function saveEggRecord() {
     const home = Number(eggsHome.value);
 
     const commercial = good - bad - home;
-    const trays20 = Math.floor(commercial / 20);
 
-    warehouse.readyTrays += trays20;
+    let trays = Math.floor(commercial / 20);
+    let leftover = commercial % 20;
 
-    if (warehouse.trays["Лотки 20 шт"] < trays20) {
-        alert("Недостатньо лотків!");
+    let text = "";
+
+    if (commercial < 20) {
+        text = `${commercial} яєць (неповний лоток)`;
     } else {
-        warehouse.trays["Лотки 20 шт"] -= trays20;
+        text = `${commercial} яєць → ${trays} лотків + ${leftover} лишилось`;
     }
 
-    eggs[date] = { good, bad, home, commercial, trays: trays20 };
+    eggs[date] = {
+        good, bad, home, commercial,
+        trays, leftover,
+        text
+    };
 
     localStorage.setItem("eggs", JSON.stringify(eggs));
-
-    // 🔥 Вивід інформації про яйця
-    renderEggsInfo(good, bad, home);
-
-    saveWarehouse();
+    renderEggsList();
 }
+
+function renderEggsList() {
+    let html = "";
+    for (let date in eggs) {
+        html += `<p><b>${date}:</b> ${eggs[date].text}</p>`;
+    }
+    document.getElementById("eggsList").innerHTML = html;
+}
+
+renderEggsList();
