@@ -116,7 +116,41 @@
 <div id="page-warehouse" class="page">
     <h2>🏚️ Склад</h2>
 
-    <div id="warehouseList" class="container"></div>
+    <div class="container">
+
+        <h3>Таблиця складу</h3>
+        <table class="feed-table">
+            <tr>
+                <th>Компонент</th>
+                <th>Прихід (кг)</th>
+                <th>На 1 заміс (кг)</th>
+                <th>Залишок (кг)</th>
+            </tr>
+            <tbody id="warehouseTable"></tbody>
+        </table>
+
+        <button id="makeFeedBtn" class="main-btn">🔄 Зробити корм</button>
+
+        <h3>📘 Історія замісів</h3>
+        <div id="mixHistory"></div>
+
+        <h3>🗄️ Запаси лотків</h3>
+        <table class="feed-table">
+            <tr>
+                <th>Тип</th>
+                <th>Кількість (шт)</th>
+            </tr>
+            <tr>
+                <td>Лотки 20 шт</td>
+                <td><input type="number" id="trayStock"></td>
+            </tr>
+        </table>
+
+        <h3>🥚 Повні лотки</h3>
+        <p>Готові лотки: <b id="fullTrays">0</b></p>
+        <p>Заброньовані: <b id="reservedTrays">0</b></p>
+
+    </div>
 </div>
 
 <!-- ІНСТРУМЕНТИ -->
