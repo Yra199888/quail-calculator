@@ -1,90 +1,72 @@
 /* ============================
-   Тема (темна + світла)
-============================ */
-:root {
-    --bg: #0e0e0e;
-    --text: #ffffff;
-    --card: #111;
-    --border: #222;
-    --input: #151515;
-    --accent: #32c44d;
-}
-
-body.light {
-    --bg: #f2f2f2;
-    --text: #1a1a1a;
-    --card: #ffffff;
-    --border: #ccc;
-    --input: #e7e7e7;
-    --accent: #2a7cda;
-}
-
-/* ============================
-   Базові параметри
+   Глобальні параметри
 ============================ */
 body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     margin: 0;
     padding: 0;
-    background: var(--bg);
-    color: var(--text);
+    background: #0e0e0e;
+    color: white;
 
-    /* трішки віддалено */
     transform: scale(0.94);
     transform-origin: top center;
 }
 
-.page {
-    padding: 20px;
-}
+/* ======= ГОЛОВНЕ ВИПРАВЛЕННЯ ======= */
+.page { display: none; padding: 20px; }
+.active-page { display: block; }
 
 /* ============================
    Заголовки
 ============================ */
 h2 {
+    margin-left: 5px;
     margin-bottom: 20px;
     font-size: 26px;
 }
 
 h3 {
+    margin-left: 10px;
     margin-top: 25px;
     margin-bottom: 10px;
 }
 
 /* ============================
-   Меню
+   Навігація
 ============================ */
 .topnav, .subnav {
     display: flex;
     justify-content: space-around;
-    background: var(--card);
+    background: #141414;
     padding: 10px 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid #222;
 }
 
 .nav-btn {
     font-size: 28px;
     padding: 5px 12px;
-    cursor: pointer;
     border-radius: 10px;
+    cursor: pointer;
 }
 
 .nav-btn.active {
-    background: rgba(255,255,255,0.1);
+    background: #2a2a2a;
 }
 
 /* ============================
    ФОРМИ (ЯЙЦЯ + ЗАМОВЛЕННЯ)
 ============================ */
+
 .egg-form,
 .order-form {
-    background: var(--card);
+    background: #111;
     padding: 20px;
     margin: 10px;
     border-radius: 14px;
-    border: 1px solid var(--border);
+    border: 1px solid #222;
 }
 
+/* Рядки форм */
 .egg-row,
 .order-row {
     display: flex;
@@ -105,9 +87,9 @@ h3 {
     width: 60%;
     padding: 10px;
     border-radius: 10px;
-    background: var(--input);
-    border: 1px solid var(--border);
-    color: var(--text);
+    background: #151515;
+    border: 1px solid #333;
+    color: white;
     font-size: 16px;
 }
 
@@ -124,7 +106,7 @@ h3 {
     text-align: center;
     padding: 14px;
     font-size: 20px;
-    background: var(--accent);
+    background: #32c44d;
     border-radius: 12px;
     border: none;
     margin-top: 10px;
@@ -133,8 +115,9 @@ h3 {
 }
 
 /* ============================
-   Таблиці
+   ТАБЛИЦІ
 ============================ */
+
 .feed-table {
     width: 100%;
     border-collapse: collapse;
@@ -142,28 +125,27 @@ h3 {
 }
 
 .feed-table th {
-    background: var(--accent);
+    background: #2ea043;
     padding: 12px;
     font-size: 18px;
-    color: #fff;
 }
 
 .feed-table td {
     padding: 10px;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
+    background: #111;
+    border-bottom: 1px solid #222;
 }
 
 .feed-table td input {
     width: 100%;
     padding: 8px;
     border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--input);
-    color: var(--text);
+    border: 1px solid #333;
+    background: #151515;
+    color: white;
 }
 
-/* Рівні ширини колонок */
+/* Вирівнювання колонок */
 .feed-table th:nth-child(1),
 .feed-table td:nth-child(1) { width: 32%; }
 
@@ -179,12 +161,13 @@ h3 {
 /* ============================
    Список замовлень
 ============================ */
+
 #ordersList div {
-    background: var(--card);
+    background: #131313;
     margin: 10px;
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid var(--border);
+    border: 1px solid #222;
 }
 
 #ordersList button {
