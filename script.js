@@ -219,44 +219,35 @@ renderWarehouse();
 // ============================
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
 
-function saveEggRecord() {
-    const dateInput = document.getElementById("eggsDate");
-    const goodInput = document.getElementById("eggsGood");
-    const badInput = document.getElementById("eggsBad");
-    const homeInput = document.getElementById("eggsHome");
-    const infoBox = document.getElementById("eggsInfo");
+function saveEggRecord(){
+    const d = eggsDate.value || new Date().toISOString().slice(0,10);
+    const good = +eggsGood.value || 0;
+    const bad = +eggsBad.value || 0;
+    const home = +eggsHome.value || 0;
 
-    const d = (dateInput && dateInput.value) || new Date().toISOString().slice(0, 10);
-    const good = Number(goodInput && goodInput.value) || 0;
-    const bad = Number(badInput && badInput.value) || 0;
-    const home = Number(homeInput && homeInput.value) || 0;
+    const commercial = good - bad - home;
+    const trays = Math.floor(commercial / 20);
+    const left = commercial % 20;
 
-    const com = good - bad - home;
-    const trays = com > 0 ? Math.floor(com / 20) : 0;
-    const left = com > 0 ? com % 20 : 0;
-
-    eggs[d] = { good, bad, home, com, trays, left };
+    eggs[d] = { good, bad, home, commercial, trays, left };
     localStorage.setItem("eggs", JSON.stringify(eggs));
 
-    // автоматичне списання лотків, якщо є пусті
-    if (trays > 0) {
-        const canUse = Math.min(trays, warehouse.trays);
-        warehouse.trays -= canUse;
-        warehouse.ready += canUse;
-        saveWarehouse();
-        renderWarehouse();
-    }
+    // 🔥 АВТОМАТИЧНЕ ДОДАВАННЯ ПОВНИХ ЛОТКІВ
+    warehouse.ready = (warehouse.ready || 0) + trays;
+    saveWarehouse();
 
-    if (infoBox) {
-        if (com < 20) {
-            infoBox.textContent = `Зібрано ${com} яєць, до повного лотка не вистачає ${20 - com}.`;
+    // Інформація під кнопкою "Зберегти"
+    const info = document.getElementById("eggsInfo");
+    if (info) {
+        if (commercial < 20) {
+            info.innerHTML = `Зібрано ${commercial} яєць — до повного лотка не вистачає ${20 - commercial}`;
         } else {
-            infoBox.textContent =
-                `Комерційні: ${com}. Повних лотків: ${trays}, залишок: ${left} яєць.`;
+            info.innerHTML = `Повних лотків: ${trays}, залишок: ${left} яєць`;
         }
     }
 
     showEggs();
+    renderWarehouse(); // оновлюємо склад
 }
 
 function showEggs() {
