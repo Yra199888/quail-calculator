@@ -15,7 +15,7 @@ if (themeSwitch) {
 document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     const page = btn.dataset.page;
-    if (!page) return; // кнопка теми
+    if (!page) return;
 
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
     const target = document.getElementById("page-" + page);
@@ -75,10 +75,8 @@ function calculateFeed() {
   let totalKg = 0;
 
   feedComponents.forEach((item, i) => {
-    const qtyEl = document.querySelector(`.qty[data-i="${i}"]`);
-    const priceEl = document.querySelector(`.price[data-i="${i}"]`);
-    const qty = Number(qtyEl?.value) || 0;
-    const price = Number(priceEl?.value) || 0;
+    const qty = Number(document.querySelector(`.qty[data-i="${i}"]`)?.value) || 0;
+    const price = Number(document.querySelector(`.price[data-i="${i}"]`)?.value) || 0;
 
     localStorage.setItem("qty_" + i, qty);
     localStorage.setItem("price_" + i, price);
@@ -106,16 +104,14 @@ function calculateFeed() {
 loadFeedTable();
 
 // ============================
-//      СКЛАД
+//      СКЛАД (корм + лотки-порожні)
 // ============================
 let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
 if (!warehouse.feed) {
   warehouse = {
     feed: {},
-    trays: 0,       // пусті лотки (ручний облік, якщо хочеш)
-    ready: 0,       // повні готові лотки (накопичувальні)
-    reserved: 0,    // заброньовані лотки
-    history: []
+    trays: 0,      // порожні лотки (вводиш вручну)
+    history: []    // історія замісів
   };
   saveWarehouse();
 }
@@ -124,6 +120,103 @@ function saveWarehouse() {
   localStorage.setItem("warehouse", JSON.stringify(warehouse));
 }
 
+// ============================
+//      ЯЙЦЯ + ПЕРЕНОС (ключове)
+// ============================
+let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
+
+// Фікс: завжди тримаємо об'єкт
+if (!eggs || typeof eggs !== "object") eggs = {};
+
+function getSortedEggDatesAsc() {
+  return Object.keys(eggs).sort((a, b) => a.localeCompare(b));
+}
+
+// Перерахунок ВСІХ днів з переносом залишку
+function recomputeEggs() {
+  const dates = getSortedEggDatesAsc();
+
+  let carry = 0; // перенос яєць (залишок) з попереднього дня
+  let producedTrays = 0;
+
+  dates.forEach(d => {
+    const e = eggs[d] || {};
+    const good = Number(e.good) || 0;
+    const bad = Number(e.bad) || 0;
+    const home = Number(e.home) || 0;
+
+    const commercial = Math.max(good - bad - home, 0);
+    const totalEggs = carry + commercial;
+
+    const traysMade = Math.floor(totalEggs / 20);
+    const remainder = totalEggs % 20;
+
+    // зберігаємо калькуляцію, щоб показувати в звіті
+    eggs[d] = {
+      good, bad, home,
+      commercial,
+      carryIn: carry,
+      totalEggs,
+      traysMade,
+      remainder
+    };
+
+    producedTrays += traysMade;
+    carry = remainder;
+  });
+
+  localStorage.setItem("eggs", JSON.stringify(eggs));
+  return { producedTrays, lastRemainder: carry };
+}
+
+// ============================
+//      ЗАМОВЛЕННЯ (резерв/виконано)
+// ============================
+let orders = JSON.parse(localStorage.getItem("orders") || "{}");
+if (!orders || typeof orders !== "object") orders = {};
+
+function saveOrders() {
+  localStorage.setItem("orders", JSON.stringify(orders));
+}
+
+function computeOrderStats() {
+  let reserved = 0;
+  let delivered = 0;
+
+  Object.keys(orders).forEach(date => {
+    (orders[date] || []).forEach(o => {
+      const trays = Number(o.trays) || 0;
+      if (o.status === "активне") reserved += trays;
+      if (o.status === "виконано") delivered += trays;
+    });
+  });
+
+  return { reserved, delivered };
+}
+
+// ============================
+//      ПОКАЗНИКИ ЛОТКІВ (всюди однаково)
+// ============================
+function computeTraysState() {
+  const eggStats = recomputeEggs(); // вироблено з яєць
+  const orderStats = computeOrderStats(); // резерв/виконано
+
+  const ready = Math.max(eggStats.producedTrays - orderStats.delivered, 0); // реально на складі (після виконаних)
+  const free = Math.max(ready - orderStats.reserved, 0);                    // вільні (не заброньовані)
+
+  return {
+    producedTrays: eggStats.producedTrays,
+    ready,
+    reserved: orderStats.reserved,
+    delivered: orderStats.delivered,
+    free,
+    lastRemainder: eggStats.lastRemainder
+  };
+}
+
+// ============================
+//      СКЛАД: таблиця корму + лотки
+// ============================
 function renderWarehouse() {
   const tbody = document.getElementById("warehouseTable");
   if (!tbody) return;
@@ -157,271 +250,264 @@ function renderWarehouse() {
     });
   });
 
-  const trayStockEl = document.getElementById("trayStock");
-  if (trayStockEl) trayStockEl.value = warehouse.trays;
+  const trayStock = document.getElementById("trayStock");
+  if (trayStock) {
+    trayStock.value = Number(warehouse.trays) || 0;
+    trayStock.onchange = (e) => {
+      warehouse.trays = Number(e.target.value) || 0;
+      saveWarehouse();
+    };
+  }
 
-  const fullTraysEl = document.getElementById("fullTrays");
-  const reservedTraysEl = document.getElementById("reservedTrays");
-  if (fullTraysEl) fullTraysEl.textContent = warehouse.ready;
-  if (reservedTraysEl) reservedTraysEl.textContent = warehouse.reserved;
+  // ПОВНІ/ЗАБРОНЬОВАНІ — рахуємо стабільно
+  const t = computeTraysState();
+  const fullTrays = document.getElementById("fullTrays");
+  const reservedTrays = document.getElementById("reservedTrays");
+  if (fullTrays) fullTrays.textContent = t.ready;
+  if (reservedTrays) reservedTrays.textContent = t.reserved;
 
+  // історія замісів (якщо є елемент)
   const mixHistory = document.getElementById("mixHistory");
   if (mixHistory) {
-    mixHistory.innerHTML = (warehouse.history?.length)
-      ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
-      : "<i>Порожньо</i>";
+    if (!warehouse.history || warehouse.history.length === 0) {
+      mixHistory.innerHTML = "<i>Порожньо</i>";
+    } else {
+      mixHistory.innerHTML = "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>";
+    }
   }
 }
 
 renderWarehouse();
 
-// ============================
-//      ЯЙЦЯ — накопичення залишку
-// ============================
-let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
+// кнопка "Зробити корм"
+const makeFeedBtn = document.getElementById("makeFeedBtn");
+if (makeFeedBtn) {
+  makeFeedBtn.addEventListener("click", () => {
+    for (let item of feedComponents) {
+      const name = item[0];
+      const need = item[1];
+      if ((warehouse.feed[name] || 0) < need) {
+        alert(`Недостатньо компоненту: ${name}`);
+        return;
+      }
+    }
 
-// Зберігаємо загальну “математику” накопичення
-let eggsCarry = JSON.parse(localStorage.getItem("eggsCarry") || "{}");
-if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;        // яйця на залишку (накопичувальні)
-if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0; // всього лотків зроблено (накопичувально)
+    feedComponents.forEach(item => {
+      warehouse.feed[item[0]] -= item[1];
+    });
 
-// Допоміжне: ISO date sort
-function sortDatesAsc(dates) {
-  return dates.slice().sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    warehouse.history = warehouse.history || [];
+    warehouse.history.push("Заміс: " + new Date().toLocaleString());
+
+    saveWarehouse();
+    renderWarehouse();
+  });
 }
 
-function recomputeEggsAccumulation() {
-  // Перерахунок всіх днів по порядку (залишок переноситься)
-  const dates = sortDatesAsc(Object.keys(eggs));
-  let carry = 0;
-  let totalTrays = 0;
+// ============================
+//      ЯЙЦЯ: збереження/редагування/видалення
+// ============================
+let editingEggDate = null;
 
-  dates.forEach(d => {
-    const e = eggs[d];
-    const commercial = Math.max((Number(e.good) || 0) - (Number(e.bad) || 0) - (Number(e.home) || 0), 0);
+function setEggFormValues(date, good, bad, home) {
+  const d = document.getElementById("eggsDate");
+  const g = document.getElementById("eggsGood");
+  const b = document.getElementById("eggsBad");
+  const h = document.getElementById("eggsHome");
 
-    const sum = carry + commercial;
-    const trays = Math.floor(sum / 20);
-    const remainder = sum % 20;
+  if (d) d.value = date || "";
+  if (g) g.value = good ?? "";
+  if (b) b.value = bad ?? "";
+  if (h) h.value = home ?? "";
+}
 
-    e.commercial = commercial;
-    e.trays = trays;           // скільки лотків “вийшло” на цьому дні з урахуванням переносу
-    e.remainder = remainder;   // залишок після цього дня
-    e.carryIn = carry;         // скільки зайшло з попереднього дня
-    e.sum = sum;               // carry + commercial
+function updateEggInfoBox() {
+  const info = document.getElementById("eggsInfo");
+  if (!info) return;
 
-    totalTrays += trays;
-    carry = remainder;
-  });
+  const t = computeTraysState();
+  info.innerHTML = `📦 <b>Вільні лотки:</b> ${t.free} | <b>Заброньовано:</b> ${t.reserved} | <b>Готові:</b> ${t.ready} | <b>Залишок яєць:</b> ${t.lastRemainder}`;
+}
 
-  const oldTotal = eggsCarry.totalTrays || 0;
-  const newTotal = totalTrays;
+// Головна кнопка "Зберегти"
+function saveEggRecord() {
+  const eggsDate = document.getElementById("eggsDate");
+  const eggsGood = document.getElementById("eggsGood");
+  const eggsBad  = document.getElementById("eggsBad");
+  const eggsHome = document.getElementById("eggsHome");
 
-  // Дельта лотків: якщо відредагував/видалив день — не дублюємо!
-  const deltaTrays = newTotal - oldTotal;
+  if (!eggsDate || !eggsGood || !eggsBad || !eggsHome) return;
 
-  // Оновлюємо склад готових лотків через ДЕЛЬТУ
-  // (щоб не з’їдати виконані замовлення — ми тут не чіпаємо orders, тільки факт виробництва)
-  if (deltaTrays !== 0) {
-    // якщо зменшили виробництво, але лотків вже заброньовано/віддано — не даємо піти в мінус
-    const minReadyAllowed = Math.max(warehouse.reserved, 0);
-    const proposed = warehouse.ready + deltaTrays;
+  const date = eggsDate.value || new Date().toISOString().slice(0, 10);
+  const good = Number(eggsGood.value) || 0;
+  const bad  = Number(eggsBad.value) || 0;
+  const home = Number(eggsHome.value) || 0;
 
-    warehouse.ready = Math.max(proposed, minReadyAllowed);
-  }
-
-  eggsCarry.carry = carry;
-  eggsCarry.totalTrays = newTotal;
+  // записуємо ТІЛЬКИ введені значення — перенос/лотки рахуємо через recomputeEggs()
+  eggs[date] = { good, bad, home };
 
   localStorage.setItem("eggs", JSON.stringify(eggs));
-  localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
-  saveWarehouse();
+  editingEggDate = null;
+
+  renderEggsReport();
+  updateEggInfoBox();
   renderWarehouse();
 }
 
-function saveEggRecord() {
-  const dateInput = document.getElementById("eggsDate");
-  const goodInput = document.getElementById("eggsGood");
-  const badInput  = document.getElementById("eggsBad");
-  const homeInput = document.getElementById("eggsHome");
-  const infoBox   = document.getElementById("eggsInfo");
-
-  if (!dateInput || !goodInput || !badInput || !homeInput) return;
-
-  const date = dateInput.value || new Date().toISOString().slice(0, 10);
-
-  eggs[date] = {
-    good: Number(goodInput.value) || 0,
-    bad:  Number(badInput.value) || 0,
-    home: Number(homeInput.value) || 0
-  };
-
-  // Головний перерахунок накопичення
-  recomputeEggsAccumulation();
-
-  // Інфо саме по цьому дню
-  const e = eggs[date];
-  if (infoBox && e) {
-    if ((e.sum || 0) < 20) {
-      infoBox.innerHTML = `🥚 ${e.sum} яєць (до лотка бракує ${20 - e.sum})`;
-    } else {
-      infoBox.innerHTML = `📦 Повних лотків: <b>${e.trays}</b>, залишок <b>${e.remainder}</b> яєць`;
-    }
-  }
-
-  renderEggsReport();
-}
-
-// зробити доступним для onclick
-window.saveEggRecord = saveEggRecord;
-
-function editEgg(date) {
-  const e = eggs[date];
-  if (!e) return;
-  const dateInput = document.getElementById("eggsDate");
-  const goodInput = document.getElementById("eggsGood");
-  const badInput  = document.getElementById("eggsBad");
-  const homeInput = document.getElementById("eggsHome");
-  if (!dateInput || !goodInput || !badInput || !homeInput) return;
-
-  dateInput.value = date;
-  goodInput.value = e.good ?? 0;
-  badInput.value  = e.bad ?? 0;
-  homeInput.value = e.home ?? 0;
-}
-window.editEgg = editEgg;
-
-function deleteEgg(date) {
-  if (!eggs[date]) return;
-  delete eggs[date];
-  recomputeEggsAccumulation();
-  renderEggsReport();
-}
-window.deleteEgg = deleteEgg;
-
-function clearEggsReport() {
-  eggs = {};
-  eggsCarry = { carry: 0, totalTrays: 0 };
-  localStorage.setItem("eggs", JSON.stringify(eggs));
-  localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
-  // НЕ обнуляю warehouse.ready тут автоматом, бо можуть бути замовлення/резерв.
-  // Якщо хочеш — скажеш, зробимо кнопку “обнулити склад готових лотків”.
-  renderEggsReport();
-}
-window.clearEggsReport = clearEggsReport;
-
+// Рендер щоденного звіту (з переносом)
 function renderEggsReport() {
   const list = document.getElementById("eggsList");
   if (!list) return;
 
-  const dates = Object.keys(eggs).sort().reverse();
-  if (dates.length === 0) {
+  const t = recomputeEggs(); // оновлює eggs[*] з carryIn/traysMade/remainder
+  (void)t;
+
+  const datesDesc = Object.keys(eggs).sort().reverse();
+  if (datesDesc.length === 0) {
     list.innerHTML = "<i>Записів немає</i>";
+    updateEggInfoBox();
     return;
   }
 
   let html = "";
-  dates.forEach(d => {
+  datesDesc.forEach(d => {
     const e = eggs[d];
+
     html += `
-      <div class="egg-entry">
-        <div style="display:flex; justify-content:space-between; gap:10px;">
-          <b>${d}</b>
+      <div class="egg-entry" style="background:#131313; border:1px solid #222; border-radius:12px; padding:12px; margin:10px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+          <div>
+            <b>${d}</b><br>
+            Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
+            Комерційні: ${e.commercial}<br>
+            Перенос з учора: ${e.carryIn} → Разом: ${e.totalEggs}<br>
+            Лотки: <b>${e.traysMade}</b> | Залишок: <b>${e.remainder}</b>
+          </div>
           <div style="display:flex; gap:8px;">
-            <button onclick="editEgg('${d}')">✏️</button>
-            <button onclick="deleteEgg('${d}')">🗑️</button>
+            <button onclick="editEgg('${d}')" style="padding:8px 10px; border-radius:10px; border:none;">✏️</button>
+            <button onclick="deleteEgg('${d}')" style="padding:8px 10px; border-radius:10px; border:none;">🗑️</button>
           </div>
         </div>
-        Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
-        Комерційні: ${e.commercial ?? 0}<br>
-        Перенос з учора: ${e.carryIn ?? 0} → Разом: ${e.sum ?? 0}<br>
-        Лотки: <b>${e.trays ?? 0}</b> | Залишок: <b>${e.remainder ?? 0}</b>
       </div>`;
   });
 
   list.innerHTML = html;
+  updateEggInfoBox();
 }
 
-// стартовий перерахунок (на випадок старих записів)
-recomputeEggsAccumulation();
+// редагувати день
+function editEgg(date) {
+  const e = eggs[date];
+  if (!e) return;
+
+  // якщо це вже перераховані поля — беремо базові good/bad/home
+  setEggFormValues(date, e.good, e.bad, e.home);
+  editingEggDate = date;
+
+  const info = document.getElementById("eggsInfo");
+  if (info) info.innerHTML = `✏️ Редагування запису за <b>${date}</b>`;
+}
+
+// видалити один день
+function deleteEgg(date) {
+  if (!confirm(`Видалити запис за ${date}?`)) return;
+  delete eggs[date];
+  localStorage.setItem("eggs", JSON.stringify(eggs));
+  renderEggsReport();
+  updateEggInfoBox();
+  renderWarehouse();
+}
+
+// видалити весь щоденний звіт
+function clearAllEggs() {
+  if (!confirm("Точно видалити ВЕСЬ щоденний звіт по яйцях?")) return;
+  eggs = {};
+  localStorage.setItem("eggs", JSON.stringify(eggs));
+  renderEggsReport();
+  updateEggInfoBox();
+  renderWarehouse();
+}
+
+// робимо функції доступними для onclick=""
+window.saveEggRecord = saveEggRecord;
+window.editEgg = editEgg;
+window.deleteEgg = deleteEgg;
+window.clearAllEggs = clearAllEggs;
+
 renderEggsReport();
+updateEggInfoBox();
 
 // ============================
 //      ЗАМОВЛЕННЯ
 // ============================
-let orders = JSON.parse(localStorage.getItem("orders") || "{}");
-
 function addOrder() {
-  const d = orderDate.value || new Date().toISOString().slice(0, 10);
-  const trays = Number(orderTrays.value) || 0;
+  const orderDate = document.getElementById("orderDate");
+  const orderName = document.getElementById("orderName");
+  const orderTrays = document.getElementById("orderTrays");
+  const orderDetails = document.getElementById("orderDetails");
+
+  const d = (orderDate?.value) || new Date().toISOString().slice(0, 10);
+  const trays = Number(orderTrays?.value) || 0;
 
   if (!orders[d]) orders[d] = [];
   orders[d].push({
-    name: orderName.value || "Без імені",
+    name: orderName?.value || "Без імені",
     trays,
-    details: orderDetails.value || "",
+    details: orderDetails?.value || "",
     status: "активне"
   });
 
-  warehouse.reserved += trays;
-  saveWarehouse();
-  localStorage.setItem("orders", JSON.stringify(orders));
-
+  saveOrders();
   showOrders();
+  updateEggInfoBox();
   renderWarehouse();
 }
-window.addOrder = addOrder;
 
 function setStatus(d, i, s) {
   const o = orders[d]?.[i];
   if (!o) return;
 
-  if (o.status === "активне") {
-    if (s === "виконано") {
-      warehouse.reserved -= o.trays;
-      // не даємо готовим лоткам піти нижче резерву
-      warehouse.ready = Math.max(warehouse.ready - o.trays, warehouse.reserved);
-    }
-    if (s === "скасовано") {
-      warehouse.reserved -= o.trays;
-    }
-  }
-
   o.status = s;
-  saveWarehouse();
-  localStorage.setItem("orders", JSON.stringify(orders));
+  saveOrders();
   showOrders();
+  updateEggInfoBox();
   renderWarehouse();
 }
-window.setStatus = setStatus;
 
 function showOrders() {
   const box = document.getElementById("ordersList");
   if (!box) return;
 
-  const free = Math.max(warehouse.ready - warehouse.reserved, 0);
+  const t = computeTraysState();
 
   let html = `
-    <div style="background:#111; border:1px solid #222; padding:10px; border-radius:10px; margin:10px 0;">
-      <b>Вільні лотки:</b> ${free} |
-      <b>Замовлено:</b> ${warehouse.reserved} |
-      <b>Готові:</b> ${warehouse.ready}
-    </div>`;
+    <div style="background:#131313; border:1px solid #222; border-radius:12px; padding:10px; margin:10px 0;">
+      <b>Вільні лотки:</b> ${t.free} |
+      <b>Замовлено:</b> ${t.reserved} |
+      <b>Готові:</b> ${t.ready}
+    </div>
+  `;
 
-  Object.keys(orders).sort().reverse().forEach(d => {
+  const dates = Object.keys(orders).sort().reverse();
+  dates.forEach(d => {
     html += `<h3>${d}</h3>`;
-    orders[d].forEach((o, i) => {
+    (orders[d] || []).forEach((o, i) => {
       html += `
-        <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
+        <div style="background:#131313; border:1px solid #222; border-radius:12px; padding:12px; margin:10px 0;">
           <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
           ${o.details ? o.details + "<br>" : ""}
-          <button onclick="setStatus('${d}',${i},'виконано')">✅ Виконано</button>
-          <button onclick="setStatus('${d}',${i},'скасовано')">❌ Скасовано</button>
-        </div>`;
+          <button onclick="setStatus('${d}',${i},'виконано')" style="margin-top:8px; padding:8px 10px; border-radius:10px; border:none;">✅ Виконано</button>
+          <button onclick="setStatus('${d}',${i},'скасовано')" style="margin-top:8px; padding:8px 10px; border-radius:10px; border:none;">❌ Скасовано</button>
+          <button onclick="setStatus('${d}',${i},'активне')" style="margin-top:8px; padding:8px 10px; border-radius:10px; border:none;">↩️ Активне</button>
+        </div>
+      `;
     });
   });
 
   box.innerHTML = html;
 }
+
+window.addOrder = addOrder;
+window.setStatus = setStatus;
 
 showOrders();
