@@ -1,6 +1,6 @@
-/*****************************
- *  ТЕМА
- *****************************/
+// ============================
+//      ТЕМА
+// ============================
 const themeSwitch = document.getElementById("themeSwitch");
 if (themeSwitch) {
   themeSwitch.onclick = () => {
@@ -10,132 +10,159 @@ if (themeSwitch) {
   };
 }
 
-/*****************************
- *  НАВІГАЦІЯ
- *****************************/
+// ============================
+//      НАВІГАЦІЯ
+// ============================
 document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.onclick = () => {
     const page = btn.dataset.page;
     if (!page) return;
 
-    document.querySelectorAll(".page").forEach(p =>
-      p.classList.remove("active-page")
-    );
-
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
     document.getElementById("page-" + page)?.classList.add("active-page");
 
-    document.querySelectorAll(".nav-btn").forEach(b =>
-      b.classList.remove("active")
-    );
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
   };
 });
 
-/*****************************
- *  СКЛАД
- *****************************/
-let warehouse = JSON.parse(localStorage.getItem("warehouse")) || {
-  feed: {},
-  trays: 0,
-  ready: 0,
-  reserved: 0,
-  history: []
-};
+// ============================
+//      КОРМ
+// ============================
+const feedComponents = [
+  ["Кукурудза", 10],
+  ["Пшениця", 5],
+  ["Ячмінь", 1.5],
+  ["Соева макуха", 3],
+  ["Соняшникова макуха", 2.5],
+  ["Рибне борошно", 1],
+  ["Дріжджі", 0.7],
+  ["Трикальційфосфат", 0.5],
+  ["Dolfos D", 0.7],
+  ["Сіль", 0.05]
+];
 
+// ============================
+//      СКЛАД
+// ============================
+let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
+if (!warehouse.ready) {
+  warehouse = { feed:{}, trays:0, ready:0, reserved:0, history:[] };
+}
 function saveWarehouse() {
   localStorage.setItem("warehouse", JSON.stringify(warehouse));
 }
 
-/*****************************
- *  ЯЙЦЯ (ГОЛОВНЕ)
- *****************************/
-let eggs = JSON.parse(localStorage.getItem("eggs")) || {};
-let eggBalance = Number(localStorage.getItem("eggBalance")) || 0;
+// ============================
+//      ЯЙЦЯ (ГОЛОВНА ЛОГІКА)
+// ============================
+let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
+
+function recalcEggs() {
+  const dates = Object.keys(eggs).sort();
+  let carry = 0;
+  let totalTrays = 0;
+
+  dates.forEach(d => {
+    const e = eggs[d];
+    const commercial = Math.max((e.good||0) - (e.bad||0) - (e.home||0), 0);
+    const sum = carry + commercial;
+    const trays = Math.floor(sum / 20);
+    const remainder = sum % 20;
+
+    e.commercial = commercial;
+    e.sum = sum;
+    e.trays = trays;
+    e.remainder = remainder;
+    e.carryIn = carry;
+
+    carry = remainder;
+    totalTrays += trays;
+  });
+
+  warehouse.ready = Math.max(totalTrays, warehouse.reserved);
+  saveWarehouse();
+}
 
 function saveEggRecord() {
-  const date = eggsDate.value || new Date().toISOString().slice(0, 10);
-  const good = Number(eggsGood.value) || 0;
-  const bad = Number(eggsBad.value) || 0;
-  const home = Number(eggsHome.value) || 0;
+  const date = eggsDate.value || new Date().toISOString().slice(0,10);
 
-  const commercialToday = Math.max(good - bad - home, 0);
-
-  // 🔥 головна математика
-  const totalEggs = eggBalance + commercialToday;
-  const newTrays = Math.floor(totalEggs / 20);
-  const newRemainder = totalEggs % 20;
-
-  // зберігаємо день
   eggs[date] = {
-    good,
-    bad,
-    home,
-    commercial: commercialToday,
-    fromPrev: eggBalance,
-    total: totalEggs,
-    trays: newTrays,
-    remainder: newRemainder
+    good: Number(eggsGood.value)||0,
+    bad: Number(eggsBad.value)||0,
+    home: Number(eggsHome.value)||0
   };
 
-  // 🔥 оновлюємо баланс
-  eggBalance = newRemainder;
-  localStorage.setItem("eggBalance", eggBalance);
-
-  // 🔥 додаємо лотки на склад
-  warehouse.ready += newTrays;
-  saveWarehouse();
-
   localStorage.setItem("eggs", JSON.stringify(eggs));
-
-  eggsInfo.innerHTML =
-    newTrays > 0
-      ? `📦 Вільних лотків: <b>${warehouse.ready}</b>, залишок <b>${eggBalance}</b> яєць`
-      : `🥚 ${totalEggs} яєць (до лотка бракує ${20 - totalEggs})`;
-
-  renderEggsReport();
-  renderWarehouseCounters();
+  recalcEggs();
+  renderEggs();
+  renderWarehouse();
 }
+window.saveEggRecord = saveEggRecord;
 
-/*****************************
- *  ЗВІТ ПО ЯЙЦЯХ
- *****************************/
-function renderEggsReport() {
-  eggsList.innerHTML = "";
+function editEgg(d) {
+  const e = eggs[d];
+  eggsDate.value = d;
+  eggsGood.value = e.good;
+  eggsBad.value = e.bad;
+  eggsHome.value = e.home;
+}
+window.editEgg = editEgg;
 
-  Object.keys(eggs)
-    .sort()
-    .reverse()
-    .forEach(d => {
-      const e = eggs[d];
-      eggsList.innerHTML += `
+function deleteEgg(d) {
+  delete eggs[d];
+  localStorage.setItem("eggs", JSON.stringify(eggs));
+  recalcEggs();
+  renderEggs();
+  renderWarehouse();
+}
+window.deleteEgg = deleteEgg;
+
+function clearEggsReport() {
+  eggs = {};
+  localStorage.removeItem("eggs");
+  warehouse.ready = warehouse.reserved;
+  saveWarehouse();
+  renderEggs();
+  renderWarehouse();
+}
+window.clearEggsReport = clearEggsReport;
+
+function renderEggs() {
+  const box = document.getElementById("eggsList");
+  if (!box) return;
+
+  const dates = Object.keys(eggs).sort().reverse();
+  if (!dates.length) {
+    box.innerHTML = "<i>Записів немає</i>";
+    return;
+  }
+
+  box.innerHTML = dates.map(d => {
+    const e = eggs[d];
+    return `
       <div class="egg-entry">
-        <b>${d}</b><br>
-        Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
-        Комерційні: ${e.commercial}<br>
-        Перенос: ${e.fromPrev} → Разом: ${e.total}<br>
-        Лотки: ${e.trays} | Залишок: ${e.remainder}
-      </div>`;
-    });
+        <b>${d}</b>
+        <button onclick="editEgg('${d}')">✏️</button>
+        <button onclick="deleteEgg('${d}')">🗑️</button><br>
+        Всього: ${e.good}, Брак: ${e.bad}, Для дому: ${e.home}<br>
+        Перенос: ${e.carryIn} → Разом: ${e.sum}<br>
+        Лотки: <b>${e.trays}</b>, Залишок: <b>${e.remainder}</b>
+      </div>
+    `;
+  }).join("");
 }
 
-/*****************************
- *  СКЛАД (ЛИШЕ ЛОТКИ)
- *****************************/
-function renderWarehouseCounters() {
-  document.getElementById("fullTrays").textContent = warehouse.ready;
-  document.getElementById("reservedTrays").textContent = warehouse.reserved;
-}
-
-/*****************************
- *  ЗАМОВЛЕННЯ
- *****************************/
-let orders = JSON.parse(localStorage.getItem("orders")) || {};
+// ============================
+//      ЗАМОВЛЕННЯ
+// ============================
+let orders = JSON.parse(localStorage.getItem("orders") || "{}");
 
 function addOrder() {
-  const d = orderDate.value || new Date().toISOString().slice(0, 10);
-  const trays = Number(orderTrays.value) || 0;
-
+  const d = orderDate.value || new Date().toISOString().slice(0,10);
+  const trays = Number(orderTrays.value)||0;
   if (!orders[d]) orders[d] = [];
+
   orders[d].push({
     name: orderName.value || "Без імені",
     trays,
@@ -146,59 +173,53 @@ function addOrder() {
   warehouse.reserved += trays;
   saveWarehouse();
   localStorage.setItem("orders", JSON.stringify(orders));
-
   showOrders();
-  renderWarehouseCounters();
+  renderWarehouse();
 }
+window.addOrder = addOrder;
 
-function setStatus(d, i, s) {
+function setStatus(d,i,s) {
   const o = orders[d][i];
-  if (!o) return;
-
   if (o.status === "активне") {
+    warehouse.reserved -= o.trays;
     if (s === "виконано") {
-      warehouse.reserved -= o.trays;
-      warehouse.ready -= o.trays;
-    }
-    if (s === "скасовано") {
-      warehouse.reserved -= o.trays;
+      warehouse.ready = Math.max(warehouse.ready - o.trays, warehouse.reserved);
     }
   }
-
   o.status = s;
   saveWarehouse();
   localStorage.setItem("orders", JSON.stringify(orders));
   showOrders();
-  renderWarehouseCounters();
+  renderWarehouse();
 }
+window.setStatus = setStatus;
 
 function showOrders() {
-  ordersList.innerHTML = `
-    <div>
-      <b>Вільні лотки:</b> ${warehouse.ready - warehouse.reserved}
-    </div>
-  `;
+  const box = document.getElementById("ordersList");
+  if (!box) return;
 
-  Object.keys(orders)
-    .sort()
-    .reverse()
-    .forEach(d => {
-      ordersList.innerHTML += `<h3>${d}</h3>`;
-      orders[d].forEach((o, i) => {
-        ordersList.innerHTML += `
+  const free = Math.max(warehouse.ready - warehouse.reserved,0);
+  let html = `<b>Вільні:</b> ${free} | <b>Замовлено:</b> ${warehouse.reserved}<br>`;
+
+  Object.keys(orders).sort().reverse().forEach(d=>{
+    html+=`<h3>${d}</h3>`;
+    orders[d].forEach((o,i)=>{
+      html+=`
         <div>
-          <b>${o.name}</b> — ${o.trays} (${o.status})<br>
-          ${o.details}<br>
+          ${o.name} — ${o.trays} (${o.status})<br>
           <button onclick="setStatus('${d}',${i},'виконано')">✅</button>
           <button onclick="setStatus('${d}',${i},'скасовано')">❌</button>
         </div>`;
-      });
     });
+  });
+
+  box.innerHTML = html;
 }
 
-/*****************************
- *  INIT
- *****************************/
-renderEggsReport();
-renderWarehouseCounters();
+// ============================
+//      СТАРТ
+// ============================
+recalcEggs();
+renderEggs();
 showOrders();
+renderWarehouse();
