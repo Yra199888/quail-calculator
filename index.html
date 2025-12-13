@@ -192,6 +192,10 @@ function clearAllEggs() {
   eggs = {};
   eggsCarry = { carry: 0, totalTrays: 0 };
 
+<button onclick="syncEggsToWarehouse()" class="main-btn">
+    🔄 Синхронізувати склад з яйцями
+</button>
+
   localStorage.setItem("eggs", JSON.stringify(eggs));
   localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
 
