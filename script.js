@@ -164,48 +164,65 @@ function renderWarehouse() {
 
 renderWarehouse();
 
-// ============================
-//      ЯЙЦЯ — 🔥 ПЕРЕНОС ЗАЛИШКУ
-// ============================
+/* =========================
+      ЯЙЦЯ — НАКОПИЧЕННЯ + РЕДАГУВАННЯ
+========================= */
+
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
 
-function saveEggRecord() {
-    const date = eggsDate.value || new Date().toISOString().slice(0, 10);
+// ініціалізація залишку
+if (warehouse.eggsRemainder === undefined) {
+    warehouse.eggsRemainder = 0;
+    saveWarehouse();
+}
+
+function saveEggRecord(editDate = null) {
+    const date = editDate || eggsDate.value || new Date().toISOString().slice(0, 10);
     const good = Number(eggsGood.value) || 0;
-    const bad = Number(eggsBad.value) || 0;
+    const bad  = Number(eggsBad.value) || 0;
     const home = Number(eggsHome.value) || 0;
 
-    const todayCommercial = Math.max(good - bad - home, 0);
+    const commercial = Math.max(good - bad - home, 0);
 
-    // 🔥 ДОДАЄМО ЗАЛИШОК З ПОПЕРЕДНІХ ДНІВ
-    const totalEggs = warehouse.eggsRemainder + todayCommercial;
-    const trays = Math.floor(totalEggs / 20);
-    const remainder = totalEggs % 20;
+    // ⛔ якщо редагуємо день — спочатку відкочуємо старі дані
+    if (eggs[date]) {
+        warehouse.eggsRemainder -= eggs[date].commercial;
+        if (warehouse.eggsRemainder < 0) warehouse.eggsRemainder = 0;
+    }
 
-    // зберігаємо день
+    // ➕ додаємо нові яйця
+    warehouse.eggsRemainder += commercial;
+
+    // 🧮 рахуємо лотки з накопичення
+    const newTrays = Math.floor(warehouse.eggsRemainder / 20);
+    warehouse.eggsRemainder = warehouse.eggsRemainder % 20;
+
+    warehouse.ready += newTrays;
+
     eggs[date] = {
         good,
         bad,
         home,
-        commercial: todayCommercial,
-        trays,
-        remainder
+        commercial,
+        trays: newTrays
     };
+
     localStorage.setItem("eggs", JSON.stringify(eggs));
-
-    // 🔥 ОНОВЛЮЄМО СКЛАД
-    warehouse.ready += trays;
-    warehouse.eggsRemainder = remainder;
     saveWarehouse();
-    renderWarehouse();
 
-    const info = document.getElementById("eggsInfo");
-    info.innerHTML =
-        trays > 0
-            ? `📦 Додано лотків: <b>${trays}</b>, залишок <b>${remainder}</b> яєць`
-            : `🥚 Залишок: <b>${remainder}</b> яєць`;
-
+    renderEggInfo();
     renderEggsReport();
+    renderWarehouse();
+}
+
+function renderEggInfo() {
+    const info = document.getElementById("eggsInfo");
+    if (!info) return;
+
+    info.innerHTML = `
+        🥚 Залишок яєць: <b>${warehouse.eggsRemainder}</b><br>
+        📦 Повних лотків на складі: <b>${warehouse.ready}</b>
+    `;
 }
 
 function renderEggsReport() {
@@ -220,12 +237,26 @@ function renderEggsReport() {
         <div class="egg-entry">
             <b>${d}</b><br>
             Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
-            Комерційні за день: ${e.commercial}<br>
-            Додано лотків: ${e.trays}
+            Комерційні: ${e.commercial}<br>
+            Нових лотків: ${e.trays}<br>
+            <button onclick="editEgg('${d}')">✏️ Редагувати</button>
         </div>`;
     });
 }
 
+function editEgg(date) {
+    const e = eggs[date];
+    if (!e) return;
+
+    eggsDate.value = date;
+    eggsGood.value = e.good;
+    eggsBad.value  = e.bad;
+    eggsHome.value = e.home;
+
+    document.querySelector(".egg-save").onclick = () => saveEggRecord(date);
+}
+
+renderEggInfo();
 renderEggsReport();
 
 // ============================
