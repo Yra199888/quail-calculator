@@ -114,6 +114,7 @@ if (!warehouse.feed) {
         trays: 0,
         ready: 0,
         reserved: 0,
+        eggsRemainder: 0,   // 🔥 ЗАЛИШОК ЯЄЦЬ
         history: []
     };
     saveWarehouse();
@@ -164,7 +165,7 @@ function renderWarehouse() {
 renderWarehouse();
 
 // ============================
-//      ЯЙЦЯ — ФІКС 100%
+//      ЯЙЦЯ — 🔥 ПЕРЕНОС ЗАЛИШКУ
 // ============================
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
 
@@ -174,22 +175,35 @@ function saveEggRecord() {
     const bad = Number(eggsBad.value) || 0;
     const home = Number(eggsHome.value) || 0;
 
-    const commercial = Math.max(good - bad - home, 0);
-    const trays = Math.floor(commercial / 20);
-    const remainder = commercial % 20;
+    const todayCommercial = Math.max(good - bad - home, 0);
 
-    eggs[date] = { good, bad, home, commercial, trays, remainder };
+    // 🔥 ДОДАЄМО ЗАЛИШОК З ПОПЕРЕДНІХ ДНІВ
+    const totalEggs = warehouse.eggsRemainder + todayCommercial;
+    const trays = Math.floor(totalEggs / 20);
+    const remainder = totalEggs % 20;
+
+    // зберігаємо день
+    eggs[date] = {
+        good,
+        bad,
+        home,
+        commercial: todayCommercial,
+        trays,
+        remainder
+    };
     localStorage.setItem("eggs", JSON.stringify(eggs));
 
-    // 👉 АВТОДОДАВАННЯ ЛОТКІВ НА СКЛАД
+    // 🔥 ОНОВЛЮЄМО СКЛАД
     warehouse.ready += trays;
+    warehouse.eggsRemainder = remainder;
     saveWarehouse();
     renderWarehouse();
 
     const info = document.getElementById("eggsInfo");
-    info.innerHTML = trays > 0
-        ? `📦 Повних лотків: <b>${trays}</b>, залишок <b>${remainder}</b> яєць`
-        : `🥚 ${commercial} яєць (до лотка бракує ${20 - commercial})`;
+    info.innerHTML =
+        trays > 0
+            ? `📦 Додано лотків: <b>${trays}</b>, залишок <b>${remainder}</b> яєць`
+            : `🥚 Залишок: <b>${remainder}</b> яєць`;
 
     renderEggsReport();
 }
@@ -206,8 +220,8 @@ function renderEggsReport() {
         <div class="egg-entry">
             <b>${d}</b><br>
             Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
-            Комерційні: ${e.commercial}<br>
-            Лотки: ${e.trays}
+            Комерційні за день: ${e.commercial}<br>
+            Додано лотків: ${e.trays}
         </div>`;
     });
 }
