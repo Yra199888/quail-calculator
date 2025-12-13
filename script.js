@@ -214,59 +214,73 @@ if (makeFeedBtn) {
 
 renderWarehouse();
 
-// ============================
-//      ЯЙЦЯ
-// ============================
+/* =========================
+      ЯЙЦЯ (СТАБІЛЬНО)
+========================= */
+
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
 
-function saveEggRecord(){
-    const d = eggsDate.value || new Date().toISOString().slice(0,10);
-    const good = +eggsGood.value || 0;
-    const bad = +eggsBad.value || 0;
-    const home = +eggsHome.value || 0;
+function saveEggRecord() {
+    const date =
+        document.getElementById("eggsDate").value ||
+        new Date().toISOString().slice(0, 10);
 
-    const commercial = good - bad - home;
+    const good = Number(document.getElementById("eggsGood").value) || 0;
+    const bad = Number(document.getElementById("eggsBad").value) || 0;
+    const home = Number(document.getElementById("eggsHome").value) || 0;
+
+    const commercial = Math.max(good - bad - home, 0);
     const trays = Math.floor(commercial / 20);
-    const left = commercial % 20;
+    const rest = commercial % 20;
 
-    eggs[d] = { good, bad, home, commercial, trays, left };
+    eggs[date] = { good, bad, home, commercial, trays, rest };
     localStorage.setItem("eggs", JSON.stringify(eggs));
 
-    // 🔥 АВТОМАТИЧНЕ ДОДАВАННЯ ПОВНИХ ЛОТКІВ
-    warehouse.ready = (warehouse.ready || 0) + trays;
-    saveWarehouse();
+    // 🔥 автоматично додаємо лотки на склад
+    if (window.warehouse) {
+        warehouse.ready = (warehouse.ready || 0) + trays;
+        saveWarehouse();
+        renderWarehouse();
+    }
 
-    // Інформація під кнопкою "Зберегти"
+    // інфо під кнопкою
     const info = document.getElementById("eggsInfo");
-    if (info) {
-        if (commercial < 20) {
-            info.innerHTML = `Зібрано ${commercial} яєць — до повного лотка не вистачає ${20 - commercial}`;
-        } else {
-            info.innerHTML = `Повних лотків: ${trays}, залишок: ${left} яєць`;
-        }
+    if (commercial < 20) {
+        info.innerHTML = `🥚 ${commercial} яєць (до лотка не вистачає ${20 - commercial})`;
+    } else {
+        info.innerHTML = `📦 ${trays} повних лотків + ${rest} яєць`;
     }
 
     showEggs();
-    renderWarehouse(); // оновлюємо склад
 }
 
+/* ===== ЩОДЕННИЙ ЗВІТ ===== */
 function showEggs() {
     const box = document.getElementById("eggsList");
     if (!box) return;
 
-    let out = "";
-    Object.keys(eggs).sort().reverse().forEach(d => {
-        const e = eggs[d];
-        out += `
-        <div class="egg-entry">
-            <b>${d}</b><br>
-            Всього: ${e.good}, брак: ${e.bad}, дім: ${e.home}<br>
-            Комерційні: ${e.com}, лотків: ${e.trays}, залишок: ${e.left}
-        </div>`;
-    });
-    box.innerHTML = out;
+    let html = "";
+    Object.keys(eggs)
+        .sort()
+        .reverse()
+        .forEach(d => {
+            const e = eggs[d];
+            html += `
+            <div class="egg-entry">
+                <b>${d}</b><br>
+                Всього: ${e.good}<br>
+                Брак: ${e.bad}<br>
+                Дім: ${e.home}<br>
+                Комерційні: ${e.commercial}<br>
+                Лотки: ${e.trays}<br>
+                Залишок: ${e.rest}
+            </div>`;
+        });
+
+    box.innerHTML = html || "<i>Немає записів</i>";
 }
 
+// показати одразу після завантаження
 showEggs();
 
 // ============================
