@@ -1,75 +1,192 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<title>Quail Farm Tools</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Quail Farm Tools PRO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<!-- ===== МЕНЮ ===== -->
+<!-- ===== ВЕРХНЄ МЕНЮ ===== -->
 <div class="topnav">
   <div class="nav-btn active" data-page="calculator">🧮</div>
   <div class="nav-btn" data-page="eggs">🥚</div>
+  <div class="nav-btn" data-page="orders">📦</div>
+  <div class="nav-btn" data-page="finance">💰</div>
 </div>
 
-<!-- ===== КАЛЬКУЛЯТОР ===== -->
+<!-- ===== НИЖНЄ МЕНЮ ===== -->
+<div class="subnav">
+  <div class="nav-btn" data-page="warehouse">🏚️</div>
+  <div class="nav-btn" data-page="tools">🔧</div>
+  <div class="nav-btn" data-page="settings">⚙️</div>
+  <div class="nav-btn theme-switch" id="themeSwitch">🌙</div>
+</div>
+
+<!-- ===== СТОРІНКИ ===== -->
+
+<!-- КАЛЬКУЛЯТОР -->
 <div id="page-calculator" class="page active-page">
   <h2>🧮 Калькулятор корму</h2>
+  <div class="container">
+    <table class="feed-table">
+      <tr>
+        <th>Компонент</th>
+        <th>К-сть</th>
+        <th>Ціна</th>
+        <th>Сума</th>
+      </tr>
+      <tbody id="feedTable"></tbody>
+    </table>
 
-  <table class="feed-table">
-    <tr>
-      <th>Компонент</th>
-      <th>К-сть</th>
-      <th>Ціна</th>
-      <th>Сума</th>
-    </tr>
-    <tbody id="feedTable"></tbody>
-  </table>
+    <label>Обʼєм корму (кг):</label>
+    <input type="number" id="feedVolume" value="25">
 
-  <label>Обʼєм корму (кг)</label>
-  <input id="feedVolume" type="number" value="25">
-
-  <p>Загальна сума: <b id="feedTotal">0</b></p>
-  <p>Ціна за кг: <b id="feedPerKg">0</b></p>
-  <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b></p>
+    <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
+    <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
+    <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
+  </div>
 </div>
 
-<!-- ===== ЯЙЦЯ ===== -->
+<!-- ЯЙЦЯ -->
 <div id="page-eggs" class="page">
   <h2>🥚 Облік яєць</h2>
 
   <div class="egg-form">
     <div class="egg-row">
-      <label>Дата</label>
+      <label>Дата:</label>
       <input id="eggsDate" type="date">
     </div>
 
     <div class="egg-row">
-      <label>Яєць за добу</label>
+      <label>Яєць за добу:</label>
       <input id="eggsGood" type="number">
     </div>
 
     <div class="egg-row">
-      <label>Браковані</label>
+      <label>Браковані:</label>
       <input id="eggsBad" type="number">
     </div>
 
     <div class="egg-row">
-      <label>Для дому</label>
+      <label>Для дому:</label>
       <input id="eggsHome" type="number">
     </div>
 
-    <button onclick="saveEggRecord()">💾 Зберегти</button>
-    <div id="eggsInfo"></div>
+    <button class="egg-save" onclick="saveEggRecord()">Зберегти</button>
+
+    <div id="eggsInfo" class="egg-info"></div>
   </div>
 
   <h3>Щоденний звіт</h3>
   <div id="eggsList"></div>
 
-  <!-- ❗ ОСЬ КНОПКА ❗ -->
-  <button onclick="clearAllEggs()">🗑️ Видалити весь звіт</button>
+  <button class="main-btn" onclick="clearAllEggs()">🗑️ Видалити весь звіт</button>
+</div>
+
+<!-- ЗАМОВЛЕННЯ -->
+<div id="page-orders" class="page">
+  <h2>📦 Замовлення</h2>
+
+  <div class="order-form">
+    <div class="order-row">
+      <label>Дата:</label>
+      <input id="orderDate" type="date">
+    </div>
+
+    <div class="order-row">
+      <label>Імʼя клієнта:</label>
+      <input id="orderName">
+    </div>
+
+    <div class="order-row">
+      <label>Лотків:</label>
+      <input id="orderTrays" type="number">
+    </div>
+
+    <div class="order-row">
+      <label>Деталі:</label>
+      <textarea id="orderDetails"></textarea>
+    </div>
+
+    <button class="order-save" onclick="addOrder()">Додати</button>
+  </div>
+
+  <h3>Список замовлень</h3>
+  <div id="ordersList"></div>
+</div>
+
+<!-- ФІНАНСИ -->
+<div id="page-finance" class="page">
+  <h2>💰 Фінанси</h2>
+  <div class="container">
+    <label>Ціна за лоток:</label>
+    <input id="trayPrice" type="number" value="50">
+
+    <button onclick="saveFinanceSettings()">Зберегти</button>
+
+    <h3>Звіт</h3>
+    <div id="financeReport"></div>
+
+    <button onclick="exportCSV()">Експорт CSV</button>
+  </div>
+</div>
+
+<!-- СКЛАД -->
+<div id="page-warehouse" class="page">
+  <h2>🏚️ Склад</h2>
+
+  <div class="container">
+    <h3>Таблиця складу</h3>
+    <table class="feed-table">
+      <tr>
+        <th>Компонент</th>
+        <th>Прихід (кг)</th>
+        <th>На 1 заміс (кг)</th>
+        <th>Залишок (кг)</th>
+      </tr>
+      <tbody id="warehouseTable"></tbody>
+    </table>
+
+    <button id="makeFeedBtn" class="main-btn">🔄 Зробити корм</button>
+
+    <h3>📘 Історія замісів</h3>
+    <div id="mixHistory"></div>
+
+    <h3>🗄️ Запаси лотків</h3>
+    <table class="feed-table">
+      <tr>
+        <th>Тип</th>
+        <th>Кількість (шт)</th>
+      </tr>
+      <tr>
+        <td>Порожні лотки (20шт)</td>
+        <td><input type="number" id="trayStock"></td>
+      </tr>
+    </table>
+
+    <h3>🥚 Лотки з яйцями</h3>
+    <p>Готові лотки: <b id="fullTrays">0</b></p>
+    <p>Заброньовані: <b id="reservedTrays">0</b></p>
+  </div>
+</div>
+
+<!-- ІНСТРУМЕНТИ -->
+<div id="page-tools" class="page">
+  <h2>🔧 Інструменти</h2>
+  <div class="container">
+    <p>Поки що порожньо (заготовка).</p>
+  </div>
+</div>
+
+<!-- НАЛАШТУВАННЯ -->
+<div id="page-settings" class="page">
+  <h2>⚙️ Налаштування</h2>
+  <div class="container">
+    <p>Тут буде меню конфігурації.</p>
+  </div>
 </div>
 
 <script src="script.js"></script>
