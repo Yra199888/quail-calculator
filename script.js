@@ -299,6 +299,11 @@ function deleteEgg(date) {
 window.deleteEgg = deleteEgg;
 
 function clearAllEggs() {
+  if (!eggsEditEnabled) {
+    alert("🔒 Увімкніть режим редагування яєць");
+    return;
+  }
+
   if (!confirm("Видалити ВЕСЬ щоденний звіт по яйцях?")) return;
 
   eggs = {};
@@ -307,14 +312,13 @@ function clearAllEggs() {
   localStorage.setItem("eggs", JSON.stringify(eggs));
   localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
 
-  // Після очистки треба перерахувати і зняти лотки (дельта стане від’ємною і відкоригує ready)
   recomputeEggsAccumulation();
   renderEggsReport();
 
-  const infoBox = document.getElementById("eggsInfo");
-  if (infoBox) infoBox.innerHTML = "";
+  document.getElementById("eggsInfo").innerHTML = "";
+
+  alert("✅ Звіт по яйцях очищено");
 }
-window.clearAllEggs = clearAllEggs;
 
 function renderEggsReport() {
   const list = document.getElementById("eggsList");
@@ -444,17 +448,28 @@ window.exportCSV = exportCSV;
 
 // Очистити ВСІ кормові компоненти
 function clearFeedComponents() {
+    if (!warehouseEditEnabled) {
+        alert("⛔ Редагування складу вимкнене");
+        return;
+    }
+
     if (!confirm("Очистити ВСІ кормові компоненти на складі?")) return;
 
     warehouse.feed = {};
     saveWarehouse();
     renderWarehouse();
+
+    alert("✅ Кормові компоненти успішно очищені");
 }
 window.clearFeedComponents = clearFeedComponents;
 
-
 // Очистити лотки з яйцями (готові + резерв)
 function clearEggTrays() {
+    if (!warehouseEditEnabled) {
+        alert("⛔ Редагування складу вимкнене");
+        return;
+    }
+
     if (!confirm("Очистити ВСІ лотки з яйцями?")) return;
 
     warehouse.ready = 0;
@@ -462,6 +477,22 @@ function clearEggTrays() {
 
     saveWarehouse();
     renderWarehouse();
-    showOrders(); // щоб одразу оновився стан у замовленнях
+    showOrders();
+
+    alert("✅ Лотки з яйцями успішно очищені");
 }
 window.clearEggTrays = clearEggTrays;
+let eggsEditEnabled = false;
+let warehouseEditEnabled = false;
+
+function toggleEggsEdit() {
+  eggsEditEnabled = !eggsEditEnabled;
+  document.getElementById("eggsEditState").textContent =
+    eggsEditEnabled ? "УВІМК" : "ВИМК";
+}
+
+function toggleWarehouseEdit() {
+  warehouseEditEnabled = !warehouseEditEnabled;
+  document.getElementById("warehouseEditState").textContent =
+    warehouseEditEnabled ? "УВІМК" : "ВИМК";
+}
