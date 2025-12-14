@@ -82,6 +82,10 @@
 
   <h3>Щоденний звіт</h3>
   <div id="eggsList"></div>
+  
+  <button class="main-btn" onclick="toggleEggsEdit()">
+  🔐 Режим редагування яєць: <span id="eggsEditState">ВИМК</span>
+</button>
 
   <button class="main-btn" onclick="clearAllEggs()">🗑️ Видалити весь звіт</button>
 </div>
@@ -167,6 +171,10 @@
       </tr>
     </table>
     
+    <button class="main-btn" onclick="toggleWarehouseEdit()">
+  🔐 Режим редагування складу: <span id="warehouseEditState">ВИМК</span>
+</button>
+    
     <div class="warehouse-actions">
     <button class="main-btn danger" onclick="clearFeedComponents()">
         🧹 Очистити компоненти
@@ -175,6 +183,7 @@
     <button class="main-btn danger" onclick="clearEggTrays()">
         🗑️ Очистити лотки з яйцями
     </button>
+    
 </div>
 
     <h3>🥚 Лотки з яйцями</h3>
