@@ -437,3 +437,31 @@ function saveFinanceSettings() { alert("Фінанси: ще в розробці
 function exportCSV() { alert("Експорт: ще в розробці 🙂"); }
 window.saveFinanceSettings = saveFinanceSettings;
 window.exportCSV = exportCSV;
+
+// ============================
+//   ОЧИСТКА СКЛАДУ
+// ============================
+
+// Очистити ВСІ кормові компоненти
+function clearFeedComponents() {
+    if (!confirm("Очистити ВСІ кормові компоненти на складі?")) return;
+
+    warehouse.feed = {};
+    saveWarehouse();
+    renderWarehouse();
+}
+window.clearFeedComponents = clearFeedComponents;
+
+
+// Очистити лотки з яйцями (готові + резерв)
+function clearEggTrays() {
+    if (!confirm("Очистити ВСІ лотки з яйцями?")) return;
+
+    warehouse.ready = 0;
+    warehouse.reserved = 0;
+
+    saveWarehouse();
+    renderWarehouse();
+    showOrders(); // щоб одразу оновився стан у замовленнях
+}
+window.clearEggTrays = clearEggTrays;
