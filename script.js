@@ -446,10 +446,14 @@ window.exportCSV = exportCSV;
 //   ОЧИСТКА СКЛАДУ
 // ============================
 
+
+let eggsEditEnabled = false;
+let warehouseEditEnabled = false;
+
 // Очистити ВСІ кормові компоненти
 function clearFeedComponents() {
     if (!warehouseEditEnabled) {
-        alert("⛔ Редагування складу вимкнене");
+        alert("⛔ Склад заблоковано. Спочатку розблокуй.");
         return;
     }
 
@@ -459,14 +463,16 @@ function clearFeedComponents() {
     saveWarehouse();
     renderWarehouse();
 
-    alert("✅ Кормові компоненти успішно очищені");
+    warehouseEditEnabled = false; // 🔒 авто-блок
+    alert("✅ Компоненти складу очищено та заблоковано.");
 }
 window.clearFeedComponents = clearFeedComponents;
 
 // Очистити лотки з яйцями (готові + резерв)
+
 function clearEggTrays() {
     if (!warehouseEditEnabled) {
-        alert("⛔ Редагування складу вимкнене");
+        alert("⛔ Склад заблоковано. Спочатку розблокуй.");
         return;
     }
 
@@ -479,20 +485,32 @@ function clearEggTrays() {
     renderWarehouse();
     showOrders();
 
-    alert("✅ Лотки з яйцями успішно очищені");
+    warehouseEditEnabled = false; // 🔒 авто-блок
+    alert("✅ Лотки з яйцями очищено та заблоковано.");
 }
 window.clearEggTrays = clearEggTrays;
-let eggsEditEnabled = false;
-let warehouseEditEnabled = false;
 
-function toggleEggsEdit() {
-  eggsEditEnabled = !eggsEditEnabled;
-  document.getElementById("eggsEditState").textContent =
-    eggsEditEnabled ? "УВІМК" : "ВИМК";
-}
+
 
 function toggleWarehouseEdit() {
-  warehouseEditEnabled = !warehouseEditEnabled;
-  document.getElementById("warehouseEditState").textContent =
-    warehouseEditEnabled ? "УВІМК" : "ВИМК";
+    warehouseEditEnabled = !warehouseEditEnabled;
+
+    alert(
+        warehouseEditEnabled
+            ? "🔓 Склад РОЗБЛОКОВАНО. Можна очищати."
+            : "🔒 Склад ЗАБЛОКОВАНО."
+    );
 }
+window.toggleWarehouseEdit = toggleWarehouseEdit;
+
+
+function toggleEggsEdit() {
+    eggsEditEnabled = !eggsEditEnabled;
+
+    alert(
+        eggsEditEnabled
+            ? "🔓 Яйця РОЗБЛОКОВАНО. Можна очищати."
+            : "🔒 Яйця ЗАБЛОКОВАНО."
+    );
+}
+window.toggleEggsEdit = toggleEggsEdit;
