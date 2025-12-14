@@ -446,14 +446,28 @@ window.exportCSV = exportCSV;
 //   ОЧИСТКА СКЛАДУ
 // ============================
 
+function toggleEggsEdit() {
+    eggsEditEnabled = !eggsEditEnabled;
+    alert(eggsEditEnabled 
+        ? "🔓 Редагування яєць УВІМКНЕНО" 
+        : "🔒 Редагування яєць ВИМКНЕНО");
+}
+window.toggleEggsEdit = toggleEggsEdit;
+
+function toggleWarehouseEdit() {
+    warehouseEditEnabled = !warehouseEditEnabled;
+    alert(warehouseEditEnabled 
+        ? "🔓 Редагування складу УВІМКНЕНО" 
+        : "🔒 Редагування складу ВИМКНЕНО");
+}
+window.toggleWarehouseEdit = toggleWarehouseEdit;
 
 let eggsEditEnabled = false;
 let warehouseEditEnabled = false;
 
-// Очистити ВСІ кормові компоненти
 function clearFeedComponents() {
     if (!warehouseEditEnabled) {
-        alert("⛔ Склад заблоковано. Спочатку розблокуй.");
+        alert("⛔ Спочатку увімкни редагування складу");
         return;
     }
 
@@ -463,16 +477,13 @@ function clearFeedComponents() {
     saveWarehouse();
     renderWarehouse();
 
-    warehouseEditEnabled = false; // 🔒 авто-блок
-    alert("✅ Компоненти складу очищено та заблоковано.");
+    alert("✅ Компоненти складу очищено");
 }
 window.clearFeedComponents = clearFeedComponents;
 
-// Очистити лотки з яйцями (готові + резерв)
-
 function clearEggTrays() {
-    if (!warehouseEditEnabled) {
-        alert("⛔ Склад заблоковано. Спочатку розблокуй.");
+    if (!eggsEditEnabled) {
+        alert("⛔ Спочатку увімкни редагування яєць");
         return;
     }
 
@@ -485,32 +496,6 @@ function clearEggTrays() {
     renderWarehouse();
     showOrders();
 
-    warehouseEditEnabled = false; // 🔒 авто-блок
-    alert("✅ Лотки з яйцями очищено та заблоковано.");
+    alert("✅ Лотки з яйцями очищено");
 }
 window.clearEggTrays = clearEggTrays;
-
-
-
-function toggleWarehouseEdit() {
-    warehouseEditEnabled = !warehouseEditEnabled;
-
-    alert(
-        warehouseEditEnabled
-            ? "🔓 Склад РОЗБЛОКОВАНО. Можна очищати."
-            : "🔒 Склад ЗАБЛОКОВАНО."
-    );
-}
-window.toggleWarehouseEdit = toggleWarehouseEdit;
-
-
-function toggleEggsEdit() {
-    eggsEditEnabled = !eggsEditEnabled;
-
-    alert(
-        eggsEditEnabled
-            ? "🔓 Яйця РОЗБЛОКОВАНО. Можна очищати."
-            : "🔒 Яйця ЗАБЛОКОВАНО."
-    );
-}
-window.toggleEggsEdit = toggleEggsEdit;
