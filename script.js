@@ -1,98 +1,152 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title>Ферма</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+// ============================
+//      ТЕМА
+// ============================
+const themeSwitch = document.getElementById("themeSwitch");
+if (themeSwitch) {
+    themeSwitch.onclick = () => {
+        document.body.classList.toggle("light");
+        themeSwitch.textContent =
+            document.body.classList.contains("light") ? "☀️" : "🌙";
+    };
+}
 
-<!-- НАВІГАЦІЯ -->
-<div class="topnav">
-    <button class="nav-btn active" data-page="eggs">🥚</button>
-    <button class="nav-btn" data-page="feed">🌾</button>
-    <button class="nav-btn" data-page="warehouse">📦</button>
-    <button id="themeSwitch">🌙</button>
-</div>
+// ============================
+//      НАВІГАЦІЯ
+// ============================
+document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.onclick = () => {
+        const page = btn.dataset.page;
+        if (!page) return;
 
-<!-- ===== ЯЙЦЯ ===== -->
-<div id="page-eggs" class="page active-page">
-    <h2>🥚 Облік яєць</h2>
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
+        document.getElementById("page-" + page)?.classList.add("active-page");
 
-    <div class="egg-form">
-        <div class="egg-row">
-            <label>Дата:</label>
-            <input id="eggsDate" type="date">
-        </div>
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+    };
+});
 
-        <div class="egg-row">
-            <label>Яєць за добу:</label>
-            <input id="eggsGood" type="number">
-        </div>
+// ============================
+//      КОРМ — НЕ ЛАМАЄМО
+// ============================
+const feedComponents = [
+    ["Кукурудза", 10],
+    ["Пшениця", 5],
+    ["Ячмінь", 1.5],
+    ["Соева макуха", 3],
+    ["Соняшникова макуха", 2.5],
+    ["Рибне борошно", 1],
+    ["Дріжджі", 0.7],
+    ["Трикальційфосфат", 0.5],
+    ["Dolfos D", 0.7],
+    ["Сіль", 0.05]
+];
 
-        <div class="egg-row">
-            <label>Браковані:</label>
-            <input id="eggsBad" type="number">
-        </div>
+function loadFeedTable() {
+    const tbody = document.getElementById("feedTable");
+    if (!tbody) return;
 
-        <div class="egg-row">
-            <label>Для дому:</label>
-            <input id="eggsHome" type="number">
-        </div>
-
-        <button class="egg-save" onclick="saveEggRecord()">Зберегти</button>
-        <div id="eggsInfo"></div>
-    </div>
-
-    <h3>Щоденний звіт</h3>
-    <div id="eggsList"></div>
-
-    <button onclick="clearAllEggs()">🗑️ Видалити весь звіт</button>
-</div>
-
-<!-- ===== КАЛЬКУЛЯТОР КОРМУ ===== -->
-<div id="page-feed" class="page">
-    <h2>🌾 Калькулятор корму</h2>
-
-    <table class="feed-table">
-        <thead>
+    tbody.innerHTML = feedComponents.map((c, i) => `
         <tr>
-            <th>Компонент</th>
-            <th>К-сть</th>
-            <th>Ціна</th>
-            <th>Сума</th>
+            <td>${c[0]}</td>
+            <td><input class="qty" data-i="${i}" type="number" value="${localStorage.getItem("qty_"+i) ?? c[1]}"></td>
+            <td><input class="price" data-i="${i}" type="number" value="${localStorage.getItem("price_"+i) ?? 0}"></td>
+            <td id="sum_${i}">0</td>
         </tr>
-        </thead>
-        <tbody id="feedTable"></tbody>
-    </table>
+    `).join("");
 
-    <input id="feedVolume" type="number" placeholder="К-сть кг">
-    <p>Разом: <span id="feedTotal">0</span></p>
-    <p>Ціна/кг: <span id="feedPerKg">0</span></p>
-    <p>На обʼєм: <span id="feedVolumeTotal">0</span></p>
-</div>
+    document.querySelectorAll(".qty,.price,#feedVolume")
+        .forEach(el => el.oninput = calculateFeed);
 
-<!-- ===== СКЛАД ===== -->
-<div id="page-warehouse" class="page">
-    <h2>📦 Склад</h2>
+    calculateFeed();
+}
 
-    <table class="feed-table">
-        <thead>
-        <tr>
-            <th>Компонент</th>
-            <th>Прихід</th>
-            <th>На заміс</th>
-            <th>Залишок</th>
-        </tr>
-        </thead>
-        <tbody id="warehouseTable"></tbody>
-    </table>
+function calculateFeed() {
+    let total = 0, totalKg = 0;
 
-    <p>Готові лотки: <b id="fullTrays">0</b></p>
-    <p>Заброньовані: <b id="reservedTrays">0</b></p>
-</div>
+    feedComponents.forEach((_, i) => {
+        const qty = Number(document.querySelector(`.qty[data-i="${i}"]`)?.value) || 0;
+        const price = Number(document.querySelector(`.price[data-i="${i}"]`)?.value) || 0;
 
-<script src="script.js"></script>
-</body>
-</html>
+        localStorage.setItem("qty_"+i, qty);
+        localStorage.setItem("price_"+i, price);
+
+        const sum = qty * price;
+        total += sum;
+        totalKg += qty;
+
+        document.getElementById("sum_"+i).textContent = sum.toFixed(2);
+    });
+
+    const perKg = totalKg ? total / totalKg : 0;
+    const vol = Number(document.getElementById("feedVolume")?.value) || 0;
+
+    feedTotal.textContent = total.toFixed(2);
+    feedPerKg.textContent = perKg.toFixed(2);
+    feedVolumeTotal.textContent = (perKg * vol).toFixed(2);
+}
+
+loadFeedTable();
+
+// ============================
+//      ЯЙЦЯ — ПРАВИЛЬНО
+// ============================
+let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
+
+function recomputeEggs() {
+    let carry = 0;
+
+    Object.keys(eggs).sort().forEach(d => {
+        const e = eggs[d];
+        const commercial = Math.max(e.good - e.bad - e.home, 0);
+        const sum = carry + commercial;
+
+        e.sum = sum;
+        e.trays = Math.floor(sum / 20);
+        e.remainder = sum % 20;
+
+        carry = e.remainder;
+    });
+
+    localStorage.setItem("eggs", JSON.stringify(eggs));
+}
+
+function saveEggRecord() {
+    const date = eggsDate.value || new Date().toISOString().slice(0,10);
+
+    eggs[date] = {
+        good: Number(eggsGood.value) || 0,
+        bad: Number(eggsBad.value) || 0,
+        home: Number(eggsHome.value) || 0
+    };
+
+    recomputeEggs();
+    renderEggs();
+}
+window.saveEggRecord = saveEggRecord;
+
+function renderEggs() {
+    const box = document.getElementById("eggsList");
+    if (!box) return;
+
+    box.innerHTML = Object.keys(eggs).sort().reverse().map(d => {
+        const e = eggs[d];
+        return `
+            <div class="egg-entry">
+                <b>${d}</b><br>
+                Яєць: ${e.good} | Брак: ${e.bad} | Дім: ${e.home}<br>
+                Лотки: ${e.trays} | Залишок: ${e.remainder}
+            </div>
+        `;
+    }).join("");
+}
+
+function clearAllEggs() {
+    if (!confirm("Видалити ВЕСЬ звіт?")) return;
+    eggs = {};
+    localStorage.removeItem("eggs");
+    renderEggs();
+}
+window.clearAllEggs = clearAllEggs;
+
+renderEggs();
