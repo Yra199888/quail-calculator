@@ -1,212 +1,77 @@
-// ============================
-//      ТЕМА (ніч / день)
-// ============================
-const themeSwitch = document.getElementById("themeSwitch");
-if (themeSwitch) {
-  themeSwitch.addEventListener("click", () => {
-    document.body.classList.toggle("light");
-    themeSwitch.textContent = document.body.classList.contains("light") ? "☀️" : "🌙";
-  });
-}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Quail Farm Tools</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-// ============================
-//      НАВІГАЦІЯ
-// ============================
-document.querySelectorAll(".nav-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const page = btn.dataset.page;
-    if (!page) return;
+<!-- ===== МЕНЮ ===== -->
+<div class="topnav">
+  <div class="nav-btn active" data-page="calculator">🧮</div>
+  <div class="nav-btn" data-page="eggs">🥚</div>
+</div>
 
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("active-page"));
-    const target = document.getElementById("page-" + page);
-    if (target) target.classList.add("active-page");
+<!-- ===== КАЛЬКУЛЯТОР ===== -->
+<div id="page-calculator" class="page active-page">
+  <h2>🧮 Калькулятор корму</h2>
 
-    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-  });
-});
+  <table class="feed-table">
+    <tr>
+      <th>Компонент</th>
+      <th>К-сть</th>
+      <th>Ціна</th>
+      <th>Сума</th>
+    </tr>
+    <tbody id="feedTable"></tbody>
+  </table>
 
-// ============================
-//      КОМПОНЕНТИ КОРМУ
-// ============================
-const feedComponents = [
-  ["Кукурудза", 10],
-  ["Пшениця", 5],
-  ["Ячмінь", 1.5],
-  ["Соева макуха", 3],
-  ["Соняшникова макуха", 2.5],
-  ["Рибне борошно", 1],
-  ["Дріжджі", 0.7],
-  ["Трикальційфосфат", 0.5],
-  ["Dolfos D", 0.7],
-  ["Сіль", 0.05]
-];
+  <label>Обʼєм корму (кг)</label>
+  <input id="feedVolume" type="number" value="25">
 
-// ============================
-//      КАЛЬКУЛЯТОР КОРМУ (НЕ ЧІПАЮ)
-// ============================
-function loadFeedTable() {
-  const tbody = document.getElementById("feedTable");
-  if (!tbody) return;
+  <p>Загальна сума: <b id="feedTotal">0</b></p>
+  <p>Ціна за кг: <b id="feedPerKg">0</b></p>
+  <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b></p>
+</div>
 
-  let html = "";
-  feedComponents.forEach((item, i) => {
-    const price = localStorage.getItem("price_" + i) || 0;
-    const qty = localStorage.getItem("qty_" + i) ?? item[1];
+<!-- ===== ЯЙЦЯ ===== -->
+<div id="page-eggs" class="page">
+  <h2>🥚 Облік яєць</h2>
 
-    html += `
-      <tr>
-        <td>${item[0]}</td>
-        <td><input class="qty" data-i="${i}" type="number" value="${qty}"></td>
-        <td><input class="price" data-i="${i}" type="number" value="${price}"></td>
-        <td id="sum_${i}">0</td>
-      </tr>`;
-  });
+  <div class="egg-form">
+    <div class="egg-row">
+      <label>Дата</label>
+      <input id="eggsDate" type="date">
+    </div>
 
-  tbody.innerHTML = html;
-  calculateFeed();
+    <div class="egg-row">
+      <label>Яєць за добу</label>
+      <input id="eggsGood" type="number">
+    </div>
 
-  document.querySelectorAll(".qty, .price, #feedVolume")
-    .forEach(el => el.addEventListener("input", calculateFeed));
-}
+    <div class="egg-row">
+      <label>Браковані</label>
+      <input id="eggsBad" type="number">
+    </div>
 
-function calculateFeed() {
-  let total = 0;
-  let totalKg = 0;
+    <div class="egg-row">
+      <label>Для дому</label>
+      <input id="eggsHome" type="number">
+    </div>
 
-  feedComponents.forEach((item, i) => {
-    const qty = Number(document.querySelector(`.qty[data-i="${i}"]`)?.value) || 0;
-    const price = Number(document.querySelector(`.price[data-i="${i}"]`)?.value) || 0;
+    <button onclick="saveEggRecord()">💾 Зберегти</button>
+    <div id="eggsInfo"></div>
+  </div>
 
-    localStorage.setItem("qty_" + i, qty);
-    localStorage.setItem("price_" + i, price);
+  <h3>Щоденний звіт</h3>
+  <div id="eggsList"></div>
 
-    const sum = qty * price;
-    total += sum;
-    totalKg += qty;
-
-    const sumCell = document.getElementById("sum_" + i);
-    if (sumCell) sumCell.textContent = sum.toFixed(2);
-  });
-
-  const perKg = totalKg ? total / totalKg : 0;
-  const volume = Number(document.getElementById("feedVolume")?.value) || 0;
-
-  document.getElementById("feedTotal").textContent = total.toFixed(2);
-  document.getElementById("feedPerKg").textContent = perKg.toFixed(2);
-  document.getElementById("feedVolumeTotal").textContent = (perKg * volume).toFixed(2);
-}
-
-loadFeedTable();
-
-// ============================
-//      ЯЙЦЯ — НАКОПИЧЕННЯ
-// ============================
-let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
-let eggsCarry = JSON.parse(localStorage.getItem("eggsCarry") || "{}");
-
-if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;
-if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0;
-
-function sortDatesAsc(dates) {
-  return dates.slice().sort((a, b) => a.localeCompare(b));
-}
-
-function recomputeEggsAccumulation() {
-  const dates = sortDatesAsc(Object.keys(eggs));
-  let carry = 0;
-  let totalTrays = 0;
-
-  dates.forEach(d => {
-    const e = eggs[d];
-    const commercial = Math.max((e.good || 0) - (e.bad || 0) - (e.home || 0), 0);
-
-    const sum = carry + commercial;
-    const trays = Math.floor(sum / 20);
-    const remainder = sum % 20;
-
-    e.commercial = commercial;
-    e.trays = trays;
-    e.remainder = remainder;
-    e.carryIn = carry;
-    e.sum = sum;
-
-    totalTrays += trays;
-    carry = remainder;
-  });
-
-  eggsCarry.carry = carry;
-  eggsCarry.totalTrays = totalTrays;
-
-  localStorage.setItem("eggs", JSON.stringify(eggs));
-  localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
-}
-
-function saveEggRecord() {
-  const date = eggsDate.value || new Date().toISOString().slice(0, 10);
-
-  eggs[date] = {
-    good: Number(eggsGood.value) || 0,
-    bad: Number(eggsBad.value) || 0,
-    home: Number(eggsHome.value) || 0
-  };
-
-  recomputeEggsAccumulation();
-
-  const e = eggs[date];
-  eggsInfo.innerHTML =
-    e.sum < 20
-      ? `🥚 ${e.sum} яєць (до лотка бракує ${20 - e.sum})`
-      : `📦 ${e.trays} лотків, залишок ${e.remainder}`;
-
-  renderEggsReport();
-}
-
-window.saveEggRecord = saveEggRecord;
-
-function renderEggsReport() {
-  const list = document.getElementById("eggsList");
-  if (!list) return;
-
-  const dates = Object.keys(eggs).sort().reverse();
-  if (!dates.length) {
-    list.innerHTML = "<i>Записів немає</i>";
-    return;
-  }
-
-  list.innerHTML = dates.map(d => {
-    const e = eggs[d];
-    return `
-      <div class="egg-entry">
-        <b>${d}</b><br>
-        Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
-        Разом: ${e.sum} → Лотки: ${e.trays}, залишок: ${e.remainder}
-      </div>`;
-  }).join("");
-}
-
-// 🗑️ ОЧИСТКА ВСЬОГО ЗВІТУ — ОЦЕ ГОЛОВНЕ
-function clearAllEggs() {
-  if (!confirm("Видалити ВЕСЬ щоденний звіт по яйцях?")) return;
-
-  eggs = {};
-  eggsCarry = { carry: 0, totalTrays: 0 };
-
-<button onclick="syncEggsToWarehouse()" class="main-btn">
-    🔄 Синхронізувати склад з яйцями
-</button>
-
-  localStorage.setItem("eggs", JSON.stringify(eggs));
-  localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
-
-  renderEggsReport();
-  document.getElementById("eggsInfo").innerHTML = "";
-}
-
-window.clearAllEggs = clearAllEggs;
-
-// старт
-recomputeEggsAccumulation();
-renderEggsReport();
+  <!-- ❗ ОСЬ КНОПКА ❗ -->
+  <button onclick="clearAllEggs()">🗑️ Видалити весь звіт</button>
+</div>
 
 <script src="script.js"></script>
+</body>
+</html>
