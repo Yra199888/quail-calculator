@@ -1,9 +1,8 @@
 // ============================
-//   ГЛОБАЛЬНІ ПЕРЕМИКАЧІ ДОСТУПУ
+//      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ
 // ============================
 let eggsEditEnabled = false;
 let warehouseEditEnabled = false;
-
 
 // ============================
 //      ТЕМА (ніч / день)
@@ -17,7 +16,6 @@ if (themeSwitch) {
   };
 }
 
-
 // ============================
 //      НАВІГАЦІЯ
 // ============================
@@ -26,19 +24,17 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
     const page = btn.dataset.page;
     if (!page) return;
 
-    document.querySelectorAll(".page")
-      .forEach(p => p.classList.remove("active-page"));
+    document.querySelectorAll(".page").forEach(p =>
+      p.classList.remove("active-page")
+    );
+    document.getElementById("page-" + page)?.classList.add("active-page");
 
-    document.getElementById("page-" + page)
-      ?.classList.add("active-page");
-
-    document.querySelectorAll(".nav-btn")
-      .forEach(b => b.classList.remove("active"));
-
+    document.querySelectorAll(".nav-btn").forEach(b =>
+      b.classList.remove("active")
+    );
     btn.classList.add("active");
   };
 });
-
 
 // ============================
 //      КОМПОНЕНТИ КОРМУ
@@ -55,7 +51,6 @@ const feedComponents = [
   ["Dolfos D", 0.7],
   ["Сіль", 0.05]
 ];
-
 
 // ============================
 //      КАЛЬКУЛЯТОР КОРМУ
@@ -103,26 +98,17 @@ function calculateFeed() {
 
   document.getElementById("feedTotal").textContent = total.toFixed(2);
   document.getElementById("feedPerKg").textContent = perKg.toFixed(2);
-  document.getElementById("feedVolumeTotal").textContent =
-    (perKg * vol).toFixed(2);
+  document.getElementById("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
 }
 
 loadFeedTable();
-
 
 // ============================
 //      СКЛАД
 // ============================
 let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
-
 if (!warehouse.feed) {
-  warehouse = {
-    feed: {},
-    trays: 0,
-    ready: 0,
-    reserved: 0,
-    history: []
-  };
+  warehouse = { feed:{}, trays:0, ready:0, reserved:0, history:[] };
   saveWarehouse();
 }
 
@@ -136,41 +122,34 @@ function renderWarehouse() {
 
   tbody.innerHTML = feedComponents.map(item => {
     const name = item[0];
-    const need = item[1];
-    const stock = warehouse.feed[name] || 0;
-
     return `
       <tr>
         <td>${name}</td>
         <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
-        <td>${need}</td>
-        <td>${stock.toFixed(2)}</td>
-      </tr>
-    `;
+        <td>${item[1]}</td>
+        <td>${(warehouse.feed[name]||0).toFixed(2)}</td>
+      </tr>`;
   }).join("");
 
   document.querySelectorAll(".addStock").forEach(inp => {
     inp.onchange = e => {
-      const name = e.target.dataset.name;
-      const val = Number(e.target.value) || 0;
-      if (val > 0) {
-        warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
-        saveWarehouse();
-        renderWarehouse();
+      const n = e.target.dataset.name;
+      const v = Number(e.target.value)||0;
+      if (v>0) {
+        warehouse.feed[n]=(warehouse.feed[n]||0)+v;
+        saveWarehouse(); renderWarehouse();
       }
     };
   });
 
-  document.getElementById("trayStock").value = warehouse.trays;
-  document.getElementById("fullTrays").textContent = warehouse.ready;
-  document.getElementById("reservedTrays").textContent = warehouse.reserved;
+  document.getElementById("trayStock").value = warehouse.trays||0;
+  document.getElementById("fullTrays").textContent = warehouse.ready||0;
+  document.getElementById("reservedTrays").textContent = warehouse.reserved||0;
 }
-
 renderWarehouse();
 
-
 // ============================
-//   TOGGLE ДОСТУПУ (ОЦЕ ТЕ, ЩО ТИ ХОТІВ)
+//      TOGGLE
 // ============================
 function toggleEggsEdit() {
   eggsEditEnabled = !eggsEditEnabled;
@@ -188,41 +167,30 @@ function toggleWarehouseEdit() {
 }
 window.toggleWarehouseEdit = toggleWarehouseEdit;
 
-
 // ============================
-//   ОЧИСТКА СКЛАДУ
+//      ОЧИСТКА
 // ============================
 function clearFeedComponents() {
   if (!warehouseEditEnabled) {
     alert("⛔ Спочатку увімкни редагування складу");
     return;
   }
-
-  if (!confirm("Очистити ВСІ кормові компоненти?")) return;
-
+  if (!confirm("Очистити ВСІ компоненти?")) return;
   warehouse.feed = {};
-  saveWarehouse();
-  renderWarehouse();
-
-  alert("✅ Компоненти складу очищено");
+  saveWarehouse(); renderWarehouse();
+  alert("✅ Компоненти очищено");
 }
 window.clearFeedComponents = clearFeedComponents;
-
 
 function clearEggTrays() {
   if (!eggsEditEnabled) {
     alert("⛔ Спочатку увімкни редагування яєць");
     return;
   }
-
-  if (!confirm("Очистити ВСІ лотки з яйцями?")) return;
-
+  if (!confirm("Очистити ВСІ лотки?")) return;
   warehouse.ready = 0;
   warehouse.reserved = 0;
-
-  saveWarehouse();
-  renderWarehouse();
-
-  alert("✅ Лотки з яйцями очищено");
+  saveWarehouse(); renderWarehouse();
+  alert("✅ Лотки очищено");
 }
 window.clearEggTrays = clearEggTrays;
