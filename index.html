@@ -200,15 +200,14 @@
 
   <div class="container">
 
-    <!-- ===== НАЛАШТУВАННЯ СКЛАДУ ===== -->
     <h3>📦 Налаштування складу</h3>
 
     <p class="hint">
       ⚠️ Вкажи мінімальні значення запасів.  
-      Якщо фактичний залишок стане меншим — система покаже попередження.
+      Якщо фактичний залишок стане меншим — буде показано попередження.
     </p>
 
-    <!-- ===== КОРМОВІ КОМПОНЕНТИ ===== -->
+    <!-- КОРМОВІ КОМПОНЕНТИ -->
     <h4>🌾 Кормові компоненти (кг)</h4>
 
     <table class="feed-table">
@@ -217,61 +216,30 @@
         <th>Мінімум (кг)</th>
       </tr>
 
-      <tr>
-        <td>Кукурудза</td>
-        <td><input type="number" id="minFeed_Кукурудза" value="0"></td>
-      </tr>
-      <tr>
-        <td>Пшениця</td>
-        <td><input type="number" id="minFeed_Пшениця" value="0"></td>
-      </tr>
-      <tr>
-        <td>Ячмінь</td>
-        <td><input type="number" id="minFeed_Ячмінь" value="0"></td>
-      </tr>
-      <tr>
-        <td>Соева макуха</td>
-        <td><input type="number" id="minFeed_Соева_макуха" value="0"></td>
-      </tr>
-      <tr>
-        <td>Соняшникова макуха</td>
-        <td><input type="number" id="minFeed_Соняшникова_макуха" value="0"></td>
-      </tr>
-      <tr>
-        <td>Рибне борошно</td>
-        <td><input type="number" id="minFeed_Рибне_борошно" value="0"></td>
-      </tr>
-      <tr>
-        <td>Дріжджі</td>
-        <td><input type="number" id="minFeed_Дріжджі" value="0"></td>
-      </tr>
-      <tr>
-        <td>Трикальційфосфат</td>
-        <td><input type="number" id="minFeed_Трикальційфосфат" value="0"></td>
-      </tr>
-      <tr>
-        <td>Dolfos D</td>
-        <td><input type="number" id="minFeed_DolfosD" value="0"></td>
-      </tr>
-      <tr>
-        <td>Сіль</td>
-        <td><input type="number" id="minFeed_Сіль" value="0"></td>
-      </tr>
+      <tr><td>Кукурудза</td><td><input type="number" id="minFeed_Кукурудза"></td></tr>
+      <tr><td>Пшениця</td><td><input type="number" id="minFeed_Пшениця"></td></tr>
+      <tr><td>Ячмінь</td><td><input type="number" id="minFeed_Ячмінь"></td></tr>
+      <tr><td>Соева макуха</td><td><input type="number" id="minFeed_Соева_макуха"></td></tr>
+      <tr><td>Соняшникова макуха</td><td><input type="number" id="minFeed_Соняшникова_макуха"></td></tr>
+      <tr><td>Рибне борошно</td><td><input type="number" id="minFeed_Рибне_борошно"></td></tr>
+      <tr><td>Дріжджі</td><td><input type="number" id="minFeed_Дріжджі"></td></tr>
+      <tr><td>Трикальційфосфат</td><td><input type="number" id="minFeed_Трикальційфосфат"></td></tr>
+      <tr><td>Dolfos D</td><td><input type="number" id="minFeed_DolfosD"></td></tr>
+      <tr><td>Сіль</td><td><input type="number" id="minFeed_Сіль"></td></tr>
     </table>
 
-    <!-- ===== ПОРОЖНІ ЛОТКИ ===== -->
+    <!-- ПОРОЖНІ ЛОТКИ -->
     <h4>🗄️ Порожні лотки</h4>
 
     <label>
       Мінімум порожніх лотків (шт):
-      <input type="number" id="minEmptyTrays" value="0">
+      <input type="number" id="minEmptyTrays">
     </label>
 
     <br><br>
 
-    <!-- КНОПКА (поки без логіки) -->
     <button class="main-btn" onclick="saveWarehouseSettings()">
-  💾 Зберегти налаштування
+      💾 Зберегти налаштування
     </button>
 
   </div>
