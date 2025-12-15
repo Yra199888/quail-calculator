@@ -572,13 +572,11 @@ window.clearEggTrays = clearEggTrays;
 
 
 // ============================
-//   НАЛАШТУВАННЯ СКЛАДУ — ПРОСТО І НАДІЙНО
+//  НАЛАШТУВАННЯ СКЛАДУ — ЗБЕРЕЖЕННЯ (ПРОСТО І НАДІЙНО)
 // ============================
 
-const WAREHOUSE_SETTINGS_KEY = "warehouseSettings";
-
-// список ВСІХ інпутів у вкладці Налаштування
-const warehouseSettingFields = [
+// список інпутів з index.html
+const warehouseSettingsFields = [
   "min_kukurudza",
   "min_pshenytsia",
   "min_yachmin",
@@ -592,48 +590,35 @@ const warehouseSettingFields = [
   "min_empty_trays"
 ];
 
-// ===== ЗБЕРЕГТИ =====
+// ЗБЕРЕГТИ
 function saveWarehouseSettings() {
-  const data = {};
-
-  for (const id of warehouseSettingFields) {
-    const el = document.getElementById(id);
-
-    if (!el) {
-      alert(`❌ Не знайдено поле: ${id}`);
-      return;
-    }
-
-    data[id] = Number(el.value) || 0;
-  }
-
   try {
-    localStorage.setItem(WAREHOUSE_SETTINGS_KEY, JSON.stringify(data));
+    warehouseSettingsFields.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) {
+        throw new Error("Не знайдено поле: " + id);
+      }
+      localStorage.setItem(id, el.value || "0");
+    });
+
     alert("✅ Дані успішно збережено");
-  } catch (e) {
+  } catch (err) {
+    console.error(err);
     alert("❌ Не вдалося зберегти дані");
-    console.error(e);
   }
 }
-
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ===== ЗАВАНТАЖИТИ ПРИ СТАРТІ =====
+// ЗАВАНТАЖИТИ ПРИ СТАРТІ
 function loadWarehouseSettings() {
-  let data = {};
-
-  try {
-    data = JSON.parse(localStorage.getItem(WAREHOUSE_SETTINGS_KEY)) || {};
-  } catch {
-    data = {};
-  }
-
-  for (const id of warehouseSettingFields) {
+  warehouseSettingsFields.forEach(id => {
     const el = document.getElementById(id);
-    if (el && data[id] !== undefined) {
-      el.value = data[id];
+    if (!el) return;
+    const saved = localStorage.getItem(id);
+    if (saved !== null) {
+      el.value = saved;
     }
-  }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
