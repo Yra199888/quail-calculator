@@ -585,64 +585,80 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
+function feedKey(name) {
+  return name.replace(/\s+/g, "_").toUpperCase();
+}
+
 // ============================
 //  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
 // ============================
 
-// зчитування або створення
 let warehouseMinimums = JSON.parse(
   localStorage.getItem("warehouseMinimums") || "{}"
 );
 
-// зберегти мінімум
-function saveWarehouseMinimum(component, value) {
-  warehouseMinimums[component] = Number(value) || 0;
+function saveWarehouseMinimum(key, value) {
+  warehouseMinimums[key] = Number(value) || 0;
   localStorage.setItem(
     "warehouseMinimums",
     JSON.stringify(warehouseMinimums)
   );
 }
 
-// отримати мінімум
-function getWarehouseMinimum(component) {
-  return Number(warehouseMinimums[component]) || 0;
+function getWarehouseMinimum(key) {
+  return Number(warehouseMinimums[key]) || 0;
 }
 
 // ============================
-//  ЗБЕРЕГТИ НАЛАШТУВАННЯ СКЛАДУ
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
 // ============================
+
+let warehouseMinimums = JSON.parse(
+  localStorage.getItem("warehouseMinimums") || "{}"
+);
+
+function saveWarehouseMinimum(key, value) {
+  warehouseMinimums[key] = Number(value) || 0;
+  localStorage.setItem(
+    "warehouseMinimums",
+    JSON.stringify(warehouseMinimums)
+  );
+}
+
+function getWarehouseMinimum(key) {
+  return Number(warehouseMinimums[key]) || 0;
+}
+
 function saveWarehouseSettings() {
 
-  // кормові компоненти
   feedComponents.forEach(item => {
     const name = item[0];
-    const input = document.getElementById("minFeed_" + name);
+    const key = feedKey(name);
+    const input = document.getElementById("minFeed_" + key);
+
     if (input) {
-      saveWarehouseMinimum(name, input.value);
+      saveWarehouseMinimum(key, input.value);
     }
   });
 
-  // порожні лотки
   const emptyTraysInput = document.getElementById("minEmptyTrays");
   if (emptyTraysInput) {
     saveWarehouseMinimum("EMPTY_TRAYS", emptyTraysInput.value);
   }
 
-  alert("✅ Мінімальні залишки збережено");
+  alert("✅ Мінімальні залишки складу збережено");
 }
-
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ============================
-//  ЗАВАНТАЖЕННЯ НАЛАШТУВАНЬ У UI
-// ============================
 function loadWarehouseSettingsUI() {
 
   feedComponents.forEach(item => {
     const name = item[0];
-    const input = document.getElementById("minFeed_" + name);
+    const key = feedKey(name);
+    const input = document.getElementById("minFeed_" + key);
+
     if (input) {
-      input.value = getWarehouseMinimum(name);
+      input.value = getWarehouseMinimum(key);
     }
   });
 
@@ -652,8 +668,9 @@ function loadWarehouseSettingsUI() {
   }
 }
 
-// виклик при старті
+// ВИКЛИК ПРИ СТАРТІ
 loadWarehouseSettingsUI();
+
 
 // ============================
 //      СТАРТ UI
