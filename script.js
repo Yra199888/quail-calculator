@@ -667,7 +667,6 @@ function loadWarehouseSettingsUI() {
 // Виклик після завантаження DOM
 document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
 
-
 // ============================
 //      СТАРТ
 // ============================
