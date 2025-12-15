@@ -149,48 +149,61 @@ function saveWarehouse() {
   localStorage.setItem("warehouse", JSON.stringify(warehouse));
 }
 
+// ============================
+//  СКЛАД + ПОПЕРЕДЖЕННЯ МІНІМУМІВ
+// ============================
+
+// відповідність назв → ключі мінімумів
+function getMinKeyByName(name) {
+  const map = {
+    "Кукурудза": "kukurudza",
+    "Пшениця": "pshenytsia",
+    "Ячмінь": "yachmin",
+    "Соева макуха": "soieva_makuha",
+    "Соняшникова макуха": "soniashnykova_makuha",
+    "Рибне борошно": "rybne_boroshno",
+    "Дріжджі": "drizhdzhi",
+    "Трикальційфосфат": "trykaltsii_fosfat",
+    "Dolfos D": "dolfos_d",
+    "Сіль": "sil",
+  };
+  return map[name] || null;
+}
+
+// ============================
+//  RENDER СКЛАДУ
+// ============================
 function renderWarehouse() {
   const tbody = $("warehouseTable");
   if (!tbody) return;
 
-tbody.innerHTML = feedComponents
-  .map((item) => {
+  const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+
+  tbody.innerHTML = feedComponents.map(item => {
     const name = item[0];
     const need = item[1];
     const stock = warehouse.feed[name] || 0;
 
-    // 🔹 мінімум з налаштувань
-    const minKey = {
-      "Кукурудза": "kukurudza",
-      "Пшениця": "pshenytsia",
-      "Ячмінь": "yachmin",
-      "Соева макуха": "soieva_makuha",
-      "Соняшникова макуха": "soniashnykova_makuha",
-      "Рибне борошно": "rybne_boroshno",
-      "Дріжджі": "drizhdzhi",
-      "Трикальційфосфат": "trykaltsii_fosfat",
-      "Dolfos D": "dolfos_d",
-      "Сіль": "sil",
-    }[name];
+    const minKey = getMinKeyByName(name);
+    const minValue = Number(minimums[minKey]) || 0;
 
-    const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
-    const min = Number(minimums[minKey]) || 0;
-
-    const isLow = stock < min;
+    const isLow = stock < minValue;
 
     return `
-      <tr style="${isLow ? "background:#3a1c1c;color:#ffb3b3;" : ""}">
+      <tr class="${isLow ? "warehouse-low" : ""}">
         <td>${isLow ? "⚠️ " : ""}${name}</td>
-        <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
+        <td>
+          <input class="addStock" data-name="${name}" type="number" value="0">
+        </td>
         <td>${need}</td>
         <td><b>${stock.toFixed(2)}</b></td>
       </tr>
     `;
-  })
-  .join("");
+  }).join("");
 
-  document.querySelectorAll(".addStock").forEach((inp) => {
-    inp.onchange = (e) => {
+  // прихід на склад
+  document.querySelectorAll(".addStock").forEach(inp => {
+    inp.onchange = e => {
       const val = Number(e.target.value) || 0;
       e.target.value = 0;
       if (val <= 0) return;
@@ -204,14 +217,14 @@ tbody.innerHTML = feedComponents
       warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
       saveWarehouse();
       renderWarehouse();
-      checkWarehouseMinimums();
     };
   });
 
+  // порожні лотки
   const trayStockEl = $("trayStock");
   if (trayStockEl) {
     trayStockEl.value = warehouse.trays ?? 0;
-    trayStockEl.onchange = (e) => {
+    trayStockEl.onchange = e => {
       if (!warehouseEditEnabled) {
         alert("🔒 Спочатку увімкни редагування складу");
         trayStockEl.value = warehouse.trays ?? 0;
@@ -229,14 +242,14 @@ tbody.innerHTML = feedComponents
   if (mixHistory) {
     mixHistory.innerHTML =
       warehouse.history?.length
-        ? "<ul>" + warehouse.history.map((x) => `<li>${x}</li>`).join("") + "</ul>"
+        ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
         : "<i>Порожньо</i>";
   }
 }
 
-renderWarehouse();
-checkWarehouseMinimums();
-
+// ============================
+//  КНОПКА "ЗРОБИТИ КОРМ"
+// ============================
 const makeFeedBtn = $("makeFeedBtn");
 if (makeFeedBtn) {
   makeFeedBtn.onclick = () => {
@@ -249,18 +262,18 @@ if (makeFeedBtn) {
       }
     }
 
-    feedComponents.forEach((item) => {
-      const name = item[0];
-      const need = item[1];
-      warehouse.feed[name] -= need;
+    feedComponents.forEach(item => {
+      warehouse.feed[item[0]] -= item[1];
     });
 
     warehouse.history.push("Заміс: " + new Date().toLocaleString());
     saveWarehouse();
     renderWarehouse();
-    checkWarehouseMinimums();
   };
 }
+
+// старт
+renderWarehouse();
 
 // ============================
 //      ЯЙЦЯ — накопичення + перенос + синхрон з лотками
@@ -656,58 +669,6 @@ document.addEventListener("DOMContentLoaded", function () {
   loadWarehouseSettings();
 });
 
-
-// ============================
-//  ПОПЕРЕДЖЕННЯ СКЛАДУ — ВЕРХНІЙ БЛОК
-// ============================
-function checkWarehouseMinimums() {
-  const warnBox = document.getElementById("warehouseWarning");
-  const warnList = document.getElementById("warehouseWarningList");
-
-  if (!warnBox || !warnList) return;
-
-  let warnings = [];
-
-  // кормові компоненти
-  const mins = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
-
-  feedComponents.forEach(item => {
-    const name = item[0];
-    const keyMap = {
-      "Кукурудза": "kukurudza",
-      "Пшениця": "pshenytsia",
-      "Ячмінь": "yachmin",
-      "Соева макуха": "soieva_makuha",
-      "Соняшникова макуха": "soniashnykova_makuha",
-      "Рибне борошно": "rybne_boroshno",
-      "Дріжджі": "drizhdzhi",
-      "Трикальційфосфат": "trykaltsii_fosfat",
-      "Dolfos D": "dolfos_d",
-      "Сіль": "sil"
-    };
-
-    const key = keyMap[name];
-    const min = Number(mins[key] || 0);
-    const stock = Number(warehouse.feed[name] || 0);
-
-    if (min > 0 && stock < min) {
-      warnings.push(`🌾 ${name}: ${stock} кг (мін ${min})`);
-    }
-  });
-
-  // порожні лотки
-  const minTrays = Number(mins.empty_trays || 0);
-  if (minTrays > 0 && (warehouse.trays || 0) < minTrays) {
-    warnings.push(`🗄️ Порожні лотки: ${warehouse.trays || 0} шт (мін ${minTrays})`);
-  }
-
-  if (warnings.length) {
-    warnList.innerHTML = warnings.map(w => `• ${w}`).join("<br>");
-    warnBox.style.display = "block";
-  } else {
-    warnBox.style.display = "none";
-  }
-}
 
 // ============================
 //      СТАРТ
