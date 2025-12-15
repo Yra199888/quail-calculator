@@ -28,7 +28,7 @@ function paintToggleButton(btn, enabled, label) {
 // Підв’язка кнопок toggle після завантаження DOM
 function syncToggleButtonsUI() {
   const eggsBtn = document.querySelector(`button[onclick="toggleEggsEdit()"]`);
-  const whBtn   = document.querySelector(`button[onclick="toggleWarehouseEdit()"]`);
+  const whBtn = document.querySelector(`button[onclick="toggleWarehouseEdit()"]`);
 
   paintToggleButton(eggsBtn, eggsEditEnabled, "Редагування яєць");
   paintToggleButton(whBtn, warehouseEditEnabled, "Редагування складу");
@@ -571,75 +571,68 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (ФІКС ЗБЕРЕЖЕННЯ)
-//  КЛЮЧІ = 1:1 з твоїми id в index
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (ФІКС ПІД ТВОЇ ID З INDEX)
+//  index: min_kukurudza ... min_sil, min_empty_trays
 // ============================
+const MIN_STORAGE_KEY = "warehouseMinimums";
 
-// Мапа: назва компонента -> suffix в id інпута в Settings
-function minIdSuffixByName(name) {
-  const map = {
-    "Кукурудза": "Кукурудза",
-    "Пшениця": "Пшениця",
-    "Ячмінь": "Ячмінь",
-    "Соева макуха": "Соева_макуха",
-    "Соняшникова макуха": "Соняшникова_макуха",
-    "Рибне борошно": "Рибне_борошно",
-    "Дріжджі": "Дріжджі",
-    "Трикальційфосфат": "Трикальційфосфат",
-    "Dolfos D": "DolfosD",
-    "Сіль": "Сіль",
-  };
-  return map[name] || name.replace(/\s+/g, "_");
+// ті самі ключі, що ти вже використовуєш в index (id="min_...")
+const MIN_KEYS = [
+  "kukurudza",
+  "pshenytsia",
+  "yachmin",
+  "soieva_makuha",
+  "soniashnykova_makuha",
+  "rybne_boroshno",
+  "drizhdzhi",
+  "trykaltsii_fosfat",
+  "dolfos_d",
+  "sil",
+  "empty_trays",
+];
+
+function loadMinStore() {
+  try {
+    return JSON.parse(localStorage.getItem(MIN_STORAGE_KEY) || "{}") || {};
+  } catch {
+    return {};
+  }
 }
 
-let warehouseMinimums = {};
-try {
-  warehouseMinimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}") || {};
-} catch {
-  warehouseMinimums = {};
+function saveMinStore(store) {
+  localStorage.setItem(MIN_STORAGE_KEY, JSON.stringify(store));
 }
 
-function saveWarehouseMinimum(key, value) {
-  warehouseMinimums[key] = Number(value) || 0;
-  localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
-}
-
-function getWarehouseMinimum(key) {
-  return Number(warehouseMinimums[key]) || 0;
-}
-
-// кнопка в index: onclick="saveWarehouseSettings()"
+// 🔥 ОЦЕ ГОЛОВНЕ: збереження по ID як у твоєму index
 function saveWarehouseSettings() {
-  // кормові компоненти
-  feedComponents.forEach(([name]) => {
-    const suffix = minIdSuffixByName(name);
-    const input = document.getElementById("minFeed_" + suffix);
-    if (input) saveWarehouseMinimum("MIN_" + suffix, input.value);
+  const store = loadMinStore();
+
+  MIN_KEYS.forEach((k) => {
+    const id = k === "empty_trays" ? "min_empty_trays" : "min_" + k;
+    const el = $(id);
+    if (!el) return;
+    store[k] = Number(el.value) || 0;
   });
 
-  // порожні лотки
-  const emptyTraysInput = document.getElementById("minEmptyTrays");
-  if (emptyTraysInput) saveWarehouseMinimum("MIN_EMPTY_TRAYS", emptyTraysInput.value);
-
-  alert("✅ Мінімальні залишки складу збережено");
+  saveMinStore(store);
+  alert("✅ Мінімальні залишки збережено");
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
+// підстановка значень після F5
 function loadWarehouseSettingsUI() {
-  // кормові компоненти
-  feedComponents.forEach(([name]) => {
-    const suffix = minIdSuffixByName(name);
-    const input = document.getElementById("minFeed_" + suffix);
-    if (input) input.value = getWarehouseMinimum("MIN_" + suffix);
-  });
+  const store = loadMinStore();
 
-  // порожні лотки
-  const emptyTraysInput = document.getElementById("minEmptyTrays");
-  if (emptyTraysInput) emptyTraysInput.value = getWarehouseMinimum("MIN_EMPTY_TRAYS");
+  MIN_KEYS.forEach((k) => {
+    const id = k === "empty_trays" ? "min_empty_trays" : "min_" + k;
+    const el = $(id);
+    if (!el) return;
+    el.value = Number(store[k]) || 0;
+  });
 }
 
 // ============================
-//      СТАРТ UI
+//      СТАРТ
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   syncToggleButtonsUI();
