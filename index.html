@@ -70,6 +70,16 @@
   </div>
 
   <div id="eggsList"></div>
+  <!-- 🔐 КЕРУВАННЯ ЯЙЦЯМИ -->
+<div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+  <button class="main-btn" onclick="toggleEggsEdit()">
+    🔒 Дозволити редагування яєць
+  </button>
+
+  <button class="main-btn danger" onclick="clearAllEggs()">
+    🗑️ Очистити звіт по яйцях
+  </button>
+</div>
 </div>
 
 <!-- ===== СКЛАД ===== -->
@@ -89,6 +99,20 @@
     </table>
 
     <button id="makeFeedBtn" class="main-btn">🔄 Зробити корм</button>
+    <!-- 🔐 КЕРУВАННЯ СКЛАДОМ -->
+<div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
+  <button class="main-btn" onclick="toggleWarehouseEdit()">
+    🔒 Дозволити редагування складу
+  </button>
+
+  <button class="main-btn danger" onclick="clearFeedComponents()">
+    🧹 Очистити компоненти
+  </button>
+
+  <button class="main-btn danger" onclick="clearEggTrays()">
+    🗑️ Очистити лотки
+  </button>
+</div>
     <!-- ⚠️ ПОПЕРЕДЖЕННЯ СКЛАДУ -->
 <div id="warehouseWarning" style="
   display:none;
