@@ -605,18 +605,30 @@ function saveWarehouseMinimum(key, value) {
   );
 }
 
-function getWarehouseMinimum(key) {
-  return Number(warehouseMinimums[key]) || 0;
-}
-
 // ============================
 //  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
 // ============================
 
+// ключі компонентів (ВАЖЛИВО: ті самі, що в index)
+const FEED_KEYS = {
+  "Кукурудза": "KUKURYDZA",
+  "Пшениця": "PSHENYCYA",
+  "Ячмінь": "YACHMIN",
+  "Соева макуха": "SOYA",
+  "Соняшникова макуха": "SONяшNYK",
+  "Рибне борошно": "RYBNE",
+  "Дріжджі": "DRIZHDZHI",
+  "Трикальційфосфат": "TCP",
+  "Dolfos D": "DOLFOS",
+  "Сіль": "SIL"
+};
+
+// зчитування або створення
 let warehouseMinimums = JSON.parse(
   localStorage.getItem("warehouseMinimums") || "{}"
 );
 
+// зберегти один мінімум
 function saveWarehouseMinimum(key, value) {
   warehouseMinimums[key] = Number(value) || 0;
   localStorage.setItem(
@@ -625,15 +637,19 @@ function saveWarehouseMinimum(key, value) {
   );
 }
 
+// отримати мінімум
 function getWarehouseMinimum(key) {
   return Number(warehouseMinimums[key]) || 0;
 }
 
+// ============================
+//  ЗБЕРЕГТИ ВСІ НАЛАШТУВАННЯ
+// ============================
 function saveWarehouseSettings() {
 
   feedComponents.forEach(item => {
     const name = item[0];
-    const key = feedKey(name);
+    const key = FEED_KEYS[name];
     const input = document.getElementById("minFeed_" + key);
 
     if (input) {
@@ -650,11 +666,14 @@ function saveWarehouseSettings() {
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
+// ============================
+//  ЗАВАНТАЖЕННЯ В UI
+// ============================
 function loadWarehouseSettingsUI() {
 
   feedComponents.forEach(item => {
     const name = item[0];
-    const key = feedKey(name);
+    const key = FEED_KEYS[name];
     const input = document.getElementById("minFeed_" + key);
 
     if (input) {
@@ -668,7 +687,7 @@ function loadWarehouseSettingsUI() {
   }
 }
 
-// ВИКЛИК ПРИ СТАРТІ
+// запуск при старті
 loadWarehouseSettingsUI();
 
 
