@@ -574,91 +574,54 @@ window.clearEggTrays = clearEggTrays;
 //  НАЛАШТУВАННЯ СКЛАДУ — SAFARI SAFE
 // ============================
 
-// ключі відповідають input id
-const warehouseMinKeys = [
-  "kukurudza",
-  "pshenytsia",
-  "yachmin",
-  "soieva_makuha",
-  "soniashnykova_makuha",
-  "rybne_boroshno",
-  "drizhdzhi",
-  "trykaltsii_fosfat",
-  "dolfos_d",
-  "sil"
-];
+document.addEventListener("DOMContentLoaded", () => {
 
-const STORAGE_KEY = "warehouseMinimums";
-
-// отримати всі мінімальні значення
-function loadWarehouseMinimums() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch {
-    return {};
+  const btn = document.getElementById("saveWarehouseSettingsBtn");
+  if (!btn) {
+    console.error("❌ Кнопка збереження не знайдена");
+    return;
   }
-}
 
-// зберегти всі мінімальні значення
-function saveWarehouseMinimums(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+  btn.addEventListener("click", () => {
+    try {
+      const data = {
+        kukurudza: Number(document.getElementById("minFeed_kukurudza")?.value || 0),
+        pshenytsia: Number(document.getElementById("minFeed_pshenytsia")?.value || 0),
+        yachmin: Number(document.getElementById("minFeed_yachmin")?.value || 0),
+        soieva_makuha: Number(document.getElementById("minFeed_soieva_makuha")?.value || 0),
+        soniashnykova_makuha: Number(document.getElementById("minFeed_soniashnykova_makuha")?.value || 0),
+        rybne_boroshno: Number(document.getElementById("minFeed_rybne_boroshno")?.value || 0),
+        drizhdzhi: Number(document.getElementById("minFeed_drizhdzhi")?.value || 0),
+        trykaltsii_fosfat: Number(document.getElementById("minFeed_trykaltsii_fosfat")?.value || 0),
+        dolfos_d: Number(document.getElementById("minFeed_dolfos_d")?.value || 0),
+        sil: Number(document.getElementById("minFeed_sil")?.value || 0),
+        empty_trays: Number(document.getElementById("min_empty_trays")?.value || 0),
+      };
+
+      localStorage.setItem("warehouseMinimums", JSON.stringify(data));
+      alert("✅ Дані успішно збережені");
+
+    } catch (e) {
+      console.error(e);
+      alert("❌ Не вдалося зберегти дані");
+    }
+  });
+
+});
 
 // ============================
 //  ЗБЕРЕЖЕННЯ
 // ============================
-function saveWarehouseSettings() {
-  const data = {};
 
-  warehouseMinKeys.forEach(key => {
-    const input = document.getElementById("minFeed_" + key);
-    if (!input) return;
-
-    data[key] = Number(input.value) || 0;
-  });
-
-  const emptyTraysInput = document.getElementById("min_empty_trays");
-  if (emptyTraysInput) {
-    data.EMPTY_TRAYS = Number(emptyTraysInput.value) || 0;
-  }
-
-  try {
-    saveWarehouseMinimums(data);
-    alert("✅ Дані успішно збережено");
-  } catch (e) {
-    alert("❌ Не вдалося зберегти дані");
-  }
-}
-
-// ============================
-//  ЗАВАНТАЖЕННЯ В UI
-// ============================
-function loadWarehouseSettingsUI() {
-  const data = loadWarehouseMinimums();
-
-  warehouseMinKeys.forEach(key => {
-    const input = document.getElementById("minFeed_" + key);
-    if (input) {
-      input.value = data[key] ?? 0;
-    }
-  });
-
-  const emptyTraysInput = document.getElementById("min_empty_trays");
-  if (emptyTraysInput) {
-    emptyTraysInput.value = data.EMPTY_TRAYS ?? 0;
-  }
-}
-
-// ============================
-//  SAFARI-СУМІСНЕ ПІДКЛЮЧЕННЯ
-// ============================
 document.addEventListener("DOMContentLoaded", () => {
-  loadWarehouseSettingsUI();
+  const saved = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
 
-  const saveBtn = document.getElementById("saveWarehouseSettingsBtn");
-  if (saveBtn) {
-    saveBtn.addEventListener("click", saveWarehouseSettings);
-  }
+  Object.keys(saved).forEach(key => {
+    const input = document.getElementById("minFeed_" + key) 
+      || document.getElementById("min_" + key);
+
+    if (input) input.value = saved[key];
+  });
 });
 
 // ============================
