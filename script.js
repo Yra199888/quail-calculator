@@ -571,104 +571,66 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ (SAFARI SAFE)
+// НАЛАШТУВАННЯ СКЛАДУ — SAFARI SAFE
 // ============================
 
-// перевірка localStorage (Safari може його блокувати)
-function storageAvailable() {
-  try {
-    const x = "__test__";
-    localStorage.setItem(x, x);
-    localStorage.removeItem(x);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-const STORAGE_KEY = "warehouseMinimums_v1";
-
-// мапа id → ключ
-const warehouseMinMap = {
-  minFeed_kukurudza: "kukurudza",
-  minFeed_pshenytsia: "pshenytsia",
-  minFeed_yachmin: "yachmin",
-  minFeed_soieva_makuha: "soieva_makuha",
-  minFeed_soniashnykova_makuha: "soniashnykova_makuha",
-  minFeed_rybne_boroshno: "rybne_boroshno",
-  minFeed_drizhdzhi: "drizhdzhi",
-  minFeed_trykaltsii_fosfat: "trykaltsii_fosfat",
-  minFeed_dolfos_d: "dolfos_d",
-  minFeed_sil: "sil",
-  min_empty_trays: "empty_trays"
-};
-
-// зчитати
-function loadWarehouseSettings() {
-  if (!storageAvailable()) return;
-
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return;
-
-  let data;
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    return;
-  }
-
-  Object.entries(warehouseMinMap).forEach(([inputId, key]) => {
-    const input = document.getElementById(inputId);
-    if (input && data[key] !== undefined) {
-      input.value = data[key];
-    }
-  });
-}
-
-// зберегти
-function saveWarehouseSettings() {
-  if (!storageAvailable()) {
-    alert("❌ Safari заблокував збереження (localStorage недоступний)");
-    return;
-  }
-
-  const data = {};
-  let hasData = false;
-
-  Object.entries(warehouseMinMap).forEach(([inputId, key]) => {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-
-    const val = Number(input.value);
-    if (!isNaN(val)) {
-      data[key] = val;
-      hasData = true;
-    }
-  });
-
-  if (!hasData) {
-    alert("⚠️ Немає даних для збереження");
-    return;
-  }
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    alert("✅ Дані успішно збережені");
-  } catch (e) {
-    alert("❌ Не вдалося зберегти дані (Safari)");
-  }
-}
-
-// привʼязка кнопки ПІСЛЯ DOM
 document.addEventListener("DOMContentLoaded", () => {
-  loadWarehouseSettings();
 
+  const STORAGE_KEY = "warehouseMinimums";
+
+  function getData() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    } catch {
+      return {};
+    }
+  }
+
+  function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function loadSettings() {
+    const data = getData();
+
+    document.querySelectorAll("[id^='minFeed_']").forEach(input => {
+      const key = input.id.replace("minFeed_", "");
+      input.value = data[key] ?? "";
+    });
+
+    const empty = document.getElementById("min_empty_trays");
+    if (empty) empty.value = data.EMPTY_TRAYS ?? "";
+  }
+
+  function saveSettings() {
+    try {
+      const data = {};
+
+      document.querySelectorAll("[id^='minFeed_']").forEach(input => {
+        const key = input.id.replace("minFeed_", "");
+        data[key] = Number(input.value) || 0;
+      });
+
+      const empty = document.getElementById("min_empty_trays");
+      if (empty) data.EMPTY_TRAYS = Number(empty.value) || 0;
+
+      saveData(data);
+      alert("✅ Дані збережені");
+
+    } catch (e) {
+      alert("❌ Не вдалося зберегти дані");
+      console.error(e);
+    }
+  }
+
+  // кнопка ЗБЕРЕГТИ
   const btn = document.getElementById("saveWarehouseSettingsBtn");
   if (btn) {
-    btn.addEventListener("click", saveWarehouseSettings);
+    btn.addEventListener("click", saveSettings);
   }
-});
 
+  loadSettings();
+});
 
 // ============================
 //      СТАРТ
