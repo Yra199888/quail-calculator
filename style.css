@@ -290,3 +290,12 @@ input[type="number"] {
 .low-stock td {
   color: #ffb3b3;
 }
+
+.low-stock {
+  background: rgba(255, 0, 0, 0.15);
+}
+
+.low-stock td {
+  color: #ff5252;
+  font-weight: bold;
+}
