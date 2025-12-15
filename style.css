@@ -281,3 +281,12 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
 }
+
+.low-stock {
+  background: rgba(255, 77, 77, 0.15);
+  border-left: 4px solid #ff4d4d;
+}
+
+.low-stock td {
+  color: #ffb3b3;
+}
