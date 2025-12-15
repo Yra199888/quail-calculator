@@ -634,6 +634,28 @@ function saveWarehouseSettings() {
 window.saveWarehouseSettings = saveWarehouseSettings;
 
 // ============================
+//  ЗАВАНТАЖЕННЯ НАЛАШТУВАНЬ У UI
+// ============================
+function loadWarehouseSettingsUI() {
+
+  feedComponents.forEach(item => {
+    const name = item[0];
+    const input = document.getElementById("minFeed_" + name);
+    if (input) {
+      input.value = getWarehouseMinimum(name);
+    }
+  });
+
+  const emptyTraysInput = document.getElementById("minEmptyTrays");
+  if (emptyTraysInput) {
+    emptyTraysInput.value = getWarehouseMinimum("EMPTY_TRAYS");
+  }
+}
+
+// виклик при старті
+loadWarehouseSettingsUI();
+
+// ============================
 //      СТАРТ UI
 // ============================
 syncToggleButtonsUI();
