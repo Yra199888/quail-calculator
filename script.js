@@ -170,6 +170,26 @@ function getMinKeyByName(name) {
   return map[name] || null;
 }
 
+function checkWarehouseMinimums() {
+  const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+  let hasWarnings = false;
+
+  feedComponents.forEach(item => {
+    const name = item[0];
+    const key = getMinKeyByName(name);
+    if (!key) return;
+
+    const stock = Number(warehouse.feed[name] || 0);
+    const min = Number(minimums[key] || 0);
+
+    if (min > 0 && stock < min) {
+      hasWarnings = true;
+    }
+  });
+
+  return hasWarnings;
+}
+
 // ============================
 //  RENDER СКЛАДУ
 // ============================
@@ -178,20 +198,19 @@ function renderWarehouse() {
   if (!tbody) return;
 
   const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
-  let warnings = [];
 
-  tbody.innerHTML = feedComponents.map(([name, need]) => {
-    const stock = warehouse.feed[name] || 0;
-    const minKey = FEED_MIN_KEYS[name];
-    const min = Number(minimums[minKey]) || 0;
-    const isLow = stock < min;
+  tbody.innerHTML = feedComponents.map(item => {
+    const name = item[0];
+    const need = item[1];
+    const stock = Number(warehouse.feed[name] || 0);
 
-    if (isLow) {
-      warnings.push(`${name}: ${stock} / мін ${min}`);
-    }
+    const key = getMinKeyByName(name);
+    const min = Number(minimums[key] || 0);
+
+    const isLow = min > 0 && stock < min;
 
     return `
-      <tr class="${isLow ? "warehouse-low" : ""}">
+      <tr class="${isLow ? "warehouse-warning" : ""}">
         <td>${isLow ? "⚠️ " : ""}${name}</td>
         <td>
           <input class="addStock" data-name="${name}" type="number" value="0">
@@ -202,9 +221,9 @@ function renderWarehouse() {
     `;
   }).join("");
 
-  // прихід компонентів
+  // ➕ прихід компонентів
   document.querySelectorAll(".addStock").forEach(inp => {
-    inp.onchange = (e) => {
+    inp.onchange = e => {
       const val = Number(e.target.value) || 0;
       e.target.value = 0;
       if (val <= 0) return;
@@ -216,16 +235,17 @@ function renderWarehouse() {
 
       const name = e.target.dataset.name;
       warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
+
       saveWarehouse();
       renderWarehouse();
     };
   });
 
-  // пусті лотки
+  // 🗄️ порожні лотки
   const trayStockEl = $("trayStock");
   if (trayStockEl) {
     trayStockEl.value = warehouse.trays ?? 0;
-    trayStockEl.onchange = (e) => {
+    trayStockEl.onchange = e => {
       if (!warehouseEditEnabled) {
         alert("🔒 Спочатку увімкни редагування складу");
         trayStockEl.value = warehouse.trays ?? 0;
@@ -236,8 +256,8 @@ function renderWarehouse() {
     };
   }
 
-  $("fullTrays") && ($("fullTrays").textContent = warehouse.ready ?? 0);
-  $("reservedTrays") && ($("reservedTrays").textContent = warehouse.reserved ?? 0);
+  if ($("fullTrays")) $("fullTrays").textContent = warehouse.ready ?? 0;
+  if ($("reservedTrays")) $("reservedTrays").textContent = warehouse.reserved ?? 0;
 
   const mixHistory = $("mixHistory");
   if (mixHistory) {
@@ -245,8 +265,6 @@ function renderWarehouse() {
       ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
       : "<i>Порожньо</i>";
   }
-
-  applyWarehouseWarnings(warnings);
 }
 
 function applyWarehouseWarnings(list) {
