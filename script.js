@@ -571,67 +571,68 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — ЗБЕРЕЖЕННЯ
+// НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (РОБОЧА ВЕРСІЯ)
 // ============================
 
-const WAREHOUSE_MIN_KEY = "warehouseMinimums";
+// 1️⃣ ЧІТКА ВІДПОВІДНІСТЬ: компонент → id поля
+const warehouseMinMap = {
+  "Кукурудза": "minFeed_kukurudza",
+  "Пшениця": "minFeed_pshenytsia",
+  "Ячмінь": "minFeed_yachmin",
+  "Соева макуха": "minFeed_soieva_makuha",
+  "Соняшникова макуха": "minFeed_soniashnykova_makuha",
+  "Рибне борошно": "minFeed_rybne_boroshno",
+  "Дріжджі": "minFeed_drizhdzhi",
+  "Трикальційфосфат": "minFeed_trykaltsii_fosfat",
+  "Dolfos D": "minFeed_dolfos_d",
+  "Сіль": "minFeed_sil",
+  "_EMPTY_TRAYS_": "min_empty_trays"
+};
 
-// ключі = id інпутів
-const warehouseMinFields = [
-  "minFeed_kukurudza",
-  "minFeed_pshenytsia",
-  "minFeed_yachmin",
-  "minFeed_soieva_makuha",
-  "minFeed_soniashnykova_makuha",
-  "minFeed_rybne_boroshno",
-  "minFeed_drizhdzhi",
-  "minFeed_trykaltsii_fosfat",
-  "minFeed_dolfos_d",
-  "minFeed_sil",
-  "min_empty_trays"
-];
+// 2️⃣ ЗАВАНТАЖЕННЯ З localStorage
+function loadWarehouseSettings() {
+  try {
+    Object.entries(warehouseMinMap).forEach(([key, inputId]) => {
+      const input = document.getElementById(inputId);
+      if (!input) return;
 
-// ===== ЗБЕРЕГТИ =====
+      const saved = localStorage.getItem("warehouse_min_" + key);
+      if (saved !== null) {
+        input.value = Number(saved);
+      }
+    });
+  } catch (e) {
+    console.error("Помилка завантаження налаштувань складу", e);
+  }
+}
+
+// 3️⃣ ЗБЕРЕЖЕННЯ В localStorage
 function saveWarehouseSettings() {
   try {
-    const data = {};
+    let savedCount = 0;
 
-    warehouseMinFields.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) throw new Error("Немає поля: " + id);
-      data[id] = Number(el.value) || 0;
+    Object.entries(warehouseMinMap).forEach(([key, inputId]) => {
+      const input = document.getElementById(inputId);
+
+      if (!input) {
+        throw new Error("Не знайдено поле: " + key);
+      }
+
+      const value = Number(input.value) || 0;
+      localStorage.setItem("warehouse_min_" + key, value);
+      savedCount++;
     });
 
-    localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(data));
-
-    alert("✅ Дані успішно збережені");
+    alert("✅ Дані збережені (" + savedCount + ")");
   } catch (e) {
     console.error(e);
     alert("❌ Не вдалося зберегти дані");
   }
 }
+
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ===== ЗАВАНТАЖИТИ =====
-function loadWarehouseSettings() {
-  try {
-    const raw = localStorage.getItem(WAREHOUSE_MIN_KEY);
-    if (!raw) return;
-
-    const data = JSON.parse(raw);
-
-    warehouseMinFields.forEach(id => {
-      const el = document.getElementById(id);
-      if (el && data[id] !== undefined) {
-        el.value = data[id];
-      }
-    });
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-// ===== ПІСЛЯ ЗАВАНТАЖЕННЯ СТОРІНКИ =====
+// 4️⃣ АВТОЗАВАНТАЖЕННЯ ПІСЛЯ ЗАПУСКУ
 document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
 
 // ============================
