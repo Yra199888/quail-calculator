@@ -178,16 +178,17 @@ function renderWarehouse() {
   if (!tbody) return;
 
   const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+  let warnings = [];
 
-  tbody.innerHTML = feedComponents.map(item => {
-    const name = item[0];
-    const need = item[1];
+  tbody.innerHTML = feedComponents.map(([name, need]) => {
     const stock = warehouse.feed[name] || 0;
+    const minKey = FEED_MIN_KEYS[name];
+    const min = Number(minimums[minKey]) || 0;
+    const isLow = stock < min;
 
-    const minKey = getMinKeyByName(name);
-    const minValue = Number(minimums[minKey]) || 0;
-
-    const isLow = stock < minValue;
+    if (isLow) {
+      warnings.push(`${name}: ${stock} / мін ${min}`);
+    }
 
     return `
       <tr class="${isLow ? "warehouse-low" : ""}">
@@ -201,9 +202,9 @@ function renderWarehouse() {
     `;
   }).join("");
 
-  // прихід на склад
+  // прихід компонентів
   document.querySelectorAll(".addStock").forEach(inp => {
-    inp.onchange = e => {
+    inp.onchange = (e) => {
       const val = Number(e.target.value) || 0;
       e.target.value = 0;
       if (val <= 0) return;
@@ -220,11 +221,11 @@ function renderWarehouse() {
     };
   });
 
-  // порожні лотки
+  // пусті лотки
   const trayStockEl = $("trayStock");
   if (trayStockEl) {
     trayStockEl.value = warehouse.trays ?? 0;
-    trayStockEl.onchange = e => {
+    trayStockEl.onchange = (e) => {
       if (!warehouseEditEnabled) {
         alert("🔒 Спочатку увімкни редагування складу");
         trayStockEl.value = warehouse.trays ?? 0;
@@ -235,16 +236,48 @@ function renderWarehouse() {
     };
   }
 
-  if ($("fullTrays")) $("fullTrays").textContent = warehouse.ready ?? 0;
-  if ($("reservedTrays")) $("reservedTrays").textContent = warehouse.reserved ?? 0;
+  $("fullTrays") && ($("fullTrays").textContent = warehouse.ready ?? 0);
+  $("reservedTrays") && ($("reservedTrays").textContent = warehouse.reserved ?? 0);
 
   const mixHistory = $("mixHistory");
   if (mixHistory) {
-    mixHistory.innerHTML =
-      warehouse.history?.length
-        ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
-        : "<i>Порожньо</i>";
+    mixHistory.innerHTML = warehouse.history?.length
+      ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
+      : "<i>Порожньо</i>";
   }
+
+  applyWarehouseWarnings(warnings);
+}
+
+function applyWarehouseWarnings(list) {
+  let box = document.getElementById("warehouseWarnings");
+
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "warehouseWarnings";
+    box.style.margin = "10px 0";
+    box.style.padding = "10px";
+    box.style.borderRadius = "8px";
+    box.style.background = "#3a1c1c";
+    box.style.color = "#ffb3b3";
+    box.style.border = "1px solid #ff4d4d";
+
+    const container = document.querySelector("#page-warehouse .container");
+    if (container) {
+      container.prepend(box);
+    }
+  }
+
+  if (!list.length) {
+    box.style.display = "none";
+    return;
+  }
+
+  box.style.display = "block";
+  box.innerHTML = `
+    ⚠️ <b>Низькі запаси складу:</b><br>
+    ${list.map(x => "• " + x).join("<br>")}
+  `;
 }
 
 // ============================
