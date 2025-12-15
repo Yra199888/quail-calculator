@@ -571,101 +571,104 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ -> МІНІМАЛЬНІ ЗАЛИШКИ СКЛАДУ
-//  (під твої ID з index.html)
+//  НАЛАШТУВАННЯ СКЛАДУ (SAFARI SAFE)
 // ============================
 
-const WMS_KEY = "warehouseMinimums"; // ключ у localStorage
-
-// Список полів (суфікс -> id input)
-const MIN_FIELDS = [
-  { key: "kukurudza", id: "minFeed_kukurudza" },
-  { key: "pshenytsia", id: "minFeed_pshenytsia" },
-  { key: "yachmin", id: "minFeed_yachmin" },
-  { key: "soieva_makuha", id: "minFeed_soieva_makuha" },
-  { key: "soniashnykova_makuha", id: "minFeed_soniashnykova_makuha" },
-  { key: "rybne_boroshno", id: "minFeed_rybne_boroshno" },
-  { key: "drizhdzhi", id: "minFeed_drizhdzhi" },
-  { key: "trykaltsii_fosfat", id: "minFeed_trykaltsii_fosfat" },
-  { key: "dolfos_d", id: "minFeed_dolfos_d" },
-  { key: "sil", id: "minFeed_sil" },
-
-  // порожні лотки (як у твоєму HTML!)
-  { key: "empty_trays", id: "min_empty_trays" },
-];
-
-function readWarehouseMinimums() {
+// перевірка localStorage (Safari може його блокувати)
+function storageAvailable() {
   try {
-    const obj = JSON.parse(localStorage.getItem(WMS_KEY) || "{}");
-    return obj && typeof obj === "object" ? obj : {};
+    const x = "__test__";
+    localStorage.setItem(x, x);
+    localStorage.removeItem(x);
+    return true;
   } catch (e) {
-    return {};
+    return false;
   }
 }
 
-function writeWarehouseMinimums(obj) {
-  // важливо: перевірка, що localStorage реально пише
-  localStorage.setItem(WMS_KEY, JSON.stringify(obj));
-  const back = localStorage.getItem(WMS_KEY);
-  if (!back) throw new Error("localStorage не зберіг значення (порожньо після setItem)");
-}
+const STORAGE_KEY = "warehouseMinimums_v1";
 
-// щоб потім у "Склад" можна було питати мінімум (ключі як вище)
-function getWarehouseMinimum(key) {
-  const mins = readWarehouseMinimums();
-  return Number(mins[key]) || 0;
-}
-window.getWarehouseMinimum = getWarehouseMinimum;
+// мапа id → ключ
+const warehouseMinMap = {
+  minFeed_kukurudza: "kukurudza",
+  minFeed_pshenytsia: "pshenytsia",
+  minFeed_yachmin: "yachmin",
+  minFeed_soieva_makuha: "soieva_makuha",
+  minFeed_soniashnykova_makuha: "soniashnykova_makuha",
+  minFeed_rybne_boroshno: "rybne_boroshno",
+  minFeed_drizhdzhi: "drizhdzhi",
+  minFeed_trykaltsii_fosfat: "trykaltsii_fosfat",
+  minFeed_dolfos_d: "dolfos_d",
+  minFeed_sil: "sil",
+  min_empty_trays: "empty_trays"
+};
 
-// КНОПКА "💾 Зберегти" викликає оце
-function saveWarehouseSettings() {
+// зчитати
+function loadWarehouseSettings() {
+  if (!storageAvailable()) return;
+
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+
+  let data;
   try {
-    const mins = readWarehouseMinimums();
-
-    // 1) перевіряємо що всі поля існують
-    for (const f of MIN_FIELDS) {
-      const el = document.getElementById(f.id);
-      if (!el) {
-        alert(`❌ Не знайдено поле: ${f.id}`);
-        return;
-      }
-    }
-
-    // 2) записуємо значення
-    for (const f of MIN_FIELDS) {
-      const el = document.getElementById(f.id);
-      const val = Number(el.value);
-      mins[f.key] = Number.isFinite(val) ? val : 0;
-    }
-
-    // 3) зберігаємо + валідуємо
-    writeWarehouseMinimums(mins);
-
-    // 4) контроль: читаємо назад і показуємо приклад
-    const check = readWarehouseMinimums();
-    if (typeof check !== "object") throw new Error("прочитали назад не-обʼєкт");
-
-    alert("✅ Дані збережені");
-  } catch (err) {
-    alert("❌ Не вдалося зберегти дані");
-    console.error("saveWarehouseSettings error:", err);
+    data = JSON.parse(raw);
+  } catch {
+    return;
   }
-}
-window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ПІДТЯГУЄМО значення в інпути після F5
-function loadWarehouseSettingsUI() {
-  const mins = readWarehouseMinimums();
-
-  for (const f of MIN_FIELDS) {
-    const el = document.getElementById(f.id);
-    if (!el) continue; // якщо сторінки ще нема — мовчки
-    el.value = (mins[f.key] ?? 0);
-  }
+  Object.entries(warehouseMinMap).forEach(([inputId, key]) => {
+    const input = document.getElementById(inputId);
+    if (input && data[key] !== undefined) {
+      input.value = data[key];
+    }
+  });
 }
 
-// Виклик після завантаження DOM
-document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
+// зберегти
+function saveWarehouseSettings() {
+  if (!storageAvailable()) {
+    alert("❌ Safari заблокував збереження (localStorage недоступний)");
+    return;
+  }
+
+  const data = {};
+  let hasData = false;
+
+  Object.entries(warehouseMinMap).forEach(([inputId, key]) => {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const val = Number(input.value);
+    if (!isNaN(val)) {
+      data[key] = val;
+      hasData = true;
+    }
+  });
+
+  if (!hasData) {
+    alert("⚠️ Немає даних для збереження");
+    return;
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    alert("✅ Дані успішно збережені");
+  } catch (e) {
+    alert("❌ Не вдалося зберегти дані (Safari)");
+  }
+}
+
+// привʼязка кнопки ПІСЛЯ DOM
+document.addEventListener("DOMContentLoaded", () => {
+  loadWarehouseSettings();
+
+  const btn = document.getElementById("saveWarehouseSettingsBtn");
+  if (btn) {
+    btn.addEventListener("click", saveWarehouseSettings);
+  }
+});
+
 
 // ============================
 //      СТАРТ
