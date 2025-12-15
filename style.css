@@ -299,3 +299,8 @@ input[type="number"] {
   color: #ff5252;
   font-weight: bold;
 }
+
+.warehouse-low {
+  background: #3a1c1c;
+  color: #ffb3b3;
+}
