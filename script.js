@@ -571,79 +571,62 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — ЗБЕРЕЖЕННЯ / ЗАВАНТАЖЕННЯ
+//  НАЛАШТУВАННЯ СКЛАДУ — ЗБЕРЕЖЕННЯ МІНІМУМІВ
+//  (логіка як у калькуляторі корму)
 // ============================
 
-const WAREHOUSE_SETTINGS_KEY = "warehouseSettings";
-
-// 👉 явне зіставлення: компонент → id інпута
-const warehouseSettingsMap = {
-  kukurudza: "min_kukurudza",
-  pshenytsia: "min_pshenytsia",
-  yachmin: "min_yachmin",
-  soieva_makuha: "min_soieva_makuha",
-  soniashnykova_makuha: "min_soniashnykova_makuha",
-  rybne_boroshno: "min_rybne_boroshno",
-  drizhdzhi: "min_drizhdzhi",
-  trykaltsii_fosfat: "min_trykaltsii_fosfat",
-  dolfos_d: "min_dolfos_d",
-  sil: "min_sil",
-  empty_trays: "min_empty_trays"
-};
+// список ID інпутів (1 в 1 з index.html)
+const warehouseMinInputs = [
+  "min_kukurudza",
+  "min_pshenytsia",
+  "min_yachmin",
+  "min_soieva_makuha",
+  "min_soniashnykova_makuha",
+  "min_rybne_boroshno",
+  "min_drizhdzhi",
+  "min_trykaltsii_fosfat",
+  "min_dolfos_d",
+  "min_sil",
+  "min_empty_trays"
+];
 
 // ============================
-//  ЗБЕРЕГТИ
+// ЗБЕРЕГТИ НАЛАШТУВАННЯ
 // ============================
 function saveWarehouseSettings() {
   try {
-    const data = {};
+    warehouseMinInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) throw new Error("Не знайдено інпут: " + id);
 
-    Object.entries(warehouseSettingsMap).forEach(([key, inputId]) => {
-      const input = document.getElementById(inputId);
-      if (!input) {
-        throw new Error(`❌ Не знайдено поле: ${inputId}`);
-      }
-      data[key] = Number(input.value) || 0;
+      const value = Number(el.value) || 0;
+      localStorage.setItem(id, value);
     });
 
-    localStorage.setItem(WAREHOUSE_SETTINGS_KEY, JSON.stringify(data));
-
-    alert("✅ Дані збережені успішно");
-    console.log("Saved warehouse settings:", data);
-
-  } catch (err) {
-    console.error(err);
+    alert("✅ Дані успішно збережені");
+  } catch (e) {
+    console.error(e);
     alert("❌ Не вдалося зберегти дані");
   }
 }
-
 window.saveWarehouseSettings = saveWarehouseSettings;
 
 // ============================
-//  ЗАВАНТАЖИТИ ПІСЛЯ F5
+// ЗАВАНТАЖИТИ НАЛАШТУВАННЯ В UI
 // ============================
 function loadWarehouseSettings() {
-  const raw = localStorage.getItem(WAREHOUSE_SETTINGS_KEY);
-  if (!raw) return;
+  warehouseMinInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-  try {
-    const data = JSON.parse(raw);
-
-    Object.entries(warehouseSettingsMap).forEach(([key, inputId]) => {
-      const input = document.getElementById(inputId);
-      if (input && data[key] !== undefined) {
-        input.value = data[key];
-      }
-    });
-
-    console.log("Loaded warehouse settings:", data);
-
-  } catch (err) {
-    console.error("❌ Помилка читання налаштувань складу", err);
-  }
+    const saved = localStorage.getItem(id);
+    if (saved !== null) {
+      el.value = saved;
+    }
+  });
 }
 
-// завантаження після старту сторінки
+// виклик ПІСЛЯ завантаження DOM
 document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
 
 // ============================
