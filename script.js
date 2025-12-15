@@ -586,6 +586,29 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
+// ============================
+
+// зчитування або створення
+let warehouseMinimums = JSON.parse(
+  localStorage.getItem("warehouseMinimums") || "{}"
+);
+
+// зберегти мінімум
+function saveWarehouseMinimum(component, value) {
+  warehouseMinimums[component] = Number(value) || 0;
+  localStorage.setItem(
+    "warehouseMinimums",
+    JSON.stringify(warehouseMinimums)
+  );
+}
+
+// отримати мінімум
+function getWarehouseMinimum(component) {
+  return Number(warehouseMinimums[component]) || 0;
+}
+
+// ============================
 //      СТАРТ UI
 // ============================
 syncToggleButtonsUI();
