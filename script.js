@@ -571,71 +571,58 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМАЛЬНІ ЗАЛИШКИ (Safari-friendly)
-//  Працює з твоїм index, де id:
-//   - minFeed_kukurudza ... minFeed_sil
-//   - min_empty_trays
+//  НАЛАШТУВАННЯ СКЛАДУ — SAFARI FIX
 // ============================
-const WAREHOUSE_MIN_KEY = "warehouseMinimums";
 
-// Забираємо всі потрібні інпути з вкладки "Налаштування"
-function getWarehouseMinInputs() {
-  const root = document.getElementById("page-settings");
-  if (!root) return [];
-
-  const all = Array.from(root.querySelectorAll('input[type="number"]'));
-  return all.filter((inp) => inp?.id && (inp.id.startsWith("minFeed_") || inp.id === "min_empty_trays"));
-}
-
-// ✅ Кнопка в index: onclick="saveWarehouseSettings()"
+// зберігання
 function saveWarehouseSettings() {
   try {
-    const inputs = getWarehouseMinInputs();
-    if (!inputs.length) throw new Error("Не знайдено полів (перевір id у вкладці Налаштування).");
+    const data = {
+      kukurudza: Number(document.getElementById("minFeed_kukurudza")?.value || 0),
+      pshenytsia: Number(document.getElementById("minFeed_pshenytsia")?.value || 0),
+      yachmin: Number(document.getElementById("minFeed_yachmin")?.value || 0),
+      soieva_makuha: Number(document.getElementById("minFeed_soieva_makuha")?.value || 0),
+      soniashnykova_makuha: Number(document.getElementById("minFeed_soniashnykova_makuha")?.value || 0),
+      rybne_boroshno: Number(document.getElementById("minFeed_rybne_boroshno")?.value || 0),
+      drizhdzhi: Number(document.getElementById("minFeed_drizhdzhi")?.value || 0),
+      trykaltsii_fosfat: Number(document.getElementById("minFeed_trykaltsii_fosfat")?.value || 0),
+      dolfos_d: Number(document.getElementById("minFeed_dolfos_d")?.value || 0),
+      sil: Number(document.getElementById("minFeed_sil")?.value || 0),
+      empty_trays: Number(document.getElementById("min_empty_trays")?.value || 0)
+    };
 
-    const data = {};
-    inputs.forEach((inp) => {
-      data[inp.id] = Number(inp.value) || 0;
-    });
+    localStorage.setItem("warehouseMinimums", JSON.stringify(data));
 
-    localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(data));
-
-    // Контроль: чи реально записалось
-    const check = localStorage.getItem(WAREHOUSE_MIN_KEY);
-    if (!check) throw new Error("localStorage не підтвердив запис.");
-
-    alert("✅ Дані збережені");
-  } catch (err) {
-    console.error("saveWarehouseSettings error:", err);
+    alert("✅ Дані успішно збережені");
+  } catch (e) {
+    console.error(e);
     alert("❌ Не вдалося зберегти дані");
   }
 }
-window.saveWarehouseSettings = saveWarehouseSettings;
 
-// Підтягуємо значення назад у поля після оновлення сторінки
-function loadWarehouseSettingsUI() {
+// завантаження
+function loadWarehouseSettings() {
   try {
-    const raw = localStorage.getItem(WAREHOUSE_MIN_KEY);
-    const data = raw ? JSON.parse(raw) : {};
+    const data = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
 
-    const inputs = getWarehouseMinInputs();
-    inputs.forEach((inp) => {
-      const v = Object.prototype.hasOwnProperty.call(data, inp.id) ? data[inp.id] : 0;
-      inp.value = Number(v) || 0;
+    Object.keys(data).forEach(key => {
+      const input = document.getElementById("minFeed_" + key) 
+        || document.getElementById("min_" + key);
+
+      if (input) input.value = data[key];
     });
-  } catch (err) {
-    console.error("loadWarehouseSettingsUI error:", err);
-    // Не валимо вкладки
+  } catch (e) {
+    console.error(e);
   }
 }
 
-// Важливо: виклик після завантаження DOM (Safari це любить)
-document.addEventListener("DOMContentLoaded", () => {
-  loadWarehouseSettingsUI();
-
-  // Якщо в тебе вже є syncToggleButtonsUI() в іншому місці — можна лишити.
-  // Але щоб не було “не оновились замочки” — викличемо безпечно:
-  if (typeof syncToggleButtonsUI === "function") syncToggleButtonsUI();
+// ⛔️ ГОЛОВНЕ: Safari-safe підв’язка кнопки
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("saveWarehouseSettingsBtn");
+  if (btn) {
+    btn.addEventListener("click", saveWarehouseSettings);
+  }
+  loadWarehouseSettings();
 });
 
 // ============================
