@@ -570,56 +570,89 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
-// ============================
-// НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (РОБОЧА ВЕРСІЯ)
-// ============================
 
-// список полів (ID = ключ у localStorage)
-const warehouseMinFields = [
-  "minFeed_kukurudza",
-  "minFeed_pshenytsia",
-  "minFeed_yachmin",
-  "minFeed_soieva_makuha",
-  "minFeed_soniashnykova_makuha",
-  "minFeed_rybne_boroshno",
-  "minFeed_drizhdzhi",
-  "minFeed_trykaltsii_fosfat",
-  "minFeed_dolfos_d",
-  "minFeed_sil",
-  "min_empty_trays"
-];
+// ============================
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (ROBUST)
+//  Працює з id: minFeed_* або min_*
+// ============================
+const WAREHOUSE_MIN_STORAGE_KEY = "warehouseMinimums";
 
-// збереження
-function saveWarehouseSettings() {
+function readWarehouseMinimums() {
   try {
-    warehouseMinFields.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) {
-        throw new Error("Не знайдено поле: " + id);
-      }
-      localStorage.setItem(id, el.value || "0");
-    });
-
-    alert("✅ Дані успішно збережено");
-  } catch (err) {
-    console.error(err);
-    alert("❌ Не вдалося зберегти дані");
+    const raw = localStorage.getItem(WAREHOUSE_MIN_STORAGE_KEY);
+    const obj = raw ? JSON.parse(raw) : {};
+    return (obj && typeof obj === "object") ? obj : {};
+  } catch (e) {
+    return {};
   }
 }
-window.saveWarehouseSettings = saveWarehouseSettings;
 
-// завантаження після F5
-function loadWarehouseSettings() {
-  warehouseMinFields.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.value = localStorage.getItem(id) ?? "";
+function writeWarehouseMinimums(obj) {
+  localStorage.setItem(WAREHOUSE_MIN_STORAGE_KEY, JSON.stringify(obj));
+}
+
+function getSettingsInputs() {
+  const root = document.getElementById("page-settings");
+  if (!root) return [];
+
+  // Беремо всі input з id, що починається на minFeed_ або min_
+  const inputs = root.querySelectorAll('input[type="number"][id^="minFeed_"], input[type="number"][id^="min_"]');
+  return Array.from(inputs);
+}
+
+function loadWarehouseSettingsUI() {
+  const mins = readWarehouseMinimums();
+  const inputs = getSettingsInputs();
+  if (!inputs.length) return;
+
+  inputs.forEach(inp => {
+    const key = inp.id; // зберігаємо/читаємо по реальному id
+    if (mins[key] !== undefined && mins[key] !== null) {
+      inp.value = mins[key];
+    } else {
+      // якщо ще не було збережено — лишаємо як є або ставимо 0
+      if (inp.value === "" || inp.value === null) inp.value = 0;
     }
   });
 }
 
-// ВАЖЛИВО: тільки після завантаження DOM
-document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
+function saveWarehouseSettings() {
+  try {
+    const inputs = getSettingsInputs();
+
+    if (!inputs.length) {
+      alert("❌ Не знайдено полів мінімумів у вкладці Налаштування");
+      return;
+    }
+
+    const mins = readWarehouseMinimums();
+
+    inputs.forEach(inp => {
+      const key = inp.id;
+      const val = Number(inp.value);
+      mins[key] = Number.isFinite(val) ? val : 0;
+    });
+
+    writeWarehouseMinimums(mins);
+
+    // Перевірка, що реально записалось
+    const check = localStorage.getItem(WAREHOUSE_MIN_STORAGE_KEY);
+    if (!check) {
+      alert("❌ Не вдалося зберегти дані (localStorage порожній)");
+      return;
+    }
+
+    alert("✅ Дані збережені");
+  } catch (e) {
+    alert("❌ Не вдалося зберегти дані");
+  }
+}
+
+window.saveWarehouseSettings = saveWarehouseSettings;
+window.loadWarehouseSettingsUI = loadWarehouseSettingsUI;
+
+// Автозавантаження у поля після перезавантаження сторінки
+document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
 
 // ============================
 //      СТАРТ
