@@ -27,7 +27,6 @@ function paintToggleButton(btn, enabled, label) {
 
 // Підв’язка кнопок toggle після завантаження DOM
 function syncToggleButtonsUI() {
-  // eggs toggle button (у тебе в index без id, тому шукаємо по onclick)
   const eggsBtn = document.querySelector(`button[onclick="toggleEggsEdit()"]`);
   const whBtn   = document.querySelector(`button[onclick="toggleWarehouseEdit()"]`);
 
@@ -138,9 +137,9 @@ let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
 if (!warehouse.feed) {
   warehouse = {
     feed: {},
-    trays: 0, // пусті лотки (ручне поле)
-    ready: 0, // готові повні лотки
-    reserved: 0, // заброньовані
+    trays: 0,
+    ready: 0,
+    reserved: 0,
     history: [],
   };
   saveWarehouse();
@@ -171,12 +170,10 @@ function renderWarehouse() {
     })
     .join("");
 
-  // додавання приходу — тільки якщо увімкнули редагування складу
   document.querySelectorAll(".addStock").forEach((inp) => {
     inp.onchange = (e) => {
       const val = Number(e.target.value) || 0;
       e.target.value = 0;
-
       if (val <= 0) return;
 
       if (!warehouseEditEnabled) {
@@ -191,7 +188,6 @@ function renderWarehouse() {
     };
   });
 
-  // пусті лотки — теж тільки при увімкненому редагуванні складу
   const trayStockEl = $("trayStock");
   if (trayStockEl) {
     trayStockEl.value = warehouse.trays ?? 0;
@@ -220,11 +216,9 @@ function renderWarehouse() {
 
 renderWarehouse();
 
-// кнопка "Зробити корм"
 const makeFeedBtn = $("makeFeedBtn");
 if (makeFeedBtn) {
   makeFeedBtn.onclick = () => {
-    // перевірка наявності компонентів
     for (const item of feedComponents) {
       const name = item[0];
       const need = item[1];
@@ -234,7 +228,6 @@ if (makeFeedBtn) {
       }
     }
 
-    // списання
     feedComponents.forEach((item) => {
       const name = item[0];
       const need = item[1];
@@ -252,8 +245,6 @@ if (makeFeedBtn) {
 // ============================
 let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
 
-// eggsCarry: carry (яйця на залишку), totalTrays (всього лотків вироблено),
-// appliedTotalTrays (скільки вже додано в warehouse.ready, щоб не дублювало після перезавантаження)
 let eggsCarry = JSON.parse(localStorage.getItem("eggsCarry") || "{}");
 if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;
 if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0;
@@ -289,7 +280,6 @@ function recomputeEggsAccumulation() {
   eggsCarry.carry = carry;
   eggsCarry.totalTrays = totalTrays;
 
-  // ✅ синхронізація готових лотків через ДЕЛЬТУ (щоб не дублювало при F5)
   const delta = eggsCarry.totalTrays - eggsCarry.appliedTotalTrays;
   if (delta !== 0) {
     const minReady = Math.max(warehouse.reserved || 0, 0);
@@ -381,7 +371,6 @@ function clearAllEggs() {
   localStorage.setItem("eggs", JSON.stringify(eggs));
   localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
 
-  // перерахунок дасть дельту і зніме лотки з warehouse.ready (але не нижче reserved)
   recomputeEggsAccumulation();
   renderEggsReport();
 
@@ -526,7 +515,7 @@ window.saveFinanceSettings = saveFinanceSettings;
 window.exportCSV = exportCSV;
 
 // ============================
-//      TOGGLE (ЯЙЦЯ / СКЛАД) + КНОПКИ
+//      TOGGLE (ЯЙЦЯ / СКЛАД)
 // ============================
 function toggleEggsEdit() {
   eggsEditEnabled = !eggsEditEnabled;
@@ -545,8 +534,6 @@ window.toggleWarehouseEdit = toggleWarehouseEdit;
 // ============================
 //   ОЧИСТКА СКЛАДУ / ЛОТКІВ
 // ============================
-
-// Очистити ВСІ кормові компоненти
 function clearFeedComponents() {
   if (!warehouseEditEnabled) {
     alert("🔒 Спочатку увімкни редагування складу");
@@ -562,7 +549,6 @@ function clearFeedComponents() {
 }
 window.clearFeedComponents = clearFeedComponents;
 
-// Очистити лотки з яйцями (готові + резерв)
 function clearEggTrays() {
   if (!eggsEditEnabled) {
     alert("🔒 Спочатку увімкни редагування яєць");
@@ -573,10 +559,9 @@ function clearEggTrays() {
   warehouse.ready = 0;
   warehouse.reserved = 0;
 
-  // також важливо обнулити “applied”, щоб подальший перерахунок яєць не “повернув” лотки
   eggsCarry.appliedTotalTrays = eggsCarry.totalTrays;
-
   localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
+
   saveWarehouse();
   renderWarehouse();
   showOrders();
@@ -586,76 +571,77 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (100% РОБОЧЕ)
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (ФІКС ЗБЕРЕЖЕННЯ)
+//  КЛЮЧІ = 1:1 з твоїми id в index
 // ============================
 
-const WAREHOUSE_MIN_KEY = "warehouseMinimums";
-
-// відповідність НАЗВА → ID
-const MIN_KEYS = {
-  "Кукурудза": "min_kukurudza",
-  "Пшениця": "min_pshenytsia",
-  "Ячмінь": "min_yachmin",
-  "Соева макуха": "min_soieva_makuha",
-  "Соняшникова макуха": "min_soniashnykova_makuha",
-  "Рибне борошно": "min_rybne_boroshno",
-  "Дріжджі": "min_drizhdzhi",
-  "Трикальційфосфат": "min_trykaltsii_fosfat",
-  "Dolfos D": "min_dolfos_d",
-  "Сіль": "min_sil",
-  "EMPTY_TRAYS": "min_empty_trays"
-};
-
-// зчитати
-function getWarehouseMinimums() {
-  return JSON.parse(localStorage.getItem(WAREHOUSE_MIN_KEY) || "{}");
+// Мапа: назва компонента -> suffix в id інпута в Settings
+function minIdSuffixByName(name) {
+  const map = {
+    "Кукурудза": "Кукурудза",
+    "Пшениця": "Пшениця",
+    "Ячмінь": "Ячмінь",
+    "Соева макуха": "Соева_макуха",
+    "Соняшникова макуха": "Соняшникова_макуха",
+    "Рибне борошно": "Рибне_борошно",
+    "Дріжджі": "Дріжджі",
+    "Трикальційфосфат": "Трикальційфосфат",
+    "Dolfos D": "DolfosD",
+    "Сіль": "Сіль",
+  };
+  return map[name] || name.replace(/\s+/g, "_");
 }
 
-// зберегти
-function setWarehouseMinimums(data) {
-  localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(data));
+let warehouseMinimums = {};
+try {
+  warehouseMinimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}") || {};
+} catch {
+  warehouseMinimums = {};
 }
 
-// кнопка 💾
+function saveWarehouseMinimum(key, value) {
+  warehouseMinimums[key] = Number(value) || 0;
+  localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
+}
+
+function getWarehouseMinimum(key) {
+  return Number(warehouseMinimums[key]) || 0;
+}
+
+// кнопка в index: onclick="saveWarehouseSettings()"
 function saveWarehouseSettings() {
-  const data = {};
-
-  feedComponents.forEach(item => {
-    const name = item[0];
-    const id = MIN_KEYS[name];
-    const input = document.getElementById(id);
-    if (input) data[name] = Number(input.value) || 0;
+  // кормові компоненти
+  feedComponents.forEach(([name]) => {
+    const suffix = minIdSuffixByName(name);
+    const input = document.getElementById("minFeed_" + suffix);
+    if (input) saveWarehouseMinimum("MIN_" + suffix, input.value);
   });
 
-  const empty = document.getElementById(MIN_KEYS.EMPTY_TRAYS);
-  if (empty) data.EMPTY_TRAYS = Number(empty.value) || 0;
+  // порожні лотки
+  const emptyTraysInput = document.getElementById("minEmptyTrays");
+  if (emptyTraysInput) saveWarehouseMinimum("MIN_EMPTY_TRAYS", emptyTraysInput.value);
 
-  setWarehouseMinimums(data);
-  alert("✅ Налаштування складу збережено");
+  alert("✅ Мінімальні залишки складу збережено");
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// автозавантаження після F5
 function loadWarehouseSettingsUI() {
-  const data = getWarehouseMinimums();
-
-  feedComponents.forEach(item => {
-    const name = item[0];
-    const id = MIN_KEYS[name];
-    const input = document.getElementById(id);
-    if (input && data[name] !== undefined) {
-      input.value = data[name];
-    }
+  // кормові компоненти
+  feedComponents.forEach(([name]) => {
+    const suffix = minIdSuffixByName(name);
+    const input = document.getElementById("minFeed_" + suffix);
+    if (input) input.value = getWarehouseMinimum("MIN_" + suffix);
   });
 
-  const empty = document.getElementById(MIN_KEYS.EMPTY_TRAYS);
-  if (empty && data.EMPTY_TRAYS !== undefined) {
-    empty.value = data.EMPTY_TRAYS;
-  }
+  // порожні лотки
+  const emptyTraysInput = document.getElementById("minEmptyTrays");
+  if (emptyTraysInput) emptyTraysInput.value = getWarehouseMinimum("MIN_EMPTY_TRAYS");
 }
 
-document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
 // ============================
 //      СТАРТ UI
 // ============================
-syncToggleButtonsUI();
+document.addEventListener("DOMContentLoaded", () => {
+  syncToggleButtonsUI();
+  loadWarehouseSettingsUI();
+});
