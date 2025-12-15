@@ -570,89 +570,78 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
+// ============================
+//  НАЛАШТУВАННЯ — МІНІМУМИ СКЛАДУ
+//  (ПРАЦЮЄ 1:1 З ТВОЇМ HTML)
+// ============================
+
+const SETTINGS_KEY = "warehouse_minimums_v1";
+
+// всі input id з index.html
+const SETTINGS_FIELDS = [
+  "minFeed_kukurudza",
+  "minFeed_pshenytsia",
+  "minFeed_yachmin",
+  "minFeed_soieva_makuha",
+  "minFeed_soniashnykova_makuha",
+  "minFeed_rybne_boroshno",
+  "minFeed_drizhdzhi",
+  "minFeed_trykaltsii_fosfat",
+  "minFeed_dolfos_d",
+  "minFeed_sil",
+  "min_empty_trays"
+];
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (ROBUST)
-//  Працює з id: minFeed_* або min_*
+//  ЗБЕРЕГТИ
 // ============================
-const WAREHOUSE_MIN_STORAGE_KEY = "warehouseMinimums";
-
-function readWarehouseMinimums() {
-  try {
-    const raw = localStorage.getItem(WAREHOUSE_MIN_STORAGE_KEY);
-    const obj = raw ? JSON.parse(raw) : {};
-    return (obj && typeof obj === "object") ? obj : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function writeWarehouseMinimums(obj) {
-  localStorage.setItem(WAREHOUSE_MIN_STORAGE_KEY, JSON.stringify(obj));
-}
-
-function getSettingsInputs() {
-  const root = document.getElementById("page-settings");
-  if (!root) return [];
-
-  // Беремо всі input з id, що починається на minFeed_ або min_
-  const inputs = root.querySelectorAll('input[type="number"][id^="minFeed_"], input[type="number"][id^="min_"]');
-  return Array.from(inputs);
-}
-
-function loadWarehouseSettingsUI() {
-  const mins = readWarehouseMinimums();
-  const inputs = getSettingsInputs();
-  if (!inputs.length) return;
-
-  inputs.forEach(inp => {
-    const key = inp.id; // зберігаємо/читаємо по реальному id
-    if (mins[key] !== undefined && mins[key] !== null) {
-      inp.value = mins[key];
-    } else {
-      // якщо ще не було збережено — лишаємо як є або ставимо 0
-      if (inp.value === "" || inp.value === null) inp.value = 0;
-    }
-  });
-}
-
 function saveWarehouseSettings() {
   try {
-    const inputs = getSettingsInputs();
+    const data = {};
 
-    if (!inputs.length) {
-      alert("❌ Не знайдено полів мінімумів у вкладці Налаштування");
-      return;
-    }
-
-    const mins = readWarehouseMinimums();
-
-    inputs.forEach(inp => {
-      const key = inp.id;
-      const val = Number(inp.value);
-      mins[key] = Number.isFinite(val) ? val : 0;
+    SETTINGS_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) {
+        alert("❌ Не знайдено поле: " + id);
+        throw new Error("Missing field " + id);
+      }
+      data[id] = Number(el.value) || 0;
     });
 
-    writeWarehouseMinimums(mins);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
 
-    // Перевірка, що реально записалось
-    const check = localStorage.getItem(WAREHOUSE_MIN_STORAGE_KEY);
-    if (!check) {
-      alert("❌ Не вдалося зберегти дані (localStorage порожній)");
-      return;
-    }
-
-    alert("✅ Дані збережені");
+    alert("✅ Дані успішно збережено");
   } catch (e) {
+    console.error(e);
     alert("❌ Не вдалося зберегти дані");
   }
 }
-
 window.saveWarehouseSettings = saveWarehouseSettings;
-window.loadWarehouseSettingsUI = loadWarehouseSettingsUI;
 
-// Автозавантаження у поля після перезавантаження сторінки
-document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
+// ============================
+//  ЗАВАНТАЖИТИ ПРИ СТАРТІ
+// ============================
+function loadWarehouseSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return;
+
+    const data = JSON.parse(raw);
+
+    SETTINGS_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) {
+        el.value = data[id];
+      }
+    });
+  } catch (e) {
+    console.error("Load settings error", e);
+  }
+}
+
+// ⚠️ ВАЖЛИВО: тільки після завантаження DOM
+document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
+
 
 // ============================
 //      СТАРТ
