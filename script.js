@@ -572,38 +572,35 @@ window.clearEggTrays = clearEggTrays;
 
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — ЗБЕРЕЖЕННЯ (ПРОСТО І НАДІЙНО)
+//  НАЛАШТУВАННЯ СКЛАДУ — ПРОСТО ЯК КАЛЬКУЛЯТОР
 // ============================
 
-// список інпутів з index.html
-const warehouseSettingsFields = [
-  "min_kukurudza",
-  "min_pshenytsia",
-  "min_yachmin",
-  "min_soieva_makuha",
-  "min_soniashnykova_makuha",
-  "min_rybne_boroshno",
-  "min_drizhdzhi",
-  "min_trykaltsii_fosfat",
-  "min_dolfos_d",
-  "min_sil",
-  "min_empty_trays"
+const warehouseSettingsIds = [
+  "minFeed_kukurudza",
+  "minFeed_pshenytsia",
+  "minFeed_yachmin",
+  "minFeed_soieva_makuha",
+  "minFeed_soniashnykova_makuha",
+  "minFeed_rybne_boroshno",
+  "minFeed_drizhdzhi",
+  "minFeed_trykaltsii_fosfat",
+  "minFeed_dolfos_d",
+  "minFeed_sil",
+  "minEmptyTrays"
 ];
 
 // ЗБЕРЕГТИ
 function saveWarehouseSettings() {
   try {
-    warehouseSettingsFields.forEach(id => {
+    warehouseSettingsIds.forEach(id => {
       const el = document.getElementById(id);
-      if (!el) {
-        throw new Error("Не знайдено поле: " + id);
-      }
+      if (!el) throw new Error("Не знайдено поле: " + id);
       localStorage.setItem(id, el.value || "0");
     });
 
-    alert("✅ Дані успішно збережено");
-  } catch (err) {
-    console.error(err);
+    alert("✅ Дані збережено");
+  } catch (e) {
+    console.error(e);
     alert("❌ Не вдалося зберегти дані");
   }
 }
@@ -611,13 +608,11 @@ window.saveWarehouseSettings = saveWarehouseSettings;
 
 // ЗАВАНТАЖИТИ ПРИ СТАРТІ
 function loadWarehouseSettings() {
-  warehouseSettingsFields.forEach(id => {
+  warehouseSettingsIds.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const saved = localStorage.getItem(id);
-    if (saved !== null) {
-      el.value = saved;
-    }
+    if (saved !== null) el.value = saved;
   });
 }
 
