@@ -586,10 +586,9 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (СТАБІЛЬНО)
 // ============================
 
-// feedKey — ЄДИНЕ ДЖЕРЕЛО ПРАВДИ
 function feedKey(name) {
   const map = {
     "Кукурудза": "kukurudza",
@@ -606,23 +605,19 @@ function feedKey(name) {
   return map[name];
 }
 
-// сховище
 let warehouseMinimums = JSON.parse(
   localStorage.getItem("warehouseMinimums") || "{}"
 );
 
-// зберегти
 function saveWarehouseMinimum(key, value) {
   warehouseMinimums[key] = Number(value) || 0;
   localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
 }
 
-// отримати
 function getWarehouseMinimum(key) {
   return Number(warehouseMinimums[key]) || 0;
 }
 
-// КНОПКА "ЗБЕРЕГТИ"
 function saveWarehouseSettings() {
   feedComponents.forEach(item => {
     const key = feedKey(item[0]);
@@ -633,11 +628,10 @@ function saveWarehouseSettings() {
   const empty = document.getElementById("minEmptyTrays");
   if (empty) saveWarehouseMinimum("EMPTY_TRAYS", empty.value);
 
-  alert("✅ Мінімальні залишки збережено");
+  alert("✅ Мінімальні залишки складу збережено");
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ЗАВАНТАЖЕННЯ ПІСЛЯ F5
 function loadWarehouseSettingsUI() {
   feedComponents.forEach(item => {
     const key = feedKey(item[0]);
