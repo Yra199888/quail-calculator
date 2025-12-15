@@ -570,53 +570,73 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
-
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — ПРОСТО ЯК КАЛЬКУЛЯТОР
+//  НАЛАШТУВАННЯ СКЛАДУ (МІНІМУМИ) — РОБОЧА ВЕРСІЯ
 // ============================
 
-const warehouseSettingsIds = [
-  "minFeed_kukurudza",
-  "minFeed_pshenytsia",
-  "minFeed_yachmin",
-  "minFeed_soieva_makuha",
-  "minFeed_soniashnykova_makuha",
-  "minFeed_rybne_boroshno",
-  "minFeed_drizhdzhi",
-  "minFeed_trykaltsii_fosfat",
-  "minFeed_dolfos_d",
-  "minFeed_sil",
-  "minEmptyTrays"
+// 1️⃣ ОПИС ПОЛІВ (ID ↔ ключ збереження)
+const warehouseSettingsFields = [
+  ["minFeed_kukurudza", "kukurudza"],
+  ["minFeed_pshenytsia", "pshenytsia"],
+  ["minFeed_yachmin", "yachmin"],
+  ["minFeed_soieva_makuha", "soieva_makuha"],
+  ["minFeed_soniashnykova_makuha", "soniashnykova_makuha"],
+  ["minFeed_rybne_boroshno", "rybne_boroshno"],
+  ["minFeed_drizhdzhi", "drizhdzhi"],
+  ["minFeed_trykaltsii_fosfat", "trykaltsii_fosfat"],
+  ["minFeed_dolfos_d", "dolfos_d"],
+  ["minFeed_sil", "sil"],
+  ["min_empty_trays", "empty_trays"]
 ];
 
-// ЗБЕРЕГТИ
-function saveWarehouseSettings() {
-  try {
-    warehouseSettingsIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) throw new Error("Не знайдено поле: " + id);
-      localStorage.setItem(id, el.value || "0");
-    });
+// 2️⃣ ЗАВАНТАЖЕННЯ З localStorage
+function loadWarehouseSettings() {
+  let ok = false;
 
-    alert("✅ Дані збережено");
-  } catch (e) {
-    console.error(e);
+  warehouseSettingsFields.forEach(([inputId, key]) => {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const val = localStorage.getItem("min_" + key);
+    if (val !== null) {
+      input.value = Number(val);
+      ok = true;
+    }
+  });
+
+  console.log("📦 Warehouse settings loaded");
+  return ok;
+}
+
+// 3️⃣ ЗБЕРЕЖЕННЯ В localStorage
+function saveWarehouseSettings() {
+  let savedAny = false;
+
+  warehouseSettingsFields.forEach(([inputId, key]) => {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const value = Number(input.value) || 0;
+    localStorage.setItem("min_" + key, value);
+    savedAny = true;
+  });
+
+  if (savedAny) {
+    alert("✅ Дані успішно збережено");
+    console.log("💾 Warehouse settings saved");
+  } else {
     alert("❌ Не вдалося зберегти дані");
+    console.error("❌ Save failed — inputs not found");
   }
 }
+
+// 4️⃣ ЕКСПОРТ У ГЛОБАЛ
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ЗАВАНТАЖИТИ ПРИ СТАРТІ
-function loadWarehouseSettings() {
-  warehouseSettingsIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const saved = localStorage.getItem(id);
-    if (saved !== null) el.value = saved;
-  });
-}
-
-document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
+// 5️⃣ АВТОЗАВАНТАЖЕННЯ ПІСЛЯ СТАРТУ
+document.addEventListener("DOMContentLoaded", () => {
+  loadWarehouseSettings();
+});
 
 // ============================
 //      СТАРТ
