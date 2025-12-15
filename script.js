@@ -571,65 +571,94 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-// НАЛАШТУВАННЯ СКЛАДУ — SAFARI SAFE
+//  НАЛАШТУВАННЯ СКЛАДУ — SAFARI SAFE
 // ============================
 
+// ключі відповідають input id
+const warehouseMinKeys = [
+  "kukurudza",
+  "pshenytsia",
+  "yachmin",
+  "soieva_makuha",
+  "soniashnykova_makuha",
+  "rybne_boroshno",
+  "drizhdzhi",
+  "trykaltsii_fosfat",
+  "dolfos_d",
+  "sil"
+];
+
+const STORAGE_KEY = "warehouseMinimums";
+
+// отримати всі мінімальні значення
+function loadWarehouseMinimums() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+// зберегти всі мінімальні значення
+function saveWarehouseMinimums(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// ============================
+//  ЗБЕРЕЖЕННЯ
+// ============================
+function saveWarehouseSettings() {
+  const data = {};
+
+  warehouseMinKeys.forEach(key => {
+    const input = document.getElementById("minFeed_" + key);
+    if (!input) return;
+
+    data[key] = Number(input.value) || 0;
+  });
+
+  const emptyTraysInput = document.getElementById("min_empty_trays");
+  if (emptyTraysInput) {
+    data.EMPTY_TRAYS = Number(emptyTraysInput.value) || 0;
+  }
+
+  try {
+    saveWarehouseMinimums(data);
+    alert("✅ Дані успішно збережено");
+  } catch (e) {
+    alert("❌ Не вдалося зберегти дані");
+  }
+}
+
+// ============================
+//  ЗАВАНТАЖЕННЯ В UI
+// ============================
+function loadWarehouseSettingsUI() {
+  const data = loadWarehouseMinimums();
+
+  warehouseMinKeys.forEach(key => {
+    const input = document.getElementById("minFeed_" + key);
+    if (input) {
+      input.value = data[key] ?? 0;
+    }
+  });
+
+  const emptyTraysInput = document.getElementById("min_empty_trays");
+  if (emptyTraysInput) {
+    emptyTraysInput.value = data.EMPTY_TRAYS ?? 0;
+  }
+}
+
+// ============================
+//  SAFARI-СУМІСНЕ ПІДКЛЮЧЕННЯ
+// ============================
 document.addEventListener("DOMContentLoaded", () => {
+  loadWarehouseSettingsUI();
 
-  const STORAGE_KEY = "warehouseMinimums";
-
-  function getData() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-    } catch {
-      return {};
-    }
+  const saveBtn = document.getElementById("saveWarehouseSettingsBtn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", saveWarehouseSettings);
   }
-
-  function saveData(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
-
-  function loadSettings() {
-    const data = getData();
-
-    document.querySelectorAll("[id^='minFeed_']").forEach(input => {
-      const key = input.id.replace("minFeed_", "");
-      input.value = data[key] ?? "";
-    });
-
-    const empty = document.getElementById("min_empty_trays");
-    if (empty) empty.value = data.EMPTY_TRAYS ?? "";
-  }
-
-  function saveSettings() {
-    try {
-      const data = {};
-
-      document.querySelectorAll("[id^='minFeed_']").forEach(input => {
-        const key = input.id.replace("minFeed_", "");
-        data[key] = Number(input.value) || 0;
-      });
-
-      const empty = document.getElementById("min_empty_trays");
-      if (empty) data.EMPTY_TRAYS = Number(empty.value) || 0;
-
-      saveData(data);
-      alert("✅ Дані збережені");
-
-    } catch (e) {
-      alert("❌ Не вдалося зберегти дані");
-      console.error(e);
-    }
-  }
-
-  // кнопка ЗБЕРЕГТИ
-  const btn = document.getElementById("saveWarehouseSettingsBtn");
-  if (btn) {
-    btn.addEventListener("click", saveSettings);
-  }
-
-  loadSettings();
 });
 
 // ============================
