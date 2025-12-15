@@ -158,15 +158,32 @@ function renderWarehouse() {
       const name = item[0];
       const need = item[1];
       const stock = warehouse.feed[name] || 0;
+          const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+    const keyMap = {
+      "Кукурудза": "kukurudza",
+      "Пшениця": "pshenytsia",
+      "Ячмінь": "yachmin",
+      "Соева макуха": "soieva_makuha",
+      "Соняшникова макуха": "soniashnykova_makuha",
+      "Рибне борошно": "rybne_boroshno",
+      "Дріжджі": "drizhdzhi",
+      "Трикальційфосфат": "trykaltsii_fosfat",
+      "Dolfos D": "dolfos_d",
+      "Сіль": "sil"
+    };
 
-      return `
-      <tr>
-        <td>${name}</td>
-        <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
-        <td>${need}</td>
-        <td>${stock.toFixed(2)}</td>
-      </tr>
-    `;
+    const minKey = keyMap[name];
+    const minValue = Number(minimums[minKey] || 0);
+    const isLow = stock < minValue;
+
+ return `
+  <tr class="${isLow ? "low-stock" : ""}">
+    <td>${name}</td>
+    <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
+    <td>${need}</td>
+    <td>${stock.toFixed(2)}</td>
+  </tr>
+`;
     })
     .join("");
 
