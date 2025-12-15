@@ -571,76 +571,101 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ — МІНІМУМИ СКЛАДУ
-//  (ПРАЦЮЄ 1:1 З ТВОЇМ HTML)
+//  НАЛАШТУВАННЯ -> МІНІМАЛЬНІ ЗАЛИШКИ СКЛАДУ
+//  (під твої ID з index.html)
 // ============================
 
-const SETTINGS_KEY = "warehouse_minimums_v1";
+const WMS_KEY = "warehouseMinimums"; // ключ у localStorage
 
-// всі input id з index.html
-const SETTINGS_FIELDS = [
-  "minFeed_kukurudza",
-  "minFeed_pshenytsia",
-  "minFeed_yachmin",
-  "minFeed_soieva_makuha",
-  "minFeed_soniashnykova_makuha",
-  "minFeed_rybne_boroshno",
-  "minFeed_drizhdzhi",
-  "minFeed_trykaltsii_fosfat",
-  "minFeed_dolfos_d",
-  "minFeed_sil",
-  "min_empty_trays"
+// Список полів (суфікс -> id input)
+const MIN_FIELDS = [
+  { key: "kukurudza", id: "minFeed_kukurudza" },
+  { key: "pshenytsia", id: "minFeed_pshenytsia" },
+  { key: "yachmin", id: "minFeed_yachmin" },
+  { key: "soieva_makuha", id: "minFeed_soieva_makuha" },
+  { key: "soniashnykova_makuha", id: "minFeed_soniashnykova_makuha" },
+  { key: "rybne_boroshno", id: "minFeed_rybne_boroshno" },
+  { key: "drizhdzhi", id: "minFeed_drizhdzhi" },
+  { key: "trykaltsii_fosfat", id: "minFeed_trykaltsii_fosfat" },
+  { key: "dolfos_d", id: "minFeed_dolfos_d" },
+  { key: "sil", id: "minFeed_sil" },
+
+  // порожні лотки (як у твоєму HTML!)
+  { key: "empty_trays", id: "min_empty_trays" },
 ];
 
-// ============================
-//  ЗБЕРЕГТИ
-// ============================
+function readWarehouseMinimums() {
+  try {
+    const obj = JSON.parse(localStorage.getItem(WMS_KEY) || "{}");
+    return obj && typeof obj === "object" ? obj : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function writeWarehouseMinimums(obj) {
+  // важливо: перевірка, що localStorage реально пише
+  localStorage.setItem(WMS_KEY, JSON.stringify(obj));
+  const back = localStorage.getItem(WMS_KEY);
+  if (!back) throw new Error("localStorage не зберіг значення (порожньо після setItem)");
+}
+
+// щоб потім у "Склад" можна було питати мінімум (ключі як вище)
+function getWarehouseMinimum(key) {
+  const mins = readWarehouseMinimums();
+  return Number(mins[key]) || 0;
+}
+window.getWarehouseMinimum = getWarehouseMinimum;
+
+// КНОПКА "💾 Зберегти" викликає оце
 function saveWarehouseSettings() {
   try {
-    const data = {};
+    const mins = readWarehouseMinimums();
 
-    SETTINGS_FIELDS.forEach(id => {
-      const el = document.getElementById(id);
+    // 1) перевіряємо що всі поля існують
+    for (const f of MIN_FIELDS) {
+      const el = document.getElementById(f.id);
       if (!el) {
-        alert("❌ Не знайдено поле: " + id);
-        throw new Error("Missing field " + id);
+        alert(`❌ Не знайдено поле: ${f.id}`);
+        return;
       }
-      data[id] = Number(el.value) || 0;
-    });
+    }
 
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
+    // 2) записуємо значення
+    for (const f of MIN_FIELDS) {
+      const el = document.getElementById(f.id);
+      const val = Number(el.value);
+      mins[f.key] = Number.isFinite(val) ? val : 0;
+    }
 
-    alert("✅ Дані успішно збережено");
-  } catch (e) {
-    console.error(e);
+    // 3) зберігаємо + валідуємо
+    writeWarehouseMinimums(mins);
+
+    // 4) контроль: читаємо назад і показуємо приклад
+    const check = readWarehouseMinimums();
+    if (typeof check !== "object") throw new Error("прочитали назад не-обʼєкт");
+
+    alert("✅ Дані збережені");
+  } catch (err) {
     alert("❌ Не вдалося зберегти дані");
+    console.error("saveWarehouseSettings error:", err);
   }
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ============================
-//  ЗАВАНТАЖИТИ ПРИ СТАРТІ
-// ============================
-function loadWarehouseSettings() {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return;
+// ПІДТЯГУЄМО значення в інпути після F5
+function loadWarehouseSettingsUI() {
+  const mins = readWarehouseMinimums();
 
-    const data = JSON.parse(raw);
-
-    SETTINGS_FIELDS.forEach(id => {
-      const el = document.getElementById(id);
-      if (el && data[id] !== undefined) {
-        el.value = data[id];
-      }
-    });
-  } catch (e) {
-    console.error("Load settings error", e);
+  for (const f of MIN_FIELDS) {
+    const el = document.getElementById(f.id);
+    if (!el) continue; // якщо сторінки ще нема — мовчки
+    el.value = (mins[f.key] ?? 0);
   }
 }
 
-// ⚠️ ВАЖЛИВО: тільки після завантаження DOM
-document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
+// Виклик після завантаження DOM
+document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
 
 
 // ============================
