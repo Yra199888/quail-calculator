@@ -202,26 +202,22 @@ function renderWarehouse() {
   tbody.innerHTML = feedComponents.map(item => {
     const name = item[0];
     const need = item[1];
-    const stock = Number(warehouse.feed[name] || 0);
+    const stock = warehouse.feed[name] || 0;
 
     const key = getMinKeyByName(name);
-    const min = Number(minimums[key] || 0);
-
+    const min = Number(minimums[key]) || 0;
     const isLow = min > 0 && stock < min;
 
     return `
-      <tr class="${isLow ? "warehouse-warning" : ""}">
+      <tr style="${isLow ? "background:#3a1c1c;color:#ffb3b3;" : ""}">
         <td>${isLow ? "⚠️ " : ""}${name}</td>
-        <td>
-          <input class="addStock" data-name="${name}" type="number" value="0">
-        </td>
+        <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
         <td>${need}</td>
         <td><b>${stock.toFixed(2)}</b></td>
       </tr>
     `;
   }).join("");
 
-  // ➕ прихід компонентів
   document.querySelectorAll(".addStock").forEach(inp => {
     inp.onchange = e => {
       const val = Number(e.target.value) || 0;
@@ -235,13 +231,12 @@ function renderWarehouse() {
 
       const name = e.target.dataset.name;
       warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
-
       saveWarehouse();
       renderWarehouse();
+      applyWarehouseWarnings();
     };
   });
 
-  // 🗄️ порожні лотки
   const trayStockEl = $("trayStock");
   if (trayStockEl) {
     trayStockEl.value = warehouse.trays ?? 0;
@@ -261,41 +256,56 @@ function renderWarehouse() {
 
   const mixHistory = $("mixHistory");
   if (mixHistory) {
-    mixHistory.innerHTML = warehouse.history?.length
-      ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
-      : "<i>Порожньо</i>";
+    mixHistory.innerHTML =
+      warehouse.history?.length
+        ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
+        : "<i>Порожньо</i>";
   }
+
+  applyWarehouseWarnings();
 }
 
-function applyWarehouseWarnings(list) {
-  let box = document.getElementById("warehouseWarnings");
+function applyWarehouseWarnings() {
+  const boxId = "warehouseWarnings";
+  let box = document.getElementById(boxId);
 
   if (!box) {
     box = document.createElement("div");
-    box.id = "warehouseWarnings";
+    box.id = boxId;
     box.style.margin = "10px 0";
     box.style.padding = "10px";
     box.style.borderRadius = "8px";
     box.style.background = "#3a1c1c";
     box.style.color = "#ffb3b3";
-    box.style.border = "1px solid #ff4d4d";
+    box.style.border = "1px solid #ff6666";
 
     const container = document.querySelector("#page-warehouse .container");
-    if (container) {
-      container.prepend(box);
+    if (container) container.prepend(box);
+  }
+
+  const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+  const problems = [];
+
+  feedComponents.forEach(item => {
+    const name = item[0];
+    const stock = warehouse.feed[name] || 0;
+    const key = getMinKeyByName(name);
+    const min = Number(minimums[key]) || 0;
+
+    if (min > 0 && stock < min) {
+      problems.push(`${name}: ${stock} / мін ${min}`);
     }
-  }
+  });
 
-  if (!list.length) {
+  if (problems.length === 0) {
     box.style.display = "none";
-    return;
+  } else {
+    box.style.display = "block";
+    box.innerHTML = `
+      ⚠️ <b>Низькі залишки на складі:</b><br>
+      ${problems.map(p => "• " + p).join("<br>")}
+    `;
   }
-
-  box.style.display = "block";
-  box.innerHTML = `
-    ⚠️ <b>Низькі запаси складу:</b><br>
-    ${list.map(x => "• " + x).join("<br>")}
-  `;
 }
 
 // ============================
