@@ -200,7 +200,12 @@
 
   <div class="container">
     <h3>📦 Мінімальні залишки складу</h3>
+    <p class="hint">
+      Вкажи мінімальні значення. Якщо запас впаде нижче — буде попередження ⚠️
+    </p>
 
+    <!-- Мінімум кормових компонентів -->
+    <h4>🌾 Кормові компоненти (кг)</h4>
     <table class="feed-table">
       <tr>
         <th>Компонент</th>
@@ -209,40 +214,55 @@
 
       <tr>
         <td>Кукурудза</td>
-        <td><input type="number" id="min-corn" value="0"></td>
+        <td><input type="number" id="minFeed_Кукурудза" value="0"></td>
       </tr>
       <tr>
         <td>Пшениця</td>
-        <td><input type="number" id="min-wheat" value="0"></td>
+        <td><input type="number" id="minFeed_Пшениця" value="0"></td>
       </tr>
       <tr>
         <td>Ячмінь</td>
-        <td><input type="number" id="min-barley" value="0"></td>
+        <td><input type="number" id="minFeed_Ячмінь" value="0"></td>
       </tr>
       <tr>
         <td>Соева макуха</td>
-        <td><input type="number" id="min-soy" value="0"></td>
+        <td><input type="number" id="minFeed_Соева макуха" value="0"></td>
       </tr>
       <tr>
         <td>Соняшникова макуха</td>
-        <td><input type="number" id="min-sunflower" value="0"></td>
+        <td><input type="number" id="minFeed_Соняшникова макуха" value="0"></td>
       </tr>
       <tr>
         <td>Рибне борошно</td>
-        <td><input type="number" id="min-fish" value="0"></td>
+        <td><input type="number" id="minFeed_Рибне борошно" value="0"></td>
+      </tr>
+      <tr>
+        <td>Дріжджі</td>
+        <td><input type="number" id="minFeed_Дріжджі" value="0"></td>
+      </tr>
+      <tr>
+        <td>Трикальційфосфат</td>
+        <td><input type="number" id="minFeed_Трикальційфосфат" value="0"></td>
+      </tr>
+      <tr>
+        <td>Dolfos D</td>
+        <td><input type="number" id="minFeed_Dolfos D" value="0"></td>
+      </tr>
+      <tr>
+        <td>Сіль</td>
+        <td><input type="number" id="minFeed_Сіль" value="0"></td>
       </tr>
     </table>
 
-    <h3 style="margin-top:20px;">🥚 Мінімум готових лотків</h3>
-    <label>Готові лотки (шт):</label>
-    <input type="number" id="min-egg-trays" value="0">
+    <!-- Мінімум порожніх лотків -->
+    <h4>🗄️ Порожні лотки</h4>
+    <label>
+      Мінімум порожніх лотків (шт):
+      <input type="number" id="minEmptyTrays" value="0">
+    </label>
 
     <br><br>
-    <button class="main-btn">💾 Зберегти мінімальні залишки</button>
-
-    <p style="margin-top:10px; opacity:0.7;">
-      ⚠️ Поки що це лише налаштування. Перевірка та попередження будуть додані пізніше.
-    </p>
+    <button class="main-btn">💾 Зберегти налаштування</button>
   </div>
 </div>
 
