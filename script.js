@@ -571,57 +571,71 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — SAFARI SAFE
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМАЛЬНІ ЗАЛИШКИ (Safari-friendly)
+//  Працює з твоїм index, де id:
+//   - minFeed_kukurudza ... minFeed_sil
+//   - min_empty_trays
 // ============================
+const WAREHOUSE_MIN_KEY = "warehouseMinimums";
 
-document.addEventListener("DOMContentLoaded", () => {
+// Забираємо всі потрібні інпути з вкладки "Налаштування"
+function getWarehouseMinInputs() {
+  const root = document.getElementById("page-settings");
+  if (!root) return [];
 
-  const btn = document.getElementById("saveWarehouseSettingsBtn");
-  if (!btn) {
-    console.error("❌ Кнопка збереження не знайдена");
-    return;
+  const all = Array.from(root.querySelectorAll('input[type="number"]'));
+  return all.filter((inp) => inp?.id && (inp.id.startsWith("minFeed_") || inp.id === "min_empty_trays"));
+}
+
+// ✅ Кнопка в index: onclick="saveWarehouseSettings()"
+function saveWarehouseSettings() {
+  try {
+    const inputs = getWarehouseMinInputs();
+    if (!inputs.length) throw new Error("Не знайдено полів (перевір id у вкладці Налаштування).");
+
+    const data = {};
+    inputs.forEach((inp) => {
+      data[inp.id] = Number(inp.value) || 0;
+    });
+
+    localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(data));
+
+    // Контроль: чи реально записалось
+    const check = localStorage.getItem(WAREHOUSE_MIN_KEY);
+    if (!check) throw new Error("localStorage не підтвердив запис.");
+
+    alert("✅ Дані збережені");
+  } catch (err) {
+    console.error("saveWarehouseSettings error:", err);
+    alert("❌ Не вдалося зберегти дані");
   }
+}
+window.saveWarehouseSettings = saveWarehouseSettings;
 
-  btn.addEventListener("click", () => {
-    try {
-      const data = {
-        kukurudza: Number(document.getElementById("minFeed_kukurudza")?.value || 0),
-        pshenytsia: Number(document.getElementById("minFeed_pshenytsia")?.value || 0),
-        yachmin: Number(document.getElementById("minFeed_yachmin")?.value || 0),
-        soieva_makuha: Number(document.getElementById("minFeed_soieva_makuha")?.value || 0),
-        soniashnykova_makuha: Number(document.getElementById("minFeed_soniashnykova_makuha")?.value || 0),
-        rybne_boroshno: Number(document.getElementById("minFeed_rybne_boroshno")?.value || 0),
-        drizhdzhi: Number(document.getElementById("minFeed_drizhdzhi")?.value || 0),
-        trykaltsii_fosfat: Number(document.getElementById("minFeed_trykaltsii_fosfat")?.value || 0),
-        dolfos_d: Number(document.getElementById("minFeed_dolfos_d")?.value || 0),
-        sil: Number(document.getElementById("minFeed_sil")?.value || 0),
-        empty_trays: Number(document.getElementById("min_empty_trays")?.value || 0),
-      };
+// Підтягуємо значення назад у поля після оновлення сторінки
+function loadWarehouseSettingsUI() {
+  try {
+    const raw = localStorage.getItem(WAREHOUSE_MIN_KEY);
+    const data = raw ? JSON.parse(raw) : {};
 
-      localStorage.setItem("warehouseMinimums", JSON.stringify(data));
-      alert("✅ Дані успішно збережені");
+    const inputs = getWarehouseMinInputs();
+    inputs.forEach((inp) => {
+      const v = Object.prototype.hasOwnProperty.call(data, inp.id) ? data[inp.id] : 0;
+      inp.value = Number(v) || 0;
+    });
+  } catch (err) {
+    console.error("loadWarehouseSettingsUI error:", err);
+    // Не валимо вкладки
+  }
+}
 
-    } catch (e) {
-      console.error(e);
-      alert("❌ Не вдалося зберегти дані");
-    }
-  });
-
-});
-
-// ============================
-//  ЗБЕРЕЖЕННЯ
-// ============================
-
+// Важливо: виклик після завантаження DOM (Safari це любить)
 document.addEventListener("DOMContentLoaded", () => {
-  const saved = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+  loadWarehouseSettingsUI();
 
-  Object.keys(saved).forEach(key => {
-    const input = document.getElementById("minFeed_" + key) 
-      || document.getElementById("min_" + key);
-
-    if (input) input.value = saved[key];
-  });
+  // Якщо в тебе вже є syncToggleButtonsUI() в іншому місці — можна лишити.
+  // Але щоб не було “не оновились замочки” — викличемо безпечно:
+  if (typeof syncToggleButtonsUI === "function") syncToggleButtonsUI();
 });
 
 // ============================
