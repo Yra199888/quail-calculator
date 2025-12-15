@@ -586,10 +586,10 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (НЕ ЛАМАЄ ВКЛАДКИ)
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
 // ============================
 
-// 1) Ключі для input id (без пробілів/спецсимволів)
+// feedKey — ЄДИНЕ ДЖЕРЕЛО ПРАВДИ
 function feedKey(name) {
   const map = {
     "Кукурудза": "kukurudza",
@@ -603,67 +603,53 @@ function feedKey(name) {
     "Dolfos D": "dolfos_d",
     "Сіль": "sil"
   };
-  return map[name] || String(name)
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_а-яіїєґ]/gi, "");
+  return map[name];
 }
 
-// 2) Сховище мінімумів
-let warehouseMinimums = {};
-try {
-  warehouseMinimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}") || {};
-} catch (e) {
-  warehouseMinimums = {};
-}
+// сховище
+let warehouseMinimums = JSON.parse(
+  localStorage.getItem("warehouseMinimums") || "{}"
+);
 
+// зберегти
 function saveWarehouseMinimum(key, value) {
   warehouseMinimums[key] = Number(value) || 0;
   localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
 }
 
+// отримати
 function getWarehouseMinimum(key) {
   return Number(warehouseMinimums[key]) || 0;
 }
 
-// 3) ЗБЕРЕГТИ (викликається кнопкою в index)
+// КНОПКА "ЗБЕРЕГТИ"
 function saveWarehouseSettings() {
-  // кормові компоненти
   feedComponents.forEach(item => {
-    const name = item[0];
-    const key = feedKey(name);
+    const key = feedKey(item[0]);
     const input = document.getElementById("minFeed_" + key);
     if (input) saveWarehouseMinimum(key, input.value);
   });
 
-  // порожні лотки
-  const emptyTraysInput = document.getElementById("minEmptyTrays");
-  if (emptyTraysInput) saveWarehouseMinimum("EMPTY_TRAYS", emptyTraysInput.value);
+  const empty = document.getElementById("minEmptyTrays");
+  if (empty) saveWarehouseMinimum("EMPTY_TRAYS", empty.value);
 
-  alert("✅ Мінімальні залишки складу збережено");
+  alert("✅ Мінімальні залишки збережено");
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// 4) ПІДТЯГНУТИ В UI (щоб після F5 НЕ пропадало)
+// ЗАВАНТАЖЕННЯ ПІСЛЯ F5
 function loadWarehouseSettingsUI() {
-  // Якщо сторінки/інпути ще не в DOM — просто вийти без помилки
-  if (!document.getElementById("page-settings")) return;
-
   feedComponents.forEach(item => {
-    const name = item[0];
-    const key = feedKey(name);
+    const key = feedKey(item[0]);
     const input = document.getElementById("minFeed_" + key);
     if (input) input.value = getWarehouseMinimum(key);
   });
 
-  const emptyTraysInput = document.getElementById("minEmptyTrays");
-  if (emptyTraysInput) emptyTraysInput.value = getWarehouseMinimum("EMPTY_TRAYS");
+  const empty = document.getElementById("minEmptyTrays");
+  if (empty) empty.value = getWarehouseMinimum("EMPTY_TRAYS");
 }
 
-// ВАЖЛИВО: виклик після завантаження DOM (щоб не валити навігацію)
-document.addEventListener("DOMContentLoaded", () => {
-  loadWarehouseSettingsUI();
-});
+document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
 
 
 // ============================
