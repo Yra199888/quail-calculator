@@ -571,72 +571,68 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ (МІНІМУМИ) — РОБОЧА ВЕРСІЯ
+//  НАЛАШТУВАННЯ СКЛАДУ — ЗБЕРЕЖЕННЯ
 // ============================
 
-// 1️⃣ ОПИС ПОЛІВ (ID ↔ ключ збереження)
-const warehouseSettingsFields = [
-  ["minFeed_kukurudza", "kukurudza"],
-  ["minFeed_pshenytsia", "pshenytsia"],
-  ["minFeed_yachmin", "yachmin"],
-  ["minFeed_soieva_makuha", "soieva_makuha"],
-  ["minFeed_soniashnykova_makuha", "soniashnykova_makuha"],
-  ["minFeed_rybne_boroshno", "rybne_boroshno"],
-  ["minFeed_drizhdzhi", "drizhdzhi"],
-  ["minFeed_trykaltsii_fosfat", "trykaltsii_fosfat"],
-  ["minFeed_dolfos_d", "dolfos_d"],
-  ["minFeed_sil", "sil"],
-  ["min_empty_trays", "empty_trays"]
+const WAREHOUSE_MIN_KEY = "warehouseMinimums";
+
+// ключі = id інпутів
+const warehouseMinFields = [
+  "minFeed_kukurudza",
+  "minFeed_pshenytsia",
+  "minFeed_yachmin",
+  "minFeed_soieva_makuha",
+  "minFeed_soniashnykova_makuha",
+  "minFeed_rybne_boroshno",
+  "minFeed_drizhdzhi",
+  "minFeed_trykaltsii_fosfat",
+  "minFeed_dolfos_d",
+  "minFeed_sil",
+  "min_empty_trays"
 ];
 
-// 2️⃣ ЗАВАНТАЖЕННЯ З localStorage
-function loadWarehouseSettings() {
-  let ok = false;
-
-  warehouseSettingsFields.forEach(([inputId, key]) => {
-    const input = document.getElementById(inputId);
-    if (!input) return;
-
-    const val = localStorage.getItem("min_" + key);
-    if (val !== null) {
-      input.value = Number(val);
-      ok = true;
-    }
-  });
-
-  console.log("📦 Warehouse settings loaded");
-  return ok;
-}
-
-// 3️⃣ ЗБЕРЕЖЕННЯ В localStorage
+// ===== ЗБЕРЕГТИ =====
 function saveWarehouseSettings() {
-  let savedAny = false;
+  try {
+    const data = {};
 
-  warehouseSettingsFields.forEach(([inputId, key]) => {
-    const input = document.getElementById(inputId);
-    if (!input) return;
+    warehouseMinFields.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) throw new Error("Немає поля: " + id);
+      data[id] = Number(el.value) || 0;
+    });
 
-    const value = Number(input.value) || 0;
-    localStorage.setItem("min_" + key, value);
-    savedAny = true;
-  });
+    localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(data));
 
-  if (savedAny) {
-    alert("✅ Дані успішно збережено");
-    console.log("💾 Warehouse settings saved");
-  } else {
+    alert("✅ Дані успішно збережені");
+  } catch (e) {
+    console.error(e);
     alert("❌ Не вдалося зберегти дані");
-    console.error("❌ Save failed — inputs not found");
+  }
+}
+window.saveWarehouseSettings = saveWarehouseSettings;
+
+// ===== ЗАВАНТАЖИТИ =====
+function loadWarehouseSettings() {
+  try {
+    const raw = localStorage.getItem(WAREHOUSE_MIN_KEY);
+    if (!raw) return;
+
+    const data = JSON.parse(raw);
+
+    warehouseMinFields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && data[id] !== undefined) {
+        el.value = data[id];
+      }
+    });
+  } catch (e) {
+    console.error(e);
   }
 }
 
-// 4️⃣ ЕКСПОРТ У ГЛОБАЛ
-window.saveWarehouseSettings = saveWarehouseSettings;
-
-// 5️⃣ АВТОЗАВАНТАЖЕННЯ ПІСЛЯ СТАРТУ
-document.addEventListener("DOMContentLoaded", () => {
-  loadWarehouseSettings();
-});
+// ===== ПІСЛЯ ЗАВАНТАЖЕННЯ СТОРІНКИ =====
+document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
 
 // ============================
 //      СТАРТ
