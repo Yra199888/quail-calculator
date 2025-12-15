@@ -609,6 +609,31 @@ function getWarehouseMinimum(component) {
 }
 
 // ============================
+//  ЗБЕРЕГТИ НАЛАШТУВАННЯ СКЛАДУ
+// ============================
+function saveWarehouseSettings() {
+
+  // кормові компоненти
+  feedComponents.forEach(item => {
+    const name = item[0];
+    const input = document.getElementById("minFeed_" + name);
+    if (input) {
+      saveWarehouseMinimum(name, input.value);
+    }
+  });
+
+  // порожні лотки
+  const emptyTraysInput = document.getElementById("minEmptyTrays");
+  if (emptyTraysInput) {
+    saveWarehouseMinimum("EMPTY_TRAYS", emptyTraysInput.value);
+  }
+
+  alert("✅ Мінімальні залишки збережено");
+}
+
+window.saveWarehouseSettings = saveWarehouseSettings;
+
+// ============================
 //      СТАРТ UI
 // ============================
 syncToggleButtonsUI();
