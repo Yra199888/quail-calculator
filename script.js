@@ -585,110 +585,85 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
+// ============================
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (НЕ ЛАМАЄ ВКЛАДКИ)
+// ============================
+
+// 1) Ключі для input id (без пробілів/спецсимволів)
 function feedKey(name) {
-  return name.replace(/\s+/g, "_").toUpperCase();
+  const map = {
+    "Кукурудза": "kukurudza",
+    "Пшениця": "pshenytsia",
+    "Ячмінь": "yachmin",
+    "Соева макуха": "soieva_makuha",
+    "Соняшникова макуха": "soniashnykova_makuha",
+    "Рибне борошно": "rybne_boroshno",
+    "Дріжджі": "drizhdzhi",
+    "Трикальційфосфат": "trykaltsii_fosfat",
+    "Dolfos D": "dolfos_d",
+    "Сіль": "sil"
+  };
+  return map[name] || String(name)
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_а-яіїєґ]/gi, "");
 }
 
-// ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
-// ============================
-
-let warehouseMinimums = JSON.parse(
-  localStorage.getItem("warehouseMinimums") || "{}"
-);
+// 2) Сховище мінімумів
+let warehouseMinimums = {};
+try {
+  warehouseMinimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}") || {};
+} catch (e) {
+  warehouseMinimums = {};
+}
 
 function saveWarehouseMinimum(key, value) {
   warehouseMinimums[key] = Number(value) || 0;
-  localStorage.setItem(
-    "warehouseMinimums",
-    JSON.stringify(warehouseMinimums)
-  );
+  localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
 }
 
-// ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
-// ============================
-
-// ключі компонентів (ВАЖЛИВО: ті самі, що в index)
-const FEED_KEYS = {
-  "Кукурудза": "KUKURYDZA",
-  "Пшениця": "PSHENYCYA",
-  "Ячмінь": "YACHMIN",
-  "Соева макуха": "SOYA",
-  "Соняшникова макуха": "SONяшNYK",
-  "Рибне борошно": "RYBNE",
-  "Дріжджі": "DRIZHDZHI",
-  "Трикальційфосфат": "TCP",
-  "Dolfos D": "DOLFOS",
-  "Сіль": "SIL"
-};
-
-// зчитування або створення
-let warehouseMinimums = JSON.parse(
-  localStorage.getItem("warehouseMinimums") || "{}"
-);
-
-// зберегти один мінімум
-function saveWarehouseMinimum(key, value) {
-  warehouseMinimums[key] = Number(value) || 0;
-  localStorage.setItem(
-    "warehouseMinimums",
-    JSON.stringify(warehouseMinimums)
-  );
-}
-
-// отримати мінімум
 function getWarehouseMinimum(key) {
   return Number(warehouseMinimums[key]) || 0;
 }
 
-// ============================
-//  ЗБЕРЕГТИ ВСІ НАЛАШТУВАННЯ
-// ============================
+// 3) ЗБЕРЕГТИ (викликається кнопкою в index)
 function saveWarehouseSettings() {
-
+  // кормові компоненти
   feedComponents.forEach(item => {
     const name = item[0];
-    const key = FEED_KEYS[name];
+    const key = feedKey(name);
     const input = document.getElementById("minFeed_" + key);
-
-    if (input) {
-      saveWarehouseMinimum(key, input.value);
-    }
+    if (input) saveWarehouseMinimum(key, input.value);
   });
 
+  // порожні лотки
   const emptyTraysInput = document.getElementById("minEmptyTrays");
-  if (emptyTraysInput) {
-    saveWarehouseMinimum("EMPTY_TRAYS", emptyTraysInput.value);
-  }
+  if (emptyTraysInput) saveWarehouseMinimum("EMPTY_TRAYS", emptyTraysInput.value);
 
   alert("✅ Мінімальні залишки складу збережено");
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ============================
-//  ЗАВАНТАЖЕННЯ В UI
-// ============================
+// 4) ПІДТЯГНУТИ В UI (щоб після F5 НЕ пропадало)
 function loadWarehouseSettingsUI() {
+  // Якщо сторінки/інпути ще не в DOM — просто вийти без помилки
+  if (!document.getElementById("page-settings")) return;
 
   feedComponents.forEach(item => {
     const name = item[0];
-    const key = FEED_KEYS[name];
+    const key = feedKey(name);
     const input = document.getElementById("minFeed_" + key);
-
-    if (input) {
-      input.value = getWarehouseMinimum(key);
-    }
+    if (input) input.value = getWarehouseMinimum(key);
   });
 
   const emptyTraysInput = document.getElementById("minEmptyTrays");
-  if (emptyTraysInput) {
-    emptyTraysInput.value = getWarehouseMinimum("EMPTY_TRAYS");
-  }
+  if (emptyTraysInput) emptyTraysInput.value = getWarehouseMinimum("EMPTY_TRAYS");
 }
 
-// запуск при старті
-loadWarehouseSettingsUI();
+// ВАЖЛИВО: виклик після завантаження DOM (щоб не валити навігацію)
+document.addEventListener("DOMContentLoaded", () => {
+  loadWarehouseSettingsUI();
+});
 
 
 // ============================
