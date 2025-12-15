@@ -204,6 +204,7 @@ tbody.innerHTML = feedComponents
       warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
       saveWarehouse();
       renderWarehouse();
+      checkWarehouseMinimums();
     };
   });
 
@@ -234,6 +235,7 @@ tbody.innerHTML = feedComponents
 }
 
 renderWarehouse();
+checkWarehouseMinimums();
 
 const makeFeedBtn = $("makeFeedBtn");
 if (makeFeedBtn) {
@@ -256,6 +258,7 @@ if (makeFeedBtn) {
     warehouse.history.push("Заміс: " + new Date().toLocaleString());
     saveWarehouse();
     renderWarehouse();
+    checkWarehouseMinimums();
   };
 }
 
@@ -458,6 +461,7 @@ function addOrder() {
 
   showOrders();
   renderWarehouse();
+  checkWarehouseMinimums();
 }
 window.addOrder = addOrder;
 
@@ -481,6 +485,7 @@ function setStatus(d, i, s) {
   localStorage.setItem("orders", JSON.stringify(orders));
   showOrders();
   renderWarehouse();
+  checkWarehouseMinimums();
 }
 window.setStatus = setStatus;
 
@@ -583,6 +588,7 @@ function clearEggTrays() {
 
   saveWarehouse();
   renderWarehouse();
+  checkWarehouseMinimums();
   showOrders();
 
   alert("✅ Лотки з яйцями очищено");
@@ -649,6 +655,59 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   loadWarehouseSettings();
 });
+
+
+// ============================
+//  ПОПЕРЕДЖЕННЯ СКЛАДУ — ВЕРХНІЙ БЛОК
+// ============================
+function checkWarehouseMinimums() {
+  const warnBox = document.getElementById("warehouseWarning");
+  const warnList = document.getElementById("warehouseWarningList");
+
+  if (!warnBox || !warnList) return;
+
+  let warnings = [];
+
+  // кормові компоненти
+  const mins = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+
+  feedComponents.forEach(item => {
+    const name = item[0];
+    const keyMap = {
+      "Кукурудза": "kukurudza",
+      "Пшениця": "pshenytsia",
+      "Ячмінь": "yachmin",
+      "Соева макуха": "soieva_makuha",
+      "Соняшникова макуха": "soniashnykova_makuha",
+      "Рибне борошно": "rybne_boroshno",
+      "Дріжджі": "drizhdzhi",
+      "Трикальційфосфат": "trykaltsii_fosfat",
+      "Dolfos D": "dolfos_d",
+      "Сіль": "sil"
+    };
+
+    const key = keyMap[name];
+    const min = Number(mins[key] || 0);
+    const stock = Number(warehouse.feed[name] || 0);
+
+    if (min > 0 && stock < min) {
+      warnings.push(`🌾 ${name}: ${stock} кг (мін ${min})`);
+    }
+  });
+
+  // порожні лотки
+  const minTrays = Number(mins.empty_trays || 0);
+  if (minTrays > 0 && (warehouse.trays || 0) < minTrays) {
+    warnings.push(`🗄️ Порожні лотки: ${warehouse.trays || 0} шт (мін ${minTrays})`);
+  }
+
+  if (warnings.length) {
+    warnList.innerHTML = warnings.map(w => `• ${w}`).join("<br>");
+    warnBox.style.display = "block";
+  } else {
+    warnBox.style.display = "none";
+  }
+}
 
 // ============================
 //      СТАРТ
