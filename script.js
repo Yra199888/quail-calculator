@@ -586,59 +586,75 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (СТАБІЛЬНО)
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (100% РОБОЧЕ)
 // ============================
 
-// 1️⃣ Сховище
-let warehouseMinimums = {};
-try {
-  warehouseMinimums = JSON.parse(localStorage.getItem("warehouseMinimums")) || {};
-} catch {
-  warehouseMinimums = {};
+const WAREHOUSE_MIN_KEY = "warehouseMinimums";
+
+// відповідність НАЗВА → ID
+const MIN_KEYS = {
+  "Кукурудза": "min_kukurudza",
+  "Пшениця": "min_pshenytsia",
+  "Ячмінь": "min_yachmin",
+  "Соева макуха": "min_soieva_makuha",
+  "Соняшникова макуха": "min_soniashnykova_makuha",
+  "Рибне борошно": "min_rybne_boroshno",
+  "Дріжджі": "min_drizhdzhi",
+  "Трикальційфосфат": "min_trykaltsii_fosfat",
+  "Dolfos D": "min_dolfos_d",
+  "Сіль": "min_sil",
+  "EMPTY_TRAYS": "min_empty_trays"
+};
+
+// зчитати
+function getWarehouseMinimums() {
+  return JSON.parse(localStorage.getItem(WAREHOUSE_MIN_KEY) || "{}");
 }
 
-// 2️⃣ Зберегти
-function saveWarehouseSettings() {
+// зберегти
+function setWarehouseMinimums(data) {
+  localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(data));
+}
 
-  // кормові компоненти — ТОЧНІ НАЗВИ
+// кнопка 💾
+function saveWarehouseSettings() {
+  const data = {};
+
   feedComponents.forEach(item => {
     const name = item[0];
-    const input = document.getElementById("min_" + name);
-    if (input) {
-      warehouseMinimums[name] = Number(input.value) || 0;
-    }
+    const id = MIN_KEYS[name];
+    const input = document.getElementById(id);
+    if (input) data[name] = Number(input.value) || 0;
   });
 
-  // порожні лотки
-  const empty = document.getElementById("min_EMPTY_TRAYS");
-  if (empty) {
-    warehouseMinimums["EMPTY_TRAYS"] = Number(empty.value) || 0;
-  }
+  const empty = document.getElementById(MIN_KEYS.EMPTY_TRAYS);
+  if (empty) data.EMPTY_TRAYS = Number(empty.value) || 0;
 
-  localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
-  alert("✅ Мінімальні залишки збережено");
+  setWarehouseMinimums(data);
+  alert("✅ Налаштування складу збережено");
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// 3️⃣ Завантажити в UI (ПІСЛЯ F5)
+// автозавантаження після F5
 function loadWarehouseSettingsUI() {
+  const data = getWarehouseMinimums();
+
   feedComponents.forEach(item => {
     const name = item[0];
-    const input = document.getElementById("min_" + name);
-    if (input) {
-      input.value = warehouseMinimums[name] ?? 0;
+    const id = MIN_KEYS[name];
+    const input = document.getElementById(id);
+    if (input && data[name] !== undefined) {
+      input.value = data[name];
     }
   });
 
-  const empty = document.getElementById("min_EMPTY_TRAYS");
-  if (empty) {
-    empty.value = warehouseMinimums["EMPTY_TRAYS"] ?? 0;
+  const empty = document.getElementById(MIN_KEYS.EMPTY_TRAYS);
+  if (empty && data.EMPTY_TRAYS !== undefined) {
+    empty.value = data.EMPTY_TRAYS;
   }
 }
 
-// 4️⃣ ПІСЛЯ ЗАВАНТАЖЕННЯ СТОРІНКИ
 document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
-
 // ============================
 //      СТАРТ UI
 // ============================
