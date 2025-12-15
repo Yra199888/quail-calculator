@@ -571,10 +571,10 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — SAFARI FIX
+//  НАЛАШТУВАННЯ СКЛАДУ (SAFARI + CHROME SAFE)
 // ============================
 
-// зберігання
+// --------- ЗБЕРЕГТИ ---------
 function saveWarehouseSettings() {
   try {
     const data = {
@@ -594,29 +594,35 @@ function saveWarehouseSettings() {
     localStorage.setItem("warehouseMinimums", JSON.stringify(data));
 
     alert("✅ Дані успішно збережені");
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
     alert("❌ Не вдалося зберегти дані");
   }
 }
 
-// завантаження
+// --------- ЗАВАНТАЖИТИ ---------
 function loadWarehouseSettings() {
   try {
     const data = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
 
-    Object.keys(data).forEach(key => {
-      const input = document.getElementById("minFeed_" + key) 
-        || document.getElementById("min_" + key);
+    if (data.kukurudza !== undefined) document.getElementById("minFeed_kukurudza").value = data.kukurudza;
+    if (data.pshenytsia !== undefined) document.getElementById("minFeed_pshenytsia").value = data.pshenytsia;
+    if (data.yachmin !== undefined) document.getElementById("minFeed_yachmin").value = data.yachmin;
+    if (data.soieva_makuha !== undefined) document.getElementById("minFeed_soieva_makuha").value = data.soieva_makuha;
+    if (data.soniashnykova_makuha !== undefined) document.getElementById("minFeed_soniashnykova_makuha").value = data.soniashnykova_makuha;
+    if (data.rybne_boroshno !== undefined) document.getElementById("minFeed_rybne_boroshno").value = data.rybne_boroshno;
+    if (data.drizhdzhi !== undefined) document.getElementById("minFeed_drizhdzhi").value = data.drizhdzhi;
+    if (data.trykaltsii_fosfat !== undefined) document.getElementById("minFeed_trykaltsii_fosfat").value = data.trykaltsii_fosfat;
+    if (data.dolfos_d !== undefined) document.getElementById("minFeed_dolfos_d").value = data.dolfos_d;
+    if (data.sil !== undefined) document.getElementById("minFeed_sil").value = data.sil;
+    if (data.empty_trays !== undefined) document.getElementById("min_empty_trays").value = data.empty_trays;
 
-      if (input) input.value = data[key];
-    });
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
   }
 }
 
-// ⛔️ ГОЛОВНЕ: Safari-safe підв’язка кнопки
+// --------- SAFARI SAFE ПІДВʼЯЗКА ---------
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("saveWarehouseSettingsBtn");
   if (btn) {
