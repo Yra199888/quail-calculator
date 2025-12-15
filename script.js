@@ -571,117 +571,76 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-// НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
-// ЛОГІКА ЯК У КАЛЬКУЛЯТОРІ КОРМУ
+//      НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
 // ============================
 
-// ключ у localStorage
-const WAREHOUSE_MIN_KEY = "warehouseMinimums";
-
-// безпечне зчитування
-function getWarehouseMinimums() {
-  try {
-    return JSON.parse(localStorage.getItem(WAREHOUSE_MIN_KEY)) || {};
-  } catch (e) {
-    return {};
-  }
+// 1) Функція, яка створює “ключ” для кожного компонента
+function feedKey(name) {
+  return name
+    .toLowerCase()
+    .replace(/і/g, "i")
+    .replace(/є/g, "e")
+    .replace(/ї/g, "i")
+    .replace(/ґ/g, "g")
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/gi, "");
 }
 
-// безпечне збереження
-function setWarehouseMinimums(obj) {
-  try {
-    localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(obj));
-    return true;
-  } catch (e) {
-    return false;
-  }
+// 2) Завантажуємо або ініціалізуємо дані
+let warehouseMinimums = {};
+try {
+  warehouseMinimums = JSON.parse(localStorage.getItem("warehouseMinimums")) || {};
+} catch {
+  warehouseMinimums = {};
 }
 
-// ============================
-// ЗБЕРЕГТИ НАЛАШТУВАННЯ
-// ============================
+function saveWarehouseMinimum(key, value) {
+  warehouseMinimums[key] = Number(value) || 0;
+  localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
+}
+
+function getWarehouseMinimum(key) {
+  return Number(warehouseMinimums[key]) || 0;
+}
+
+// 3) Функція збереження (викликається при натисканні)
 function saveWarehouseSettings() {
-  const data = {};
+  try {
+    // компоненти
+    feedComponents.forEach(item => {
+      const key = feedKey(item[0]);
+      const input = document.getElementById("minFeed_" + key);
+      if (input) saveWarehouseMinimum(key, input.value);
+    });
 
-  // кормові компоненти — ІМЕНА = ЯК В СКЛАДІ
-  const map = {
-    "Кукурудза": "min_kukurudza",
-    "Пшениця": "min_pshenytsia",
-    "Ячмінь": "min_yachmin",
-    "Соева макуха": "min_soieva_makuha",
-    "Соняшникова макуха": "min_soniashnykova_makuha",
-    "Рибне борошно": "min_rybne_boroshno",
-    "Дріжджі": "min_drizhdzhi",
-    "Трикальційфосфат": "min_trykaltsii_fosfat",
-    "Dolfos D": "min_dolfos_d",
-    "Сіль": "min_sil"
-  };
+    // порожні лотки
+    const emptyTraysInput = document.getElementById("minEmptyTrays");
+    if (emptyTraysInput) saveWarehouseMinimum("EMPTY_TRAYS", emptyTraysInput.value);
 
-  // зчитуємо всі інпути
-  for (const name in map) {
-    const el = document.getElementById(map[name]);
-    if (!el) {
-      alert("❌ Не знайдено поле: " + name);
-      return;
-    }
-    data[name] = Number(el.value) || 0;
-  }
-
-  // порожні лотки
-  const emptyTrays = document.getElementById("min_empty_trays");
-  if (!emptyTrays) {
-    alert("❌ Не знайдено поле порожніх лотків");
-    return;
-  }
-  data.EMPTY_TRAYS = Number(emptyTrays.value) || 0;
-
-  // зберігаємо
-  const ok = setWarehouseMinimums(data);
-
-  if (ok) {
-    alert("✅ Дані збережено");
-  } else {
-    alert("❌ Не вдалося зберегти дані");
+    alert("✅ Дані налаштувань збережено!");
+  } catch (err) {
+    console.error("Помилка збереження налаштувань:", err);
+    alert("❌ Не вдалося зберегти дані!");
   }
 }
-
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ============================
-// ЗАВАНТАЖЕННЯ ПІСЛЯ F5
-// ============================
-function loadWarehouseSettings() {
-  const data = getWarehouseMinimums();
-  if (!data || typeof data !== "object") return;
+// 4) Завантаження налаштувань в UI після F5
+function loadWarehouseSettingsUI() {
+  // перевіряємо чи є елементи
+  if (!document.getElementById("minEmptyTrays")) return;
 
-  const map = {
-    "Кукурудза": "min_kukurudza",
-    "Пшениця": "min_pshenytsia",
-    "Ячмінь": "min_yachmin",
-    "Соева макуха": "min_soieva_makuha",
-    "Соняшникова макуха": "min_soniashnykova_makuha",
-    "Рибне борошно": "min_rybne_boroshno",
-    "Дріжджі": "min_drizhdzhi",
-    "Трикальційфосфат": "min_trykaltsii_fosfat",
-    "Dolfos D": "min_dolfos_d",
-    "Сіль": "min_sil"
-  };
+  feedComponents.forEach(item => {
+    const key = feedKey(item[0]);
+    const input = document.getElementById("minFeed_" + key);
+    if (input) input.value = getWarehouseMinimum(key);
+  });
 
-  for (const name in map) {
-    const el = document.getElementById(map[name]);
-    if (el && data[name] !== undefined) {
-      el.value = data[name];
-    }
-  }
-
-  const emptyTrays = document.getElementById("min_empty_trays");
-  if (emptyTrays && data.EMPTY_TRAYS !== undefined) {
-    emptyTrays.value = data.EMPTY_TRAYS;
-  }
+  const emptyTraysInput = document.getElementById("minEmptyTrays");
+  if (emptyTraysInput) emptyTraysInput.value = getWarehouseMinimum("EMPTY_TRAYS");
 }
 
-// ПІСЛЯ ЗАВАНТАЖЕННЯ СТОРІНКИ
-document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
+document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
 
 // ============================
 //      СТАРТ
