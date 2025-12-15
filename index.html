@@ -199,46 +199,34 @@
   <h2>⚙️ Налаштування</h2>
 
   <div class="container">
-
     <h3>📦 Налаштування складу</h3>
 
     <p class="hint">
-      ⚠️ Вкажи мінімальні значення запасів.
-      Якщо фактичний залишок стане меншим — система покаже попередження.
+      ⚠️ Якщо запас стане меншим за мінімум — буде попередження
     </p>
 
     <h4>🌾 Кормові компоненти (кг)</h4>
 
     <table class="feed-table">
-      <tr>
-        <th>Компонент</th>
-        <th>Мінімум (кг)</th>
-      </tr>
+      <tr><th>Компонент</th><th>Мінімум</th></tr>
 
-      <tr><td>Кукурудза</td><td><input type="number" id="minFeed_kukurudza" value="0"></td></tr>
-      <tr><td>Пшениця</td><td><input type="number" id="minFeed_pshenytsia" value="0"></td></tr>
-      <tr><td>Ячмінь</td><td><input type="number" id="minFeed_yachmin" value="0"></td></tr>
-      <tr><td>Соева макуха</td><td><input type="number" id="minFeed_soieva_makuha" value="0"></td></tr>
-      <tr><td>Соняшникова макуха</td><td><input type="number" id="minFeed_soniashnykova_makuha" value="0"></td></tr>
-      <tr><td>Рибне борошно</td><td><input type="number" id="minFeed_rybne_boroshno" value="0"></td></tr>
-      <tr><td>Дріжджі</td><td><input type="number" id="minFeed_drizhdzhi" value="0"></td></tr>
-      <tr><td>Трикальційфосфат</td><td><input type="number" id="minFeed_trykaltsii_fosfat" value="0"></td></tr>
-      <tr><td>Dolfos D</td><td><input type="number" id="minFeed_dolfos_d" value="0"></td></tr>
-      <tr><td>Сіль</td><td><input type="number" id="minFeed_sil" value="0"></td></tr>
+      <tr><td>Кукурудза</td><td><input id="minFeed_kukurudza" type="number"></td></tr>
+      <tr><td>Пшениця</td><td><input id="minFeed_pshenytsia" type="number"></td></tr>
+      <tr><td>Ячмінь</td><td><input id="minFeed_yachmin" type="number"></td></tr>
+      <tr><td>Соева макуха</td><td><input id="minFeed_soieva_makuha" type="number"></td></tr>
+      <tr><td>Соняшникова макуха</td><td><input id="minFeed_soniashnykova_makuha" type="number"></td></tr>
+      <tr><td>Рибне борошно</td><td><input id="minFeed_rybne_boroshno" type="number"></td></tr>
+      <tr><td>Дріжджі</td><td><input id="minFeed_drizhdzhi" type="number"></td></tr>
+      <tr><td>Трикальційфосфат</td><td><input id="minFeed_trykaltsii_fosfat" type="number"></td></tr>
+      <tr><td>Dolfos D</td><td><input id="minFeed_dolfos_d" type="number"></td></tr>
+      <tr><td>Сіль</td><td><input id="minFeed_sil" type="number"></td></tr>
     </table>
 
     <h4>🗄️ Порожні лотки</h4>
-    <label>
-      Мінімум порожніх лотків (шт):
-      <input type="number" id="minEmptyTrays" value="0">
-    </label>
+    <input id="minEmptyTrays" type="number">
 
     <br><br>
-
-    <button class="main-btn" onclick="saveWarehouseSettings()">
-      💾 Зберегти налаштування
-    </button>
-
+    <button class="main-btn" onclick="saveWarehouseSettings()">💾 Зберегти</button>
   </div>
 </div>
 
