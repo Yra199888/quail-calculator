@@ -586,65 +586,72 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (СТАБІЛЬНО)
+//  НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (ПРОСТО І НАДІЙНО)
 // ============================
 
-function feedKey(name) {
-  const map = {
-    "Кукурудза": "kukurudza",
-    "Пшениця": "pshenytsia",
-    "Ячмінь": "yachmin",
-    "Соева макуха": "soieva_makuha",
-    "Соняшникова макуха": "soniashnykova_makuha",
-    "Рибне борошно": "rybne_boroshno",
-    "Дріжджі": "drizhdzhi",
-    "Трикальційфосфат": "trykaltsii_fosfat",
-    "Dolfos D": "dolfos_d",
-    "Сіль": "sil"
-  };
-  return map[name];
+// зчитати або створити
+let warehouseMinimums = {};
+try {
+  warehouseMinimums = JSON.parse(localStorage.getItem("warehouseMinimums")) || {};
+} catch {
+  warehouseMinimums = {};
 }
 
-let warehouseMinimums = JSON.parse(
-  localStorage.getItem("warehouseMinimums") || "{}"
-);
-
-function saveWarehouseMinimum(key, value) {
-  warehouseMinimums[key] = Number(value) || 0;
+// зберегти мінімум
+function saveWarehouseMinimum(name, value) {
+  warehouseMinimums[name] = Number(value) || 0;
   localStorage.setItem("warehouseMinimums", JSON.stringify(warehouseMinimums));
 }
 
-function getWarehouseMinimum(key) {
-  return Number(warehouseMinimums[key]) || 0;
+// отримати мінімум
+function getWarehouseMinimum(name) {
+  return Number(warehouseMinimums[name]) || 0;
 }
 
+// ============================
+//  ЗБЕРЕГТИ НАЛАШТУВАННЯ (КНОПКА)
+// ============================
 function saveWarehouseSettings() {
+
+  // кормові компоненти
   feedComponents.forEach(item => {
-    const key = feedKey(item[0]);
-    const input = document.getElementById("minFeed_" + key);
-    if (input) saveWarehouseMinimum(key, input.value);
+    const name = item[0];
+    const input = document.getElementById("minFeed_" + name);
+    if (input) {
+      saveWarehouseMinimum(name, input.value);
+    }
   });
 
-  const empty = document.getElementById("minEmptyTrays");
-  if (empty) saveWarehouseMinimum("EMPTY_TRAYS", empty.value);
+  // порожні лотки
+  const emptyTraysInput = document.getElementById("minEmptyTrays");
+  if (emptyTraysInput) {
+    saveWarehouseMinimum("EMPTY_TRAYS", emptyTraysInput.value);
+  }
 
   alert("✅ Мінімальні залишки складу збережено");
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
 
+// ============================
+//  ЗАВАНТАЖЕННЯ В UI (ПІСЛЯ F5)
+// ============================
 function loadWarehouseSettingsUI() {
   feedComponents.forEach(item => {
-    const key = feedKey(item[0]);
-    const input = document.getElementById("minFeed_" + key);
-    if (input) input.value = getWarehouseMinimum(key);
+    const name = item[0];
+    const input = document.getElementById("minFeed_" + name);
+    if (input) {
+      input.value = getWarehouseMinimum(name);
+    }
   });
 
-  const empty = document.getElementById("minEmptyTrays");
-  if (empty) empty.value = getWarehouseMinimum("EMPTY_TRAYS");
+  const emptyTraysInput = document.getElementById("minEmptyTrays");
+  if (emptyTraysInput) {
+    emptyTraysInput.value = getWarehouseMinimum("EMPTY_TRAYS");
+  }
 }
 
+// виклик ОДИН раз після старту
 document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
-
 
 // ============================
 //      СТАРТ UI
