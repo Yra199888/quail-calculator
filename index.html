@@ -25,9 +25,7 @@
   <div class="nav-btn theme-switch" id="themeSwitch">🌙</div>
 </div>
 
-<!-- ===== СТОРІНКИ ===== -->
-
-<!-- КАЛЬКУЛЯТОР -->
+<!-- ===== КАЛЬКУЛЯТОР ===== -->
 <div id="page-calculator" class="page active-page">
   <h2>🧮 Калькулятор корму</h2>
   <div class="container">
@@ -50,162 +48,65 @@
   </div>
 </div>
 
-<!-- ЯЙЦЯ -->
+<!-- ===== ЯЙЦЯ ===== -->
 <div id="page-eggs" class="page">
   <h2>🥚 Облік яєць</h2>
 
   <div class="egg-form">
-    <div class="egg-row">
-      <label>Дата:</label>
-      <input id="eggsDate" type="date">
-    </div>
+    <label>Дата:</label>
+    <input id="eggsDate" type="date">
 
-    <div class="egg-row">
-      <label>Яєць за добу:</label>
-      <input id="eggsGood" type="number">
-    </div>
+    <label>Яєць за добу:</label>
+    <input id="eggsGood" type="number">
 
-    <div class="egg-row">
-      <label>Браковані:</label>
-      <input id="eggsBad" type="number">
-    </div>
+    <label>Браковані:</label>
+    <input id="eggsBad" type="number">
 
-    <div class="egg-row">
-      <label>Для дому:</label>
-      <input id="eggsHome" type="number">
-    </div>
+    <label>Для дому:</label>
+    <input id="eggsHome" type="number">
 
-    <button class="egg-save" onclick="saveEggRecord()">Зберегти</button>
-
-    <div id="eggsInfo" class="egg-info"></div>
+    <button id="saveEggBtn" class="main-btn">Зберегти</button>
+    <div id="eggsInfo"></div>
   </div>
 
-  <h3>Щоденний звіт</h3>
   <div id="eggsList"></div>
-  
-<button class="main-btn" onclick="toggleEggsEdit()">🔐 Дозволити редагування яєць</button>
 </div>
 
-<!-- ЗАМОВЛЕННЯ -->
-<div id="page-orders" class="page">
-  <h2>📦 Замовлення</h2>
-
-  <div class="order-form">
-    <div class="order-row">
-      <label>Дата:</label>
-      <input id="orderDate" type="date">
-    </div>
-
-    <div class="order-row">
-      <label>Імʼя клієнта:</label>
-      <input id="orderName">
-    </div>
-
-    <div class="order-row">
-      <label>Лотків:</label>
-      <input id="orderTrays" type="number">
-    </div>
-
-    <div class="order-row">
-      <label>Деталі:</label>
-      <textarea id="orderDetails"></textarea>
-    </div>
-
-    <button class="order-save" onclick="addOrder()">Додати</button>
-  </div>
-
-  <h3>Список замовлень</h3>
-  <div id="ordersList"></div>
-</div>
-
-<!-- ФІНАНСИ -->
-<div id="page-finance" class="page">
-  <h2>💰 Фінанси</h2>
-  <div class="container">
-    <label>Ціна за лоток:</label>
-    <input id="trayPrice" type="number" value="50">
-
-    <button onclick="saveFinanceSettings()">Зберегти</button>
-
-    <h3>Звіт</h3>
-    <div id="financeReport"></div>
-
-    <button onclick="exportCSV()">Експорт CSV</button>
-  </div>
-</div>
-
-<!-- СКЛАД -->
+<!-- ===== СКЛАД ===== -->
 <div id="page-warehouse" class="page">
   <h2>🏚️ Склад</h2>
-
   <div class="container">
-    <h3>Таблиця складу</h3>
     <table class="feed-table">
-      <tr>
-        <th>Компонент</th>
-        <th>Прихід (кг)</th>
-        <th>На 1 заміс (кг)</th>
-        <th>Залишок (кг)</th>
-      </tr>
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>Прихід</th>
+          <th>На заміс</th>
+          <th>Залишок</th>
+        </tr>
+      </thead>
       <tbody id="warehouseTable"></tbody>
     </table>
 
     <button id="makeFeedBtn" class="main-btn">🔄 Зробити корм</button>
 
-    <h3>📘 Історія замісів</h3>
-    <div id="mixHistory"></div>
+    <h3>Порожні лотки</h3>
+    <input id="trayStock" type="number">
 
-    <h3>🗄️ Запаси лотків</h3>
-    <table class="feed-table">
-      <tr>
-        <th>Тип</th>
-        <th>Кількість (шт)</th>
-      </tr>
-      <tr>
-        <td>Порожні лотки (20шт)</td>
-        <td><input type="number" id="trayStock"></td>
-      </tr>
-    </table>
-    
-   <button class="main-btn" onclick="toggleWarehouseEdit()">🔐 Дозволити редагування складу</button>
-    
-    <div class="warehouse-actions">
-    <button class="main-btn danger" onclick="clearFeedComponents()">
-        🧹 Очистити компоненти
-    </button>
-
-    <button class="main-btn danger" onclick="clearEggTrays()">
-        🗑️ Очистити лотки з яйцями
-    </button>
-    
-</div>
-
-    <h3>🥚 Лотки з яйцями</h3>
-    <p>Готові лотки: <b id="fullTrays">0</b></p>
+    <p>Готові: <b id="fullTrays">0</b></p>
     <p>Заброньовані: <b id="reservedTrays">0</b></p>
   </div>
 </div>
 
-<!-- ІНСТРУМЕНТИ -->
-<div id="page-tools" class="page">
-  <h2>🔧 Інструменти</h2>
-  <div class="container">
-    <p>Поки що порожньо (заготовка).</p>
-  </div>
-</div>
-
-<!-- НАЛАШТУВАННЯ -->
+<!-- ===== НАЛАШТУВАННЯ ===== -->
 <div id="page-settings" class="page">
   <h2>⚙️ Налаштування</h2>
 
   <div class="container">
     <h3>📦 Мінімальні залишки складу</h3>
-    <p class="hint">⚠️ Якщо запас стане меншим — зʼявиться попередження</p>
 
-    <h4>🌾 Кормові компоненти (кг)</h4>
     <table class="feed-table">
       <tr><th>Компонент</th><th>Мінімум</th></tr>
-
       <tr><td>Кукурудза</td><td><input id="minFeed_kukurudza" type="number"></td></tr>
       <tr><td>Пшениця</td><td><input id="minFeed_pshenytsia" type="number"></td></tr>
       <tr><td>Ячмінь</td><td><input id="minFeed_yachmin" type="number"></td></tr>
@@ -218,19 +119,20 @@
       <tr><td>Сіль</td><td><input id="minFeed_sil" type="number"></td></tr>
     </table>
 
-    <h4>🗄️ Порожні лотки</h4>
-    <label>
-      Мінімум порожніх лотків:
-      <input id="min_empty_trays" type="number">
-    </label>
+    <h4>Порожні лотки</h4>
+    <input id="min_empty_trays" type="number">
 
     <br><br>
-    <button class="main-btn" id="saveWarehouseSettingsBtn">
-  💾 Зберегти
-</button>
+    <button id="saveWarehouseSettingsBtn" class="main-btn">
+      💾 Зберегти налаштування
+    </button>
+
+    <div id="settingsStatus"></div>
   </div>
 </div>
 
-<script src="script.js"></script>
+<!-- ===== SCRIPT ===== -->
+<script src="script.js" defer></script>
+
 </body>
 </html>
