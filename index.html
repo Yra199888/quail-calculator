@@ -89,7 +89,22 @@
     </table>
 
     <button id="makeFeedBtn" class="main-btn">🔄 Зробити корм</button>
-
+    <!-- ⚠️ ПОПЕРЕДЖЕННЯ СКЛАДУ -->
+<div id="warehouseWarning" style="
+  display:none;
+  background:#3b0f0f;
+  border:1px solid #ff4d4d;
+  color:#ffd6d6;
+  padding:12px;
+  border-radius:8px;
+  margin:10px 0;
+  font-weight:600;
+">
+  ⚠️ УВАГА! Деякі запаси нижче мінімуму
+  <div id="warehouseWarningList" style="margin-top:6px; font-weight:400;"></div>
+</div>
+    
+    
     <h3>Порожні лотки</h3>
     <input id="trayStock" type="number">
 
