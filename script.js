@@ -571,62 +571,116 @@ function clearEggTrays() {
 window.clearEggTrays = clearEggTrays;
 
 // ============================
-//  НАЛАШТУВАННЯ СКЛАДУ — ЗБЕРЕЖЕННЯ МІНІМУМІВ
-//  (логіка як у калькуляторі корму)
+// НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ
+// ЛОГІКА ЯК У КАЛЬКУЛЯТОРІ КОРМУ
 // ============================
 
-// список ID інпутів (1 в 1 з index.html)
-const warehouseMinInputs = [
-  "min_kukurudza",
-  "min_pshenytsia",
-  "min_yachmin",
-  "min_soieva_makuha",
-  "min_soniashnykova_makuha",
-  "min_rybne_boroshno",
-  "min_drizhdzhi",
-  "min_trykaltsii_fosfat",
-  "min_dolfos_d",
-  "min_sil",
-  "min_empty_trays"
-];
+// ключ у localStorage
+const WAREHOUSE_MIN_KEY = "warehouseMinimums";
+
+// безпечне зчитування
+function getWarehouseMinimums() {
+  try {
+    return JSON.parse(localStorage.getItem(WAREHOUSE_MIN_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+// безпечне збереження
+function setWarehouseMinimums(obj) {
+  try {
+    localStorage.setItem(WAREHOUSE_MIN_KEY, JSON.stringify(obj));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 // ============================
 // ЗБЕРЕГТИ НАЛАШТУВАННЯ
 // ============================
 function saveWarehouseSettings() {
-  try {
-    warehouseMinInputs.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) throw new Error("Не знайдено інпут: " + id);
+  const data = {};
 
-      const value = Number(el.value) || 0;
-      localStorage.setItem(id, value);
-    });
+  // кормові компоненти — ІМЕНА = ЯК В СКЛАДІ
+  const map = {
+    "Кукурудза": "min_kukurudza",
+    "Пшениця": "min_pshenytsia",
+    "Ячмінь": "min_yachmin",
+    "Соева макуха": "min_soieva_makuha",
+    "Соняшникова макуха": "min_soniashnykova_makuha",
+    "Рибне борошно": "min_rybne_boroshno",
+    "Дріжджі": "min_drizhdzhi",
+    "Трикальційфосфат": "min_trykaltsii_fosfat",
+    "Dolfos D": "min_dolfos_d",
+    "Сіль": "min_sil"
+  };
 
-    alert("✅ Дані успішно збережені");
-  } catch (e) {
-    console.error(e);
+  // зчитуємо всі інпути
+  for (const name in map) {
+    const el = document.getElementById(map[name]);
+    if (!el) {
+      alert("❌ Не знайдено поле: " + name);
+      return;
+    }
+    data[name] = Number(el.value) || 0;
+  }
+
+  // порожні лотки
+  const emptyTrays = document.getElementById("min_empty_trays");
+  if (!emptyTrays) {
+    alert("❌ Не знайдено поле порожніх лотків");
+    return;
+  }
+  data.EMPTY_TRAYS = Number(emptyTrays.value) || 0;
+
+  // зберігаємо
+  const ok = setWarehouseMinimums(data);
+
+  if (ok) {
+    alert("✅ Дані збережено");
+  } else {
     alert("❌ Не вдалося зберегти дані");
   }
 }
+
 window.saveWarehouseSettings = saveWarehouseSettings;
 
 // ============================
-// ЗАВАНТАЖИТИ НАЛАШТУВАННЯ В UI
+// ЗАВАНТАЖЕННЯ ПІСЛЯ F5
 // ============================
 function loadWarehouseSettings() {
-  warehouseMinInputs.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
+  const data = getWarehouseMinimums();
+  if (!data || typeof data !== "object") return;
 
-    const saved = localStorage.getItem(id);
-    if (saved !== null) {
-      el.value = saved;
+  const map = {
+    "Кукурудза": "min_kukurudza",
+    "Пшениця": "min_pshenytsia",
+    "Ячмінь": "min_yachmin",
+    "Соева макуха": "min_soieva_makuha",
+    "Соняшникова макуха": "min_soniashnykova_makuha",
+    "Рибне борошно": "min_rybne_boroshno",
+    "Дріжджі": "min_drizhdzhi",
+    "Трикальційфосфат": "min_trykaltsii_fosfat",
+    "Dolfos D": "min_dolfos_d",
+    "Сіль": "min_sil"
+  };
+
+  for (const name in map) {
+    const el = document.getElementById(map[name]);
+    if (el && data[name] !== undefined) {
+      el.value = data[name];
     }
-  });
+  }
+
+  const emptyTrays = document.getElementById("min_empty_trays");
+  if (emptyTrays && data.EMPTY_TRAYS !== undefined) {
+    emptyTrays.value = data.EMPTY_TRAYS;
+  }
 }
 
-// виклик ПІСЛЯ завантаження DOM
+// ПІСЛЯ ЗАВАНТАЖЕННЯ СТОРІНКИ
 document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
 
 // ============================
