@@ -153,13 +153,14 @@ function renderWarehouse() {
   const tbody = $("warehouseTable");
   if (!tbody) return;
 
-  tbody.innerHTML = feedComponents
-    .map((item) => {
-      const name = item[0];
-      const need = item[1];
-      const stock = warehouse.feed[name] || 0;
-          const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
-    const keyMap = {
+tbody.innerHTML = feedComponents
+  .map((item) => {
+    const name = item[0];
+    const need = item[1];
+    const stock = warehouse.feed[name] || 0;
+
+    // 🔹 мінімум з налаштувань
+    const minKey = {
       "Кукурудза": "kukurudza",
       "Пшениця": "pshenytsia",
       "Ячмінь": "yachmin",
@@ -169,23 +170,24 @@ function renderWarehouse() {
       "Дріжджі": "drizhdzhi",
       "Трикальційфосфат": "trykaltsii_fosfat",
       "Dolfos D": "dolfos_d",
-      "Сіль": "sil"
-    };
+      "Сіль": "sil",
+    }[name];
 
-    const minKey = keyMap[name];
-    const minValue = Number(minimums[minKey] || 0);
-    const isLow = stock < minValue;
+    const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+    const min = Number(minimums[minKey]) || 0;
 
- return `
-  <tr class="${isLow ? "low-stock" : ""}">
-    <td>${name}</td>
-    <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
-    <td>${need}</td>
-    <td>${stock.toFixed(2)}</td>
-  </tr>
-`;
-    })
-    .join("");
+    const isLow = stock < min;
+
+    return `
+      <tr style="${isLow ? "background:#3a1c1c;color:#ffb3b3;" : ""}">
+        <td>${isLow ? "⚠️ " : ""}${name}</td>
+        <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
+        <td>${need}</td>
+        <td><b>${stock.toFixed(2)}</b></td>
+      </tr>
+    `;
+  })
+  .join("");
 
   document.querySelectorAll(".addStock").forEach((inp) => {
     inp.onchange = (e) => {
