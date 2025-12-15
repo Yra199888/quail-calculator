@@ -570,66 +570,73 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
-// ============================
-// НАЛАШТУВАННЯ СКЛАДУ — МІНІМУМИ (ПРОСТО І НАДІЙНО)
-// ============================
-
-const SETTINGS_KEY = "warehouseMinimums";
-
-// зчитати всі налаштування
-function loadSettings() {
-  try {
-    return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
-
-// зберегти всі налаштування
-function saveSettings(data) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(data));
-}
 
 // ============================
-// ЗБЕРЕГТИ (КНОПКА)
+//   НАЛАШТУВАННЯ СКЛАДУ — ПРОСТО І НАДІЙНО
 // ============================
+
+const WAREHOUSE_SETTINGS_KEY = "warehouseSettings";
+
+// список ВСІХ інпутів у вкладці Налаштування
+const warehouseSettingFields = [
+  "min_kukurudza",
+  "min_pshenytsia",
+  "min_yachmin",
+  "min_soieva_makuha",
+  "min_soniashnykova_makuha",
+  "min_rybne_boroshno",
+  "min_drizhdzhi",
+  "min_trykaltsii_fosfat",
+  "min_dolfos_d",
+  "min_sil",
+  "min_empty_trays"
+];
+
+// ===== ЗБЕРЕГТИ =====
 function saveWarehouseSettings() {
+  const data = {};
+
+  for (const id of warehouseSettingFields) {
+    const el = document.getElementById(id);
+
+    if (!el) {
+      alert(`❌ Не знайдено поле: ${id}`);
+      return;
+    }
+
+    data[id] = Number(el.value) || 0;
+  }
+
   try {
-    const data = {};
-
-    // беремо ВСІ input у вкладці налаштувань
-    document
-      .querySelectorAll("#page-settings input[type='number']")
-      .forEach(input => {
-        data[input.id] = Number(input.value) || 0;
-      });
-
-    saveSettings(data);
-
-    alert("✅ Дані збережені");
+    localStorage.setItem(WAREHOUSE_SETTINGS_KEY, JSON.stringify(data));
+    alert("✅ Дані успішно збережено");
   } catch (e) {
-    console.error(e);
     alert("❌ Не вдалося зберегти дані");
+    console.error(e);
   }
 }
+
 window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ============================
-// ЗАВАНТАЖИТИ ПРИ СТАРТІ
-// ============================
-function loadWarehouseSettingsUI() {
-  const data = loadSettings();
+// ===== ЗАВАНТАЖИТИ ПРИ СТАРТІ =====
+function loadWarehouseSettings() {
+  let data = {};
 
-  document
-    .querySelectorAll("#page-settings input[type='number']")
-    .forEach(input => {
-      if (data[input.id] !== undefined) {
-        input.value = data[input.id];
-      }
-    });
+  try {
+    data = JSON.parse(localStorage.getItem(WAREHOUSE_SETTINGS_KEY)) || {};
+  } catch {
+    data = {};
+  }
+
+  for (const id of warehouseSettingFields) {
+    const el = document.getElementById(id);
+    if (el && data[id] !== undefined) {
+      el.value = data[id];
+    }
+  }
 }
 
-document.addEventListener("DOMContentLoaded", loadWarehouseSettingsUI);
+document.addEventListener("DOMContentLoaded", loadWarehouseSettings);
 
 // ============================
 //      СТАРТ
