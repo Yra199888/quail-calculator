@@ -20,8 +20,14 @@ const AppState = {
     eggsEditEnabled: false,
     warehouseEditEnabled: false,
   },
+
   warehouse: {
-    minimums: {}, // {kukurudza:1, ..., empty_trays: 10}
+    feed: {},
+    trays: 0,
+    ready: 0,
+    reserved: 0,
+    history: [],
+    minimums: {} // ← вже є, НЕ ЛАМАЄМО
   },
 };
 
@@ -35,6 +41,28 @@ function loadAppState() {
     }
   } catch (e) {
     console.warn("AppState load failed", e);
+  }
+}
+
+function migrateWarehouseToAppState() {
+  // якщо вже є в AppState — нічого не робимо
+  if (AppState.warehouse.feed && Object.keys(AppState.warehouse.feed).length) return;
+
+  try {
+    const old = JSON.parse(localStorage.getItem("warehouse"));
+    if (!old) return;
+
+    AppState.warehouse.feed = old.feed || {};
+    AppState.warehouse.trays = old.trays || 0;
+    AppState.warehouse.ready = old.ready || 0;
+    AppState.warehouse.reserved = old.reserved || 0;
+    AppState.warehouse.history = old.history || [];
+
+    saveAppState();
+
+    console.log("✅ Warehouse мігровано в AppState");
+  } catch (e) {
+    console.warn("❌ Не вдалося мігрувати склад", e);
   }
 }
 
@@ -196,26 +224,12 @@ function calculateFeed() {
 // ============================
 let warehouse = {};
 function loadWarehouse() {
-  try {
-    warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}") || {};
-  } catch {
-    warehouse = {};
-  }
-
-  if (!warehouse.feed) {
-    warehouse = {
-      feed: {},
-      trays: 0,
-      ready: 0,
-      reserved: 0,
-      history: [],
-    };
-    saveWarehouse();
-  }
+  warehouse = AppState.warehouse;
 }
 
 function saveWarehouse() {
-  localStorage.setItem("warehouse", JSON.stringify(warehouse));
+  AppState.warehouse = warehouse;
+  saveAppState();
 }
 
 // ============================
