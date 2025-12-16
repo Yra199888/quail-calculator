@@ -795,8 +795,17 @@ function loadWarehouseSettingsUI() {
 }
 
 function bindSettingsSaveButton() {
-  const btn = $("saveWarehouseSettingsBtn");
-  if (btn) btn.addEventListener("click", saveWarehouseSettings);
+  const btn = document.getElementById("saveWarehouseSettingsBtn");
+  if (!btn) {
+    console.warn("❌ saveWarehouseSettingsBtn не знайдена");
+    return;
+  }
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();      // 🔑 КРИТИЧНО
+    e.stopPropagation();
+    saveWarehouseSettings();
+  });
 }
 
 // ============================
@@ -830,4 +839,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
+  bindSettingsSaveButton();
 });
