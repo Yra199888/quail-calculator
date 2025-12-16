@@ -647,11 +647,20 @@ function bindEggSaveButton() {
 //      ЗАМОВЛЕННЯ
 // ============================
 
+function loadOrders() {
+  if (!AppState.orders || typeof AppState.orders !== "object") {
+    AppState.orders = {};
+  }
+}
+
 function addOrder() {
+  // автодата
   const d = $("orderDate")?.value || isoToday();
-  const name = $("orderName")?.value || "Без імені";
+  if ($("orderDate") && !$("orderDate").value) $("orderDate").value = d;
+
+  const name = $("orderName")?.value?.trim() || "Без імені";
   const trays = Number($("orderTrays")?.value) || 0;
-  const details = $("orderDetails")?.value || "";
+  const details = $("orderDetails")?.value?.trim() || "";
 
   if (trays <= 0) {
     alert("Вкажи кількість лотків (> 0)");
@@ -661,16 +670,10 @@ function addOrder() {
   if (!AppState.orders) AppState.orders = {};
   if (!AppState.orders[d]) AppState.orders[d] = [];
 
-  AppState.orders[d].push({
-    name,
-    trays,
-    details,
-    status: "активне"
-  });
+  AppState.orders[d].push({ name, trays, details, status: "активне" });
 
-  // ✅ РЕЗЕРВ ЛОТКІВ ЧЕРЕЗ APPSTATE
-  AppState.warehouse.reserved =
-    (AppState.warehouse.reserved || 0) + trays;
+  // резерв через AppState
+  AppState.warehouse.reserved = (AppState.warehouse.reserved || 0) + trays;
 
   saveAppState();
 
@@ -709,8 +712,10 @@ function showOrders() {
   const box = $("ordersList");
   if (!box) return;
 
-  const ready = warehouse.ready || 0;
-  const reserved = warehouse.reserved || 0;
+  const orders = AppState.orders || {};
+
+  const ready = AppState.warehouse.ready || 0;
+  const reserved = AppState.warehouse.reserved || 0;
   const free = Math.max(ready - reserved, 0);
 
   let html = `
@@ -721,23 +726,17 @@ function showOrders() {
     </div>
   `;
 
-  const orders = AppState.orders;
-Object.keys(orders)
-    .sort()
-    .reverse()
-    .forEach((date) => {
-      html += `<h3>${date}</h3>`;
-      orders[date].forEach((o, idx) => {
-        html += `
-          <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
-            <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
-            ${o.details ? o.details + "<br>" : ""}
-            <button onclick="setStatus('${date}',${idx},'виконано')">✅ Виконано</button>
-            <button onclick="setStatus('${date}',${idx},'скасовано')">❌ Скасовано</button>
-          </div>
-        `;
-      });
+  Object.keys(orders).sort().reverse().forEach((date) => {
+    html += `<h3>${date}</h3>`;
+    orders[date].forEach((o, idx) => {
+      html += `
+        <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
+          <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
+          ${o.details ? o.details + "<br>" : ""}
+        </div>
+      `;
     });
+  });
 
   box.innerHTML = html;
 }
