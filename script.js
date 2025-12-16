@@ -1,4 +1,32 @@
 // ============================
+//      APP STATE (BASE)
+// ============================
+
+const AppState = {
+  ui: {
+    page: "calculator",
+    eggsEditEnabled: false,
+    warehouseEditEnabled: false
+  },
+  warehouse: {
+    minimums: {}
+  }
+};
+
+function loadAppState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("AppState"));
+    if (saved) Object.assign(AppState, saved);
+  } catch {}
+}
+
+function saveAppState() {
+  try {
+    localStorage.setItem("AppState", JSON.stringify(AppState));
+  } catch {}
+}
+
+// ============================
 //      ДОПОМІЖНІ
 // ============================
 const $ = (id) => document.getElementById(id);
@@ -698,46 +726,6 @@ function loadWarehouseSettingsUI() {
   const traysInput = document.getElementById("min_empty_trays");
   if (traysInput) {
     traysInput.value = mins.empty_trays ?? 0;
-  }
-}
-
-
-
-
-// ============================
-//      APP STATE (BASE)
-// ============================
-
-const AppState = {
-  ui: {
-    page: "calculator",
-    eggsEditEnabled: false,
-    warehouseEditEnabled: false
-  },
-
-  warehouse: {
-    minimums: {}
-  }
-};
-
-// завантаження зі сховища
-function loadAppState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("AppState"));
-    if (saved) {
-      Object.assign(AppState, saved);
-    }
-  } catch (e) {
-    console.warn("AppState load failed", e);
-  }
-}
-
-// збереження
-function saveAppState() {
-  try {
-    localStorage.setItem("AppState", JSON.stringify(AppState));
-  } catch (e) {
-    console.error("AppState save failed", e);
   }
 }
 
