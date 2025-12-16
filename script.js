@@ -765,14 +765,14 @@ function saveWarehouseSettings() {
     AppState.warehouse.minimums = mins;
     saveAppState();
 
-    const status = $("settingsSaveStatus");
+    const status = $("settingsStatus");
     if (status) status.innerHTML = "✅ Дані збережено";
 
     applyWarehouseWarnings();
     renderWarehouse();
   } catch (e) {
     console.error("saveWarehouseSettings error:", e);
-    const status = $("settingsSaveStatus");
+    const status = $("settingsStatus");
     if (status) status.innerHTML = "❌ Не вдалося зберегти";
     alert("❌ Не вдалося зберегти налаштування");
   }
@@ -802,7 +802,6 @@ function bindSettingsSaveButton() {
   }
 
   btn.addEventListener("click", (e) => {
-    e.preventDefault();      // 🔑 КРИТИЧНО
     e.stopPropagation();
     saveWarehouseSettings();
   });
@@ -839,5 +838,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
-  bindSettingsSaveButton();
 });
