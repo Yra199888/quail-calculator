@@ -738,3 +738,45 @@ document.addEventListener("DOMContentLoaded", () => {
   syncToggleButtonsUI();
   loadWarehouseSettingsUI();
 });
+
+// ============================
+//      APP STATE (BASE)
+// ============================
+
+const AppState = {
+  ui: {
+    page: "calculator",
+    eggsEditEnabled: false,
+    warehouseEditEnabled: false
+  },
+
+  warehouse: {
+    minimums: {}
+  }
+};
+
+// завантаження зі сховища
+function loadAppState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("AppState"));
+    if (saved) {
+      Object.assign(AppState, saved);
+    }
+  } catch (e) {
+    console.warn("AppState load failed", e);
+  }
+}
+
+// збереження
+function saveAppState() {
+  try {
+    localStorage.setItem("AppState", JSON.stringify(AppState));
+  } catch (e) {
+    console.error("AppState save failed", e);
+  }
+}
+
+// старт
+document.addEventListener("DOMContentLoaded", () => {
+  loadAppState();
+});
