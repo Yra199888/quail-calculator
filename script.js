@@ -223,7 +223,7 @@ function renderWarehouse() {
   const tbody = $("warehouseTable");
   if (!tbody) return;
 
-  const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
+  const mins = AppState.warehouse.minimums
 
   tbody.innerHTML = feedComponents.map(item => {
     const name = item[0];
