@@ -350,3 +350,22 @@ input[type="number"] {
   font-size: 18px;
   border-radius: 12px;
 }
+
+/* ============================
+   Помилки введення яєць
+============================ */
+
+.input-error {
+  border: 2px solid #ff5252 !important;
+  background: rgba(255, 82, 82, 0.15);
+}
+
+.error-text {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 82, 82, 0.15);
+  border: 1px solid #ff5252;
+  color: #ffb3b3;
+  font-size: 14px;
+}
