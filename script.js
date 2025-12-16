@@ -658,7 +658,9 @@ function addOrder() {
     return;
   }
 
+  if (!AppState.orders) AppState.orders = {};
   if (!AppState.orders[d]) AppState.orders[d] = [];
+
   AppState.orders[d].push({
     name,
     trays,
@@ -666,6 +668,7 @@ function addOrder() {
     status: "активне"
   });
 
+  // ✅ РЕЗЕРВ ЛОТКІВ ЧЕРЕЗ APPSTATE
   AppState.warehouse.reserved =
     (AppState.warehouse.reserved || 0) + trays;
 
@@ -675,6 +678,7 @@ function addOrder() {
   renderWarehouse();
   applyWarehouseWarnings();
 }
+window.addOrder = addOrder;
 
 function setStatus(d, i, s) {
   const o = AppState.orders[d]?.[i];
