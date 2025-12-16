@@ -684,54 +684,57 @@ function saveWarehouseSettings() {
   try {
     const mins = {};
 
-    feedComponents.forEach(item => {
-      const name = item[0];
+    // мінімальні запаси по компонентах
+    feedComponents.forEach(([name]) => {
       const key = getMinKeyByName(name);
+      if (!key) return;
+
       const input = document.getElementById("minFeed_" + key);
-      if (input) {
-        mins[key] = Number(input.value) || 0;
-      }
+      mins[key] = Number(input?.value || 0);
     });
 
-    const traysInput = document.getElementById("min_empty_trays");
-    mins.empty_trays = Number(traysInput?.value || 0);
+    // мінімум порожніх лотків
+    mins.empty_trays = Number(document.getElementById("min_empty_trays")?.value || 0);
 
-    // 🔹 ЗБЕРІГАЄМО В APPSTATE
+    // збереження в AppState + localStorage
     AppState.warehouse.minimums = mins;
     saveAppState();
 
-    alert("✅ Мінімальні залишки збережено");
+    // статус на екрані
+    const s = document.getElementById("settingsSaveStatus");
+    if (s) s.innerHTML = "✅ Дані збережено";
+
   } catch (e) {
-    console.error(e);
+    console.error("saveWarehouseSettings error:", e);
+    const s = document.getElementById("settingsSaveStatus");
+    if (s) s.innerHTML = "❌ Не вдалося зберегти";
     alert("❌ Не вдалося зберегти налаштування");
   }
 }
-window.saveWarehouseSettings = saveWarehouseSettings;
 
-// ============================
-//      ЗАВАНТАЖИТИ В UI
-// ============================
 function loadWarehouseSettingsUI() {
   const mins = AppState.warehouse.minimums || {};
 
-  feedComponents.forEach(item => {
-    const name = item[0];
+  feedComponents.forEach(([name]) => {
     const key = getMinKeyByName(name);
+    if (!key) return;
+
     const input = document.getElementById("minFeed_" + key);
-    if (input) {
-      input.value = mins[key] ?? 0;
-    }
+    if (input) input.value = mins[key] ?? 0;
   });
 
-  const traysInput = document.getElementById("min_empty_trays");
-  if (traysInput) {
-    traysInput.value = mins.empty_trays ?? 0;
-  }
+  const trays = document.getElementById("min_empty_trays");
+  if (trays) trays.value = mins.empty_trays ?? 0;
 }
 
+// Safari/Chrome safe підв’язка кнопки
 document.addEventListener("DOMContentLoaded", () => {
-  // AppState
+  const btn = document.getElementById("saveWarehouseSettingsBtn");
+  if (btn) btn.addEventListener("click", saveWarehouseSettings);
+
   loadAppState();
+  loadWarehouseSettingsUI();
+});
 
   // калькулятор
   loadFeedTable();
