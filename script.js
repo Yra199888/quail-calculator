@@ -874,6 +874,24 @@ function bindSettingsSaveButton() {
   });
 }
 
+function restoreActivePage() {
+  const page = AppState.ui.page || "calculator";
+
+  // показ сторінки
+  document.querySelectorAll(".page").forEach(p =>
+    p.classList.remove("active-page")
+  );
+  const target = document.getElementById("page-" + page);
+  if (target) target.classList.add("active-page");
+
+  // підсвітка кнопки
+  document.querySelectorAll(".nav-btn").forEach(b =>
+    b.classList.remove("active")
+  );
+  const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
+  if (btn) btn.classList.add("active");
+}
+
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
@@ -891,6 +909,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
   bindNavigation();
+  restoreActivePage();
   bindMakeFeed();
   bindEggSaveButton();
   bindSettingsSaveButton();
