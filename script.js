@@ -170,29 +170,55 @@ function getMinKeyByName(name) {
   return map[name] || null;
 }
 
-function checkWarehouseMinimums() {
-  const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
-  let hasWarnings = false;
 
+// ============================
+//  RENDER СКЛАДУ
+// ============================
+function applyWarehouseWarnings() {
+  const box = document.getElementById("warehouseWarning");
+  const list = document.getElementById("warehouseWarningList");
+  if (!box || !list) return;
+
+  let mins = {};
+  try {
+    mins = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}") || {};
+  } catch {
+    mins = {};
+  }
+
+  const warnings = [];
+
+  // кормові компоненти
   feedComponents.forEach(item => {
     const name = item[0];
     const key = getMinKeyByName(name);
     if (!key) return;
 
     const stock = Number(warehouse.feed[name] || 0);
-    const min = Number(minimums[key] || 0);
+    const min = Number(mins[key] || 0);
 
     if (min > 0 && stock < min) {
-      hasWarnings = true;
+      warnings.push(`• ${name}: ${stock.toFixed(2)} кг (мін. ${min})`);
     }
   });
 
-  return hasWarnings;
+  // порожні лотки
+  const trayMin = Number(mins.empty_trays || 0);
+  const trayStock = Number(warehouse.trays || 0);
+
+  if (trayMin > 0 && trayStock < trayMin) {
+    warnings.push(`• Порожні лотки: ${trayStock} (мін. ${trayMin})`);
+  }
+
+  if (warnings.length) {
+    list.innerHTML = warnings.join("<br>");
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+    list.innerHTML = "";
+  }
 }
 
-// ============================
-//  RENDER СКЛАДУ
-// ============================
 function renderWarehouse() {
   const tbody = $("warehouseTable");
   if (!tbody) return;
@@ -231,6 +257,7 @@ function renderWarehouse() {
 
       const name = e.target.dataset.name;
       warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
+
       saveWarehouse();
       renderWarehouse();
       applyWarehouseWarnings();
@@ -248,6 +275,7 @@ function renderWarehouse() {
       }
       warehouse.trays = Number(e.target.value) || 0;
       saveWarehouse();
+      applyWarehouseWarnings();
     };
   }
 
@@ -261,8 +289,6 @@ function renderWarehouse() {
         ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
         : "<i>Порожньо</i>";
   }
-
-  applyWarehouseWarnings();
 }
 
 function applyWarehouseWarnings() {
@@ -329,12 +355,14 @@ if (makeFeedBtn) {
 
     warehouse.history.push("Заміс: " + new Date().toLocaleString());
     saveWarehouse();
-    renderWarehouse();
+renderWarehouse();
+applyWarehouseWarnings();
   };
 }
 
 // старт
 renderWarehouse();
+applyWarehouseWarnings();
 
 // ============================
 //      ЯЙЦЯ — накопичення + перенос + синхрон з лотками
@@ -535,7 +563,7 @@ function addOrder() {
 
   showOrders();
   renderWarehouse();
-  checkWarehouseMinimums();
+  applyWarehouseWarnings();
 }
 window.addOrder = addOrder;
 
@@ -559,7 +587,7 @@ function setStatus(d, i, s) {
   localStorage.setItem("orders", JSON.stringify(orders));
   showOrders();
   renderWarehouse();
-  checkWarehouseMinimums();
+  applyWarehouseWarnings();
 }
 window.setStatus = setStatus;
 
@@ -662,7 +690,7 @@ function clearEggTrays() {
 
   saveWarehouse();
   renderWarehouse();
-  checkWarehouseMinimums();
+  applyWarehouseWarnings();
   showOrders();
 
   alert("✅ Лотки з яйцями очищено");
