@@ -476,36 +476,46 @@ function ensureEggsDate() {
 }
 
 function saveEggRecord() {
+  const dbg = $("debugEggs");
+  if (dbg) dbg.innerHTML = "🟡 Натиснута кнопка Зберегти";
+
   ensureEggsDate();
 
-  const date = $("eggsDate").value;
-  const good = Number($("eggsGood").value) || 0;
-  const bad = Number($("eggsBad").value) || 0;
-  const home = Number($("eggsHome").value) || 0;
+  const dateInput = $("eggsDate");
+  const goodInput = $("eggsGood");
+  const badInput = $("eggsBad");
+  const homeInput = $("eggsHome");
   const infoBox = $("eggsInfo");
 
-  // очистка помилок
-  ["eggsGood", "eggsBad", "eggsHome"].forEach(id =>
-    $(id)?.classList.remove("input-error")
-  );
-  if (infoBox) infoBox.innerHTML = "";
-
-  // ❌ логічна помилка
-  if (bad + home > good) {
-    $("eggsBad").classList.add("input-error");
-    $("eggsHome").classList.add("input-error");
-
-    if (infoBox) {
-      infoBox.innerHTML = `
-        <div class="error-text">
-          ❌ Брак + Для дому не можуть перевищувати кількість яєць
-        </div>
-      `;
-    }
+  if (!dateInput || !goodInput || !badInput || !homeInput) {
+    if (dbg) dbg.innerHTML += "<br>❌ Не знайдені поля форми";
     return;
   }
 
-  // ✅ ЗБЕРЕЖЕННЯ В APPSTATE
+  const date = dateInput.value;
+  const good = Number(goodInput.value) || 0;
+  const bad = Number(badInput.value) || 0;
+  const home = Number(homeInput.value) || 0;
+
+  if (dbg) {
+    dbg.innerHTML += `<br>📅 Дата: ${date}`;
+    dbg.innerHTML += `<br>🥚 good=${good}, bad=${bad}, home=${home}`;
+  }
+
+  // ❌ перевірка логіки
+  if (bad + home > good) {
+    badInput.classList.add("input-error");
+    homeInput.classList.add("input-error");
+
+    if (infoBox) {
+      infoBox.innerHTML = "❌ Брак + для дому > кількості яєць";
+    }
+
+    if (dbg) dbg.innerHTML += "<br>⛔ ЛОГІЧНА ПОМИЛКА";
+    return;
+  }
+
+  // ✅ ЗБЕРЕЖЕННЯ
   AppState.eggs.records[date] = { good, bad, home };
 
   recomputeEggsAccumulation();
@@ -522,9 +532,9 @@ function saveEggRecord() {
   renderWarehouse();
   applyWarehouseWarnings();
   showOrders();
-}
 
-window.saveEggRecord = saveEggRecord;
+  if (dbg) dbg.innerHTML += "<br>✅ Запис збережено в AppState";
+}
 
 function editEgg(date) {
   const e = AppState.eggs.records[date];
