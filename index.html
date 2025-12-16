@@ -53,21 +53,30 @@
   <h2>🥚 Облік яєць</h2>
 
   <div class="egg-form">
-    <label>Дата:</label>
+  <div class="form-row">
+    <label for="eggsDate">Дата:</label>
     <input id="eggsDate" type="date">
-
-    <label>Яєць за добу:</label>
-    <input id="eggsGood" type="number">
-
-    <label>Браковані:</label>
-    <input id="eggsBad" type="number">
-
-    <label>Для дому:</label>
-    <input id="eggsHome" type="number">
-
-    <button id="saveEggBtn" class="main-btn">Зберегти</button>
-    <div id="eggsInfo"></div>
   </div>
+
+  <div class="form-row">
+    <label for="eggsGood">Яєць за добу:</label>
+    <input id="eggsGood" type="number">
+  </div>
+
+  <div class="form-row">
+    <label for="eggsBad">Браковані:</label>
+    <input id="eggsBad" type="number">
+  </div>
+
+  <div class="form-row">
+    <label for="eggsHome">Для дому:</label>
+    <input id="eggsHome" type="number">
+  </div>
+
+  <button id="saveEggBtn" class="main-btn">Зберегти</button>
+
+  <div id="eggsInfo"></div>
+</div>
 
   <div id="eggsList"></div>
   <!-- 🔐 КЕРУВАННЯ ЯЙЦЯМИ -->
