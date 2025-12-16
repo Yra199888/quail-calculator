@@ -708,22 +708,7 @@ function loadWarehouseSettingsUI() {
   }
 }
 
-// ============================
-//      СТАРТ
-// ============================
-document.addEventListener("DOMContentLoaded", () => {
-  loadWarehouseSettingsUI();
-});
 
-
-// --------- SAFARI SAFE ПІДВʼЯЗКА ---------
-document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("saveWarehouseSettingsBtn");
-  if (btn) {
-    btn.addEventListener("click", saveWarehouseSettings);
-  }
-  loadWarehouseSettings();
-});
 
 
 // ============================
@@ -763,7 +748,27 @@ function saveAppState() {
   }
 }
 
-// старт
 document.addEventListener("DOMContentLoaded", () => {
+  // AppState
   loadAppState();
+
+  // калькулятор
+  loadFeedTable();
+
+  // склад
+  renderWarehouse();
+  applyWarehouseWarnings();
+
+  // яйця
+  recomputeEggsAccumulation();
+  renderEggsReport();
+
+  // замовлення
+  showOrders();
+
+  // налаштування
+  loadWarehouseSettingsUI();
+
+  // UI
+  syncToggleButtonsUI();
 });
