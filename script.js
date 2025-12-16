@@ -27,8 +27,15 @@ const AppState = {
     ready: 0,
     reserved: 0,
     history: [],
-    minimums: {} // ← вже є, НЕ ЛАМАЄМО
+    minimums: {}
   },
+
+  eggs: {
+    records: {},          // всі дні
+    carry: 0,             // залишок яєць
+    totalTrays: 0,        // всього лотків
+    appliedTotalTrays: 0  // застосовано до складу
+  }
 };
 
 function loadAppState() {
@@ -65,6 +72,27 @@ function migrateWarehouseToAppState() {
     console.warn("❌ Не вдалося мігрувати склад", e);
   }
 }
+
+function migrateEggsToAppState() {
+  if (AppState.eggs.records && Object.keys(AppState.eggs.records).length) return;
+
+  try {
+    const oldEggs = JSON.parse(localStorage.getItem("eggs")) || {};
+    const oldCarry = JSON.parse(localStorage.getItem("eggsCarry")) || {};
+
+    AppState.eggs.records = oldEggs;
+    AppState.eggs.carry = oldCarry.carry || 0;
+    AppState.eggs.totalTrays = oldCarry.totalTrays || 0;
+    AppState.eggs.appliedTotalTrays = oldCarry.appliedTotalTrays || 0;
+
+    saveAppState();
+
+    console.log("✅ Eggs мігровано в AppState");
+  } catch (e) {
+    console.warn("❌ Не вдалося мігрувати яйця", e);
+  }
+}
+
 
 function saveAppState() {
   try {
@@ -395,17 +423,9 @@ let eggs = {};
 let eggsCarry = {};
 
 function loadEggs() {
-  try {
-    eggs = JSON.parse(localStorage.getItem("eggs") || "{}") || {};
-  } catch {
-    eggs = {};
-  }
-
-  try {
-    eggsCarry = JSON.parse(localStorage.getItem("eggsCarry") || "{}") || {};
-  } catch {
-    eggsCarry = {};
-  }
+  eggs = AppState.eggs.records;
+  eggsCarry = AppState.eggs;
+}
 
   if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;
   if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0;
@@ -452,8 +472,8 @@ function recomputeEggsAccumulation() {
     saveWarehouse();
   }
 
-  localStorage.setItem("eggs", JSON.stringify(eggs));
-  localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
+  AppState.eggs.records = eggs;
+saveAppState();
 }
 
 function saveEggRecord() {
@@ -535,9 +555,11 @@ function clearAllEggs() {
     appliedTotalTrays: eggsCarry.appliedTotalTrays || 0,
   };
 
-  localStorage.setItem("eggs", JSON.stringify(eggs));
-  localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
-
+  AppState.eggs.records = eggs;
+AppState.eggs.carry = eggsCarry.carry;
+AppState.eggs.totalTrays = eggsCarry.totalTrays;
+AppState.eggs.appliedTotalTrays = eggsCarry.appliedTotalTrays;
+saveAppState();
   recomputeEggsAccumulation();
   renderEggsReport();
   if ($("eggsInfo")) $("eggsInfo").innerHTML = "";
@@ -825,25 +847,25 @@ function bindSettingsSaveButton() {
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  // state
   loadAppState();
+
+  migrateWarehouseToAppState();
+  migrateEggsToAppState();   // ← 🆕 КРОК 5
+
   eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
   warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
-  // data
   loadWarehouse();
   loadEggs();
   loadOrders();
 
-  // ui
   bindNavigation();
   bindMakeFeed();
   bindEggSaveButton();
   bindSettingsSaveButton();
 
-  // render
-  loadFeedTable();                // ✅ повертає рецепт у калькуляторі
-  renderWarehouse();              // ✅ повертає таблицю складу
+  loadFeedTable();
+  renderWarehouse();
   applyWarehouseWarnings();
 
   recomputeEggsAccumulation();
