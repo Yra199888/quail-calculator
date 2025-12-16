@@ -674,51 +674,85 @@ window.clearEggTrays = clearEggTrays;
 // ============================
 
 // --------- ЗБЕРЕГТИ ---------
+// ============================
+//  APPSTATE → МІНІМУМИ СКЛАДУ
+// ============================
+
+// ключі компонентів (ТИ ВЖЕ ЇХ МАЄШ — МИ ЇХ НЕ МІНЯЄМО)
+function getMinKeyByName(name) {
+  const map = {
+    "Кукурудза": "kukurudza",
+    "Пшениця": "pshenytsia",
+    "Ячмінь": "yachmin",
+    "Соева макуха": "soieva_makuha",
+    "Соняшникова макуха": "soniashnykova_makuha",
+    "Рибне борошно": "rybne_boroshno",
+    "Дріжджі": "drizhdzhi",
+    "Трикальційфосфат": "trykaltsii_fosfat",
+    "Dolfos D": "dolfos_d",
+    "Сіль": "sil"
+  };
+  return map[name] || null;
+}
+
+// ============================
+//      ЗБЕРЕГТИ
+// ============================
 function saveWarehouseSettings() {
   try {
-    const data = {
-      kukurudza: Number(document.getElementById("minFeed_kukurudza")?.value || 0),
-      pshenytsia: Number(document.getElementById("minFeed_pshenytsia")?.value || 0),
-      yachmin: Number(document.getElementById("minFeed_yachmin")?.value || 0),
-      soieva_makuha: Number(document.getElementById("minFeed_soieva_makuha")?.value || 0),
-      soniashnykova_makuha: Number(document.getElementById("minFeed_soniashnykova_makuha")?.value || 0),
-      rybne_boroshno: Number(document.getElementById("minFeed_rybne_boroshno")?.value || 0),
-      drizhdzhi: Number(document.getElementById("minFeed_drizhdzhi")?.value || 0),
-      trykaltsii_fosfat: Number(document.getElementById("minFeed_trykaltsii_fosfat")?.value || 0),
-      dolfos_d: Number(document.getElementById("minFeed_dolfos_d")?.value || 0),
-      sil: Number(document.getElementById("minFeed_sil")?.value || 0),
-      empty_trays: Number(document.getElementById("min_empty_trays")?.value || 0)
-    };
+    const mins = {};
 
-    localStorage.setItem("warehouseMinimums", JSON.stringify(data));
+    feedComponents.forEach(item => {
+      const name = item[0];
+      const key = getMinKeyByName(name);
+      const input = document.getElementById("minFeed_" + key);
+      if (input) {
+        mins[key] = Number(input.value) || 0;
+      }
+    });
 
-    alert("✅ Дані успішно збережені");
-  } catch (err) {
-    console.error(err);
-    alert("❌ Не вдалося зберегти дані");
+    const traysInput = document.getElementById("min_empty_trays");
+    mins.empty_trays = Number(traysInput?.value || 0);
+
+    // 🔹 ЗБЕРІГАЄМО В APPSTATE
+    AppState.warehouse.minimums = mins;
+    saveAppState();
+
+    alert("✅ Мінімальні залишки збережено");
+  } catch (e) {
+    console.error(e);
+    alert("❌ Не вдалося зберегти налаштування");
+  }
+}
+window.saveWarehouseSettings = saveWarehouseSettings;
+
+// ============================
+//      ЗАВАНТАЖИТИ В UI
+// ============================
+function loadWarehouseSettingsUI() {
+  const mins = AppState.warehouse.minimums || {};
+
+  feedComponents.forEach(item => {
+    const name = item[0];
+    const key = getMinKeyByName(name);
+    const input = document.getElementById("minFeed_" + key);
+    if (input) {
+      input.value = mins[key] ?? 0;
+    }
+  });
+
+  const traysInput = document.getElementById("min_empty_trays");
+  if (traysInput) {
+    traysInput.value = mins.empty_trays ?? 0;
   }
 }
 
-// --------- ЗАВАНТАЖИТИ ---------
-function loadWarehouseSettings() {
-  try {
-    const data = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
-
-    if (data.kukurudza !== undefined) document.getElementById("minFeed_kukurudza").value = data.kukurudza;
-    if (data.pshenytsia !== undefined) document.getElementById("minFeed_pshenytsia").value = data.pshenytsia;
-    if (data.yachmin !== undefined) document.getElementById("minFeed_yachmin").value = data.yachmin;
-    if (data.soieva_makuha !== undefined) document.getElementById("minFeed_soieva_makuha").value = data.soieva_makuha;
-    if (data.soniashnykova_makuha !== undefined) document.getElementById("minFeed_soniashnykova_makuha").value = data.soniashnykova_makuha;
-    if (data.rybne_boroshno !== undefined) document.getElementById("minFeed_rybne_boroshno").value = data.rybne_boroshno;
-    if (data.drizhdzhi !== undefined) document.getElementById("minFeed_drizhdzhi").value = data.drizhdzhi;
-    if (data.trykaltsii_fosfat !== undefined) document.getElementById("minFeed_trykaltsii_fosfat").value = data.trykaltsii_fosfat;
-    if (data.dolfos_d !== undefined) document.getElementById("minFeed_dolfos_d").value = data.dolfos_d;
-    if (data.sil !== undefined) document.getElementById("minFeed_sil").value = data.sil;
-    if (data.empty_trays !== undefined) document.getElementById("min_empty_trays").value = data.empty_trays;
-
-  } catch (err) {
-    console.error(err);
-  }
+// ============================
+//      СТАРТ
+// ============================
+document.addEventListener("DOMContentLoaded", () => {
+  loadWarehouseSettingsUI();
+});
 }
 
 // --------- SAFARI SAFE ПІДВʼЯЗКА ---------
@@ -730,14 +764,6 @@ document.addEventListener("DOMContentLoaded", function () {
   loadWarehouseSettings();
 });
 
-
-// ============================
-//      СТАРТ
-// ============================
-document.addEventListener("DOMContentLoaded", () => {
-  syncToggleButtonsUI();
-  loadWarehouseSettingsUI();
-});
 
 // ============================
 //      APP STATE (BASE)
