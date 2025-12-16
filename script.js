@@ -42,9 +42,9 @@ function loadAppState() {
   try {
     const saved = JSON.parse(localStorage.getItem("AppState"));
     if (saved && typeof saved === "object") {
-      // просте злиття
       if (saved.ui) Object.assign(AppState.ui, saved.ui);
       if (saved.warehouse) Object.assign(AppState.warehouse, saved.warehouse);
+      if (saved.eggs) Object.assign(AppState.eggs, saved.eggs); // 🔑 КРИТИЧНО
     }
   } catch (e) {
     console.warn("AppState load failed", e);
@@ -74,8 +74,11 @@ function migrateWarehouseToAppState() {
 }
 
 function migrateEggsToAppState() {
-  if (AppState.eggs.records && Object.keys(AppState.eggs.records).length) return;
-
+  if (
+  AppState.eggs.records &&
+  Object.keys(AppState.eggs.records).length &&
+  typeof AppState.eggs.totalTrays === "number"
+) return;
   try {
     const oldEggs = JSON.parse(localStorage.getItem("eggs")) || {};
     const oldCarry = JSON.parse(localStorage.getItem("eggsCarry")) || {};
@@ -423,9 +426,8 @@ let eggs = {};
 let eggsCarry = {};
 
 function loadEggs() {
-  eggs = AppState.eggs.records;
+  eggs = AppState.eggs.records || {};
   eggsCarry = AppState.eggs;
-}
 
   if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;
   if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0;
