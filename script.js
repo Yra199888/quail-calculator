@@ -1,32 +1,4 @@
 // ============================
-//      APP STATE (BASE)
-// ============================
-
-const AppState = {
-  ui: {
-    page: "calculator",
-    eggsEditEnabled: false,
-    warehouseEditEnabled: false
-  },
-  warehouse: {
-    minimums: {}
-  }
-};
-
-function loadAppState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem("AppState"));
-    if (saved) Object.assign(AppState, saved);
-  } catch {}
-}
-
-function saveAppState() {
-  try {
-    localStorage.setItem("AppState", JSON.stringify(AppState));
-  } catch {}
-}
-
-// ============================
 //      ДОПОМІЖНІ
 // ============================
 const $ = (id) => document.getElementById(id);
@@ -40,8 +12,42 @@ function sortDatesAsc(dates) {
 }
 
 // ============================
+//      APP STATE (BASE)
+// ============================
+const AppState = {
+  ui: {
+    page: "calculator",
+    eggsEditEnabled: false,
+    warehouseEditEnabled: false,
+  },
+  warehouse: {
+    minimums: {}, // {kukurudza:1, ..., empty_trays: 10}
+  },
+};
+
+function loadAppState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("AppState"));
+    if (saved && typeof saved === "object") {
+      // просте злиття
+      if (saved.ui) Object.assign(AppState.ui, saved.ui);
+      if (saved.warehouse) Object.assign(AppState.warehouse, saved.warehouse);
+    }
+  } catch (e) {
+    console.warn("AppState load failed", e);
+  }
+}
+
+function saveAppState() {
+  try {
+    localStorage.setItem("AppState", JSON.stringify(AppState));
+  } catch (e) {
+    console.error("AppState save failed", e);
+  }
+}
+
+// ============================
 //      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ (ЗАХИСТ)
-// зелена = ВИМКНЕНО, червона = УВІМКНЕНО
 // ============================
 let eggsEditEnabled = false;
 let warehouseEditEnabled = false;
@@ -49,14 +55,17 @@ let warehouseEditEnabled = false;
 function paintToggleButton(btn, enabled, label) {
   if (!btn) return;
   btn.textContent = `${enabled ? "🔓" : "🔒"} ${label}: ${enabled ? "УВІМКНЕНО" : "ВИМКНЕНО"}`;
-  btn.style.background = enabled ? "#b30000" : "#2e7d32"; // червоний / зелений
+  btn.style.background = enabled ? "#b30000" : "#2e7d32";
   btn.style.color = "#fff";
 }
 
 // Підв’язка кнопок toggle після завантаження DOM
 function syncToggleButtonsUI() {
-  const eggsBtn = document.querySelector(`button[onclick="toggleEggsEdit()"]`);
-  const whBtn = document.querySelector(`button[onclick="toggleWarehouseEdit()"]`);
+  // підтримка двох варіантів: або inline onclick-кнопки, або кнопки з id
+  const eggsBtn =
+    document.querySelector(`button[onclick="toggleEggsEdit()"]`) || $("toggleEggsEditBtn");
+  const whBtn =
+    document.querySelector(`button[onclick="toggleWarehouseEdit()"]`) || $("toggleWarehouseEditBtn");
 
   paintToggleButton(eggsBtn, eggsEditEnabled, "Редагування яєць");
   paintToggleButton(whBtn, warehouseEditEnabled, "Редагування складу");
@@ -67,30 +76,36 @@ function syncToggleButtonsUI() {
 // ============================
 const themeSwitch = $("themeSwitch");
 if (themeSwitch) {
-  themeSwitch.onclick = () => {
+  themeSwitch.addEventListener("click", () => {
     document.body.classList.toggle("light");
     themeSwitch.textContent = document.body.classList.contains("light") ? "☀️" : "🌙";
-  };
+  });
 }
 
 // ============================
 //      НАВІГАЦІЯ
 // ============================
-document.querySelectorAll(".nav-btn").forEach((btn) => {
-  btn.onclick = () => {
-    const page = btn.dataset.page;
-    if (!page) return; // тема
+function bindNavigation() {
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const page = btn.dataset.page;
+      if (!page) return; // тема або кнопка без page
 
-    document.querySelectorAll(".page").forEach((p) => p.classList.remove("active-page"));
-    $("page-" + page)?.classList.add("active-page");
+      document.querySelectorAll(".page").forEach((p) => p.classList.remove("active-page"));
+      const target = $("page-" + page);
+      if (target) target.classList.add("active-page");
 
-    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-  };
-});
+      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      AppState.ui.page = page;
+      saveAppState();
+    });
+  });
+}
 
 // ============================
-//      КОМПОНЕНТИ КОРМУ
+//      КОМПОНЕНТИ КОРМУ (РЕЦЕПТ)
 // ============================
 const feedComponents = [
   ["Кукурудза", 10],
@@ -104,80 +119,6 @@ const feedComponents = [
   ["Dolfos D", 0.7],
   ["Сіль", 0.05],
 ];
-
-// ============================
-//      КАЛЬКУЛЯТОР КОРМУ (ЛОГІКУ НЕ ЛАМАЄМО)
-// ============================
-function loadFeedTable() {
-  const tbody = $("feedTable");
-  if (!tbody) return;
-
-  tbody.innerHTML = feedComponents
-    .map(
-      (c, i) => `
-    <tr>
-      <td>${c[0]}</td>
-      <td><input class="qty" data-i="${i}" type="number" value="${localStorage.getItem("qty_" + i) ?? c[1]}"></td>
-      <td><input class="price" data-i="${i}" type="number" value="${localStorage.getItem("price_" + i) ?? 0}"></td>
-      <td id="sum_${i}">0</td>
-    </tr>
-  `
-    )
-    .join("");
-
-  document.querySelectorAll(".qty,.price,#feedVolume").forEach((el) => (el.oninput = calculateFeed));
-  calculateFeed();
-}
-
-function calculateFeed() {
-  let total = 0,
-    totalKg = 0;
-
-  feedComponents.forEach((_, i) => {
-    const qty = Number(document.querySelector(`.qty[data-i="${i}"]`)?.value) || 0;
-    const price = Number(document.querySelector(`.price[data-i="${i}"]`)?.value) || 0;
-
-    localStorage.setItem("qty_" + i, qty);
-    localStorage.setItem("price_" + i, price);
-
-    const sum = qty * price;
-    total += sum;
-    totalKg += qty;
-
-    const cell = $("sum_" + i);
-    if (cell) cell.textContent = sum.toFixed(2);
-  });
-
-  const perKg = totalKg ? total / totalKg : 0;
-  const vol = Number($("feedVolume")?.value) || 0;
-
-  if ($("feedTotal")) $("feedTotal").textContent = total.toFixed(2);
-  if ($("feedPerKg")) $("feedPerKg").textContent = perKg.toFixed(2);
-  if ($("feedVolumeTotal")) $("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
-}
-
-// ============================
-//      СКЛАД
-// ============================
-let warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}");
-if (!warehouse.feed) {
-  warehouse = {
-    feed: {},
-    trays: 0,
-    ready: 0,
-    reserved: 0,
-    history: [],
-  };
-  saveWarehouse();
-}
-
-function saveWarehouse() {
-  localStorage.setItem("warehouse", JSON.stringify(warehouse));
-}
-
-// ============================
-//  СКЛАД + ПОПЕРЕДЖЕННЯ МІНІМУМІВ
-// ============================
 
 // відповідність назв → ключі мінімумів
 function getMinKeyByName(name) {
@@ -196,21 +137,113 @@ function getMinKeyByName(name) {
   return map[name] || null;
 }
 
+// ============================
+//      КАЛЬКУЛЯТОР КОРМУ
+// ============================
+function loadFeedTable() {
+  const tbody = $("feedTable");
+  if (!tbody) return;
+
+  tbody.innerHTML = feedComponents
+    .map(
+      (c, i) => `
+      <tr>
+        <td>${c[0]}</td>
+        <td><input class="qty" data-i="${i}" type="number" value="${localStorage.getItem("qty_" + i) ?? c[1]}"></td>
+        <td><input class="price" data-i="${i}" type="number" value="${localStorage.getItem("price_" + i) ?? 0}"></td>
+        <td id="sum_${i}">0</td>
+      </tr>
+    `
+    )
+    .join("");
+
+  document.querySelectorAll(".qty,.price,#feedVolume").forEach((el) =>
+    el.addEventListener("input", calculateFeed)
+  );
+
+  calculateFeed();
+}
+
+function calculateFeed() {
+  let total = 0;
+  let totalKg = 0;
+
+  feedComponents.forEach((_, i) => {
+    const qty = Number(document.querySelector(`.qty[data-i="${i}"]`)?.value) || 0;
+    const price = Number(document.querySelector(`.price[data-i="${i}"]`)?.value) || 0;
+
+    localStorage.setItem("qty_" + i, String(qty));
+    localStorage.setItem("price_" + i, String(price));
+
+    const sum = qty * price;
+    total += sum;
+    totalKg += qty;
+
+    const cell = $("sum_" + i);
+    if (cell) cell.textContent = sum.toFixed(2);
+  });
+
+  const perKg = totalKg ? total / totalKg : 0;
+  const vol = Number($("feedVolume")?.value) || 0;
+
+  if ($("feedTotal")) $("feedTotal").textContent = total.toFixed(2);
+  if ($("feedPerKg")) $("feedPerKg").textContent = perKg.toFixed(2);
+  if ($("feedVolumeTotal")) $("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
+}
 
 // ============================
-//  RENDER СКЛАДУ
+//      СКЛАД (дані)
 // ============================
+let warehouse = {};
+function loadWarehouse() {
+  try {
+    warehouse = JSON.parse(localStorage.getItem("warehouse") || "{}") || {};
+  } catch {
+    warehouse = {};
+  }
+
+  if (!warehouse.feed) {
+    warehouse = {
+      feed: {},
+      trays: 0,
+      ready: 0,
+      reserved: 0,
+      history: [],
+    };
+    saveWarehouse();
+  }
+}
+
+function saveWarehouse() {
+  localStorage.setItem("warehouse", JSON.stringify(warehouse));
+}
+
+// ============================
+//  ПОПЕРЕДЖЕННЯ МІНІМУМІВ (UI + список)
+// ============================
+function getMinimums() {
+  // джерело: AppState
+  const fromAppState = AppState?.warehouse?.minimums;
+  if (fromAppState && typeof fromAppState === "object") return fromAppState;
+
+  // fallback: старий localStorage warehouseMinimums (якщо лишився)
+  try {
+    return JSON.parse(localStorage.getItem("warehouseMinimums") || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
 function applyWarehouseWarnings() {
-  const box = document.getElementById("warehouseWarning");
-  const list = document.getElementById("warehouseWarningList");
+  const box = $("warehouseWarning");
+  const list = $("warehouseWarningList");
   if (!box || !list) return;
 
-  const mins = AppState.warehouse.minimums || {};
+  const mins = getMinimums();
   const warnings = [];
 
-  // кормові компоненти
-  feedComponents.forEach(item => {
-    const name = item[0];
+  // компоненти
+  feedComponents.forEach(([name]) => {
     const key = getMinKeyByName(name);
     if (!key) return;
 
@@ -222,10 +255,9 @@ function applyWarehouseWarnings() {
     }
   });
 
-  // порожні лотки
+  // лотки
   const trayMin = Number(mins.empty_trays || 0);
   const trayStock = Number(warehouse.trays || 0);
-
   if (trayMin > 0 && trayStock < trayMin) {
     warnings.push(`• Порожні лотки: ${trayStock} (мін. ${trayMin})`);
   }
@@ -239,34 +271,36 @@ function applyWarehouseWarnings() {
   }
 }
 
+// ============================
+//  RENDER СКЛАДУ
+// ============================
 function renderWarehouse() {
   const tbody = $("warehouseTable");
   if (!tbody) return;
 
-  const mins = AppState.warehouse.minimums || {};
+  const mins = getMinimums();
 
+  tbody.innerHTML = feedComponents
+    .map(([name, need]) => {
+      const stock = Number(warehouse.feed[name] || 0);
 
-  tbody.innerHTML = feedComponents.map(item => {
-    const name = item[0];
-    const need = item[1];
-    const stock = warehouse.feed[name] || 0;
+      const key = getMinKeyByName(name);
+      const min = Number(mins[key] || 0);
+      const isLow = min > 0 && stock < min;
 
-    const key = getMinKeyByName(name);
-    const min = Number(mins[key]) || 0;
-    const isLow = min > 0 && stock < min;
+      return `
+        <tr style="${isLow ? "background:#3a1c1c;color:#ffb3b3;" : ""}">
+          <td>${isLow ? "⚠️ " : ""}${name}</td>
+          <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
+          <td>${need}</td>
+          <td><b>${stock.toFixed(2)}</b></td>
+        </tr>
+      `;
+    })
+    .join("");
 
-    return `
-      <tr style="${isLow ? "background:#3a1c1c;color:#ffb3b3;" : ""}">
-        <td>${isLow ? "⚠️ " : ""}${name}</td>
-        <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
-        <td>${need}</td>
-        <td><b>${stock.toFixed(2)}</b></td>
-      </tr>
-    `;
-  }).join("");
-
-  document.querySelectorAll(".addStock").forEach(inp => {
-    inp.onchange = e => {
+  document.querySelectorAll(".addStock").forEach((inp) => {
+    inp.addEventListener("change", (e) => {
       const val = Number(e.target.value) || 0;
       e.target.value = 0;
       if (val <= 0) return;
@@ -277,18 +311,18 @@ function renderWarehouse() {
       }
 
       const name = e.target.dataset.name;
-      warehouse.feed[name] = (warehouse.feed[name] || 0) + val;
+      warehouse.feed[name] = Number(warehouse.feed[name] || 0) + val;
 
       saveWarehouse();
       renderWarehouse();
       applyWarehouseWarnings();
-    };
+    });
   });
 
   const trayStockEl = $("trayStock");
   if (trayStockEl) {
     trayStockEl.value = warehouse.trays ?? 0;
-    trayStockEl.onchange = e => {
+    trayStockEl.addEventListener("change", (e) => {
       if (!warehouseEditEnabled) {
         alert("🔒 Спочатку увімкни редагування складу");
         trayStockEl.value = warehouse.trays ?? 0;
@@ -297,7 +331,7 @@ function renderWarehouse() {
       warehouse.trays = Number(e.target.value) || 0;
       saveWarehouse();
       applyWarehouseWarnings();
-    };
+    });
   }
 
   if ($("fullTrays")) $("fullTrays").textContent = warehouse.ready ?? 0;
@@ -307,51 +341,62 @@ function renderWarehouse() {
   if (mixHistory) {
     mixHistory.innerHTML =
       warehouse.history?.length
-        ? "<ul>" + warehouse.history.map(x => `<li>${x}</li>`).join("") + "</ul>"
+        ? "<ul>" + warehouse.history.map((x) => `<li>${x}</li>`).join("") + "</ul>"
         : "<i>Порожньо</i>";
   }
 }
 
-
 // ============================
 //  КНОПКА "ЗРОБИТИ КОРМ"
 // ============================
-const makeFeedBtn = $("makeFeedBtn");
-if (makeFeedBtn) {
-  makeFeedBtn.onclick = () => {
+function bindMakeFeed() {
+  const makeFeedBtn = $("makeFeedBtn");
+  if (!makeFeedBtn) return;
+
+  makeFeedBtn.addEventListener("click", () => {
     for (const item of feedComponents) {
       const name = item[0];
       const need = item[1];
-      if ((warehouse.feed[name] || 0) < need) {
+      if (Number(warehouse.feed[name] || 0) < need) {
         alert(`Недостатньо компоненту: ${name}`);
         return;
       }
     }
 
-    feedComponents.forEach(item => {
-      warehouse.feed[item[0]] -= item[1];
+    feedComponents.forEach(([name, need]) => {
+      warehouse.feed[name] = Number(warehouse.feed[name] || 0) - need;
     });
 
     warehouse.history.push("Заміс: " + new Date().toLocaleString());
     saveWarehouse();
-renderWarehouse();
-applyWarehouseWarnings();
-  };
+    renderWarehouse();
+    applyWarehouseWarnings();
+  });
 }
 
-// старт
-renderWarehouse();
-applyWarehouseWarnings();
-
 // ============================
-//      ЯЙЦЯ — накопичення + перенос + синхрон з лотками
+//      ЯЙЦЯ
 // ============================
-let eggs = JSON.parse(localStorage.getItem("eggs") || "{}");
+let eggs = {};
+let eggsCarry = {};
 
-let eggsCarry = JSON.parse(localStorage.getItem("eggsCarry") || "{}");
-if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;
-if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0;
-if (typeof eggsCarry.appliedTotalTrays !== "number") eggsCarry.appliedTotalTrays = 0;
+function loadEggs() {
+  try {
+    eggs = JSON.parse(localStorage.getItem("eggs") || "{}") || {};
+  } catch {
+    eggs = {};
+  }
+
+  try {
+    eggsCarry = JSON.parse(localStorage.getItem("eggsCarry") || "{}") || {};
+  } catch {
+    eggsCarry = {};
+  }
+
+  if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;
+  if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0;
+  if (typeof eggsCarry.appliedTotalTrays !== "number") eggsCarry.appliedTotalTrays = 0;
+}
 
 function recomputeEggsAccumulation() {
   const dates = sortDatesAsc(Object.keys(eggs));
@@ -359,7 +404,7 @@ function recomputeEggsAccumulation() {
   let totalTrays = 0;
 
   dates.forEach((d) => {
-    const e = eggs[d];
+    const e = eggs[d] || {};
     const good = Number(e.good) || 0;
     const bad = Number(e.bad) || 0;
     const home = Number(e.home) || 0;
@@ -376,6 +421,7 @@ function recomputeEggsAccumulation() {
     e.trays = trays;
     e.remainder = remainder;
 
+    eggs[d] = e;
     totalTrays += trays;
     carry = remainder;
   });
@@ -390,8 +436,6 @@ function recomputeEggsAccumulation() {
     eggsCarry.appliedTotalTrays = eggsCarry.totalTrays;
 
     saveWarehouse();
-    renderWarehouse();
-    showOrders();
   }
 
   localStorage.setItem("eggs", JSON.stringify(eggs));
@@ -427,6 +471,9 @@ function saveEggRecord() {
   }
 
   renderEggsReport();
+  renderWarehouse();
+  applyWarehouseWarnings();
+  showOrders();
 }
 window.saveEggRecord = saveEggRecord;
 
@@ -453,6 +500,9 @@ function deleteEgg(date) {
   delete eggs[date];
   recomputeEggsAccumulation();
   renderEggsReport();
+  renderWarehouse();
+  applyWarehouseWarnings();
+  showOrders();
 }
 window.deleteEgg = deleteEgg;
 
@@ -476,8 +526,11 @@ function clearAllEggs() {
 
   recomputeEggsAccumulation();
   renderEggsReport();
-
   if ($("eggsInfo")) $("eggsInfo").innerHTML = "";
+
+  renderWarehouse();
+  applyWarehouseWarnings();
+  showOrders();
 
   alert("✅ Звіт по яйцях очищено");
 }
@@ -497,30 +550,41 @@ function renderEggsReport() {
     .map((d) => {
       const e = eggs[d];
       return `
-      <div class="egg-entry">
-        <div style="display:flex; justify-content:space-between; gap:10px;">
-          <b>${d}</b>
-          <div style="display:flex; gap:8px;">
-            <button onclick="editEgg('${d}')">✏️</button>
-            <button onclick="deleteEgg('${d}')">🗑️</button>
+        <div class="egg-entry">
+          <div style="display:flex; justify-content:space-between; gap:10px;">
+            <b>${d}</b>
+            <div style="display:flex; gap:8px;">
+              <button onclick="editEgg('${d}')">✏️</button>
+              <button onclick="deleteEgg('${d}')">🗑️</button>
+            </div>
           </div>
+          Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
+          Перенос: ${e.carryIn ?? 0} → Разом: ${e.sum ?? 0}<br>
+          Лотки: <b>${e.trays ?? 0}</b> | Залишок: <b>${e.remainder ?? 0}</b>
         </div>
-        Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
-        Перенос: ${e.carryIn ?? 0} → Разом: ${e.sum ?? 0}<br>
-        Лотки: <b>${e.trays ?? 0}</b> | Залишок: <b>${e.remainder ?? 0}</b>
-      </div>
-    `;
+      `;
     })
     .join("");
 }
 
-recomputeEggsAccumulation();
-renderEggsReport();
+// кнопка "Зберегти" в яйцях (якщо у тебе id="saveEggBtn")
+function bindEggSaveButton() {
+  const btn = $("saveEggBtn");
+  if (btn) btn.addEventListener("click", saveEggRecord);
+}
 
 // ============================
 //      ЗАМОВЛЕННЯ
 // ============================
-let orders = JSON.parse(localStorage.getItem("orders") || "{}");
+let orders = {};
+
+function loadOrders() {
+  try {
+    orders = JSON.parse(localStorage.getItem("orders") || "{}") || {};
+  } catch {
+    orders = {};
+  }
+}
 
 function addOrder() {
   const d = $("orderDate")?.value || isoToday();
@@ -564,6 +628,7 @@ function setStatus(d, i, s) {
   o.status = s;
   saveWarehouse();
   localStorage.setItem("orders", JSON.stringify(orders));
+
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
@@ -593,19 +658,18 @@ function showOrders() {
       html += `<h3>${date}</h3>`;
       orders[date].forEach((o, idx) => {
         html += `
-        <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
-          <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
-          ${o.details ? o.details + "<br>" : ""}
-          <button onclick="setStatus('${date}',${idx},'виконано')">✅ Виконано</button>
-          <button onclick="setStatus('${date}',${idx},'скасовано')">❌ Скасовано</button>
-        </div>
-      `;
+          <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
+            <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
+            ${o.details ? o.details + "<br>" : ""}
+            <button onclick="setStatus('${date}',${idx},'виконано')">✅ Виконано</button>
+            <button onclick="setStatus('${date}',${idx},'скасовано')">❌ Скасовано</button>
+          </div>
+        `;
       });
     });
 
   box.innerHTML = html;
 }
-showOrders();
 
 // ============================
 //      ФІНАНСИ (заглушки)
@@ -624,6 +688,8 @@ window.exportCSV = exportCSV;
 // ============================
 function toggleEggsEdit() {
   eggsEditEnabled = !eggsEditEnabled;
+  AppState.ui.eggsEditEnabled = eggsEditEnabled;
+  saveAppState();
   syncToggleButtonsUI();
   alert(eggsEditEnabled ? "🔓 Редагування яєць УВІМКНЕНО" : "🔒 Редагування яєць ВИМКНЕНО");
 }
@@ -631,6 +697,8 @@ window.toggleEggsEdit = toggleEggsEdit;
 
 function toggleWarehouseEdit() {
   warehouseEditEnabled = !warehouseEditEnabled;
+  AppState.ui.warehouseEditEnabled = warehouseEditEnabled;
+  saveAppState();
   syncToggleButtonsUI();
   alert(warehouseEditEnabled ? "🔓 Редагування складу УВІМКНЕНО" : "🔒 Редагування складу ВИМКНЕНО");
 }
@@ -649,6 +717,7 @@ function clearFeedComponents() {
   warehouse.feed = {};
   saveWarehouse();
   renderWarehouse();
+  applyWarehouseWarnings();
 
   alert("✅ Компоненти складу очищено");
 }
@@ -676,15 +745,13 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
-
 // ============================
-//      ЗБЕРЕГТИ
+//  НАЛАШТУВАННЯ (мінімальні запаси) — SAVE/LOAD UI
 // ============================
 function saveWarehouseSettings() {
   try {
     const mins = {};
 
-    // мінімальні запаси по компонентах
     feedComponents.forEach(([name]) => {
       const key = getMinKeyByName(name);
       if (!key) return;
@@ -693,27 +760,27 @@ function saveWarehouseSettings() {
       mins[key] = Number(input?.value || 0);
     });
 
-    // мінімум порожніх лотків
     mins.empty_trays = Number(document.getElementById("min_empty_trays")?.value || 0);
 
-    // збереження в AppState + localStorage
     AppState.warehouse.minimums = mins;
     saveAppState();
 
-    // статус на екрані
-    const s = document.getElementById("settingsSaveStatus");
-    if (s) s.innerHTML = "✅ Дані збережено";
+    const status = $("settingsSaveStatus");
+    if (status) status.innerHTML = "✅ Дані збережено";
 
+    applyWarehouseWarnings();
+    renderWarehouse();
   } catch (e) {
     console.error("saveWarehouseSettings error:", e);
-    const s = document.getElementById("settingsSaveStatus");
-    if (s) s.innerHTML = "❌ Не вдалося зберегти";
+    const status = $("settingsSaveStatus");
+    if (status) status.innerHTML = "❌ Не вдалося зберегти";
     alert("❌ Не вдалося зберегти налаштування");
   }
 }
+window.saveWarehouseSettings = saveWarehouseSettings;
 
 function loadWarehouseSettingsUI() {
-  const mins = AppState.warehouse.minimums || {};
+  const mins = getMinimums();
 
   feedComponents.forEach(([name]) => {
     const key = getMinKeyByName(name);
@@ -723,36 +790,44 @@ function loadWarehouseSettingsUI() {
     if (input) input.value = mins[key] ?? 0;
   });
 
-  const trays = document.getElementById("min_empty_trays");
-  if (trays) trays.value = mins.empty_trays ?? 0;
+  const traysInput = document.getElementById("min_empty_trays");
+  if (traysInput) traysInput.value = mins.empty_trays ?? 0;
 }
 
-// Safari/Chrome safe підв’язка кнопки
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("saveWarehouseSettingsBtn");
+function bindSettingsSaveButton() {
+  const btn = $("saveWarehouseSettingsBtn");
   if (btn) btn.addEventListener("click", saveWarehouseSettings);
+}
 
+// ============================
+//      START (ОДИН РАЗ)
+// ============================
+document.addEventListener("DOMContentLoaded", () => {
+  // state
   loadAppState();
-  loadWarehouseSettingsUI();
-});
+  eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
+  warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
-  // калькулятор
-  loadFeedTable();
+  // data
+  loadWarehouse();
+  loadEggs();
+  loadOrders();
 
-  // склад
-  renderWarehouse();
+  // ui
+  bindNavigation();
+  bindMakeFeed();
+  bindEggSaveButton();
+  bindSettingsSaveButton();
+
+  // render
+  loadFeedTable();                // ✅ повертає рецепт у калькуляторі
+  renderWarehouse();              // ✅ повертає таблицю складу
   applyWarehouseWarnings();
 
-  // яйця
   recomputeEggsAccumulation();
   renderEggsReport();
-
-  // замовлення
   showOrders();
 
-  // налаштування
   loadWarehouseSettingsUI();
-
-  // UI
   syncToggleButtonsUI();
 });
