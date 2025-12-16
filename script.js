@@ -177,13 +177,7 @@ function applyWarehouseWarnings() {
   const list = document.getElementById("warehouseWarningList");
   if (!box || !list) return;
 
-  let mins = {};
-  try {
-    const mins = AppState.warehouse.minimums || {};
-  } catch {
-    mins = {};
-  }
-
+  const mins = AppState.warehouse.minimums || {};
   const warnings = [];
 
   // кормові компоненти
@@ -230,7 +224,7 @@ function renderWarehouse() {
     const stock = warehouse.feed[name] || 0;
 
     const key = getMinKeyByName(name);
-    const min = Number(minimums[key]) || 0;
+    const min = Number(mins[key]) || 0;
     const isLow = min > 0 && stock < min;
 
     return `
