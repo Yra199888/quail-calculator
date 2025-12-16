@@ -422,8 +422,6 @@ function bindMakeFeed() {
 // ============================
 //      ЯЙЦЯ
 // ============================
-let eggs = {};
-let eggsCarry = {};
 
 function loadEggs() {
   eggs = AppState.eggs.records || {};
@@ -435,12 +433,14 @@ function loadEggs() {
 }
 
 function recomputeEggsAccumulation() {
-  const dates = sortDatesAsc(Object.keys(eggs));
+  const records = AppState.eggs.records;
+  const dates = sortDatesAsc(Object.keys(records));
+
   let carry = 0;
   let totalTrays = 0;
 
-  dates.forEach((d) => {
-    const e = eggs[d] || {};
+  dates.forEach(date => {
+    const e = records[date];
     const good = Number(e.good) || 0;
     const bad = Number(e.bad) || 0;
     const home = Number(e.home) || 0;
@@ -457,70 +457,67 @@ function recomputeEggsAccumulation() {
     e.trays = trays;
     e.remainder = remainder;
 
-    eggs[d] = e;
     totalTrays += trays;
     carry = remainder;
   });
 
-  eggsCarry.carry = carry;
-  eggsCarry.totalTrays = totalTrays;
+  AppState.eggs.carry = carry;
+  AppState.eggs.totalTrays = totalTrays;
 
-  const delta = eggsCarry.totalTrays - eggsCarry.appliedTotalTrays;
+  const delta = totalTrays - AppState.eggs.appliedTotalTrays;
   if (delta !== 0) {
-    const minReady = Math.max(warehouse.reserved || 0, 0);
-    warehouse.ready = Math.max((warehouse.ready || 0) + delta, minReady);
-    eggsCarry.appliedTotalTrays = eggsCarry.totalTrays;
-
-    saveWarehouse();
+    const minReady = Math.max(AppState.warehouse.reserved || 0, 0);
+    AppState.warehouse.ready = Math.max(
+      (AppState.warehouse.ready || 0) + delta,
+      minReady
+    );
+    AppState.eggs.appliedTotalTrays = totalTrays;
   }
 
-  AppState.eggs.records = eggs;
-saveAppState();
+  saveAppState();
 }
 
 function saveEggRecord() {
   ensureEggsDate();
 
-  const dateInput = $("eggsDate");
-  const goodInput = $("eggsGood");
-  const badInput = $("eggsBad");
-  const homeInput = $("eggsHome");
+  const date = $("eggsDate").value;
+  const good = Number($("eggsGood").value) || 0;
+  const bad = Number($("eggsBad").value) || 0;
+  const home = Number($("eggsHome").value) || 0;
   const infoBox = $("eggsInfo");
 
-  // очистка старих помилок
-  [goodInput, badInput, homeInput].forEach(el =>
-    el?.classList.remove("input-error")
+  // очистка помилок
+  ["eggsGood", "eggsBad", "eggsHome"].forEach(id =>
+    $(id)?.classList.remove("input-error")
   );
   if (infoBox) infoBox.innerHTML = "";
 
-  const good = Number(goodInput.value) || 0;
-  const bad = Number(badInput.value) || 0;
-  const home = Number(homeInput.value) || 0;
-
-  // ❌ ЛОГІЧНА ПОМИЛКА
+  // ❌ логічна помилка
   if (bad + home > good) {
-    badInput.classList.add("input-error");
-    homeInput.classList.add("input-error");
+    $("eggsBad").classList.add("input-error");
+    $("eggsHome").classList.add("input-error");
 
     if (infoBox) {
       infoBox.innerHTML = `
         <div class="error-text">
-          ❌ Брак + Для дому не можуть перевищувати кількість яєць за добу
+          ❌ Брак + Для дому не можуть перевищувати кількість яєць
         </div>
       `;
     }
-    return; // ⛔ стоп збереження
+    return;
   }
 
-  const date = dateInput.value;
-  
-  const e = eggs[date];
+  // ✅ ЗБЕРЕЖЕННЯ В APPSTATE
+  AppState.eggs.records[date] = { good, bad, home };
+
+  recomputeEggsAccumulation();
+
+  const e = AppState.eggs.records[date];
   if (infoBox && e) {
-    if ((e.sum || 0) < 20) {
-      infoBox.innerHTML = `🥚 ${e.sum} яєць (до лотка бракує ${20 - e.sum})`;
-    } else {
-      infoBox.innerHTML = `📦 Повних лотків: <b>${e.trays}</b>, залишок <b>${e.remainder}</b> яєць`;
-    }
+    infoBox.innerHTML =
+      e.sum < 20
+        ? `🥚 ${e.sum} яєць (до лотка бракує ${20 - e.sum})`
+        : `📦 Лотків: <b>${e.trays}</b>, залишок <b>${e.remainder}</b>`;
   }
 
   renderEggsReport();
@@ -528,6 +525,7 @@ function saveEggRecord() {
   applyWarehouseWarnings();
   showOrders();
 }
+
 window.saveEggRecord = saveEggRecord;
 
 function editEgg(date) {
