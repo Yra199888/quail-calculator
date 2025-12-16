@@ -94,6 +94,39 @@
 </div>
 </div>
 
+<!-- ===== ЗАМОВЛЕННЯ ===== -->
+<div id="page-orders" class="page">
+  <h2>📦 Замовлення</h2>
+
+  <div class="container">
+    <div class="form-row">
+      <label>Дата:</label>
+      <input id="orderDate" type="date">
+    </div>
+
+    <div class="form-row">
+      <label>Імʼя клієнта:</label>
+      <input id="orderName" type="text">
+    </div>
+
+    <div class="form-row">
+      <label>Кількість лотків:</label>
+      <input id="orderTrays" type="number">
+    </div>
+
+    <div class="form-row">
+      <label>Примітка:</label>
+      <input id="orderDetails" type="text">
+    </div>
+
+    <button class="main-btn" onclick="addOrder()">➕ Додати замовлення</button>
+
+    <hr>
+
+    <div id="ordersList"></div>
+  </div>
+</div>
+
 <!-- ===== СКЛАД ===== -->
 <div id="page-warehouse" class="page">
   <h2>🏚️ Склад</h2>
