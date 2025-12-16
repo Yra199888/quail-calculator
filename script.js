@@ -423,15 +423,6 @@ function bindMakeFeed() {
 //      ЯЙЦЯ
 // ============================
 
-function loadEggs() {
-  eggs = AppState.eggs.records || {};
-  eggsCarry = AppState.eggs;
-
-  if (typeof eggsCarry.carry !== "number") eggsCarry.carry = 0;
-  if (typeof eggsCarry.totalTrays !== "number") eggsCarry.totalTrays = 0;
-  if (typeof eggsCarry.appliedTotalTrays !== "number") eggsCarry.appliedTotalTrays = 0;
-}
-
 function recomputeEggsAccumulation() {
   const records = AppState.eggs.records;
   const dates = sortDatesAsc(Object.keys(records));
@@ -529,7 +520,7 @@ function saveEggRecord() {
 window.saveEggRecord = saveEggRecord;
 
 function editEgg(date) {
-  const e = eggs[date];
+  const e = AppState.eggs.records[date];
   if (!e) return;
 
   $("eggsDate").value = date;
@@ -544,11 +535,10 @@ function deleteEgg(date) {
     alert("🔒 Увімкни редагування яєць");
     return;
   }
-  if (!eggs[date]) return;
+  if (!AppState.eggs.records[date]) return;
+delete AppState.eggs.records[date];
 
-  if (!confirm(`Видалити запис за ${date}?`)) return;
-
-  delete eggs[date];
+saveAppState();
   recomputeEggsAccumulation();
   renderEggsReport();
   renderWarehouse();
@@ -565,18 +555,13 @@ function clearAllEggs() {
 
   if (!confirm("Видалити ВЕСЬ щоденний звіт по яйцях?")) return;
 
-  eggs = {};
-  eggsCarry = {
-    carry: 0,
-    totalTrays: 0,
-    appliedTotalTrays: eggsCarry.appliedTotalTrays || 0,
-  };
-
-  AppState.eggs.records = eggs;
-AppState.eggs.carry = eggsCarry.carry;
-AppState.eggs.totalTrays = eggsCarry.totalTrays;
-AppState.eggs.appliedTotalTrays = eggsCarry.appliedTotalTrays;
+  AppState.eggs.records = {};
+AppState.eggs.carry = 0;
+AppState.eggs.totalTrays = 0;
+AppState.eggs.appliedTotalTrays = 0;
 saveAppState();
+
+  
   recomputeEggsAccumulation();
   renderEggsReport();
   if ($("eggsInfo")) $("eggsInfo").innerHTML = "";
@@ -593,31 +578,31 @@ function renderEggsReport() {
   const list = $("eggsList");
   if (!list) return;
 
-  const dates = Object.keys(eggs).sort().reverse();
+  const records = AppState.eggs.records;
+  const dates = Object.keys(records).sort().reverse();
+
   if (!dates.length) {
     list.innerHTML = "<i>Записів немає</i>";
     return;
   }
 
-  list.innerHTML = dates
-    .map((d) => {
-      const e = eggs[d];
-      return `
-        <div class="egg-entry">
-          <div style="display:flex; justify-content:space-between; gap:10px;">
-            <b>${d}</b>
-            <div style="display:flex; gap:8px;">
-              <button onclick="editEgg('${d}')">✏️</button>
-              <button onclick="deleteEgg('${d}')">🗑️</button>
-            </div>
+  list.innerHTML = dates.map(date => {
+    const e = records[date];
+    return `
+      <div class="egg-entry">
+        <div style="display:flex; justify-content:space-between;">
+          <b>${date}</b>
+          <div>
+            <button onclick="editEgg('${date}')">✏️</button>
+            <button onclick="deleteEgg('${date}')">🗑️</button>
           </div>
-          Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
-          Перенос: ${e.carryIn ?? 0} → Разом: ${e.sum ?? 0}<br>
-          Лотки: <b>${e.trays ?? 0}</b> | Залишок: <b>${e.remainder ?? 0}</b>
         </div>
-      `;
-    })
-    .join("");
+        Всього: ${e.good} | Брак: ${e.bad} | Для дому: ${e.home}<br>
+        Перенос: ${e.carryIn ?? 0} → Разом: ${e.sum ?? 0}<br>
+        Лотки: <b>${e.trays ?? 0}</b> | Залишок: <b>${e.remainder ?? 0}</b>
+      </div>
+    `;
+  }).join("");
 }
 
 // кнопка "Зберегти" в яйцях (якщо у тебе id="saveEggBtn")
@@ -786,9 +771,9 @@ function clearEggTrays() {
   warehouse.ready = 0;
   warehouse.reserved = 0;
 
-  eggsCarry.appliedTotalTrays = eggsCarry.totalTrays;
-  localStorage.setItem("eggsCarry", JSON.stringify(eggsCarry));
-
+  AppState.eggs.appliedTotalTrays = AppState.eggs.totalTrays;
+  
+saveAppState();
   saveWarehouse();
   renderWarehouse();
   applyWarehouseWarnings();
@@ -873,7 +858,6 @@ document.addEventListener("DOMContentLoaded", () => {
   warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
   loadWarehouse();
-  loadEggs();
   loadOrders();
 
   bindNavigation();
