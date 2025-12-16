@@ -468,6 +468,13 @@ function recomputeEggsAccumulation() {
   saveAppState();
 }
 
+function ensureEggsDate() {
+  const dateInput = $("eggsDate");
+  if (dateInput && !dateInput.value) {
+    dateInput.value = isoToday();
+  }
+}
+
 function saveEggRecord() {
   ensureEggsDate();
 
