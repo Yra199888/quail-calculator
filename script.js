@@ -128,8 +128,6 @@ function calculateFeed() {
   if ($("feedVolumeTotal")) $("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
 }
 
-loadFeedTable();
-
 // ============================
 //      СКЛАД
 // ============================
@@ -181,7 +179,7 @@ function applyWarehouseWarnings() {
 
   let mins = {};
   try {
-    mins = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}") || {};
+    const mins = AppState.warehouse.minimums || {};
   } catch {
     mins = {};
   }
