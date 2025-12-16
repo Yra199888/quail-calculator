@@ -291,48 +291,6 @@ function renderWarehouse() {
   }
 }
 
-function applyWarehouseWarnings() {
-  const boxId = "warehouseWarnings";
-  let box = document.getElementById(boxId);
-
-  if (!box) {
-    box = document.createElement("div");
-    box.id = boxId;
-    box.style.margin = "10px 0";
-    box.style.padding = "10px";
-    box.style.borderRadius = "8px";
-    box.style.background = "#3a1c1c";
-    box.style.color = "#ffb3b3";
-    box.style.border = "1px solid #ff6666";
-
-    const container = document.querySelector("#page-warehouse .container");
-    if (container) container.prepend(box);
-  }
-
-  const minimums = JSON.parse(localStorage.getItem("warehouseMinimums") || "{}");
-  const problems = [];
-
-  feedComponents.forEach(item => {
-    const name = item[0];
-    const stock = warehouse.feed[name] || 0;
-    const key = getMinKeyByName(name);
-    const min = Number(minimums[key]) || 0;
-
-    if (min > 0 && stock < min) {
-      problems.push(`${name}: ${stock} / мін ${min}`);
-    }
-  });
-
-  if (problems.length === 0) {
-    box.style.display = "none";
-  } else {
-    box.style.display = "block";
-    box.innerHTML = `
-      ⚠️ <b>Низькі залишки на складі:</b><br>
-      ${problems.map(p => "• " + p).join("<br>")}
-    `;
-  }
-}
 
 // ============================
 //  КНОПКА "ЗРОБИТИ КОРМ"
@@ -697,31 +655,6 @@ function clearEggTrays() {
 }
 window.clearEggTrays = clearEggTrays;
 
-// ============================
-//  НАЛАШТУВАННЯ СКЛАДУ (SAFARI + CHROME SAFE)
-// ============================
-
-// --------- ЗБЕРЕГТИ ---------
-// ============================
-//  APPSTATE → МІНІМУМИ СКЛАДУ
-// ============================
-
-// ключі компонентів (ТИ ВЖЕ ЇХ МАЄШ — МИ ЇХ НЕ МІНЯЄМО)
-function getMinKeyByName(name) {
-  const map = {
-    "Кукурудза": "kukurudza",
-    "Пшениця": "pshenytsia",
-    "Ячмінь": "yachmin",
-    "Соева макуха": "soieva_makuha",
-    "Соняшникова макуха": "soniashnykova_makuha",
-    "Рибне борошно": "rybne_boroshno",
-    "Дріжджі": "drizhdzhi",
-    "Трикальційфосфат": "trykaltsii_fosfat",
-    "Dolfos D": "dolfos_d",
-    "Сіль": "sil"
-  };
-  return map[name] || null;
-}
 
 // ============================
 //      ЗБЕРЕГТИ
@@ -781,7 +714,7 @@ function loadWarehouseSettingsUI() {
 document.addEventListener("DOMContentLoaded", () => {
   loadWarehouseSettingsUI();
 });
-}
+
 
 // --------- SAFARI SAFE ПІДВʼЯЗКА ---------
 document.addEventListener("DOMContentLoaded", function () {
