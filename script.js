@@ -35,7 +35,8 @@ const AppState = {
     carry: 0,             // залишок яєць
     totalTrays: 0,        // всього лотків
     appliedTotalTrays: 0  // застосовано до складу
-  }
+  },
+  orders: {}
 };
 
 function loadAppState() {
@@ -93,6 +94,20 @@ function migrateEggsToAppState() {
     console.log("✅ Eggs мігровано в AppState");
   } catch (e) {
     console.warn("❌ Не вдалося мігрувати яйця", e);
+  }
+}
+
+function migrateOrdersToAppState() {
+  if (AppState.orders && Object.keys(AppState.orders).length) return;
+
+  try {
+    const old = JSON.parse(localStorage.getItem("orders") || "{}");
+    AppState.orders = old;
+    saveAppState();
+
+    console.log("✅ Orders мігровано в AppState");
+  } catch (e) {
+    console.warn("❌ Не вдалося мігрувати orders", e);
   }
 }
 
@@ -631,15 +646,6 @@ function bindEggSaveButton() {
 // ============================
 //      ЗАМОВЛЕННЯ
 // ============================
-let orders = {};
-
-function loadOrders() {
-  try {
-    orders = JSON.parse(localStorage.getItem("orders") || "{}") || {};
-  } catch {
-    orders = {};
-  }
-}
 
 function addOrder() {
   const d = $("orderDate")?.value || isoToday();
@@ -652,43 +658,48 @@ function addOrder() {
     return;
   }
 
-  if (!orders[d]) orders[d] = [];
-  orders[d].push({ name, trays, details, status: "активне" });
+  if (!AppState.orders[d]) AppState.orders[d] = [];
+  AppState.orders[d].push({
+    name,
+    trays,
+    details,
+    status: "активне"
+  });
 
-  warehouse.reserved = (warehouse.reserved || 0) + trays;
-  saveWarehouse();
-  localStorage.setItem("orders", JSON.stringify(orders));
+  AppState.warehouse.reserved =
+    (AppState.warehouse.reserved || 0) + trays;
+
+  saveAppState();
 
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
 }
-window.addOrder = addOrder;
 
 function setStatus(d, i, s) {
-  const o = orders[d]?.[i];
+  const o = AppState.orders[d]?.[i];
   if (!o) return;
 
   if (o.status === "активне") {
     if (s === "виконано") {
-      warehouse.reserved = (warehouse.reserved || 0) - o.trays;
-      warehouse.ready = Math.max((warehouse.ready || 0) - o.trays, warehouse.reserved || 0);
+      AppState.warehouse.reserved -= o.trays;
+      AppState.warehouse.ready =
+        Math.max(AppState.warehouse.ready - o.trays, AppState.warehouse.reserved);
     }
     if (s === "скасовано") {
-      warehouse.reserved = (warehouse.reserved || 0) - o.trays;
-      warehouse.ready = Math.max(warehouse.ready || 0, warehouse.reserved || 0);
+      AppState.warehouse.reserved -= o.trays;
+      AppState.warehouse.ready =
+        Math.max(AppState.warehouse.ready, AppState.warehouse.reserved);
     }
   }
 
   o.status = s;
-  saveWarehouse();
-  localStorage.setItem("orders", JSON.stringify(orders));
+  saveAppState();
 
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
 }
-window.setStatus = setStatus;
 
 function showOrders() {
   const box = $("ordersList");
@@ -706,7 +717,8 @@ function showOrders() {
     </div>
   `;
 
-  Object.keys(orders)
+  const orders = AppState.orders;
+Object.keys(orders)
     .sort()
     .reverse()
     .forEach((date) => {
@@ -870,12 +882,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   migrateWarehouseToAppState();
   migrateEggsToAppState();   // ← 🆕 КРОК 5
+  migrateOrdersToAppState();
 
   eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
   warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
   loadWarehouse();
-  loadOrders();
+  
 
   bindNavigation();
   bindMakeFeed();
