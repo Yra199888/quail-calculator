@@ -479,24 +479,41 @@ saveAppState();
 }
 
 function saveEggRecord() {
+  ensureEggsDate();
+
   const dateInput = $("eggsDate");
   const goodInput = $("eggsGood");
   const badInput = $("eggsBad");
   const homeInput = $("eggsHome");
   const infoBox = $("eggsInfo");
 
-  if (!dateInput || !goodInput || !badInput || !homeInput) return;
+  // очистка старих помилок
+  [goodInput, badInput, homeInput].forEach(el =>
+    el?.classList.remove("input-error")
+  );
+  if (infoBox) infoBox.innerHTML = "";
 
-  const date = dateInput.value || isoToday();
+  const good = Number(goodInput.value) || 0;
+  const bad = Number(badInput.value) || 0;
+  const home = Number(homeInput.value) || 0;
 
-  eggs[date] = {
-    good: Number(goodInput.value) || 0,
-    bad: Number(badInput.value) || 0,
-    home: Number(homeInput.value) || 0,
-  };
+  // ❌ ЛОГІЧНА ПОМИЛКА
+  if (bad + home > good) {
+    badInput.classList.add("input-error");
+    homeInput.classList.add("input-error");
 
-  recomputeEggsAccumulation();
+    if (infoBox) {
+      infoBox.innerHTML = `
+        <div class="error-text">
+          ❌ Брак + Для дому не можуть перевищувати кількість яєць за добу
+        </div>
+      `;
+    }
+    return; // ⛔ стоп збереження
+  }
 
+  const date = dateInput.value;
+  
   const e = eggs[date];
   if (infoBox && e) {
     if ((e.sum || 0) < 20) {
