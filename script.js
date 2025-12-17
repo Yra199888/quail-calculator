@@ -102,18 +102,23 @@ function migrateEggsToAppState() {
 }
 
 function migrateOrdersToAppState() {
-  // якщо вже є замовлення в AppState — не чіпаємо
-  if (AppState.orders && typeof AppState.orders === "object" && Object.keys(AppState.orders).length) return;
+  if (AppState.orders && Object.keys(AppState.orders).length) return;
 
   try {
-    const old = JSON.parse(localStorage.getItem("orders") || "{}") || {};
-    if (old && typeof old === "object" && Object.keys(old).length) {
-      AppState.orders = old;
-      saveAppState();
-      console.log("✅ Orders мігровано в AppState");
-    }
+    const old = JSON.parse(localStorage.getItem("orders")) || {};
+    Object.keys(old).forEach(date => {
+      if (Array.isArray(old[date])) {
+        old[date] = old[date];
+      } else {
+        old[date] = [];
+      }
+    });
+
+    AppState.orders = old;
+    saveAppState();
+    console.log("✅ Orders мігровано в AppState");
   } catch (e) {
-    console.warn("❌ Не вдалося мігрувати orders", e);
+    console.warn("❌ Orders migration failed", e);
   }
 }
 
@@ -679,7 +684,7 @@ function addOrder() {
     return;
   }
 
-  if (!orders[d]) orders[d] = [];
+  if (!Array.isArray(orders[d])) orders[d] = [];
   orders[d].push({ name, trays, details, status: "активне" });
 
   warehouse.reserved = Number(warehouse.reserved || 0) + trays;
@@ -739,7 +744,8 @@ function showOrders() {
 
   Object.keys(orders).sort().reverse().forEach((date) => {
     html += `<h3>${date}</h3>`;
-    orders[date].forEach((o, idx) => {
+    const dayOrders = Array.isArray(orders[date]) ? orders[date] : [];
+    dayOrders.forEach((o, idx) => {
       html += `
         <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
           <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
