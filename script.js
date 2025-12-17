@@ -49,7 +49,8 @@ function loadAppState() {
     if (saved && typeof saved === "object") {
       if (saved.ui) Object.assign(AppState.ui, saved.ui);
       if (saved.warehouse) Object.assign(AppState.warehouse, saved.warehouse);
-      if (saved.eggs) Object.assign(AppState.eggs, saved.eggs); // 🔑 КРИТИЧНО
+      if (saved.eggs) Object.assign(AppState.eggs, saved.eggs);
+      if (saved.orders) AppState.orders = saved.orders; // ✅ ОЦЕ
     }
   } catch (e) {
     console.warn("AppState load failed", e);
@@ -102,19 +103,11 @@ function migrateEggsToAppState() {
 }
 
 function migrateOrdersToAppState() {
-  if (AppState.orders && Object.keys(AppState.orders).length) return;
-
   try {
-    const old = JSON.parse(localStorage.getItem("orders")) || {};
-    Object.keys(old).forEach(date => {
-      if (Array.isArray(old[date])) {
-        old[date] = old[date];
-      } else {
-        old[date] = [];
-      }
-    });
+    const old = JSON.parse(localStorage.getItem("orders"));
+    if (!old || typeof old !== "object") return;
 
-    AppState.orders = old;
+    AppState.orders = normalizeOrdersObject(old);
     saveAppState();
     console.log("✅ Orders мігровано в AppState");
   } catch (e) {
