@@ -115,8 +115,11 @@ function migrateOrdersToAppState() {
 
 // для зручності (щоб старі функції не ламались)
 let orders = {};
+
 function loadOrders() {
-  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
+  if (!AppState.orders || typeof AppState.orders !== "object") {
+    AppState.orders = {};
+  }
   orders = AppState.orders;
 }
 
@@ -667,16 +670,24 @@ function addOrder() {
     return;
   }
 
-  // гарантія структури
+  // 🔒 ГАРАНТІЯ, ЩО orders ІСНУЄ
+  if (!orders || typeof orders !== "object") {
+    orders = {};
+  }
   if (!orders[d]) orders[d] = [];
 
-  orders[d].push({ name, trays, details, status: "активне" });
+  orders[d].push({
+    name,
+    trays,
+    details,
+    status: "активне"
+  });
 
-  // склад: резерв
+  // склад
   warehouse.reserved = Number(warehouse.reserved || 0) + trays;
   saveWarehouse();
 
-  // збереження
+  // 💾 ЗБЕРЕЖЕННЯ В APPSTATE
   AppState.orders = orders;
   saveAppState();
 
@@ -914,7 +925,7 @@ document.addEventListener("DOMContentLoaded", () => {
   warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
   loadWarehouse();
-  
+  loadOrders();
 
   bindNavigation();
   restoreActivePage();
