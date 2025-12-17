@@ -3,6 +3,10 @@
 // ============================
 const $ = (id) => document.getElementById(id);
 
+window.onerror = function (msg, src, line, col) {
+  alert("JS помилка: " + msg + "\nРядок: " + line + ":" + col);
+};
+
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -660,6 +664,11 @@ function bindEggSaveButton() {
 // ============================
 
 function addOrder() {
+  alert("addOrder() натиснуто"); // потім прибереш
+
+  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
+  orders = AppState.orders;
+
   const d = $("orderDate")?.value || isoToday();
   const name = $("orderName")?.value || "Без імені";
   const trays = Number($("orderTrays")?.value) || 0;
@@ -670,24 +679,12 @@ function addOrder() {
     return;
   }
 
-  // 🔒 ГАРАНТІЯ, ЩО orders ІСНУЄ
-  if (!orders || typeof orders !== "object") {
-    orders = {};
-  }
   if (!orders[d]) orders[d] = [];
+  orders[d].push({ name, trays, details, status: "активне" });
 
-  orders[d].push({
-    name,
-    trays,
-    details,
-    status: "активне"
-  });
-
-  // склад
   warehouse.reserved = Number(warehouse.reserved || 0) + trays;
   saveWarehouse();
 
-  // 💾 ЗБЕРЕЖЕННЯ В APPSTATE
   AppState.orders = orders;
   saveAppState();
 
