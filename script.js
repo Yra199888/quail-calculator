@@ -536,6 +536,8 @@ function saveEggRecord() {
   AppState.eggs.records[date] = { good, bad, home };
 
   recomputeEggsAccumulation();
+  recomputeWarehouseFromState();
+  saveAppState();
 
   const e = AppState.eggs.records[date];
   if (infoBox && e) {
@@ -575,7 +577,7 @@ delete AppState.eggs.records[date];
 saveAppState();
   recomputeEggsAccumulation();
   recomputeWarehouseFromState();
-saveAppState();
+  saveAppState();
   renderEggsReport();
   renderWarehouse();
   applyWarehouseWarnings();
@@ -595,6 +597,7 @@ function clearAllEggs() {
 AppState.eggs.carry = 0;
 AppState.eggs.totalTrays = 0;
 AppState.eggs.appliedTotalTrays = 0;
+
 recomputeWarehouseFromState();
 saveAppState();
 
@@ -652,20 +655,21 @@ function bindEggSaveButton() {
 //      ЗАМОВЛЕННЯ
 // ============================
 
-function recomputeReservedFromOrders() {
-  let reserved = 0;
+function recomputeWarehouseFromState() {
+  const total = Number(AppState.eggs.totalTrays || 0);
 
+  let reserved = 0;
   Object.values(AppState.orders).forEach(dayOrders => {
     if (!Array.isArray(dayOrders)) return;
-
     dayOrders.forEach(o => {
-      if (o.status === "активне") {
+      if (o && o.status === "активне") {
         reserved += Number(o.trays) || 0;
       }
     });
   });
 
   AppState.warehouse.reserved = reserved;
+  AppState.warehouse.ready = Math.max(total - reserved, 0);
 }
 
 function addOrder() {
@@ -694,7 +698,7 @@ if (!d) d = isoToday();
   AppState.warehouse.reserved =
     Number(AppState.warehouse.reserved || 0) + trays;
 
-recomputeReservedFromOrders();
+  recomputeWarehouseFromState();
   saveAppState();
 
 
@@ -710,7 +714,8 @@ function setStatus(d, i, s) {
   if (!o) return;
 
   o.status = s;
-recomputeReservedFromOrders();
+
+  recomputeWarehouseFromState();
   saveAppState();
 
 
@@ -915,27 +920,6 @@ function restoreActivePage() {
   if (btn) btn.classList.add("active");
 }
 
-function recomputeWarehouseFromState() {
-  // 1) Скільки всього лотків дали яйця
-  const total = Number(AppState.eggs.totalTrays || 0);
-
-  // 2) Скільки лотків зараз "активно" замовлено
-  let reserved = 0;
-  Object.values(AppState.orders).forEach(dayOrders => {
-    if (!Array.isArray(dayOrders)) return;
-
-    dayOrders.forEach(o => {
-      if (o && o.status === "активне") {
-        reserved += Number(o.trays) || 0;
-      }
-    });
-  });
-
-  // 3) Записуємо склад як похідні значення
-  AppState.warehouse.reserved = reserved;
-  AppState.warehouse.ready = Math.max(total - reserved, 0);
-}
-
 const orderDateInput = $("orderDate");
 if (orderDateInput && !orderDateInput.value) {
   orderDateInput.value = isoToday();
@@ -948,7 +932,8 @@ if (orderDateInput && !orderDateInput.value) {
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
 
-  recomputeReservedFromOrders();
+  recomputeEggsAccumulation();
+  recomputeWarehouseFromState();
 
   migrateWarehouseToAppState();
   migrateEggsToAppState();
