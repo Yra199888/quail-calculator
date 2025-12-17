@@ -596,6 +596,8 @@ delete AppState.eggs.records[date];
 
 saveAppState();
   recomputeEggsAccumulation();
+  recomputeWarehouseFromState();
+saveAppState();
   renderEggsReport();
   renderWarehouse();
   applyWarehouseWarnings();
@@ -615,6 +617,7 @@ function clearAllEggs() {
 AppState.eggs.carry = 0;
 AppState.eggs.totalTrays = 0;
 AppState.eggs.appliedTotalTrays = 0;
+recomputeWarehouseFromState();
 saveAppState();
 
   
@@ -696,9 +699,8 @@ function addOrder() {
   AppState.warehouse.reserved =
     Number(AppState.warehouse.reserved || 0) + trays;
 
-   recomputeReservedFromOrders();
-  saveAppState();
-
+   recomputeWarehouseFromState();
+saveAppState();
 
   showOrders();
   renderWarehouse();
@@ -711,20 +713,9 @@ function setStatus(d, i, s) {
   const o = AppState.orders[d]?.[i];
   if (!o) return;
 
-  if (o.status === "активне") {
-    if (s === "виконано") {
-      AppState.warehouse.ready =
-        Math.max(AppState.warehouse.ready - o.trays, AppState.warehouse.reserved);
-    }
-    if (s === "скасовано") {
-      AppState.warehouse.ready =
-        Math.max(AppState.warehouse.ready, AppState.warehouse.reserved);
-    }
-  }
-
   o.status = s;
-  recomputeReservedFromOrders();
-  saveAppState();
+recomputeWarehouseFromState();
+saveAppState();
 
   showOrders();
   renderWarehouse();
@@ -927,20 +918,25 @@ function restoreActivePage() {
   if (btn) btn.classList.add("active");
 }
 
-function recomputeReservedFromOrders() {
-  let reserved = 0;
+function recomputeWarehouseFromState() {
+  // 1) Скільки всього лотків дали яйця
+  const total = Number(AppState.eggs.totalTrays || 0);
 
+  // 2) Скільки лотків зараз "активно" замовлено
+  let reserved = 0;
   Object.values(AppState.orders).forEach(dayOrders => {
     if (!Array.isArray(dayOrders)) return;
 
     dayOrders.forEach(o => {
-      if (o.status === "активне") {
+      if (o && o.status === "активне") {
         reserved += Number(o.trays) || 0;
       }
     });
   });
 
+  // 3) Записуємо склад як похідні значення
   AppState.warehouse.reserved = reserved;
+  AppState.warehouse.ready = Math.max(total - reserved, 0);
 }
 
 
@@ -951,7 +947,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadAppState();                 // 1️⃣ СПОЧАТКУ зчитали ВСЕ
   normalizeOrdersInState();       // 2️⃣ тільки форма даних
 
-  recomputeReservedFromOrders();
+  recomputeWarehouseFromState();
+saveAppState();
 
   migrateWarehouseToAppState();   // ⚠️ тепер БЕЗ save
   migrateEggsToAppState();        // ⚠️ тепер БЕЗ save
