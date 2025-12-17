@@ -66,6 +66,8 @@ function normalizeOrdersInState() {
     AppState.orders = {};
   }
 
+  delete AppState.orders[""];
+
   Object.keys(AppState.orders).forEach(date => {
     const v = AppState.orders[date];
 
@@ -675,7 +677,8 @@ function bindEggSaveButton() {
 // ============================
 
 function addOrder() {
-  const d = $("orderDate")?.value || isoToday();
+  let d = $("orderDate")?.value;
+if (!d) d = isoToday();
   const name = $("orderName")?.value || "Без імені";
   const trays = Number($("orderTrays")?.value) || 0;
   const details = $("orderDetails")?.value || "";
@@ -937,6 +940,11 @@ function recomputeWarehouseFromState() {
   // 3) Записуємо склад як похідні значення
   AppState.warehouse.reserved = reserved;
   AppState.warehouse.ready = Math.max(total - reserved, 0);
+}
+
+const orderDateInput = $("orderDate");
+if (orderDateInput && !orderDateInput.value) {
+  orderDateInput.value = isoToday();
 }
 
 
