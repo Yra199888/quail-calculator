@@ -652,6 +652,22 @@ function bindEggSaveButton() {
 //      ЗАМОВЛЕННЯ
 // ============================
 
+function recomputeReservedFromOrders() {
+  let reserved = 0;
+
+  Object.values(AppState.orders).forEach(dayOrders => {
+    if (!Array.isArray(dayOrders)) return;
+
+    dayOrders.forEach(o => {
+      if (o.status === "активне") {
+        reserved += Number(o.trays) || 0;
+      }
+    });
+  });
+
+  AppState.warehouse.reserved = reserved;
+}
+
 function addOrder() {
   let d = $("orderDate")?.value;
 if (!d) d = isoToday();
