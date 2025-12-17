@@ -919,20 +919,18 @@ function restoreActivePage() {
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  loadAppState();
+  loadAppState();        // ← спочатку ЗАВАНТАЖЕННЯ
+  initOrders();          // ← потім ініціалізація
 
   migrateWarehouseToAppState();
-  migrateEggsToAppState();   // ← 🆕 КРОК 5
-  migrateOrdersToAppState();
-
-  eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
-  warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
+  migrateEggsToAppState();
+  migrateOrdersToAppState(); // (можна вже прибрати пізніше)
 
   loadWarehouse();
-  initOrders();
 
   bindNavigation();
   restoreActivePage();
+
   bindMakeFeed();
   bindEggSaveButton();
   bindSettingsSaveButton();
@@ -943,7 +941,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   recomputeEggsAccumulation();
   renderEggsReport();
-  showOrders();
+  showOrders();          // ← тепер orders вже є
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
