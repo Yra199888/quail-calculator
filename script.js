@@ -673,34 +673,28 @@ function recomputeWarehouseFromState() {
 }
 
 function addOrder() {
-  let d = $("orderDate").value || isoToday();
-  const name = $("orderName").value || "Без імені";
-  const trays = Number($("orderTrays").value) || 0;
-  const details = $("orderDetails").value || "";
+  const d = ($("orderDate")?.value || isoToday());
+  const name = $("orderName")?.value?.trim() || "Без імені";
+  const trays = Number($("orderTrays")?.value) || 0;
+  const details = $("orderDetails")?.value?.trim() || "";
 
   if (trays <= 0) {
     alert("Вкажи кількість лотків (> 0)");
     return;
   }
 
-  if (!Array.isArray(AppState.orders[d])) {
-    AppState.orders[d] = [];
-  }
+  if (!Array.isArray(AppState.orders[d])) AppState.orders[d] = [];
 
-  AppState.orders[d].push({
-    name,
-    trays,
-    details,
-    status: "активне"
-  });
+  AppState.orders[d].push({ name, trays, details, status: "активне" });
 
-  recomputeWarehouseFromState();
+  // перерахунок тільки через джерела
+  recomputeWarehouseFromSources();
   saveAppState();
 
   showOrders();
   renderWarehouse();
+  applyWarehouseWarnings();
 }
-
 window.addOrder = addOrder;
 
 function setStatus(d, i, s) {
@@ -709,15 +703,13 @@ function setStatus(d, i, s) {
 
   o.status = s;
 
-  recomputeWarehouseFromState();
+  recomputeWarehouseFromSources();
   saveAppState();
-
 
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
 }
-
 window.setStatus = setStatus;
 
 function showOrders() {
@@ -914,28 +906,45 @@ function restoreActivePage() {
   if (btn) btn.classList.add("active");
 }
 
-const orderDateInput = $("orderDate");
-if (orderDateInput && !orderDateInput.value) {
-  orderDateInput.value = isoToday();
-}
-
 function normalizeOrdersInState() {
-  if (!AppState.orders || typeof AppState.orders !== "object") {
-    AppState.orders = {};
-  }
+  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
 
   Object.keys(AppState.orders).forEach(date => {
     const v = AppState.orders[date];
-
     if (Array.isArray(v)) return;
 
     if (v && typeof v === "object" && "trays" in v) {
       AppState.orders[date] = [v];
       return;
     }
-
     AppState.orders[date] = [];
   });
+}
+
+function recomputeWarehouseFromSources() {
+  // 1) total trays from eggs
+  const total = Number(AppState.eggs.totalTrays || 0);
+
+  // 2) reserved = sum(active)
+  let reserved = 0;
+
+  // 3) shipped = sum(done)
+  let shipped = 0;
+
+  Object.values(AppState.orders).forEach(dayOrders => {
+    if (!Array.isArray(dayOrders)) return;
+
+    dayOrders.forEach(o => {
+      const t = Number(o?.trays) || 0;
+      if (o?.status === "активне") reserved += t;
+      if (o?.status === "виконано") shipped += t;
+    });
+  });
+
+  AppState.warehouse.reserved = reserved;
+
+  // ready = what’s physically left after shipped
+  AppState.warehouse.ready = Math.max(total - shipped, 0);
 }
 
 
@@ -949,8 +958,13 @@ document.addEventListener("DOMContentLoaded", () => {
   migrateWarehouseToAppState();
   migrateEggsToAppState();
 
+  // якщо ти десь рахуєш eggs.totalTrays у recomputeEggsAccumulation — виклич його тут
   recomputeEggsAccumulation();
-  recomputeWarehouseFromState();
+
+  // головний перерахунок складу від eggs + orders
+  recomputeWarehouseFromSources();
+
+  // важливо зафіксувати після нормалізації/міграції
   saveAppState();
 
   loadWarehouse();
@@ -971,4 +985,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
+
+  // автодата (лише після DOM)
+  const orderDateInput = $("orderDate");
+  if (orderDateInput && !orderDateInput.value) orderDateInput.value = isoToday();
 });
