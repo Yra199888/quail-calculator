@@ -694,8 +694,9 @@ if (!d) d = isoToday();
   AppState.warehouse.reserved =
     Number(AppState.warehouse.reserved || 0) + trays;
 
-   recomputeWarehouseFromState();
-saveAppState();
+recomputeReservedFromOrders();
+  saveAppState();
+
 
   showOrders();
   renderWarehouse();
@@ -709,8 +710,9 @@ function setStatus(d, i, s) {
   if (!o) return;
 
   o.status = s;
-recomputeWarehouseFromState();
-saveAppState();
+recomputeReservedFromOrders();
+  saveAppState();
+
 
   showOrders();
   renderWarehouse();
