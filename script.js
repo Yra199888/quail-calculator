@@ -67,9 +67,19 @@ function normalizeOrdersInState() {
   }
 
   Object.keys(AppState.orders).forEach(date => {
-    if (!Array.isArray(AppState.orders[date])) {
-      AppState.orders[date] = [];
+    const v = AppState.orders[date];
+
+    // ✅ вже масив — ок
+    if (Array.isArray(v)) return;
+
+    // ✅ одиночне замовлення → в масив
+    if (v && typeof v === "object" && "trays" in v) {
+      AppState.orders[date] = [v];
+      return;
     }
+
+    // ❌ все інше — очищаємо
+    AppState.orders[date] = [];
   });
 }
 
