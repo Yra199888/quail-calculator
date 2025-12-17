@@ -493,7 +493,6 @@ function recomputeEggsAccumulation() {
     AppState.eggs.appliedTotalTrays = totalTrays;
   }
 
-  saveAppState();
 }
 
 function ensureEggsDate() {
