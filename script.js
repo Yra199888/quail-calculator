@@ -59,6 +59,18 @@ function loadAppState() {
   }
 }
 
+function normalizeOrdersInState() {
+  if (!AppState.orders || typeof AppState.orders !== "object") {
+    AppState.orders = {};
+  }
+
+  Object.keys(AppState.orders).forEach(date => {
+    if (!Array.isArray(AppState.orders[date])) {
+      AppState.orders[date] = [];
+    }
+  });
+}
+
 function migrateWarehouseToAppState() {
   // якщо вже є в AppState — нічого не робимо
   if (AppState.warehouse.feed && Object.keys(AppState.warehouse.feed).length) return;
@@ -104,25 +116,7 @@ function migrateEggsToAppState() {
   }
 }
 
-function migrateOrdersToAppState() {
-  try {
-    const old = JSON.parse(localStorage.getItem("orders"));
-    if (!old || typeof old !== "object") return;
 
-    AppState.orders = normalizeOrdersObject(old);
-    saveAppState();
-    console.log("✅ Orders мігровано в AppState");
-  } catch (e) {
-    console.warn("❌ Orders migration failed", e);
-  }
-}
-
-function initOrders() {
-  if (!AppState.orders || typeof AppState.orders !== "object") {
-    AppState.orders = {};
-    saveAppState();
-  }
-}
 
 
 function saveAppState() {
@@ -919,12 +913,12 @@ function restoreActivePage() {
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  loadAppState();        // ← спочатку ЗАВАНТАЖЕННЯ
-  initOrders();          // ← потім ініціалізація
+  loadAppState();                 // 1️⃣ читаємо ВСЕ з localStorage
+  normalizeOrdersInState();       // 2️⃣ приводимо orders до масивів
+  saveAppState();                 // 3️⃣ фіксуємо
 
   migrateWarehouseToAppState();
   migrateEggsToAppState();
-  migrateOrdersToAppState(); // (можна вже прибрати пізніше)
 
   loadWarehouse();
 
@@ -941,7 +935,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   recomputeEggsAccumulation();
   renderEggsReport();
-  showOrders();          // ← тепер orders вже є
+  showOrders();                   // ✅ тепер НЕ ЗНИКАЄ
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
