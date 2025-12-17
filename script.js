@@ -125,11 +125,50 @@ function migrateOrdersToAppState() {
 // для зручності (щоб старі функції не ламались)
 let orders = {};
 
+function normalizeOrdersObject(obj) {
+  if (!obj || typeof obj !== "object") return {};
+
+  Object.keys(obj).forEach((date) => {
+    const v = obj[date];
+
+    // якщо вже масив — ок
+    if (Array.isArray(v)) return;
+
+    // якщо це 1 замовлення обʼєктом — перетворюємо в масив з 1 елемента
+    if (v && typeof v === "object" && ("trays" in v || "name" in v)) {
+      obj[date] = [v];
+      return;
+    }
+
+    // все інше — робимо порожній масив
+    obj[date] = [];
+  });
+
+  return obj;
+}
+
 function loadOrders() {
-  if (!AppState.orders || typeof AppState.orders !== "object") {
-    AppState.orders = {};
+  // ✅ головне джерело — AppState
+  const fromState = AppState.orders && typeof AppState.orders === "object" ? AppState.orders : null;
+
+  if (fromState) {
+    AppState.orders = normalizeOrdersObject(fromState);
+    orders = AppState.orders;
+    saveAppState();
+    return;
   }
-  orders = AppState.orders;
+
+  // fallback: старий localStorage
+  try {
+    const old = JSON.parse(localStorage.getItem("orders") || "{}") || {};
+    AppState.orders = normalizeOrdersObject(old);
+    orders = AppState.orders;
+    saveAppState();
+  } catch {
+    AppState.orders = {};
+    orders = AppState.orders;
+    saveAppState();
+  }
 }
 
 
