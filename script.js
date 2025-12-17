@@ -74,6 +74,7 @@ function normalizeOrdersInState() {
 }
 
 function migrateWarehouseToAppState() {
+  if (appStateLoadedFromStorage) return;
   // якщо вже є в AppState — нічого не робимо
   if (AppState.warehouse.feed && Object.keys(AppState.warehouse.feed).length) return;
 
@@ -98,6 +99,7 @@ function migrateWarehouseToAppState() {
 }
 
 function migrateEggsToAppState() {
+  if (appStateLoadedFromStorage) return;
   if (
   AppState.eggs.records &&
   Object.keys(AppState.eggs.records).length &&
@@ -937,7 +939,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderWarehouse();
   applyWarehouseWarnings();
 
-  recomputeEggsAccumulation();    // ❗ без save
   renderEggsReport();
   showOrders();                   // ✅ замовлення залишаються
 
