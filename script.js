@@ -61,30 +61,6 @@ function loadAppState() {
   }
 }
 
-function normalizeOrdersInState() {
-  if (!AppState.orders || typeof AppState.orders !== "object") {
-    AppState.orders = {};
-  }
-
-  delete AppState.orders[""];
-
-  Object.keys(AppState.orders).forEach(date => {
-    const v = AppState.orders[date];
-
-    // ✅ вже масив — ок
-    if (Array.isArray(v)) return;
-
-    // ✅ одиночне замовлення → в масив
-    if (v && typeof v === "object" && "trays" in v) {
-      AppState.orders[date] = [v];
-      return;
-    }
-
-    // ❌ все інше — очищаємо
-    AppState.orders[date] = [];
-  });
-}
-
 function migrateWarehouseToAppState() {
   if (appStateLoadedFromStorage) return;
   // якщо вже є в AppState — нічого не робимо
@@ -952,14 +928,12 @@ if (orderDateInput && !orderDateInput.value) {
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  loadAppState();                 // 1️⃣ СПОЧАТКУ зчитали ВСЕ
-  normalizeOrdersInState();       // 2️⃣ тільки форма даних
+  loadAppState();
 
-  recomputeWarehouseFromState();
-saveAppState();
+  recomputeReservedFromOrders();
 
-  migrateWarehouseToAppState();   // ⚠️ тепер БЕЗ save
-  migrateEggsToAppState();        // ⚠️ тепер БЕЗ save
+  migrateWarehouseToAppState();
+  migrateEggsToAppState();
 
   loadWarehouse();
 
@@ -975,7 +949,7 @@ saveAppState();
   applyWarehouseWarnings();
 
   renderEggsReport();
-  showOrders();                   // ✅ замовлення залишаються
+  showOrders();
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
