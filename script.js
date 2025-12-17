@@ -43,16 +43,18 @@ const AppState = {
   orders: {}
 };
 
+let appStateLoadedFromStorage = false;
+
 function loadAppState() {
   try {
     const saved = JSON.parse(localStorage.getItem("AppState"));
     if (saved && typeof saved === "object") {
-      if (saved.ui) Object.assign(AppState.ui, saved.ui);
-      if (saved.warehouse) Object.assign(AppState.warehouse, saved.warehouse);
-      if (saved.eggs) Object.assign(AppState.eggs, saved.eggs);
+      Object.assign(AppState.ui, saved.ui || {});
+      Object.assign(AppState.warehouse, saved.warehouse || {});
+      Object.assign(AppState.eggs, saved.eggs || {});
+      AppState.orders = saved.orders || {};
 
-      // ✅ ОСЬ ЦЕ КРИТИЧНО
-      if (saved.orders) AppState.orders = saved.orders;
+      appStateLoadedFromStorage = true; // 🔑 КРИТИЧНО
     }
   } catch (e) {
     console.warn("AppState load failed", e);
@@ -85,7 +87,9 @@ function migrateWarehouseToAppState() {
     AppState.warehouse.reserved = old.reserved || 0;
     AppState.warehouse.history = old.history || [];
 
-    saveAppState();
+    if (!appStateLoadedFromStorage) {
+  saveAppState();
+}
 
     console.log("✅ Warehouse мігровано в AppState");
   } catch (e) {
@@ -108,7 +112,9 @@ function migrateEggsToAppState() {
     AppState.eggs.totalTrays = oldCarry.totalTrays || 0;
     AppState.eggs.appliedTotalTrays = oldCarry.appliedTotalTrays || 0;
 
-    saveAppState();
+    if (!appStateLoadedFromStorage) {
+  saveAppState();
+}
 
     console.log("✅ Eggs мігровано в AppState");
   } catch (e) {
@@ -913,12 +919,11 @@ function restoreActivePage() {
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
-  loadAppState();                 // 1️⃣ читаємо ВСЕ з localStorage
-  normalizeOrdersInState();       // 2️⃣ приводимо orders до масивів
-  saveAppState();                 // 3️⃣ фіксуємо
+  loadAppState();                 // 1️⃣ СПОЧАТКУ зчитали ВСЕ
+  normalizeOrdersInState();       // 2️⃣ тільки форма даних
 
-  migrateWarehouseToAppState();
-  migrateEggsToAppState();
+  migrateWarehouseToAppState();   // ⚠️ тепер БЕЗ save
+  migrateEggsToAppState();        // ⚠️ тепер БЕЗ save
 
   loadWarehouse();
 
@@ -933,9 +938,9 @@ document.addEventListener("DOMContentLoaded", () => {
   renderWarehouse();
   applyWarehouseWarnings();
 
-  recomputeEggsAccumulation();
+  recomputeEggsAccumulation();    // ❗ без save
   renderEggsReport();
-  showOrders();                   // ✅ тепер НЕ ЗНИКАЄ
+  showOrders();                   // ✅ замовлення залишаються
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
