@@ -673,6 +673,7 @@ function recomputeWarehouseFromState() {
 }
 
 function addOrder() {
+  alert("addOrder викликалась");
   const d = ($("orderDate")?.value || isoToday());
   const name = $("orderName")?.value?.trim() || "Без імені";
   const trays = Number($("orderTrays")?.value) || 0;
@@ -690,6 +691,8 @@ function addOrder() {
   // перерахунок тільки через джерела
   recomputeWarehouseFromSources();
   saveAppState();
+
+alert("localStorage:\n" + localStorage.getItem("AppState"));
 
   showOrders();
   renderWarehouse();
@@ -989,4 +992,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // автодата (лише після DOM)
   const orderDateInput = $("orderDate");
   if (orderDateInput && !orderDateInput.value) orderDateInput.value = isoToday();
+  
+    document.addEventListener("DOMContentLoaded", () => {
+  ...
+  alert("START orders keys: " + Object.keys(AppState.orders).join(", "));
 });
