@@ -696,7 +696,9 @@ function addOrder() {
   AppState.warehouse.reserved =
     Number(AppState.warehouse.reserved || 0) + trays;
 
+   recomputeReservedFromOrders();
   saveAppState();
+
 
   showOrders();
   renderWarehouse();
@@ -711,18 +713,17 @@ function setStatus(d, i, s) {
 
   if (o.status === "активне") {
     if (s === "виконано") {
-      AppState.warehouse.reserved -= o.trays;
       AppState.warehouse.ready =
         Math.max(AppState.warehouse.ready - o.trays, AppState.warehouse.reserved);
     }
     if (s === "скасовано") {
-      AppState.warehouse.reserved -= o.trays;
       AppState.warehouse.ready =
         Math.max(AppState.warehouse.ready, AppState.warehouse.reserved);
     }
   }
 
   o.status = s;
+  recomputeReservedFromOrders();
   saveAppState();
 
   showOrders();
@@ -926,12 +927,31 @@ function restoreActivePage() {
   if (btn) btn.classList.add("active");
 }
 
+function recomputeReservedFromOrders() {
+  let reserved = 0;
+
+  Object.values(AppState.orders).forEach(dayOrders => {
+    if (!Array.isArray(dayOrders)) return;
+
+    dayOrders.forEach(o => {
+      if (o.status === "активне") {
+        reserved += Number(o.trays) || 0;
+      }
+    });
+  });
+
+  AppState.warehouse.reserved = reserved;
+}
+
+
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();                 // 1️⃣ СПОЧАТКУ зчитали ВСЕ
   normalizeOrdersInState();       // 2️⃣ тільки форма даних
+
+  recomputeReservedFromOrders();
 
   migrateWarehouseToAppState();   // ⚠️ тепер БЕЗ save
   migrateEggsToAppState();        // ⚠️ тепер БЕЗ save
