@@ -115,51 +115,9 @@ function migrateOrdersToAppState() {
   }
 }
 
-// для зручності (щоб старі функції не ламались)
-let orders = {};
-
-function normalizeOrdersObject(obj) {
-  if (!obj || typeof obj !== "object") return {};
-
-  Object.keys(obj).forEach((date) => {
-    const v = obj[date];
-
-    // якщо вже масив — ок
-    if (Array.isArray(v)) return;
-
-    // якщо це 1 замовлення обʼєктом — перетворюємо в масив з 1 елемента
-    if (v && typeof v === "object" && ("trays" in v || "name" in v)) {
-      obj[date] = [v];
-      return;
-    }
-
-    // все інше — робимо порожній масив
-    obj[date] = [];
-  });
-
-  return obj;
-}
-
-function loadOrders() {
-  // ✅ головне джерело — AppState
-  const fromState = AppState.orders && typeof AppState.orders === "object" ? AppState.orders : null;
-
-  if (fromState) {
-    AppState.orders = normalizeOrdersObject(fromState);
-    orders = AppState.orders;
-    saveAppState();
-    return;
-  }
-
-  // fallback: старий localStorage
-  try {
-    const old = JSON.parse(localStorage.getItem("orders") || "{}") || {};
-    AppState.orders = normalizeOrdersObject(old);
-    orders = AppState.orders;
-    saveAppState();
-  } catch {
+function initOrders() {
+  if (!AppState.orders || typeof AppState.orders !== "object") {
     AppState.orders = {};
-    orders = AppState.orders;
     saveAppState();
   }
 }
@@ -701,11 +659,6 @@ function bindEggSaveButton() {
 // ============================
 
 function addOrder() {
-  alert("addOrder() натиснуто"); // потім прибереш
-
-  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
-  orders = AppState.orders;
-
   const d = $("orderDate")?.value || isoToday();
   const name = $("orderName")?.value || "Без імені";
   const trays = Number($("orderTrays")?.value) || 0;
@@ -716,54 +669,62 @@ function addOrder() {
     return;
   }
 
-  if (!Array.isArray(orders[d])) orders[d] = [];
-  orders[d].push({ name, trays, details, status: "активне" });
+  if (!Array.isArray(AppState.orders[d])) {
+    AppState.orders[d] = [];
+  }
 
-  warehouse.reserved = Number(warehouse.reserved || 0) + trays;
-  saveWarehouse();
+  AppState.orders[d].push({
+    name,
+    trays,
+    details,
+    status: "активне"
+  });
 
-  AppState.orders = orders;
+  AppState.warehouse.reserved =
+    Number(AppState.warehouse.reserved || 0) + trays;
+
   saveAppState();
 
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
 }
+
 window.addOrder = addOrder;
 
 function setStatus(d, i, s) {
-  const o = orders[d]?.[i];
+  const o = AppState.orders[d]?.[i];
   if (!o) return;
 
   if (o.status === "активне") {
     if (s === "виконано") {
-      warehouse.reserved = Number(warehouse.reserved || 0) - o.trays;
-      warehouse.ready = Math.max(Number(warehouse.ready || 0) - o.trays, Number(warehouse.reserved || 0));
+      AppState.warehouse.reserved -= o.trays;
+      AppState.warehouse.ready =
+        Math.max(AppState.warehouse.ready - o.trays, AppState.warehouse.reserved);
     }
     if (s === "скасовано") {
-      warehouse.reserved = Number(warehouse.reserved || 0) - o.trays;
-      warehouse.ready = Math.max(Number(warehouse.ready || 0), Number(warehouse.reserved || 0));
+      AppState.warehouse.reserved -= o.trays;
+      AppState.warehouse.ready =
+        Math.max(AppState.warehouse.ready, AppState.warehouse.reserved);
     }
   }
 
   o.status = s;
-
-  saveWarehouse();
-  AppState.orders = orders;
   saveAppState();
 
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
 }
+
 window.setStatus = setStatus;
 
 function showOrders() {
   const box = $("ordersList");
   if (!box) return;
 
-  const ready = Number(warehouse.ready || 0);
-  const reserved = Number(warehouse.reserved || 0);
+  const ready = Number(AppState.warehouse.ready || 0);
+  const reserved = Number(AppState.warehouse.reserved || 0);
   const free = Math.max(ready - reserved, 0);
 
   let html = `
@@ -774,20 +735,26 @@ function showOrders() {
     </div>
   `;
 
-  Object.keys(orders).sort().reverse().forEach((date) => {
-    html += `<h3>${date}</h3>`;
-    const dayOrders = Array.isArray(orders[date]) ? orders[date] : [];
-    dayOrders.forEach((o, idx) => {
-      html += `
-        <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
-          <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
-          ${o.details ? o.details + "<br>" : ""}
-          <button onclick="setStatus('${date}',${idx},'виконано')">✅ Виконано</button>
-          <button onclick="setStatus('${date}',${idx},'скасовано')">❌ Скасовано</button>
-        </div>
-      `;
+  Object.keys(AppState.orders)
+    .sort()
+    .reverse()
+    .forEach((date) => {
+      const dayOrders = AppState.orders[date];
+      if (!Array.isArray(dayOrders)) return;
+
+      html += `<h3>${date}</h3>`;
+
+      dayOrders.forEach((o, idx) => {
+        html += `
+          <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
+            <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
+            ${o.details ? o.details + "<br>" : ""}
+            <button onclick="setStatus('${date}',${idx},'виконано')">✅ Виконано</button>
+            <button onclick="setStatus('${date}',${idx},'скасовано')">❌ Скасовано</button>
+          </div>
+        `;
+      });
     });
-  });
 
   box.innerHTML = html;
 }
@@ -960,7 +927,7 @@ document.addEventListener("DOMContentLoaded", () => {
   warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
   loadWarehouse();
-  loadOrders();
+  initOrders();
 
   bindNavigation();
   restoreActivePage();
