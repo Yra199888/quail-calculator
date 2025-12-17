@@ -50,7 +50,9 @@ function loadAppState() {
       if (saved.ui) Object.assign(AppState.ui, saved.ui);
       if (saved.warehouse) Object.assign(AppState.warehouse, saved.warehouse);
       if (saved.eggs) Object.assign(AppState.eggs, saved.eggs);
-      if (saved.orders) AppState.orders = saved.orders; // ✅ ОЦЕ
+
+      // ✅ ОСЬ ЦЕ КРИТИЧНО
+      if (saved.orders) AppState.orders = saved.orders;
     }
   } catch (e) {
     console.warn("AppState load failed", e);
