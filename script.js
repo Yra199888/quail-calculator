@@ -98,17 +98,26 @@ function migrateEggsToAppState() {
 }
 
 function migrateOrdersToAppState() {
-  if (AppState.orders && Object.keys(AppState.orders).length) return;
+  // якщо вже є замовлення в AppState — не чіпаємо
+  if (AppState.orders && typeof AppState.orders === "object" && Object.keys(AppState.orders).length) return;
 
   try {
-    const old = JSON.parse(localStorage.getItem("orders") || "{}");
-    AppState.orders = old;
-    saveAppState();
-
-    console.log("✅ Orders мігровано в AppState");
+    const old = JSON.parse(localStorage.getItem("orders") || "{}") || {};
+    if (old && typeof old === "object" && Object.keys(old).length) {
+      AppState.orders = old;
+      saveAppState();
+      console.log("✅ Orders мігровано в AppState");
+    }
   } catch (e) {
     console.warn("❌ Не вдалося мігрувати orders", e);
   }
+}
+
+// для зручності (щоб старі функції не ламались)
+let orders = {};
+function loadOrders() {
+  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
+  orders = AppState.orders;
 }
 
 
@@ -647,34 +656,28 @@ function bindEggSaveButton() {
 //      ЗАМОВЛЕННЯ
 // ============================
 
-function loadOrders() {
-  if (!AppState.orders || typeof AppState.orders !== "object") {
-    AppState.orders = {};
-  }
-}
-
 function addOrder() {
-  // автодата
   const d = $("orderDate")?.value || isoToday();
-  if ($("orderDate") && !$("orderDate").value) $("orderDate").value = d;
-
-  const name = $("orderName")?.value?.trim() || "Без імені";
+  const name = $("orderName")?.value || "Без імені";
   const trays = Number($("orderTrays")?.value) || 0;
-  const details = $("orderDetails")?.value?.trim() || "";
+  const details = $("orderDetails")?.value || "";
 
   if (trays <= 0) {
     alert("Вкажи кількість лотків (> 0)");
     return;
   }
 
-  if (!AppState.orders) AppState.orders = {};
-  if (!AppState.orders[d]) AppState.orders[d] = [];
+  // гарантія структури
+  if (!orders[d]) orders[d] = [];
 
-  AppState.orders[d].push({ name, trays, details, status: "активне" });
+  orders[d].push({ name, trays, details, status: "активне" });
 
-  // резерв через AppState
-  AppState.warehouse.reserved = (AppState.warehouse.reserved || 0) + trays;
+  // склад: резерв
+  warehouse.reserved = Number(warehouse.reserved || 0) + trays;
+  saveWarehouse();
 
+  // збереження
+  AppState.orders = orders;
   saveAppState();
 
   showOrders();
@@ -684,38 +687,38 @@ function addOrder() {
 window.addOrder = addOrder;
 
 function setStatus(d, i, s) {
-  const o = AppState.orders[d]?.[i];
+  const o = orders[d]?.[i];
   if (!o) return;
 
   if (o.status === "активне") {
     if (s === "виконано") {
-      AppState.warehouse.reserved -= o.trays;
-      AppState.warehouse.ready =
-        Math.max(AppState.warehouse.ready - o.trays, AppState.warehouse.reserved);
+      warehouse.reserved = Number(warehouse.reserved || 0) - o.trays;
+      warehouse.ready = Math.max(Number(warehouse.ready || 0) - o.trays, Number(warehouse.reserved || 0));
     }
     if (s === "скасовано") {
-      AppState.warehouse.reserved -= o.trays;
-      AppState.warehouse.ready =
-        Math.max(AppState.warehouse.ready, AppState.warehouse.reserved);
+      warehouse.reserved = Number(warehouse.reserved || 0) - o.trays;
+      warehouse.ready = Math.max(Number(warehouse.ready || 0), Number(warehouse.reserved || 0));
     }
   }
 
   o.status = s;
+
+  saveWarehouse();
+  AppState.orders = orders;
   saveAppState();
 
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
 }
+window.setStatus = setStatus;
 
 function showOrders() {
   const box = $("ordersList");
   if (!box) return;
 
-  const orders = AppState.orders || {};
-
-  const ready = AppState.warehouse.ready || 0;
-  const reserved = AppState.warehouse.reserved || 0;
+  const ready = Number(warehouse.ready || 0);
+  const reserved = Number(warehouse.reserved || 0);
   const free = Math.max(ready - reserved, 0);
 
   let html = `
@@ -733,6 +736,8 @@ function showOrders() {
         <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
           <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
           ${o.details ? o.details + "<br>" : ""}
+          <button onclick="setStatus('${date}',${idx},'виконано')">✅ Виконано</button>
+          <button onclick="setStatus('${date}',${idx},'скасовано')">❌ Скасовано</button>
         </div>
       `;
     });
