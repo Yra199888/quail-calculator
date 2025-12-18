@@ -383,7 +383,7 @@ function applyWarehouseWarnings() {
     const key = getMinKeyByName(name);
     if (!key) return;
 
-    const stock = Number(warehouse.feed[name] || 0);
+    const stock = Number(AppState.warehouse.history[name] || 0);
     const min = Number(mins[key] || 0);
 
     if (min > 0 && stock < min) {
@@ -418,7 +418,7 @@ function renderWarehouse() {
 
   tbody.innerHTML = feedComponents
     .map(([name, need]) => {
-      const stock = Number(warehouse.feed[name] || 0);
+      const stock = Number(AppState.warehouse.history[name] || 0);
 
       const key = getMinKeyByName(name);
       const min = Number(mins[key] || 0);
@@ -447,7 +447,7 @@ function renderWarehouse() {
       }
 
       const name = e.target.dataset.name;
-      warehouse.feed[name] = Number(warehouse.feed[name] || 0) + val;
+      AppState.warehouse.history[name] = Number(AppState.warehouse.history[name] || 0) + val;
 
       saveWarehouse();
       renderWarehouse();
@@ -476,8 +476,8 @@ function renderWarehouse() {
   const mixHistory = $("mixHistory");
   if (mixHistory) {
     mixHistory.innerHTML =
-      warehouse.history?.length
-        ? "<ul>" + warehouse.history.map((x) => `<li>${x}</li>`).join("") + "</ul>"
+      AppState.warehouse.history?.length
+        ? "<ul>" + AppState.warehouse.history.map((x) => `<li>${x}</li>`).join("") + "</ul>"
         : "<i>Порожньо</i>";
   }
 }
@@ -493,17 +493,17 @@ function bindMakeFeed() {
     for (const item of feedComponents) {
       const name = item[0];
       const need = item[1];
-      if (Number(warehouse.feed[name] || 0) < need) {
+      if (Number(AppState.warehouse.feed[name] || 0) < need) {
         alert(`Недостатньо компоненту: ${name}`);
         return;
       }
     }
 
     feedComponents.forEach(([name, need]) => {
-      warehouse.feed[name] = Number(warehouse.feed[name] || 0) - need;
+      AppState.warehouse.feed[name] = Number(AppState.warehouse.feed[name] || 0) - need;
     });
 
-    warehouse.history.push("Заміс: " + new Date().toLocaleString());
+    AppState.warehouse.history.push("Заміс: " + new Date().toLocaleString());
     saveWarehouse();
     renderWarehouse();
     applyWarehouseWarnings();
