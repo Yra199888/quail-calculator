@@ -38,6 +38,12 @@ const AppState = {
     records: {},
     carry: 0,
     totalTrays: 0,
+  },
+
+  feedCalculator: {          // 👈 НОВЕ
+    qty: [],
+    price: [],
+    volume: 25
   }
 };
 
@@ -176,6 +182,24 @@ function ensureWarehouseShape() {
   warehouse = AppState.warehouse;
 }
 
+function ensureFeedCalculatorShape() {
+  if (!AppState.feedCalculator || typeof AppState.feedCalculator !== "object") {
+    AppState.feedCalculator = { qty: [], price: [], volume: 25 };
+  }
+  if (!Array.isArray(AppState.feedCalculator.qty)) AppState.feedCalculator.qty = [];
+  if (!Array.isArray(AppState.feedCalculator.price)) AppState.feedCalculator.price = [];
+
+  feedComponents.forEach(([, defaultQty], i) => {
+    const q = AppState.feedCalculator.qty[i];
+    const p = AppState.feedCalculator.price[i];
+
+    AppState.feedCalculator.qty[i] = Number(q ?? defaultQty);
+    AppState.feedCalculator.price[i] = Number(p ?? 0);
+  });
+
+  AppState.feedCalculator.volume = Number(AppState.feedCalculator.volume ?? 25);
+}
+
 // ============================
 //      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ (ЗАХИСТ)
 // ============================
@@ -270,22 +294,24 @@ function getMinKeyByName(name) {
 // ============================
 //      КАЛЬКУЛЯТОР КОРМУ
 // ============================
+
+
+
 function loadFeedTable() {
   const tbody = $("feedTable");
   if (!tbody) return;
 
-  tbody.innerHTML = feedComponents
-    .map(
-      (c, i) => `
-      <tr>
-        <td>${c[0]}</td>
-        <td><input class="qty" data-i="${i}" type="number" value="${localStorage.getItem("qty_" + i) ?? c[1]}"></td>
-        <td><input class="price" data-i="${i}" type="number" value="${localStorage.getItem("price_" + i) ?? 0}"></td>
-        <td id="sum_${i}">0</td>
-      </tr>
-    `
-    )
-    .join("");
+  tbody.innerHTML = feedComponents.map((c, i) => `
+    <tr>
+      <td>${c[0]}</td>
+      <td><input class="qty" data-i="${i}" type="number" value="${AppState.feedCalculator.qty[i] ?? c[1]}"></td>
+      <td><input class="price" data-i="${i}" type="number" value="${AppState.feedCalculator.price[i] ?? 0}"></td>
+      <td id="sum_${i}">0</td>
+    </tr>
+  `).join("");
+
+  const volEl = $("feedVolume");
+  if (volEl) volEl.value = AppState.feedCalculator.volume ?? 25;
 
   document.querySelectorAll(".qty,.price,#feedVolume").forEach((el) =>
     el.addEventListener("input", calculateFeed)
@@ -302,9 +328,9 @@ function calculateFeed() {
     const qty = Number(document.querySelector(`.qty[data-i="${i}"]`)?.value) || 0;
     const price = Number(document.querySelector(`.price[data-i="${i}"]`)?.value) || 0;
 
-    localStorage.setItem("qty_" + i, String(qty));
-    localStorage.setItem("price_" + i, String(price));
-
+    AppState.feedCalculator.qty[i] = qty;
+    AppState.feedCalculator.price[i] = price;
+    
     const sum = qty * price;
     total += sum;
     totalKg += qty;
@@ -315,10 +341,13 @@ function calculateFeed() {
 
   const perKg = totalKg ? total / totalKg : 0;
   const vol = Number($("feedVolume")?.value) || 0;
+AppState.feedCalculator.volume = vol;
 
   if ($("feedTotal")) $("feedTotal").textContent = total.toFixed(2);
   if ($("feedPerKg")) $("feedPerKg").textContent = perKg.toFixed(2);
   if ($("feedVolumeTotal")) $("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
+  
+  saveAppState();
 }
 
 // ============================
@@ -854,12 +883,24 @@ function restoreActivePage() {
   if (btn) btn.classList.add("active");
 }
 
+function cleanupLegacyLocalStorage() {
+  // старі ключі калькулятора
+  for (let i = 0; i < feedComponents.length; i++) {
+    localStorage.removeItem("qty_" + i);
+    localStorage.removeItem("price_" + i);
+  }
+  // якщо використовувався старий ключ мінімумів
+  localStorage.removeItem("warehouseMinimums");
+}
+
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
   ensureWarehouseShape();
+  ensureFeedCalculatorShape();
+  cleanupLegacyLocalStorage();
   validateState("after START");
   alert("warehouse.feed OK: " + (typeof warehouse.feed));
 
@@ -882,5 +923,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderEggsReport();
 
   loadWarehouseSettingsUI();
+  eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
+warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
   syncToggleButtonsUI();
 });
