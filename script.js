@@ -60,9 +60,10 @@ function loadAppState() {
       Object.assign(AppState.ui, saved.ui || {});
       Object.assign(AppState.warehouse, saved.warehouse || {});
       Object.assign(AppState.eggs, saved.eggs || {});
-Object.assign(AppState.feedCalculator, saved.feedCalculator || {});
+      Object.assign(AppState.feedCalculator, saved.feedCalculator || {});
+      Object.assign(AppState.orders, saved.orders || {}); // ✅ ОСЬ ЦЕГО НЕ ВИСТАЧАЛО
 
-      appStateLoadedFromStorage = true; // 🔑 КРИТИЧНО
+      appStateLoadedFromStorage = true;
     }
   } catch (e) {
     console.warn("AppState load failed", e);
@@ -1058,6 +1059,8 @@ function cleanupLegacyLocalStorage() {
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
+  
+  console.log("ORDERS AFTER LOAD:", AppState.orders.list);
 
   ensureWarehouseShape();
   ensureFeedCalculatorShape();
