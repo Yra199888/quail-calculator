@@ -95,11 +95,56 @@
 </div>
 
 <!-- ===== ЗАМОВЛЕННЯ ===== -->
+<!-- ============================
+     ЗАМОВЛЕННЯ
+============================ -->
 <div id="page-orders" class="page">
+
   <h2>📦 Замовлення</h2>
-  <p style="opacity:0.6; margin-top:20px;">
-    Розділ у розробці. Скоро буде доступний.
-  </p>
+
+  <!-- Форма додавання замовлення -->
+  <div class="container order-form">
+
+    <div class="form-row">
+      <label for="orderDate">Дата</label>
+      <input type="date" id="orderDate">
+    </div>
+
+    <div class="form-row">
+      <label for="orderClient">Клієнт</label>
+      <input
+        type="text"
+        id="orderClient"
+        placeholder="Імʼя / кафе / магазин"
+      >
+    </div>
+
+    <div class="form-row">
+      <label for="orderTrays">Кількість лотків</label>
+      <input
+        type="number"
+        id="orderTrays"
+        min="1"
+        placeholder="0"
+      >
+    </div>
+
+    <div class="form-row">
+      <label for="orderDetails">Коментар</label>
+      <textarea
+        id="orderDetails"
+        placeholder="Доставка, телефон, примітки…"
+      ></textarea>
+    </div>
+
+    <button id="addOrderBtn" class="main-btn">
+      ➕ Додати замовлення
+    </button>
+  </div>
+
+  <!-- Список замовлень -->
+  <div id="ordersList"></div>
+
 </div>
 
 <!-- ===== СКЛАД ===== -->
