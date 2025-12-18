@@ -176,6 +176,11 @@ function ensureWarehouseShape() {
   if (!AppState.warehouse.minimums || typeof AppState.warehouse.minimums !== "object") {
     AppState.warehouse.minimums = {};
   }
+  
+  for (const [name] of feedComponents) {
+  AppState.warehouse.feed[name] =
+    Number(AppState.warehouse.feed[name] || 0);
+}
 
   AppState.warehouse.trays = Number(AppState.warehouse.trays || 0);
   AppState.warehouse.ready = Number(AppState.warehouse.ready || 0);
@@ -383,7 +388,7 @@ function applyWarehouseWarnings() {
     const key = getMinKeyByName(name);
     if (!key) return;
 
-    const stock = Number(AppState.warehouse.history[name] || 0);
+    const stock = Number(AppState.warehouse.feed[name] || 0);
     const min = Number(mins[key] || 0);
 
     if (min > 0 && stock < min) {
@@ -418,7 +423,7 @@ function renderWarehouse() {
 
   tbody.innerHTML = feedComponents
     .map(([name, need]) => {
-      const stock = Number(AppState.warehouse.history[name] || 0);
+      const stock = Number(AppState.warehouse.feed[name] || 0);
 
       const key = getMinKeyByName(name);
       const min = Number(mins[key] || 0);
@@ -447,9 +452,10 @@ function renderWarehouse() {
       }
 
       const name = e.target.dataset.name;
-      AppState.warehouse.history[name] = Number(AppState.warehouse.history[name] || 0) + val;
+      AppState.warehouse.feed[name] =
+      Number(AppState.warehouse.feed[name] || 0) + val;
 
-      saveWarehouse();
+      saveAppState();
       renderWarehouse();
       applyWarehouseWarnings();
     });
@@ -465,7 +471,7 @@ function renderWarehouse() {
         return;
       }
       AppState.warehouse.trays = Number(e.target.value) || 0;
-      saveWarehouse();
+      saveAppState();
       applyWarehouseWarnings();
     });
   }
@@ -504,7 +510,7 @@ function bindMakeFeed() {
     });
 
     AppState.warehouse.history.push("Заміс: " + new Date().toLocaleString());
-    saveWarehouse();
+    saveAppState();
     renderWarehouse();
     applyWarehouseWarnings();
   });
@@ -765,7 +771,7 @@ function clearFeedComponents() {
   if (!confirm("Очистити ВСІ кормові компоненти на складі?")) return;
 
   AppState.warehouse.feed = {};
-  saveWarehouse();
+  saveAppState();
   renderWarehouse();
   applyWarehouseWarnings();
 
@@ -786,7 +792,7 @@ function clearEggTrays() {
   AppState.eggs.appliedTotalTrays = AppState.eggs.totalTrays;
   
 saveAppState();
-  saveWarehouse();
+  saveAppState();
   renderWarehouse();
   applyWarehouseWarnings();
 
@@ -892,6 +898,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ensureWarehouseShape();
   ensureFeedCalculatorShape();
+  
+  cleanupLegacyLocalStorage();
 
   eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
   warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
