@@ -753,7 +753,7 @@ function showOrders() {
 
   const ready = Number(AppState.warehouse.ready || 0);
   const reserved = Number(AppState.warehouse.reserved || 0);
-  const free = Math.max(ready - reserved, 0);
+  const free = ready;
 
   let html = `
     <div style="background:#111; border:1px solid #222; padding:10px; border-radius:10px; margin:10px 0;">
