@@ -856,31 +856,78 @@ function renderOrders() {
   const box = $("ordersList");
   if (!box) return;
 
-  const list = AppState.orders.list.slice().sort((a,b) => (a.date < b.date ? 1 : -1));
+  const list = AppState.orders.list.slice();
 
   if (!list.length) {
     box.innerHTML = "<i>Замовлень немає</i>";
     return;
   }
 
-  box.innerHTML = list.map(o => `
-    <div class="order-entry">
-      <div style="display:flex; justify-content:space-between; gap:10px;">
-        <div>
-          <b>${o.date}</b> — <b>${o.client}</b><br>
-          Лотків: <b>${o.trays}</b> | Статус: <b>${formatStatus(o.status)}</b><br>
-          <small>${o.details ? o.details : ""}</small>
-        </div>
+  // 1️⃣ сортування: confirmed → delivered → cancelled
+  const statusOrder = {
+    confirmed: 1,
+    delivered: 2,
+    cancelled: 3
+  };
 
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          <button onclick="setOrderStatus('${o.id}','confirmed')">✅ Підтв.</button>
-          <button onclick="setOrderStatus('${o.id}','delivered')">📦 Видано</button>
-          <button onclick="setOrderStatus('${o.id}','cancelled')">❌ Скас.</button>
-          <button onclick="deleteOrder('${o.id}')">🗑️</button>
+  list.sort((a, b) => {
+    const sa = statusOrder[a.status] || 99;
+    const sb = statusOrder[b.status] || 99;
+    if (sa !== sb) return sa - sb;
+    return a.date < b.date ? 1 : -1; // нові зверху
+  });
+
+  box.innerHTML = list.map(o => {
+    // 2️⃣ стилі по статусу
+    let bg = "";
+    let badge = "";
+
+    if (o.status === "confirmed") {
+      bg = "background:#1b3d1b;border-left:4px solid #4caf50;";
+      badge = "🟢 Підтверджено";
+    } else if (o.status === "delivered") {
+      bg = "background:#2b2b2b;border-left:4px solid #9e9e9e;";
+      badge = "⚪ Видано";
+    } else if (o.status === "cancelled") {
+      bg = "background:#3d1b1b;border-left:4px solid #f44336;";
+      badge = "🔴 Скасовано";
+    }
+
+    // 3️⃣ кнопки по статусу
+    let actions = "";
+
+    if (o.status === "confirmed") {
+      actions = `
+        <button onclick="setOrderStatus('${o.id}','delivered')">📦 Видано</button>
+        <button onclick="setOrderStatus('${o.id}','cancelled')">❌ Скасувати</button>
+      `;
+    } else {
+      actions = `
+        <button onclick="deleteOrder('${o.id}')">🗑️ Видалити</button>
+      `;
+    }
+
+    return `
+      <div class="order-entry" style="padding:10px;margin-bottom:10px;border-radius:6px;${bg}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          
+          <div>
+            <b>${o.date}</b> — <b>${o.client}</b><br>
+            Лотків: <b>${o.trays}</b><br>
+            <small>${o.details || ""}</small>
+          </div>
+
+          <div style="text-align:right;">
+            <div style="margin-bottom:6px;"><b>${badge}</b></div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${actions}
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
 function bindOrders() {
