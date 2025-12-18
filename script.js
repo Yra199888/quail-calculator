@@ -35,11 +35,10 @@ const AppState = {
   },
 
   eggs: {
-    records: {},          // всі дні
-    carry: 0,             // залишок яєць
-    totalTrays: 0,        // всього лотків
-  },
-  orders: {}
+    records: {},
+    carry: 0,
+    totalTrays: 0,
+  }
 };
 
 let appStateLoadedFromStorage = false;
@@ -51,7 +50,6 @@ function loadAppState() {
       Object.assign(AppState.ui, saved.ui || {});
       Object.assign(AppState.warehouse, saved.warehouse || {});
       Object.assign(AppState.eggs, saved.eggs || {});
-      AppState.orders = saved.orders || {};
 
       appStateLoadedFromStorage = true; // 🔑 КРИТИЧНО
     }
@@ -60,39 +58,11 @@ function loadAppState() {
   }
 }
 
-function normalizeOrdersInState() {
-  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
-
-  Object.keys(AppState.orders).forEach(date => {
-    const v = AppState.orders[date];
-
-    if (Array.isArray(v)) return;
-
-    // якщо раптом колись збереглось як один об’єкт
-    if (v && typeof v === "object" && "trays" in v) {
-      AppState.orders[date] = [v];
-      return;
-    }
-
-    AppState.orders[date] = [];
-  });
-}
-
 function recomputeWarehouseFromSources() {
-  // totalTrays має бути актуальним (перерахунок яєць)
   const total = Number(AppState.eggs.totalTrays || 0);
 
-  let reserved = 0;
-  Object.values(AppState.orders).forEach(dayOrders => {
-    if (!Array.isArray(dayOrders)) return;
-    dayOrders.forEach(o => {
-      if (o && o.status === "активне") reserved += Number(o.trays) || 0;
-    });
-  });
-
-  AppState.warehouse.reserved = reserved;
-  // Готові = ВСІ лотки з яєць (total) — активні замовлення (reserved)
-  AppState.warehouse.ready = Math.max(total - reserved, 0);
+  AppState.warehouse.reserved = 0;
+  AppState.warehouse.ready = total;
 }
 
 
@@ -150,7 +120,6 @@ function migrateEggsToAppState() {
 function validateState(context = "") {
   const errors = [];
 
-  // ---- STRUCTURE
   if (!AppState || typeof AppState !== "object") {
     errors.push("AppState не object");
     return errors;
@@ -158,58 +127,12 @@ function validateState(context = "") {
 
   if (!AppState.warehouse || typeof AppState.warehouse !== "object") {
     errors.push("warehouse відсутній");
-  } else {
-    if (!AppState.warehouse.feed || typeof AppState.warehouse.feed !== "object") {
-      errors.push("warehouse.feed не object");
-    }
-    ["trays", "ready", "reserved"].forEach(k => {
-      if (typeof AppState.warehouse[k] !== "number") {
-        errors.push(`warehouse.${k} не number`);
-      }
-    });
   }
 
-  // ---- EGGS
   if (!AppState.eggs || typeof AppState.eggs !== "object") {
     errors.push("eggs відсутні");
-  } else {
-    if (!AppState.eggs.records || typeof AppState.eggs.records !== "object") {
-      errors.push("eggs.records не object");
-    }
-    if (typeof AppState.eggs.totalTrays !== "number") {
-      errors.push("eggs.totalTrays не number");
-    }
   }
 
-  // ---- ORDERS
-  if (!AppState.orders || typeof AppState.orders !== "object") {
-    errors.push("orders не object");
-  } else {
-    Object.entries(AppState.orders).forEach(([date, list]) => {
-      if (!Array.isArray(list)) {
-        errors.push(`orders[${date}] не array`);
-        return;
-      }
-      list.forEach((o, i) => {
-        if (typeof o.trays !== "number" || o.trays <= 0) {
-          errors.push(`orders[${date}][${i}].trays некоректний`);
-        }
-        if (!["активне", "виконано", "скасовано"].includes(o.status)) {
-          errors.push(`orders[${date}][${i}].status некоректний`);
-        }
-      });
-    });
-  }
-
-  // ---- LOGIC
-  const total = AppState.eggs?.totalTrays ?? 0;
-  const { ready = 0, reserved = 0 } = AppState.warehouse || {};
-
-  if (ready + reserved !== total) {
-    errors.push(`ready(${ready}) + reserved(${reserved}) ≠ total(${total})`);
-  }
-
-  // ---- REPORT
   if (errors.length) {
     console.warn("❌ validateState", context, errors);
   } else {
@@ -671,7 +594,6 @@ function saveEggRecord() {
   renderEggsReport();
   renderWarehouse();
   applyWarehouseWarnings();
-  showOrders();
 
   if (dbg) dbg.innerHTML += "<br>✅ Запис збережено в AppState";
 }
@@ -701,7 +623,6 @@ saveAppState();
   renderEggsReport();
   renderWarehouse();
   applyWarehouseWarnings();
-  showOrders();
 }
 window.deleteEgg = deleteEgg;
 
@@ -727,7 +648,6 @@ saveAppState();
 
   renderWarehouse();
   applyWarehouseWarnings();
-  showOrders();
 
   alert("✅ Звіт по яйцях очищено");
 }
@@ -774,90 +694,11 @@ function bindEggSaveButton() {
 //      ЗАМОВЛЕННЯ
 // ============================
 
-function addOrder() {
-  let d = $("orderDate")?.value;
-  if (!d) d = isoToday();
-
-  const name = $("orderName")?.value?.trim() || "Без імені";
-  const trays = Number($("orderTrays")?.value) || 0;
-  const details = $("orderDetails")?.value?.trim() || "";
-
-  if (trays <= 0) {
-    alert("Вкажи кількість лотків (> 0)");
-    return;
-  }
-
-  normalizeOrdersInState();
-
-  if (!Array.isArray(AppState.orders[d])) AppState.orders[d] = [];
-
-  AppState.orders[d].push({ name, trays, details, status: "активне" });
-
-  // ✅ НЕ ЧІПАЄМО reserved/ready вручну — тільки перерахунок
-  recomputeWarehouseFromSources();
-  saveAppState();
-  validateState("after addOrder");
-  showOrders();
-  renderWarehouse();
-  applyWarehouseWarnings();
-}
-window.addOrder = addOrder;
-
-function setStatus(d, i, s) {
-  normalizeOrdersInState();
-
-  const o = AppState.orders[d]?.[i];
-  if (!o) return;
-
-  o.status = s;
-
-  recomputeWarehouseFromSources();
-  saveAppState();
-
-  showOrders();
-  renderWarehouse();
-  applyWarehouseWarnings();
-}
-window.setStatus = setStatus;
-
 function showOrders() {
-  const box = $("ordersList");
-  if (!box) return;
-
-  const ready = Number(AppState.warehouse.ready || 0);
-  const reserved = Number(AppState.warehouse.reserved || 0);
-  const free = ready;
-
-  let html = `
-    <div style="background:#111; border:1px solid #222; padding:10px; border-radius:10px; margin:10px 0;">
-      <b>Вільні лотки:</b> ${free} |
-      <b>Замовлено:</b> ${reserved} |
-      <b>Готові:</b> ${ready}
-    </div>
-  `;
-
-  Object.keys(AppState.orders)
-    .sort()
-    .reverse()
-    .forEach((date) => {
-      const dayOrders = AppState.orders[date];
-      if (!Array.isArray(dayOrders)) return;
-
-      html += `<h3>${date}</h3>`;
-
-      dayOrders.forEach((o, idx) => {
-        html += `
-          <div style="background:#131313; border:1px solid #222; padding:12px; border-radius:10px; margin:10px 0;">
-            <b>${o.name}</b> — ${o.trays} лотків (<b>${o.status}</b>)<br>
-            ${o.details ? o.details + "<br>" : ""}
-            <button onclick="setStatus('${date}',${idx},'виконано')">✅ Виконано</button>
-            <button onclick="setStatus('${date}',${idx},'скасовано')">❌ Скасовано</button>
-          </div>
-        `;
-      });
-    });
-
-  box.innerHTML = html;
+  const box = document.getElementById("ordersList");
+  if (box) {
+    box.innerHTML = "<i>Розділ «Замовлення» у розробці</i>";
+  }
 }
 
 // ============================
@@ -928,7 +769,6 @@ saveAppState();
   saveWarehouse();
   renderWarehouse();
   applyWarehouseWarnings();
-  showOrders();
 
   alert("✅ Лотки з яйцями очищено");
 }
@@ -1022,7 +862,6 @@ document.addEventListener("DOMContentLoaded", () => {
   ensureWarehouseShape();
   validateState("after START");
   alert("warehouse.feed OK: " + (typeof warehouse.feed));
-  normalizeOrdersInState();
 
   recomputeEggsAccumulation();   // рахує totalTrays
   recomputeWarehouseFromSources();
@@ -1041,7 +880,6 @@ document.addEventListener("DOMContentLoaded", () => {
   applyWarehouseWarnings();
 
   renderEggsReport();
-  showOrders();
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
@@ -1050,6 +888,4 @@ document.addEventListener("DOMContentLoaded", () => {
   if (orderDateInput && !orderDateInput.value) {
     orderDateInput.value = isoToday();
   }
-
-  console.log("START orders:", JSON.stringify(AppState.orders));
 });
