@@ -158,6 +158,29 @@ function saveAppState() {
   }
 }
 
+function ensureWarehouseShape() {
+  if (!AppState.warehouse || typeof AppState.warehouse !== "object") {
+    AppState.warehouse = {};
+  }
+  if (!AppState.warehouse.feed || typeof AppState.warehouse.feed !== "object") {
+    AppState.warehouse.feed = {};
+  }
+  if (!Array.isArray(AppState.warehouse.history)) {
+    AppState.warehouse.history = [];
+  }
+  if (!AppState.warehouse.minimums || typeof AppState.warehouse.minimums !== "object") {
+    AppState.warehouse.minimums = {};
+  }
+
+  // числа
+  AppState.warehouse.trays = Number(AppState.warehouse.trays || 0);
+  AppState.warehouse.ready = Number(AppState.warehouse.ready || 0);
+  AppState.warehouse.reserved = Number(AppState.warehouse.reserved || 0);
+
+  // синхронізуємо робочу змінну warehouse
+  warehouse = AppState.warehouse;
+}
+
 // ============================
 //      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ (ЗАХИСТ)
 // ============================
@@ -923,6 +946,8 @@ function restoreActivePage() {
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
+  ensureWarehouseShape();
+  alert("warehouse.feed OK: " + (typeof warehouse.feed));
   normalizeOrdersInState();
 
   recomputeEggsAccumulation();   // рахує totalTrays
