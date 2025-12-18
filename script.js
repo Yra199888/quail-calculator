@@ -506,11 +506,11 @@ function recomputeEggsAccumulation() {
     carry = remainder;
   });
 
-    AppState.eggs.carry = carry;
+  AppState.eggs.carry = carry;
   AppState.eggs.totalTrays = totalTrays;
 
+  // 🔥 ЄДИНЕ місце, де рахується склад
   recomputeWarehouseFromSources();
-  saveAppState();
 }
 
   const delta = totalTrays - AppState.eggs.appliedTotalTrays;
@@ -952,35 +952,17 @@ function restoreActivePage() {
   if (btn) btn.classList.add("active");
 }
 
-function normalizeOrdersInState() {
-  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
-
-  Object.keys(AppState.orders).forEach(date => {
-    const v = AppState.orders[date];
-    if (Array.isArray(v)) return;
-
-    if (v && typeof v === "object" && "trays" in v) {
-      AppState.orders[date] = [v];
-      return;
-    }
-    AppState.orders[date] = [];
-  });
-}
-
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
   normalizeOrdersInState();
-recomputeEggsAccumulation();       // щоб totalTrays був актуальний
-recomputeWarehouseFromSources();
-saveAppState();
 
-  migrateWarehouseToAppState();
-  migrateEggsToAppState();
+  recomputeEggsAccumulation();   // рахує totalTrays
+  recomputeWarehouseFromSources();
 
-  loadWarehouse();
+  saveAppState();
 
   bindNavigation();
   restoreActivePage();
@@ -999,11 +981,10 @@ saveAppState();
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
 
-  // автодата (лише після DOM)
   const orderDateInput = $("orderDate");
-  if (orderDateInput && !orderDateInput.value) orderDateInput.value = isoToday();
-  
-    document.addEventListener("DOMContentLoaded", () => {
-  ...
-  alert("START orders keys: " + Object.keys(AppState.orders).join(", "));
+  if (orderDateInput && !orderDateInput.value) {
+    orderDateInput.value = isoToday();
+  }
+
+  console.log("START orders:", JSON.stringify(AppState.orders));
 });
