@@ -44,7 +44,11 @@ const AppState = {
     qty: [],
     price: [],
     volume: 25
-  }
+  },
+  
+  orders: {
+    list: []   // масив замовлень
+  }, 
 };
 
 let appStateLoadedFromStorage = false;
@@ -67,9 +71,22 @@ Object.assign(AppState.feedCalculator, saved.feedCalculator || {});
 
 function recomputeWarehouseFromSources() {
   const total = Number(AppState.eggs.totalTrays || 0);
+  const reserved = Number(AppState.warehouse.reserved || 0);
 
-  AppState.warehouse.reserved = 0;
-  AppState.warehouse.ready = total;
+  // готові = всі лотки - зарезервовані
+  AppState.warehouse.ready = Math.max(total - reserved, 0);
+
+  // reserved НЕ чіпаємо тут — він керується замовленнями
+  AppState.warehouse.reserved = reserved;
+}
+
+function ensureOrdersShape() {
+  if (!AppState.orders || typeof AppState.orders !== "object") {
+    AppState.orders = { list: [] };
+  }
+  if (!Array.isArray(AppState.orders.list)) {
+    AppState.orders.list = [];
+  }
 }
 
 
@@ -720,11 +737,157 @@ function bindEggSaveButton() {
 //      ЗАМОВЛЕННЯ
 // ============================
 
-function showOrders() {
-  const box = document.getElementById("ordersList");
-  if (box) {
-    box.innerHTML = "<i>Розділ «Замовлення» у розробці</i>";
+function uid() {
+  return String(Date.now()) + "_" + Math.random().toString(16).slice(2);
+}
+
+function getOrderById(id) {
+  return AppState.orders.list.find(o => o.id === id);
+}
+
+function formatStatus(s) {
+  const map = {
+    draft: "Чернетка",
+    confirmed: "Підтверджено",
+    delivered: "Видано",
+    cancelled: "Скасовано"
+  };
+  return map[s] || s;
+}
+
+function addOrderFromForm() {
+  const date = $("orderDate")?.value || isoToday();
+  const client = ($("orderClient")?.value || "").trim();
+  const trays = Number($("orderTrays")?.value || 0);
+  const details = ($("orderDetails")?.value || "").trim();
+
+  if (!client) return alert("Вкажи клієнта");
+  if (trays <= 0) return alert("Вкажи кількість лотків (>0)");
+
+  // скільки доступно
+  recomputeWarehouseFromSources();
+  const free = Number(AppState.warehouse.ready || 0);
+
+  if (trays > free) {
+    return alert(`Недостатньо вільних лотків. Доступно: ${free}`);
   }
+
+  // резервуємо
+  AppState.warehouse.reserved = Number(AppState.warehouse.reserved || 0) + trays;
+  recomputeWarehouseFromSources();
+
+  // створюємо замовлення
+  AppState.orders.list.push({
+    id: uid(),
+    date,
+    client,
+    trays,
+    details,
+    status: "confirmed",       // одразу підтверджено (можемо зробити draft, якщо хочеш)
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+
+  saveAppState();
+  renderWarehouse();
+  applyWarehouseWarnings();
+  renderOrders();
+
+  // очистка форми
+  if ($("orderClient")) $("orderClient").value = "";
+  if ($("orderTrays")) $("orderTrays").value = "";
+  if ($("orderDetails")) $("orderDetails").value = "";
+}
+
+function setOrderStatus(id, nextStatus) {
+  const o = getOrderById(id);
+  if (!o) return;
+
+  const prevStatus = o.status;
+
+  // якщо був confirmed і стає cancelled/delivered — знімаємо резерв
+  if (prevStatus === "confirmed" && (nextStatus === "cancelled" || nextStatus === "delivered")) {
+    AppState.warehouse.reserved = Math.max(Number(AppState.warehouse.reserved || 0) - Number(o.trays || 0), 0);
+  }
+
+  // якщо був cancelled/draft і стає confirmed — треба ДОрезервувати
+  if ((prevStatus === "draft" || prevStatus === "cancelled") && nextStatus === "confirmed") {
+    recomputeWarehouseFromSources();
+    const free = Number(AppState.warehouse.ready || 0);
+
+    if (Number(o.trays || 0) > free) {
+      return alert(`Недостатньо вільних лотків для підтвердження. Доступно: ${free}`);
+    }
+
+    AppState.warehouse.reserved = Number(AppState.warehouse.reserved || 0) + Number(o.trays || 0);
+  }
+
+  o.status = nextStatus;
+  o.updatedAt = new Date().toISOString();
+
+  recomputeWarehouseFromSources();
+  saveAppState();
+  renderWarehouse();
+  renderOrders();
+}
+window.setOrderStatus = setOrderStatus;
+
+function deleteOrder(id) {
+  const o = getOrderById(id);
+  if (!o) return;
+
+  if (!confirm("Видалити замовлення?")) return;
+
+  if (o.status === "confirmed") {
+    AppState.warehouse.reserved = Math.max(Number(AppState.warehouse.reserved || 0) - Number(o.trays || 0), 0);
+  }
+
+  AppState.orders.list = AppState.orders.list.filter(x => x.id !== id);
+
+  recomputeWarehouseFromSources();
+  saveAppState();
+  renderWarehouse();
+  renderOrders();
+}
+window.deleteOrder = deleteOrder;
+
+function renderOrders() {
+  const box = $("ordersList");
+  if (!box) return;
+
+  const list = AppState.orders.list.slice().sort((a,b) => (a.date < b.date ? 1 : -1));
+
+  if (!list.length) {
+    box.innerHTML = "<i>Замовлень немає</i>";
+    return;
+  }
+
+  box.innerHTML = list.map(o => `
+    <div class="order-entry">
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+        <div>
+          <b>${o.date}</b> — <b>${o.client}</b><br>
+          Лотків: <b>${o.trays}</b> | Статус: <b>${formatStatus(o.status)}</b><br>
+          <small>${o.details ? o.details : ""}</small>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <button onclick="setOrderStatus('${o.id}','confirmed')">✅ Підтв.</button>
+          <button onclick="setOrderStatus('${o.id}','delivered')">📦 Видано</button>
+          <button onclick="setOrderStatus('${o.id}','cancelled')">❌ Скас.</button>
+          <button onclick="deleteOrder('${o.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function bindOrders() {
+  const btn = $("addOrderBtn");
+  if (btn) btn.addEventListener("click", addOrderFromForm);
+
+  const dateEl = $("orderDate");
+  if (dateEl && !dateEl.value) dateEl.value = isoToday();
 }
 
 // ============================
@@ -898,8 +1061,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ensureWarehouseShape();
   ensureFeedCalculatorShape();
-  
-  cleanupLegacyLocalStorage();
+  ensureOrdersShape();         // ✅
 
   eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
   warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
@@ -923,6 +1085,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
+
+  bindOrders();                // ✅
+  renderOrders();              // ✅
 
   validateState("after START");
 });
