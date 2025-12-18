@@ -61,6 +61,42 @@ function loadAppState() {
   }
 }
 
+function normalizeOrdersInState() {
+  if (!AppState.orders || typeof AppState.orders !== "object") AppState.orders = {};
+
+  Object.keys(AppState.orders).forEach(date => {
+    const v = AppState.orders[date];
+
+    if (Array.isArray(v)) return;
+
+    // якщо раптом колись збереглось як один об’єкт
+    if (v && typeof v === "object" && "trays" in v) {
+      AppState.orders[date] = [v];
+      return;
+    }
+
+    AppState.orders[date] = [];
+  });
+}
+
+function recomputeWarehouseFromSources() {
+  // totalTrays має бути актуальним (перерахунок яєць)
+  const total = Number(AppState.eggs.totalTrays || 0);
+
+  let reserved = 0;
+  Object.values(AppState.orders).forEach(dayOrders => {
+    if (!Array.isArray(dayOrders)) return;
+    dayOrders.forEach(o => {
+      if (o && o.status === "активне") reserved += Number(o.trays) || 0;
+    });
+  });
+
+  AppState.warehouse.reserved = reserved;
+  // Готові = ВСІ лотки з яєць (total) — активні замовлення (reserved)
+  AppState.warehouse.ready = Math.max(total - reserved, 0);
+}
+
+
 function migrateWarehouseToAppState() {
   if (appStateLoadedFromStorage) return;
   // якщо вже є в AppState — нічого не робимо
@@ -470,8 +506,12 @@ function recomputeEggsAccumulation() {
     carry = remainder;
   });
 
-  AppState.eggs.carry = carry;
+    AppState.eggs.carry = carry;
   AppState.eggs.totalTrays = totalTrays;
+
+  recomputeWarehouseFromSources();
+  saveAppState();
+}
 
   const delta = totalTrays - AppState.eggs.appliedTotalTrays;
   if (delta !== 0) {
@@ -673,8 +713,9 @@ function recomputeWarehouseFromState() {
 }
 
 function addOrder() {
-  alert("addOrder викликалась");
-  const d = ($("orderDate")?.value || isoToday());
+  let d = $("orderDate")?.value;
+  if (!d) d = isoToday();
+
   const name = $("orderName")?.value?.trim() || "Без імені";
   const trays = Number($("orderTrays")?.value) || 0;
   const details = $("orderDetails")?.value?.trim() || "";
@@ -684,15 +725,15 @@ function addOrder() {
     return;
   }
 
+  normalizeOrdersInState();
+
   if (!Array.isArray(AppState.orders[d])) AppState.orders[d] = [];
 
   AppState.orders[d].push({ name, trays, details, status: "активне" });
 
-  // перерахунок тільки через джерела
+  // ✅ НЕ ЧІПАЄМО reserved/ready вручну — тільки перерахунок
   recomputeWarehouseFromSources();
   saveAppState();
-
-alert("localStorage:\n" + localStorage.getItem("AppState"));
 
   showOrders();
   renderWarehouse();
@@ -701,6 +742,8 @@ alert("localStorage:\n" + localStorage.getItem("AppState"));
 window.addOrder = addOrder;
 
 function setStatus(d, i, s) {
+  normalizeOrdersInState();
+
   const o = AppState.orders[d]?.[i];
   if (!o) return;
 
@@ -924,51 +967,18 @@ function normalizeOrdersInState() {
   });
 }
 
-function recomputeWarehouseFromSources() {
-  // 1) total trays from eggs
-  const total = Number(AppState.eggs.totalTrays || 0);
-
-  // 2) reserved = sum(active)
-  let reserved = 0;
-
-  // 3) shipped = sum(done)
-  let shipped = 0;
-
-  Object.values(AppState.orders).forEach(dayOrders => {
-    if (!Array.isArray(dayOrders)) return;
-
-    dayOrders.forEach(o => {
-      const t = Number(o?.trays) || 0;
-      if (o?.status === "активне") reserved += t;
-      if (o?.status === "виконано") shipped += t;
-    });
-  });
-
-  AppState.warehouse.reserved = reserved;
-
-  // ready = what’s physically left after shipped
-  AppState.warehouse.ready = Math.max(total - shipped, 0);
-}
-
-
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
   normalizeOrdersInState();
+recomputeEggsAccumulation();       // щоб totalTrays був актуальний
+recomputeWarehouseFromSources();
+saveAppState();
 
   migrateWarehouseToAppState();
   migrateEggsToAppState();
-
-  // якщо ти десь рахуєш eggs.totalTrays у recomputeEggsAccumulation — виклич його тут
-  recomputeEggsAccumulation();
-
-  // головний перерахунок складу від eggs + orders
-  recomputeWarehouseFromSources();
-
-  // важливо зафіксувати після нормалізації/міграції
-  saveAppState();
 
   loadWarehouse();
 
