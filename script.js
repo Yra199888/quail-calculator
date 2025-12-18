@@ -147,6 +147,78 @@ function migrateEggsToAppState() {
   }
 }
 
+function validateState(context = "") {
+  const errors = [];
+
+  // ---- STRUCTURE
+  if (!AppState || typeof AppState !== "object") {
+    errors.push("AppState не object");
+    return errors;
+  }
+
+  if (!AppState.warehouse || typeof AppState.warehouse !== "object") {
+    errors.push("warehouse відсутній");
+  } else {
+    if (!AppState.warehouse.feed || typeof AppState.warehouse.feed !== "object") {
+      errors.push("warehouse.feed не object");
+    }
+    ["trays", "ready", "reserved"].forEach(k => {
+      if (typeof AppState.warehouse[k] !== "number") {
+        errors.push(`warehouse.${k} не number`);
+      }
+    });
+  }
+
+  // ---- EGGS
+  if (!AppState.eggs || typeof AppState.eggs !== "object") {
+    errors.push("eggs відсутні");
+  } else {
+    if (!AppState.eggs.records || typeof AppState.eggs.records !== "object") {
+      errors.push("eggs.records не object");
+    }
+    if (typeof AppState.eggs.totalTrays !== "number") {
+      errors.push("eggs.totalTrays не number");
+    }
+  }
+
+  // ---- ORDERS
+  if (!AppState.orders || typeof AppState.orders !== "object") {
+    errors.push("orders не object");
+  } else {
+    Object.entries(AppState.orders).forEach(([date, list]) => {
+      if (!Array.isArray(list)) {
+        errors.push(`orders[${date}] не array`);
+        return;
+      }
+      list.forEach((o, i) => {
+        if (typeof o.trays !== "number" || o.trays <= 0) {
+          errors.push(`orders[${date}][${i}].trays некоректний`);
+        }
+        if (!["активне", "виконано", "скасовано"].includes(o.status)) {
+          errors.push(`orders[${date}][${i}].status некоректний`);
+        }
+      });
+    });
+  }
+
+  // ---- LOGIC
+  const total = AppState.eggs?.totalTrays ?? 0;
+  const { ready = 0, reserved = 0 } = AppState.warehouse || {};
+
+  if (ready + reserved !== total) {
+    errors.push(`ready(${ready}) + reserved(${reserved}) ≠ total(${total})`);
+  }
+
+  // ---- REPORT
+  if (errors.length) {
+    console.warn("❌ validateState", context, errors);
+  } else {
+    console.log("✅ validateState OK", context);
+  }
+
+  return errors;
+}
+
 
 
 
@@ -586,6 +658,7 @@ function saveEggRecord() {
 
   recomputeEggsAccumulation();
   saveAppState();
+  validateState("after saveEggRecord");
 
   const e = AppState.eggs.records[date];
   if (infoBox && e) {
@@ -723,7 +796,7 @@ function addOrder() {
   // ✅ НЕ ЧІПАЄМО reserved/ready вручну — тільки перерахунок
   recomputeWarehouseFromSources();
   saveAppState();
-
+  validateState("after addOrder");
   showOrders();
   renderWarehouse();
   applyWarehouseWarnings();
@@ -947,6 +1020,7 @@ function restoreActivePage() {
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
   ensureWarehouseShape();
+  validateState("after START");
   alert("warehouse.feed OK: " + (typeof warehouse.feed));
   normalizeOrdersInState();
 
