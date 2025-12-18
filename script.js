@@ -38,7 +38,6 @@ const AppState = {
     records: {},          // всі дні
     carry: 0,             // залишок яєць
     totalTrays: 0,        // всього лотків
-    appliedTotalTrays: 0  // застосовано до складу
   },
   orders: {}
 };
@@ -509,20 +508,7 @@ function recomputeEggsAccumulation() {
   AppState.eggs.carry = carry;
   AppState.eggs.totalTrays = totalTrays;
 
-  // 🔥 ЄДИНЕ місце, де рахується склад
   recomputeWarehouseFromSources();
-}
-
-  const delta = totalTrays - AppState.eggs.appliedTotalTrays;
-  if (delta !== 0) {
-    const minReady = Math.max(AppState.warehouse.reserved || 0, 0);
-    AppState.warehouse.ready = Math.max(
-      (AppState.warehouse.ready || 0) + delta,
-      minReady
-    );
-    AppState.eggs.appliedTotalTrays = totalTrays;
-  }
-
 }
 
 function ensureEggsDate() {
@@ -576,7 +562,6 @@ function saveEggRecord() {
   AppState.eggs.records[date] = { good, bad, home };
 
   recomputeEggsAccumulation();
-  recomputeWarehouseFromState();
   saveAppState();
 
   const e = AppState.eggs.records[date];
@@ -616,7 +601,6 @@ delete AppState.eggs.records[date];
 
 saveAppState();
   recomputeEggsAccumulation();
-  recomputeWarehouseFromState();
   saveAppState();
   renderEggsReport();
   renderWarehouse();
@@ -638,7 +622,6 @@ AppState.eggs.carry = 0;
 AppState.eggs.totalTrays = 0;
 AppState.eggs.appliedTotalTrays = 0;
 
-recomputeWarehouseFromState();
 saveAppState();
 
   
@@ -694,23 +677,6 @@ function bindEggSaveButton() {
 // ============================
 //      ЗАМОВЛЕННЯ
 // ============================
-
-function recomputeWarehouseFromState() {
-  const total = Number(AppState.eggs.totalTrays || 0);
-
-  let reserved = 0;
-  Object.values(AppState.orders).forEach(dayOrders => {
-    if (!Array.isArray(dayOrders)) return;
-    dayOrders.forEach(o => {
-      if (o && o.status === "активне") {
-        reserved += Number(o.trays) || 0;
-      }
-    });
-  });
-
-  AppState.warehouse.reserved = reserved;
-  AppState.warehouse.ready = Math.max(total - reserved, 0);
-}
 
 function addOrder() {
   let d = $("orderDate")?.value;
