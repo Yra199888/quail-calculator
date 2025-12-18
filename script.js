@@ -883,9 +883,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadWarehouseSettingsUI();
   syncToggleButtonsUI();
-
-  const orderDateInput = $("orderDate");
-  if (orderDateInput && !orderDateInput.value) {
-    orderDateInput.value = isoToday();
-  }
 });
