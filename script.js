@@ -86,18 +86,6 @@ function ensureOrdersShape() {
   }
 }
 
-    console.log("✅ Warehouse мігровано в AppState");
-  } catch (e) {
-    console.warn("❌ Не вдалося мігрувати склад", e);
-  }
-}
-
-    console.log("✅ Eggs мігровано в AppState");
-  } catch (e) {
-    console.warn("❌ Не вдалося мігрувати яйця", e);
-  }
-}
-
 function validateState(context = "") {
   const errors = [];
 
@@ -114,9 +102,11 @@ function validateState(context = "") {
     errors.push("eggs відсутні");
   }
 
-  if (!AppState.orders || !Array.isArray(AppState.orders.list)) {
-  errors.push("orders.list відсутній або не масив");
-}
+  if (!AppState.orders || typeof AppState.orders !== "object") {
+  errors.push("orders відсутній");
+  } else if (!Array.isArray(AppState.orders.list)) {
+  errors.push("orders.list не масив");
+  }
 
 if (errors.length) {
   console.warn("❌ validateState", context, errors);
@@ -621,7 +611,7 @@ function deleteEgg(date) {
   if (!AppState.eggs.records[date]) return;
 delete AppState.eggs.records[date];
 
-saveAppState();
+
   recomputeEggsAccumulation();
   saveAppState();
   renderEggsReport();
@@ -973,7 +963,7 @@ function clearEggTrays() {
   if (!confirm("Очистити ВСІ лотки з яйцями? (готові + резерв)")) return;
 
   AppState.warehouse.reserved = 0;
-  
+  recomputeWarehouseFromSources();
   saveAppState();
   renderWarehouse();
   applyWarehouseWarnings();
@@ -1077,7 +1067,12 @@ function cleanupLegacyLocalStorage() {
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
-  cleanupLegacyLocalStorage();
+    // 🔐 ОЧИСТКА СТАРИХ КЛЮЧІВ — ТІЛЬКИ 1 РАЗ
+  if (!localStorage.getItem("legacyCleaned")) {
+    cleanupLegacyLocalStorage();
+    localStorage.setItem("legacyCleaned", "1");
+    console.log("🧹 Legacy localStorage очищено один раз");
+  }
   
   console.log("ORDERS AFTER LOAD:", AppState.orders.list);
 
@@ -1090,8 +1085,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   recomputeEggsAccumulation();
   recomputeWarehouseFromSources();
-  renderOrders();
-  saveAppState();
 
   bindNavigation();
   restoreActivePage();
@@ -1109,7 +1102,8 @@ document.addEventListener("DOMContentLoaded", () => {
   syncToggleButtonsUI();
 
   bindOrders();                // ✅
-  renderOrders();              // ✅
+  renderOrders();
+  saveAppState();
 
   validateState("after START");
 });
