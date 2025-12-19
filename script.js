@@ -1166,4 +1166,19 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.OrdersFormController) {
   OrdersFormController.init();
   }
+  import { EggsFormController } from "./controllers/EggsFormController.js";
+
+  new EggsFormController({
+  onSave: ({ date, good, bad, home }) => {
+    // 🔁 ТУТ ТВОЯ СТАРА ЛОГІКА
+    AppState.eggs.records[date] = { good, bad, home };
+
+    recomputeEggsAccumulation();
+    saveAppState();
+
+    renderEggsReport();
+    renderWarehouse();
+    applyWarehouseWarnings();
+  }
+});
 });
