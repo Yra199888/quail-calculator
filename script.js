@@ -74,11 +74,7 @@ function recomputeWarehouseFromSources() {
   const total = Number(AppState.eggs.totalTrays || 0);
   const reserved = Number(AppState.warehouse.reserved || 0);
 
-  // готові = всі лотки - зарезервовані
   AppState.warehouse.ready = Math.max(total - reserved, 0);
-
-  // reserved НЕ чіпаємо тут — він керується замовленнями
-  AppState.warehouse.reserved = reserved;
 }
 
 function ensureOrdersShape() {
@@ -130,7 +126,6 @@ function migrateEggsToAppState() {
     AppState.eggs.records = oldEggs;
     AppState.eggs.carry = oldCarry.carry || 0;
     AppState.eggs.totalTrays = oldCarry.totalTrays || 0;
-    AppState.eggs.appliedTotalTrays = oldCarry.appliedTotalTrays || 0;
 
     if (!appStateLoadedFromStorage) {
   saveAppState();
@@ -162,6 +157,10 @@ function validateState(context = "") {
     console.warn("❌ validateState", context, errors);
   } else {
     console.log("✅ validateState OK", context);
+  }
+  
+  if (!AppState.orders || !Array.isArray(AppState.orders.list)) {
+  errors.push("orders.list відсутній або не масив");
   }
 
   return errors;
@@ -1014,8 +1013,6 @@ function clearEggTrays() {
 
   AppState.warehouse.ready = 0;
   AppState.warehouse.reserved = 0;
-
-  AppState.eggs.appliedTotalTrays = AppState.eggs.totalTrays;
   
 saveAppState();
   saveAppState();
@@ -1121,6 +1118,7 @@ function cleanupLegacyLocalStorage() {
 // ============================
 document.addEventListener("DOMContentLoaded", () => {
   loadAppState();
+  cleanupLegacyLocalStorage();
   
   console.log("ORDERS AFTER LOAD:", AppState.orders.list);
 
@@ -1133,7 +1131,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   recomputeEggsAccumulation();
   recomputeWarehouseFromSources();
-
+  renderOrders();
   saveAppState();
 
   bindNavigation();
