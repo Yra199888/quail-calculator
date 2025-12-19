@@ -706,11 +706,11 @@ function formatStatus(s) {
   return map[s] || s;
 }
 
-function addOrderFromForm() {
-  const date = $("orderDate")?.value || isoToday();
-  const client = ($("orderClient")?.value || "").trim();
-  const trays = Number($("orderTrays")?.value || 0);
-  const details = ($("orderDetails")?.value || "").trim();
+function addOrderFromForm(formData) {
+  const date = formData?.date || isoToday();
+  const client = formData?.client || "";
+  const trays = Number(formData?.trays || 0);
+  const details = formData?.details || "";
 
   if (!client) return alert("Вкажи клієнта");
   if (trays <= 0) return alert("Вкажи кількість лотків (>0)");
@@ -1106,4 +1106,7 @@ document.addEventListener("DOMContentLoaded", () => {
   saveAppState();
 
   validateState("after START");
+  if (window.OrdersFormController) {
+  OrdersFormController.init();
+  }
 });
