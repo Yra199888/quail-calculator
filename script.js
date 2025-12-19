@@ -3,6 +3,7 @@
 // ============================
 import { EggsFormController } from "./controllers/EggsFormController.js";
 import { FeedFormController } from "./controllers/FeedFormController.js";
+import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -50,7 +51,8 @@ const AppState = {
 },
 
   recipes: {
-  feed: []
+  list: {},
+  selectedId: null
 },
 
   feedMixes: {
@@ -186,10 +188,13 @@ function ensureFeedCalculatorShape() {
 
 function ensureRecipesShape() {
   if (!AppState.recipes || typeof AppState.recipes !== "object") {
-    AppState.recipes = { feed: [] };
+    AppState.recipes = {};
   }
-  if (!Array.isArray(AppState.recipes.feed)) {
-    AppState.recipes.feed = [];
+  if (!AppState.recipes.list || typeof AppState.recipes.list !== "object") {
+    AppState.recipes.list = {};
+  }
+  if (!("selectedId" in AppState.recipes)) {
+    AppState.recipes.selectedId = null;
   }
 }
 
@@ -201,66 +206,6 @@ function ensureFeedMixesShape() {
     AppState.feedMixes.history = [];
   }
 }
-
-function refreshRecipeSelect() {
-  const sel = document.getElementById("recipeSelect");
-  if (!sel) return;
-
-  sel.innerHTML = "<option value=''>— обери рецепт —</option>";
-
-  AppState.recipes.feed.forEach((r, i) => {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = r.name;
-    sel.appendChild(opt);
-  });
-}
-
-function saveFeedRecipe() {
-  const name = document.getElementById("recipeName")?.value.trim();
-  if (!name) return alert("Вкажи назву рецепту");
-
-  const recipe = {
-    name,
-    qty: [...AppState.feedCalculator.qty],
-    price: [...AppState.feedCalculator.price],
-    volume: AppState.feedCalculator.volume,
-    createdAt: new Date().toISOString()
-  };
-
-  AppState.recipes.feed.push(recipe);
-  saveAppState();
-  refreshRecipeSelect();
-}
-
-function loadFeedRecipe() {
-  const sel = document.getElementById("recipeSelect");
-  const i = Number(sel?.value);
-  if (isNaN(i)) return;
-
-  const r = AppState.recipes.feed[i];
-  if (!r) return;
-
-  AppState.feedCalculator.qty = [...r.qty];
-  AppState.feedCalculator.price = [...r.price];
-  AppState.feedCalculator.volume = r.volume;
-
-  saveAppState();
-  loadFeedTable();
-}
-
-function deleteFeedRecipe() {
-  const sel = document.getElementById("recipeSelect");
-  const i = Number(sel?.value);
-  if (isNaN(i)) return;
-
-  if (!confirm("Видалити рецепт?")) return;
-
-  AppState.recipes.feed.splice(i, 1);
-  saveAppState();
-  refreshRecipeSelect();
-}
-
 
 // ============================
 //      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ (ЗАХИСТ)
@@ -374,7 +319,6 @@ function loadFeedTable() {
 
   const volEl = $("feedVolume");
   if (volEl) volEl.value = AppState.feedCalculator.volume ?? 25;
-
 
   calculateFeed();
 }
@@ -1046,20 +990,27 @@ function cleanupLegacyLocalStorage() {
 // ============================
 let eggsForm;
 let feedForm;
+let feedRecipesController;
 
 document.addEventListener("DOMContentLoaded", () => {
   try {
-    // 1) Load state
+    // ============================
+    // 1) Load AppState
+    // ============================
     loadAppState();
 
+    // ============================
     // 2) One-time legacy cleanup
+    // ============================
     if (!localStorage.getItem("legacyCleaned")) {
       cleanupLegacyLocalStorage();
       localStorage.setItem("legacyCleaned", "1");
       console.log("🧹 Legacy localStorage очищено");
     }
 
-    // 3) Ensure shapes
+    // ============================
+    // 3) Ensure AppState shapes
+    // ============================
     ensureWarehouseShape();
     ensureFeedCalculatorShape();
     ensureOrdersShape();
@@ -1069,42 +1020,57 @@ document.addEventListener("DOMContentLoaded", () => {
     eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
     warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
-    // 4) Recompute
+    // ============================
+    // 4) Recompute derived data
+    // ============================
     recomputeEggsAccumulation();
     recomputeWarehouseFromSources();
 
+    // ============================
     // 5) Navigation
+    // ============================
     bindNavigation();
     restoreActivePage();
 
-    // 6) Render UI
-    loadFeedTable();                 // <-- таблиця калькулятора з інпутами
+    // ============================
+    // 6) Initial render
+    // ============================
+    loadFeedTable();
     renderWarehouse();
     applyWarehouseWarnings();
     renderEggsReport();
     renderOrders();
 
-    // 6.1) FeedFormController (форма калькулятора корму)
+    // ============================
+    // 7) FeedFormController (calculator inputs)
+    // ============================
     feedForm = new FeedFormController({
       onChange: ({ type, index, value }) => {
         if (type === "qty") AppState.feedCalculator.qty[index] = value;
         if (type === "price") AppState.feedCalculator.price[index] = value;
         if (type === "volume") AppState.feedCalculator.volume = value;
 
-        calculateFeed();   // перерахунок сум
-        saveAppState();    // збереження в AppState
+        calculateFeed();
+        saveAppState();
       }
     });
     feedForm.init();
 
-    // 7) Bind buttons / extra UI
-    bindMakeFeed();
-    bindSettingsSaveButton();
-    syncToggleButtonsUI();
-    loadWarehouseSettingsUI();
-    refreshRecipeSelect();
+    // ============================
+    // 8) FeedRecipesController (ONE TIME!)
+    // ============================
+    feedRecipesController = new FeedRecipesController({
+      AppState,
+      saveAppState,
+      refreshUI: () => {
+        loadFeedTable();
+        calculateFeed();
+      }
+    });
 
-    // 8) EggsFormController (main)
+    // ============================
+    // 9) EggsFormController
+    // ============================
     eggsForm = new EggsFormController({
       onSave: ({ date, good, bad, home }) => {
         AppState.eggs.records[date] = { good, bad, home };
@@ -1118,13 +1084,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // зробити доступним для onclick в HTML
+    // доступ для inline onclick
     window.eggsForm = eggsForm;
 
-    // 9) Final
+    // ============================
+    // 10) Bind buttons & settings
+    // ============================
+    bindMakeFeed();
+    bindSettingsSaveButton();
+    syncToggleButtonsUI();
+    loadWarehouseSettingsUI();
+
+    // ============================
+    // 11) Final validation
+    // ============================
     saveAppState();
     validateState("after START");
     console.log("✅ App initialized");
+
   } catch (e) {
     console.error("❌ Startup error:", e);
     alert("❌ Помилка запуску. Відкрий Console і скинь помилку сюди.");
