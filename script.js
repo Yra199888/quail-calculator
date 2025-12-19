@@ -2,6 +2,7 @@
 //      ДОПОМІЖНІ
 // ============================
 import { EggsFormController } from "./controllers/EggsFormController.js";
+import { FeedFormController } from "./controllers/FeedFormController.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -374,9 +375,6 @@ function loadFeedTable() {
   const volEl = $("feedVolume");
   if (volEl) volEl.value = AppState.feedCalculator.volume ?? 25;
 
-  document.querySelectorAll(".qty,.price,#feedVolume").forEach((el) =>
-    el.addEventListener("input", calculateFeed)
-  );
 
   calculateFeed();
 }
@@ -1047,6 +1045,7 @@ function cleanupLegacyLocalStorage() {
 //      START (ОДИН РАЗ)
 // ============================
 let eggsForm;
+let feedForm;
 
 document.addEventListener("DOMContentLoaded", () => {
   try {
@@ -1079,13 +1078,26 @@ document.addEventListener("DOMContentLoaded", () => {
     restoreActivePage();
 
     // 6) Render UI
-    loadFeedTable();
+    loadFeedTable();                 // <-- таблиця калькулятора з інпутами
     renderWarehouse();
     applyWarehouseWarnings();
     renderEggsReport();
     renderOrders();
 
-    // 7) Bind buttons
+    // 6.1) FeedFormController (форма калькулятора корму)
+    feedForm = new FeedFormController({
+      onChange: ({ type, index, value }) => {
+        if (type === "qty") AppState.feedCalculator.qty[index] = value;
+        if (type === "price") AppState.feedCalculator.price[index] = value;
+        if (type === "volume") AppState.feedCalculator.volume = value;
+
+        calculateFeed();   // перерахунок сум
+        saveAppState();    // збереження в AppState
+      }
+    });
+    feedForm.init();
+
+    // 7) Bind buttons / extra UI
     bindMakeFeed();
     bindSettingsSaveButton();
     syncToggleButtonsUI();
