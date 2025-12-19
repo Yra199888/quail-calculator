@@ -707,10 +707,7 @@ function formatStatus(s) {
 }
 
 function addOrderFromForm(formData) {
-  const date = formData?.date || isoToday();
-  const client = formData?.client || "";
-  const trays = Number(formData?.trays || 0);
-  const details = formData?.details || "";
+  const { client, trays, details, date } = FormController.orders;
 
   if (!client) return alert("Вкажи клієнта");
   if (trays <= 0) return alert("Вкажи кількість лотків (>0)");
