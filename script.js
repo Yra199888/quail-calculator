@@ -590,75 +590,6 @@ function recomputeEggsAccumulation() {
   recomputeWarehouseFromSources();
 }
 
-function ensureEggsDate() {
-  const dateInput = $("eggsDate");
-  if (dateInput && !dateInput.value) {
-    dateInput.value = isoToday();
-  }
-}
-
-function saveEggRecord() {
-  const dbg = $("debugEggs");
-  if (dbg) dbg.innerHTML = "🟡 Натиснута кнопка Зберегти";
-
-  ensureEggsDate();
-
-  const dateInput = $("eggsDate");
-  const goodInput = $("eggsGood");
-  const badInput = $("eggsBad");
-  const homeInput = $("eggsHome");
-  const infoBox = $("eggsInfo");
-
-  if (!dateInput || !goodInput || !badInput || !homeInput) {
-    if (dbg) dbg.innerHTML += "<br>❌ Не знайдені поля форми";
-    return;
-  }
-
-  const date = dateInput.value;
-  const good = Number(goodInput.value) || 0;
-  const bad = Number(badInput.value) || 0;
-  const home = Number(homeInput.value) || 0;
-
-  if (dbg) {
-    dbg.innerHTML += `<br>📅 Дата: ${date}`;
-    dbg.innerHTML += `<br>🥚 good=${good}, bad=${bad}, home=${home}`;
-  }
-
-  // ❌ перевірка логіки
-  if (bad + home > good) {
-    badInput.classList.add("input-error");
-    homeInput.classList.add("input-error");
-
-    if (infoBox) {
-      infoBox.innerHTML = "❌ Брак + для дому > кількості яєць";
-    }
-
-    if (dbg) dbg.innerHTML += "<br>⛔ ЛОГІЧНА ПОМИЛКА";
-    return;
-  }
-
-  // ✅ ЗБЕРЕЖЕННЯ
-  AppState.eggs.records[date] = { good, bad, home };
-
-  recomputeEggsAccumulation();
-  saveAppState();
-  validateState("after saveEggRecord");
-
-  const e = AppState.eggs.records[date];
-  if (infoBox && e) {
-    infoBox.innerHTML =
-      e.sum < 20
-        ? `🥚 ${e.sum} яєць (до лотка бракує ${20 - e.sum})`
-        : `📦 Лотків: <b>${e.trays}</b>, залишок <b>${e.remainder}</b>`;
-  }
-
-  renderEggsReport();
-  renderWarehouse();
-  applyWarehouseWarnings();
-
-  if (dbg) dbg.innerHTML += "<br>✅ Запис збережено в AppState";
-}
-
 function editEgg(date) {
   const e = AppState.eggs.records[date];
   if (!e) return;
@@ -743,12 +674,6 @@ function renderEggsReport() {
       </div>
     `;
   }).join("");
-}
-
-// кнопка "Зберегти" в яйцях (якщо у тебе id="saveEggBtn")
-function bindEggSaveButton() {
-  const btn = $("saveEggBtn");
-  if (btn) btn.addEventListener("click", saveEggRecord);
 }
 
 // ============================
@@ -1152,7 +1077,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderEggsReport();
 
   bindMakeFeed();
-  bindEggSaveButton();
   bindSettingsSaveButton();
 
   loadWarehouseSettingsUI();
@@ -1166,18 +1090,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.OrdersFormController) {
   OrdersFormController.init();
   }
-  import { EggsFormController } from "./controllers/EggsFormController.js";
-
+  if (window.EggsFormController) {
   new EggsFormController({
-  onSave: ({ date, good, bad, home }) => {
-    // 🔁 ТУТ ТВОЯ СТАРА ЛОГІКА
-    AppState.eggs.records[date] = { good, bad, home };
+    onSave: ({ date, good, bad, home }) => {
+      AppState.eggs.records[date] = { good, bad, home };
 
-    recomputeEggsAccumulation();
-    saveAppState();
+      recomputeEggsAccumulation();
+      saveAppState();
 
-    renderEggsReport();
-    renderWarehouse();
-    applyWarehouseWarnings();
-  }
+      renderEggsReport();
+      renderWarehouse();
+      applyWarehouseWarnings();
+    }
+  });
+}
 });
