@@ -1181,4 +1181,3 @@ document.addEventListener("DOMContentLoaded", () => {
     applyWarehouseWarnings();
   }
 });
-});
