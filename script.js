@@ -1041,79 +1041,70 @@ function cleanupLegacyLocalStorage() {
 let eggsForm;
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ============================
-  // 1. LOAD STATE
-  // ============================
-  loadAppState();
+  try {
+    // 1) Load state
+    loadAppState();
 
-  // одноразове очищення legacy-ключів
-  if (!localStorage.getItem("legacyCleaned")) {
-    cleanupLegacyLocalStorage();
-    localStorage.setItem("legacyCleaned", "1");
-    console.log("🧹 Legacy localStorage очищено");
-  }
-
-  // ============================
-  // 2. ENSURE SHAPES
-  // ============================
-  ensureWarehouseShape();
-  ensureFeedCalculatorShape();
-  ensureOrdersShape();
-
-  eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
-  warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
-
-  // ============================
-  // 3. RECOMPUTE
-  // ============================
-  recomputeEggsAccumulation();
-  recomputeWarehouseFromSources();
-
-  // ============================
-  // 4. NAVIGATION + PAGE
-  // ============================
-  bindNavigation();
-  restoreActivePage();
-
-  // ============================
-  // 5. UI RENDER
-  // ============================
-  loadFeedTable();
-  renderWarehouse();
-  applyWarehouseWarnings();
-  renderEggsReport();
-  renderOrders();
-
-  // ============================
-  // 6. BINDS
-  // ============================
-  bindMakeFeed();
-  bindSettingsSaveButton();
-  bindOrders();
-  syncToggleButtonsUI();
-  loadWarehouseSettingsUI();
-
-  // ============================
-  // 7. EGGS FORM CONTROLLER (MAIN)
-  // ============================
-  eggsForm = new EggsFormController({
-    onSave: ({ date, good, bad, home }) => {
-      AppState.eggs.records[date] = { good, bad, home };
-
-      recomputeEggsAccumulation();
-      saveAppState();
-
-      renderEggsReport();
-      renderWarehouse();
-      applyWarehouseWarnings();
+    // 2) One-time legacy cleanup
+    if (!localStorage.getItem("legacyCleaned")) {
+      cleanupLegacyLocalStorage();
+      localStorage.setItem("legacyCleaned", "1");
+      console.log("🧹 Legacy localStorage очищено");
     }
-  });
 
-  // ============================
-  // 8. FINAL SAVE + VALIDATE
-  // ============================
-  saveAppState();
-  validateState("after START");
+    // 3) Ensure shapes
+    ensureWarehouseShape();
+    ensureFeedCalculatorShape();
+    ensureOrdersShape();
 
-  console.log("✅ App initialized");
+    eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
+    warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
+
+    // 4) Recompute
+    recomputeEggsAccumulation();
+    recomputeWarehouseFromSources();
+
+    // 5) Navigation
+    bindNavigation();
+    restoreActivePage();
+
+    // 6) Render UI
+    loadFeedTable();
+    renderWarehouse();
+    applyWarehouseWarnings();
+    renderEggsReport();
+    renderOrders();
+
+    // 7) Bind buttons
+    bindMakeFeed();
+    bindSettingsSaveButton();
+    bindOrders();
+    syncToggleButtonsUI();
+    loadWarehouseSettingsUI();
+
+    // 8) EggsFormController (main)
+    eggsForm = new EggsFormController({
+      onSave: ({ date, good, bad, home }) => {
+        AppState.eggs.records[date] = { good, bad, home };
+
+        recomputeEggsAccumulation();
+        saveAppState();
+
+        renderEggsReport();
+        renderWarehouse();
+        applyWarehouseWarnings();
+      }
+    });
+
+    // зробити доступним для onclick в HTML
+    window.eggsForm = eggsForm;
+
+    // 9) Final
+    saveAppState();
+    validateState("after START");
+    console.log("✅ App initialized");
+  } catch (e) {
+    console.error("❌ Startup error:", e);
+    alert("❌ Помилка запуску. Відкрий Console і скинь помилку сюди.");
+  }
 });
