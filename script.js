@@ -938,6 +938,18 @@ function bindOrders() {
   if (dateEl && !dateEl.value) dateEl.value = isoToday();
 }
 
+function updateOrdersSummary() {
+  const countEl = document.getElementById("ordersCount");
+  const traysEl = document.getElementById("ordersReservedTrays");
+
+  if (!countEl || !traysEl) return;
+
+  const active = AppState.orders.list.filter(o => o.status === "confirmed");
+
+  countEl.textContent = active.length;
+  traysEl.textContent = active.reduce((sum, o) => sum + Number(o.trays || 0), 0);
+}
+
 // ============================
 //      ФІНАНСИ (заглушки)
 // ============================
