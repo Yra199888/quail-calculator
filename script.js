@@ -86,49 +86,10 @@ function ensureOrdersShape() {
   }
 }
 
-
-function migrateWarehouseToAppState() {
-  if (appStateLoadedFromStorage) return;
-  // якщо вже є в AppState — нічого не робимо
-  if (AppState.warehouse.feed && Object.keys(AppState.warehouse.feed).length) return;
-
-  try {
-    const old = JSON.parse(localStorage.getItem("warehouse"));
-    if (!old) return;
-
-    AppState.warehouse.feed = old.feed || {};
-    AppState.warehouse.trays = old.trays || 0;
-    AppState.warehouse.ready = old.ready || 0;
-    AppState.warehouse.reserved = old.reserved || 0;
-    AppState.warehouse.history = old.history || [];
-
-    if (!appStateLoadedFromStorage) {
-  saveAppState();
-}
-
     console.log("✅ Warehouse мігровано в AppState");
   } catch (e) {
     console.warn("❌ Не вдалося мігрувати склад", e);
   }
-}
-
-function migrateEggsToAppState() {
-  if (appStateLoadedFromStorage) return;
-  if (
-  AppState.eggs.records &&
-  Object.keys(AppState.eggs.records).length &&
-  typeof AppState.eggs.totalTrays === "number"
-) return;
-  try {
-    const oldEggs = JSON.parse(localStorage.getItem("eggs")) || {};
-    const oldCarry = JSON.parse(localStorage.getItem("eggsCarry")) || {};
-
-    AppState.eggs.records = oldEggs;
-    AppState.eggs.carry = oldCarry.carry || 0;
-    AppState.eggs.totalTrays = oldCarry.totalTrays || 0;
-
-    if (!appStateLoadedFromStorage) {
-  saveAppState();
 }
 
     console.log("✅ Eggs мігровано в AppState");
@@ -153,15 +114,15 @@ function validateState(context = "") {
     errors.push("eggs відсутні");
   }
 
-  if (errors.length) {
-    console.warn("❌ validateState", context, errors);
-  } else {
-    console.log("✅ validateState OK", context);
-  }
-  
   if (!AppState.orders || !Array.isArray(AppState.orders.list)) {
   errors.push("orders.list відсутній або не масив");
-  }
+}
+
+if (errors.length) {
+  console.warn("❌ validateState", context, errors);
+} else {
+  console.log("✅ validateState OK", context);
+}
 
   return errors;
 }
@@ -1011,10 +972,8 @@ function clearEggTrays() {
   }
   if (!confirm("Очистити ВСІ лотки з яйцями? (готові + резерв)")) return;
 
-  AppState.warehouse.ready = 0;
   AppState.warehouse.reserved = 0;
   
-saveAppState();
   saveAppState();
   renderWarehouse();
   applyWarehouseWarnings();
