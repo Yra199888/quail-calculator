@@ -49,21 +49,14 @@
   <hr>
 
     <h3>📋 Рецепти корму</h3>
+
+    <input id="recipeName" placeholder="Назва рецепту">
     
-    <input
-      id="recipeName"
-      type="text"
-      placeholder="Назва рецепту"
-      style="width:100%;margin-bottom:8px;"
-    >
+    <select id="recipeSelect"></select>
     
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="main-btn" onclick="saveFeedRecipe()">💾 Зберегти</button>
-      <button class="main-btn" onclick="loadFeedRecipe()">📂 Завантажити</button>
-      <button class="main-btn danger" onclick="deleteFeedRecipe()">🗑️ Видалити</button>
-    </div>
-    
-    <select id="recipeSelect" style="width:100%;margin-top:8px;"></select>
+    <button id="saveRecipeBtn" class="main-btn">💾 Зберегти</button>
+    <button id="loadRecipeBtn" class="main-btn">📂 Завантажити</button>
+    <button id="deleteRecipeBtn" class="main-btn danger">🗑️ Видалити</button>
   </div>
 
 <!-- ===== ЯЙЦЯ ===== -->
