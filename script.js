@@ -860,10 +860,10 @@ function renderOrders() {
 
   if (!list.length) {
     box.innerHTML = "<i>Замовлень немає</i>";
+    updateOrdersSummary(); // 👈 ТУТ ТЕЖ, щоб 0 показувало
     return;
   }
 
-  // 1️⃣ сортування: confirmed → delivered → cancelled
   const statusOrder = {
     confirmed: 1,
     delivered: 2,
@@ -874,11 +874,10 @@ function renderOrders() {
     const sa = statusOrder[a.status] || 99;
     const sb = statusOrder[b.status] || 99;
     if (sa !== sb) return sa - sb;
-    return a.date < b.date ? 1 : -1; // нові зверху
+    return a.date < b.date ? 1 : -1;
   });
 
   box.innerHTML = list.map(o => {
-    // 2️⃣ стилі по статусу
     let bg = "";
     let badge = "";
 
@@ -893,7 +892,6 @@ function renderOrders() {
       badge = "🔴 Скасовано";
     }
 
-    // 3️⃣ кнопки по статусу
     let actions = "";
 
     if (o.status === "confirmed") {
@@ -910,7 +908,6 @@ function renderOrders() {
     return `
       <div class="order-entry" style="padding:10px;margin-bottom:10px;border-radius:6px;${bg}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-          
           <div>
             <b>${o.date}</b> — <b>${o.client}</b><br>
             Лотків: <b>${o.trays}</b><br>
@@ -923,12 +920,15 @@ function renderOrders() {
               ${actions}
             </div>
           </div>
-
         </div>
       </div>
     `;
   }).join("");
+
+  updateOrdersSummary(); // ✅ ОСЬ САМЕ ЦЕЙ РЯДОК
 }
+
+
 
 function bindOrders() {
   const btn = $("addOrderBtn");
