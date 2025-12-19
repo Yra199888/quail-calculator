@@ -176,33 +176,6 @@ function ensureFeedCalculatorShape() {
 }
 
 // ============================
-//      FORM CONTROLLER
-// ============================
-
-    reset() {
-      this.state = {
-        date: isoToday(),
-        client: "",
-        trays: 0,
-        details: ""
-      };
-      this.sync();
-    },
-
-    sync() {
-      if ($("orderDate")) $("orderDate").value = this.state.date;
-      if ($("orderClient")) $("orderClient").value = this.state.client;
-      if ($("orderTrays")) $("orderTrays").value = this.state.trays || "";
-      if ($("orderDetails")) $("orderDetails").value = this.state.details;
-    },
-
-    getData() {
-      return { ...this.state };
-    }
-  }
-};
-
-// ============================
 //      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ (ЗАХИСТ)
 // ============================
 let eggsEditEnabled = false;
@@ -680,7 +653,6 @@ function addOrderFromForm(data) {
   renderWarehouse();
   renderOrders();
 
-  FormController.orders.reset(); // 🔥 ОЦЕ КЛЮЧОВЕ
 }
 
 function setOrderStatus(id, nextStatus) {
