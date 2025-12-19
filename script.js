@@ -939,15 +939,18 @@ function bindOrders() {
 }
 
 function updateOrdersSummary() {
-  const countEl = document.getElementById("ordersCount");
-  const traysEl = document.getElementById("ordersReservedTrays");
+  const countEl = document.getElementById("activeOrdersCount");
+  const traysEl = document.getElementById("activeOrdersTrays");
 
   if (!countEl || !traysEl) return;
 
   const active = AppState.orders.list.filter(o => o.status === "confirmed");
 
   countEl.textContent = active.length;
-  traysEl.textContent = active.reduce((sum, o) => sum + Number(o.trays || 0), 0);
+  traysEl.textContent = active.reduce(
+    (sum, o) => sum + Number(o.trays || 0),
+    0
+  );
 }
 
 // ============================
