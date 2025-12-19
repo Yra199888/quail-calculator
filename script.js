@@ -42,15 +42,23 @@ const AppState = {
     totalTrays: 0,
   },
 
-  feedCalculator: {          // 👈 НОВЕ
-    qty: [],
-    price: [],
-    volume: 25
-  },
-  
+  feedCalculator: {
+  qty: [],
+  price: [],
+  volume: 25
+},
+
+  recipes: {
+  feed: []
+},
+
+  feedMixes: {
+  history: []
+},
+
   orders: {
-    list: []   // масив замовлень
-  }, 
+  list: []
+},
 };
 
 let appStateLoadedFromStorage = false;
@@ -174,6 +182,84 @@ function ensureFeedCalculatorShape() {
 
   AppState.feedCalculator.volume = Number(AppState.feedCalculator.volume ?? 25);
 }
+
+function ensureRecipesShape() {
+  if (!AppState.recipes || typeof AppState.recipes !== "object") {
+    AppState.recipes = { feed: [] };
+  }
+  if (!Array.isArray(AppState.recipes.feed)) {
+    AppState.recipes.feed = [];
+  }
+}
+
+function ensureFeedMixesShape() {
+  if (!AppState.feedMixes || typeof AppState.feedMixes !== "object") {
+    AppState.feedMixes = { history: [] };
+  }
+  if (!Array.isArray(AppState.feedMixes.history)) {
+    AppState.feedMixes.history = [];
+  }
+}
+
+function refreshRecipeSelect() {
+  const sel = document.getElementById("recipeSelect");
+  if (!sel) return;
+
+  sel.innerHTML = "<option value=''>— обери рецепт —</option>";
+
+  AppState.recipes.feed.forEach((r, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = r.name;
+    sel.appendChild(opt);
+  });
+}
+
+function saveFeedRecipe() {
+  const name = document.getElementById("recipeName")?.value.trim();
+  if (!name) return alert("Вкажи назву рецепту");
+
+  const recipe = {
+    name,
+    qty: [...AppState.feedCalculator.qty],
+    price: [...AppState.feedCalculator.price],
+    volume: AppState.feedCalculator.volume,
+    createdAt: new Date().toISOString()
+  };
+
+  AppState.recipes.feed.push(recipe);
+  saveAppState();
+  refreshRecipeSelect();
+}
+
+function loadFeedRecipe() {
+  const sel = document.getElementById("recipeSelect");
+  const i = Number(sel?.value);
+  if (isNaN(i)) return;
+
+  const r = AppState.recipes.feed[i];
+  if (!r) return;
+
+  AppState.feedCalculator.qty = [...r.qty];
+  AppState.feedCalculator.price = [...r.price];
+  AppState.feedCalculator.volume = r.volume;
+
+  saveAppState();
+  loadFeedTable();
+}
+
+function deleteFeedRecipe() {
+  const sel = document.getElementById("recipeSelect");
+  const i = Number(sel?.value);
+  if (isNaN(i)) return;
+
+  if (!confirm("Видалити рецепт?")) return;
+
+  AppState.recipes.feed.splice(i, 1);
+  saveAppState();
+  refreshRecipeSelect();
+}
+
 
 // ============================
 //      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ (ЗАХИСТ)
@@ -978,6 +1064,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ensureWarehouseShape();
     ensureFeedCalculatorShape();
     ensureOrdersShape();
+    ensureRecipesShape();
+    ensureFeedMixesShape();
 
     eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
     warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
@@ -1002,6 +1090,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bindSettingsSaveButton();
     syncToggleButtonsUI();
     loadWarehouseSettingsUI();
+    refreshRecipeSelect();
 
     // 8) EggsFormController (main)
     eggsForm = new EggsFormController({
