@@ -178,46 +178,6 @@ function ensureFeedCalculatorShape() {
 // ============================
 //      FORM CONTROLLER
 // ============================
-const FormController = {
-  orders: {
-    state: {
-      date: "",
-      client: "",
-      trays: 0,
-      details: ""
-    },
-
-    bind() {
-      const dateEl = $("orderDate");
-      const clientEl = $("orderClient");
-      const traysEl = $("orderTrays");
-      const detailsEl = $("orderDetails");
-
-      if (dateEl) {
-        this.state.date = dateEl.value || isoToday();
-        dateEl.addEventListener("input", e => {
-          this.state.date = e.target.value;
-        });
-      }
-
-      if (clientEl) {
-        clientEl.addEventListener("input", e => {
-          this.state.client = e.target.value.trim();
-        });
-      }
-
-      if (traysEl) {
-        traysEl.addEventListener("input", e => {
-          this.state.trays = Number(e.target.value) || 0;
-        });
-      }
-
-      if (detailsEl) {
-        detailsEl.addEventListener("input", e => {
-          this.state.details = e.target.value.trim();
-        });
-      }
-    },
 
     reset() {
       this.state = {
@@ -689,9 +649,9 @@ function formatStatus(s) {
   return map[s] || s;
 }
 
-function addOrderFromForm() {
-  const { date, client, trays, details } = FormController.orders.getData();
-
+function addOrderFromForm(data) {
+  const { date, client, trays, details } = data;
+  
   if (!client) return alert("Вкажи клієнта");
   if (trays <= 0) return alert("Вкажи кількість лотків (>0)");
 
@@ -850,16 +810,6 @@ function renderOrders() {
 
   updateOrdersSummary(); // ✅ ОСЬ САМЕ ЦЕЙ РЯДОК
 }
-
-
-
-  function bindOrders() {
-  const btn = $("addOrderBtn");
-  if (btn) btn.addEventListener("click", addOrderFromForm);
-
-  FormController.orders.bind();
-  FormController.orders.reset();
-  }
 
 function updateOrdersSummary() {
   const countEl = document.getElementById("activeOrdersCount");
@@ -1078,7 +1028,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // 7) Bind buttons
     bindMakeFeed();
     bindSettingsSaveButton();
-    bindOrders();
     syncToggleButtonsUI();
     loadWarehouseSettingsUI();
 
