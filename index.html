@@ -46,7 +46,25 @@
     <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
     <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
   </div>
-</div>
+  <hr>
+
+    <h3>📋 Рецепти корму</h3>
+    
+    <input
+      id="recipeName"
+      type="text"
+      placeholder="Назва рецепту"
+      style="width:100%;margin-bottom:8px;"
+    >
+    
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="main-btn" onclick="saveFeedRecipe()">💾 Зберегти</button>
+      <button class="main-btn" onclick="loadFeedRecipe()">📂 Завантажити</button>
+      <button class="main-btn danger" onclick="deleteFeedRecipe()">🗑️ Видалити</button>
+    </div>
+    
+    <select id="recipeSelect" style="width:100%;margin-top:8px;"></select>
+  </div>
 
 <!-- ===== ЯЙЦЯ ===== -->
 <div id="page-eggs" class="page">
