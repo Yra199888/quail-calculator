@@ -105,7 +105,6 @@
 </div>
 </div>
 
-<!-- ===== ЗАМОВЛЕННЯ ===== -->
 <!-- ============================
      ЗАМОВЛЕННЯ
 ============================ -->
@@ -259,6 +258,38 @@
 
     <div id="settingsStatus"></div>
   </div>
+  
+  <!-- ===== КОМПОНЕНТИ КОРМУ ===== -->
+<div class="container">
+  <h3>🌾 Кормові компоненти</h3>
+
+  <table class="feed-table">
+    <thead>
+      <tr>
+        <th>Назва</th>
+        <th>ID</th>
+        <th>Дії</th>
+      </tr>
+    </thead>
+    <tbody id="componentsTable"></tbody>
+  </table>
+
+  <hr>
+
+  <h4>➕ Додати новий компонент</h4>
+  <input id="newComponentName" placeholder="Назва (Calvet)">
+  <input id="newComponentId" placeholder="ID (calvet)">
+  <button class="main-btn" onclick="addNewComponent()">Додати</button>
+
+  <hr>
+
+  <h4>🔁 Заміна компонента</h4>
+  <select id="replaceFrom"></select>
+  →
+  <select id="replaceTo"></select>
+  <button class="main-btn danger" onclick="replaceComponentUI()">Замінити</button>
+</div>
+  
 </div>
 
 <!-- ===== SCRIPT ===== -->
