@@ -518,10 +518,6 @@ function applyRecipe(recipe) {
 
 
 // ============================
-//      СКЛАД (дані)
-// ============================
-
-// ============================
 //  ПОПЕРЕДЖЕННЯ МІНІМУМІВ (UI + список)
 // ============================
 function getMinimums() {
@@ -1240,6 +1236,84 @@ function makeFeedFromRecipe(recipe) {
   alert(`✅ Корм "${recipe.name}" успішно замішано`);
 }
 
+function renderComponentsTable() {
+  const tbody = document.getElementById("componentsTable");
+  if (!tbody) return;
+
+  tbody.innerHTML = AppState.feedComponents.map(c => `
+    <tr>
+      <td>
+        <input value="${c.name}" 
+               onchange="renameComponent('${c.id}', this.value)">
+      </td>
+      <td><code>${c.id}</code></td>
+      <td>
+        <button onclick="deleteComponent('${c.id}')">🗑️</button>
+      </td>
+    </tr>
+  `).join("");
+
+  refreshReplaceSelectors();
+}
+
+function renameComponent(id, newName) {
+  const c = AppState.feedComponents.find(x => x.id === id);
+  if (!c) return;
+
+  c.name = newName.trim();
+  saveAppState();
+
+  loadFeedTable();
+  renderWarehouse();
+}
+
+function addNewComponent() {
+  const name = document.getElementById("newComponentName").value.trim();
+  const id = document.getElementById("newComponentId").value.trim();
+
+  if (!name || !id) {
+    alert("Вкажи назву і ID");
+    return;
+  }
+
+  if (AppState.feedComponents.some(c => c.id === id)) {
+    alert("Такий ID вже існує");
+    return;
+  }
+
+  AppState.feedComponents.push({ id, name, unit: "kg" });
+  saveAppState();
+
+  renderComponentsTable();
+  loadFeedTable();
+}
+
+function replaceComponentUI() {
+  const from = document.getElementById("replaceFrom").value;
+  const to = document.getElementById("replaceTo").value;
+
+  if (!from || !to || from === to) {
+    alert("Невірний вибір");
+    return;
+  }
+
+  replaceComponentId(from, AppState.feedComponents.find(c => c.id === to));
+}
+
+function refreshReplaceSelectors() {
+  const fromSel = document.getElementById("replaceFrom");
+  const toSel = document.getElementById("replaceTo");
+  if (!fromSel || !toSel) return;
+
+  const opts = AppState.feedComponents
+    .map(c => `<option value="${c.id}">${c.name}</option>`)
+    .join("");
+
+  fromSel.innerHTML = "<option value=''>Замість…</option>" + opts;
+  toSel.innerHTML = "<option value=''>На…</option>" + opts;
+}
+
+
 
 
 // ============================
@@ -1301,6 +1375,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderOrders();
     bindOrdersUX();
     renderFeedMixHistory();
+    renderComponentsTable();
 
     // ============================
     // 7) FeedFormController (calculator inputs)
