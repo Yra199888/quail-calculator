@@ -85,7 +85,9 @@ function loadAppState() {
       Object.assign(AppState.eggs, saved.eggs || {});
       Object.assign(AppState.feedCalculator, saved.feedCalculator || {});
       Object.assign(AppState.orders, saved.orders || {}); // ✅ ОСЬ ЦЕГО НЕ ВИСТАЧАЛО
-
+      Object.assign(AppState.recipes, saved.recipes || {});
+      Object.assign(AppState.feedMixes, saved.feedMixes || {});
+      
       appStateLoadedFromStorage = true;
     }
   } catch (e) {
@@ -216,6 +218,106 @@ function ensureFeedMixesShape() {
     AppState.feedMixes.history = [];
   }
 }
+
+  function getCurrentFeedSnapshot() {
+    // беремо поточні значення з AppState (а не з DOM)
+    const qty = AppState.feedCalculator.qty.map(x => Number(x) || 0);
+    const price = AppState.feedCalculator.price.map(x => Number(x) || 0);
+    const volume = Number(AppState.feedCalculator.volume || 0);
+  
+    let totalCost = 0;
+    let totalKg = 0;
+  
+    feedComponents.forEach(([name], i) => {
+      const q = qty[i] || 0;
+      const p = price[i] || 0;
+      totalKg += q;
+      totalCost += q * p;
+    });
+  
+    const perKg = totalKg > 0 ? totalCost / totalKg : 0;
+  
+    return { qty, price, volume, totalCost, totalKg, perKg };
+  }
+  
+  function addFeedMixToHistory(meta = {}) {
+    const snap = getCurrentFeedSnapshot();
+  
+    const entry = {
+      id: String(Date.now()) + "_" + Math.random().toString(16).slice(2),
+      createdAt: new Date().toISOString(),
+      // мета-дані (назва рецепта, коментар тощо)
+      recipeName: meta.recipeName || "",
+      note: meta.note || "",
+      // знімок калькулятора
+      volume: snap.volume,
+      qty: snap.qty,
+      price: snap.price,
+      totalCost: snap.totalCost,
+      perKg: snap.perKg
+    };
+  
+    AppState.feedMixes.history.unshift(entry);
+    saveAppState();
+  }
+  
+  function renderMixHistory() {
+    const box = document.getElementById("mixHistory");
+    if (!box) return;
+  
+    const list = AppState.feedMixes?.history || [];
+    if (!list.length) {
+      box.innerHTML = "<i>Порожньо</i>";
+      return;
+    }
+  
+    box.innerHTML = list.map(x => {
+      const dt = new Date(x.createdAt);
+      const dateStr = isNaN(dt.getTime()) ? x.createdAt : dt.toLocaleString();
+  
+      const title = x.recipeName ? `🍲 ${x.recipeName}` : "🍲 Заміс";
+      const cost = Number(x.totalCost || 0).toFixed(2);
+      const perKg = Number(x.perKg || 0).toFixed(2);
+      const vol = Number(x.volume || 0);
+  
+      return `
+        <div class="order-entry" style="padding:10px;margin-bottom:10px;border-radius:6px;background:#111;border-left:4px solid #4caf50;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+            <div>
+              <b>${title}</b><br>
+              <small>${dateStr}</small><br>
+              Обʼєм: <b>${vol}</b> кг<br>
+              Собівартість: <b>${cost}</b> грн (≈ <b>${perKg}</b> грн/кг)
+              ${x.note ? `<br><small>${x.note}</small>` : ""}
+            </div>
+  
+            <div style="text-align:right;">
+              <button class="main-btn danger" style="padding:6px 10px;" onclick="deleteMix('${x.id}')">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+  
+  function deleteMix(id) {
+    AppState.feedMixes.history = (AppState.feedMixes.history || []).filter(x => x.id !== id);
+    saveAppState();
+    renderMixHistory();
+  }
+  window.deleteMix = deleteMix;
+  
+  function bindMixHistoryUI() {
+    const btn = document.getElementById("clearMixHistoryBtn");
+    if (!btn) return;
+  
+    btn.addEventListener("click", () => {
+      if (!confirm("Очистити історію замісів?")) return;
+      AppState.feedMixes.history = [];
+      saveAppState();
+      renderMixHistory();
+    });
+  }
 
 // ============================
 //      ГЛОБАЛЬНІ ПЕРЕМИКАЧІ (ЗАХИСТ)
@@ -508,24 +610,28 @@ function bindMakeFeed() {
   if (!makeFeedBtn) return;
 
   makeFeedBtn.addEventListener("click", () => {
-    for (const item of feedComponents) {
-      const name = item[0];
-      const need = item[1];
-      if (Number(AppState.warehouse.feed[name] || 0) < need) {
-        alert(`Недостатньо компоненту: ${name}`);
-        return;
-      }
+  for (const item of feedComponents) {
+    const name = item[0];
+    const need = item[1];
+    if (Number(AppState.warehouse.feed[name] || 0) < need) {
+      alert(`Недостатньо компоненту: ${name}`);
+      return;
     }
+  }
 
-    feedComponents.forEach(([name, need]) => {
-      AppState.warehouse.feed[name] = Number(AppState.warehouse.feed[name] || 0) - need;
-    });
+  // ✅ запис в історію
+  addFeedMixToHistory({ note: "Заміс зі складу" });
 
-    AppState.warehouse.history.push("Заміс: " + new Date().toLocaleString());
-    saveAppState();
-    renderWarehouse();
-    applyWarehouseWarnings();
+  feedComponents.forEach(([name, need]) => {
+    AppState.warehouse.feed[name] = Number(AppState.warehouse.feed[name] || 0) - need;
   });
+
+  AppState.warehouse.history.push("Заміс: " + new Date().toLocaleString());
+  saveAppState();
+  renderWarehouse();
+  applyWarehouseWarnings();
+  renderMixHistory(); // ✅ оновити UI історії
+});
 }
 
 // ============================
@@ -1083,6 +1189,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     loadFeedTable();
     renderWarehouse();
+    renderMixHistory();
+    bindMixHistoryUI();
     applyWarehouseWarnings();
     renderEggsReport();
     renderOrders();
