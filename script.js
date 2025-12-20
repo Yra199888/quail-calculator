@@ -264,8 +264,12 @@ function bindNavigation() {
 
       document.querySelectorAll(".page").forEach((p) => p.classList.remove("active-page"));
       const target = $("page-" + page);
-      if (target) target.classList.add("active-page");
-
+      if (!target) {
+      toast(`Сторінка page-${page} не знайдена`, "error", 3000);
+      return;
+      }
+      target.classList.add("active-page");
+      
       document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
 
@@ -663,13 +667,22 @@ function formatStatus(s) {
 function addOrderFromForm(data) {
   const { date, client, trays, details } = data;
   
-  if (!client) return alert("Вкажи клієнта");
-  if (trays <= 0) return alert("Вкажи кількість лотків (>0)");
+  if (!client) {
+  toast("Вкажи клієнта", "warn");
+  markError(document.getElementById("orderClient"));
+  return;
+}
+if (trays <= 0) {
+  toast("Вкажи кількість лотків (>0)", "warn");
+  markError(document.getElementById("orderTrays"));
+  return;
+}
 
   recomputeWarehouseFromSources();
   const free = Number(AppState.warehouse.ready || 0);
 
   if (trays > free) {
+    toast(`Недостатньо вільних лотків. Доступно: ${free}`, "error", 3500);
     return alert(`Недостатньо вільних лотків. Доступно: ${free}`);
   }
 
@@ -995,6 +1008,29 @@ function cleanupLegacyLocalStorage() {
   localStorage.removeItem("warehouseMinimums");
 }
 
+function markError(el){
+  if (!el) return;
+  el.classList.add("input-error");
+  setTimeout(() => el.classList.remove("input-error"), 1200);
+}
+
+function bindOrdersUX(){
+  const btn = document.getElementById("addOrderBtn");
+  const clientEl = document.getElementById("orderClient");
+  const traysEl  = document.getElementById("orderTrays");
+  if (!btn || !clientEl || !traysEl) return;
+
+  const sync = () => {
+    const ok = clientEl.value.trim().length > 0 && Number(traysEl.value) > 0;
+    btn.disabled = !ok;
+    btn.style.opacity = ok ? "1" : "0.6";
+  };
+
+  clientEl.addEventListener("input", sync);
+  traysEl.addEventListener("input", sync);
+  sync();
+}
+
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
@@ -1050,6 +1086,7 @@ document.addEventListener("DOMContentLoaded", () => {
     applyWarehouseWarnings();
     renderEggsReport();
     renderOrders();
+    bindOrdersUX();
 
     // ============================
     // 7) FeedFormController (calculator inputs)
