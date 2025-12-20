@@ -369,3 +369,30 @@ input[type="number"] {
   color: #ffb3b3;
   font-size: 14px;
 }
+
+.toast{
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  background: rgba(20,20,20,.92);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  max-width: 92vw;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+
+.toast.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.toast.success{ border-color: rgba(76,175,80,.35); }
+.toast.warn{ border-color: rgba(255,193,7,.35); }
+.toast.error{ border-color: rgba(244,67,54,.35); }
