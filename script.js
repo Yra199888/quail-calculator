@@ -1312,9 +1312,93 @@ function refreshReplaceSelectors() {
   toSel.innerHTML = "<option value=''>На…</option>" + opts;
 }
 
+function saveCurrentRecipe(name) {
+  if (!name) {
+    toast("Вкажи назву рецепта", "warn");
+    return;
+  }
 
+  const recipe = {
+    id: "recipe_" + Date.now(),
+    name,
+    volume: Number(AppState.feedCalculator.volume || 0),
+    components: {}
+  };
 
+  const active = getActiveFeedComponents();
 
+  active.forEach((c, i) => {
+    const qty = Number(AppState.feedCalculator.qty[i] || 0);
+    if (qty > 0) {
+      recipe.components[c.id] = qty;
+    }
+  });
+
+  AppState.recipes.list[recipe.id] = recipe;
+
+  saveAppState();
+  refreshRecipeSelect();
+
+  toast("✅ Рецепт збережено", "ok");
+}
+
+function applyRecipe(recipe) {
+  // очистка
+  AppState.feedCalculator.qty = [];
+
+  const active = getActiveFeedComponents();
+
+  active.forEach((c, i) => {
+    AppState.feedCalculator.qty[i] =
+      Number(recipe.components[c.id] || 0);
+  });
+
+  AppState.feedCalculator.volume = recipe.volume || 25;
+
+  saveAppState();
+  loadFeedTable();
+  calculateFeed();
+
+  toast(`🍲 Рецепт "${recipe.name}" застосовано`, "ok");
+}
+
+function canMakeRecipe(recipe) {
+  for (const id in recipe.components) {
+    const need = Number(recipe.components[id] || 0);
+    const stock = Number(AppState.warehouse.feed[id] || 0);
+
+    if (stock < need) {
+      const c = AppState.feedComponents.find(x => x.id === id);
+      const name = c?.name || id;
+
+      toast(`❌ Недостатньо: ${name}`, "error", 3500);
+      return false;
+    }
+  }
+  return true;
+}
+
+function makeFeedFromRecipe(recipe) {
+  if (!canMakeRecipe(recipe)) return;
+
+  for (const id in recipe.components) {
+    AppState.warehouse.feed[id] -= recipe.components[id];
+  }
+
+  AppState.feedMixes.history.unshift({
+    id: "mix_" + Date.now(),
+    createdAt: new Date().toISOString(),
+    recipeName: recipe.name,
+    volume: recipe.volume,
+    components: { ...recipe.components }
+  });
+
+  saveAppState();
+  renderWarehouse();
+  renderMixHistory();
+
+  toast(`✅ Корм "${recipe.name}" замішано`, "ok");
+}
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
