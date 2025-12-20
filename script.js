@@ -654,33 +654,49 @@ function renderWarehouse() {
 //  КНОПКА "ЗРОБИТИ КОРМ"
 // ============================
 function bindMakeFeed() {
-  const makeFeedBtn = $("makeFeedBtn");
-  if (!makeFeedBtn) return;
+  const btn = $("makeFeedBtn");
+  if (!btn) return;
 
-  makeFeedBtn.addEventListener("click", () => {
-  for (const item of feedComponents) {
-    const name = item[0];
-    const need = item[1];
-    if (Number(AppState.warehouse.feed[name] || 0) < need) {
-      alert(`Недостатньо компоненту: ${name}`);
+  btn.addEventListener("click", () => {
+    const sel = $("recipeSelect");
+    const recipeIndex = Number(sel?.value);
+
+    if (isNaN(recipeIndex)) {
+      alert("Обери рецепт");
       return;
     }
+
+    const recipe = AppState.recipes.feed[recipeIndex];
+    if (!recipe) {
+      alert("Рецепт не знайдено");
+      return;
+    }
+
+    makeFeedFromRecipe(recipe);
+  });
+}
+
+function renderFeedMixHistory() {
+  const box = document.getElementById("mixHistory");
+  if (!box) return;
+
+  if (!AppState.feedMixes.history.length) {
+    box.innerHTML = "<i>Історія замісів порожня</i>";
+    return;
   }
 
-  // ✅ запис в історію
-  addFeedMixToHistory({ note: "Заміс зі складу" });
-
-  feedComponents.forEach(([name, need]) => {
-    AppState.warehouse.feed[name] = Number(AppState.warehouse.feed[name] || 0) - need;
-  });
-
-  AppState.warehouse.history.push("Заміс: " + new Date().toLocaleString());
-  saveAppState();
-  renderWarehouse();
-  applyWarehouseWarnings();
-  renderMixHistory(); // ✅ оновити UI історії
-});
+  box.innerHTML = AppState.feedMixes.history
+    .slice()
+    .reverse()
+    .map(mix => `
+      <div class="mix-entry">
+        <b>${mix.recipeName}</b> — ${mix.volume} кг<br>
+        <small>${mix.date}</small>
+      </div>
+    `)
+    .join("");
 }
+
 
 // ============================
 //      ЯЙЦЯ
@@ -1185,6 +1201,47 @@ function bindOrdersUX(){
   sync();
 }
 
+function canMakeRecipe(recipe) {
+  for (const key in recipe.components) {
+    const label = FEED_KEYS[key];
+    const need = recipe.components[key];
+    const stock = Number(AppState.warehouse.feed[label] || 0);
+
+    if (stock < need) {
+      alert(`❌ Недостатньо: ${label}\nПотрібно: ${need}, є: ${stock}`);
+      return false;
+    }
+  }
+  return true;
+}
+
+function makeFeedFromRecipe(recipe) {
+  if (!canMakeRecipe(recipe)) return;
+
+  // списуємо склад
+  for (const key in recipe.components) {
+    const label = FEED_KEYS[key];
+    AppState.warehouse.feed[label] -= recipe.components[key];
+  }
+
+  // історія
+  AppState.feedMixes.history.push({
+    id: "mix_" + Date.now(),
+    date: new Date().toLocaleString(),
+    recipeName: recipe.name,
+    volume: recipe.volume,
+    components: { ...recipe.components }
+  });
+
+  saveAppState();
+  renderWarehouse();
+  renderFeedMixHistory();
+
+  alert(`✅ Корм "${recipe.name}" успішно замішано`);
+}
+
+
+
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
@@ -1243,6 +1300,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderEggsReport();
     renderOrders();
     bindOrdersUX();
+    renderFeedMixHistory();
 
     // ============================
     // 7) FeedFormController (calculator inputs)
