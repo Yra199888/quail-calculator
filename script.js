@@ -8,8 +8,18 @@ import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
 const $ = (id) => document.getElementById(id);
 
 window.onerror = function (msg, src, line, col) {
-  alert("JS помилка: " + msg + "\nРядок: " + line + ":" + col);
+  console.error("JS error:", msg, src, line, col);
+  toast(`Помилка: ${msg} (рядок ${line}:${col})`, "error", 4500);
 };
+
+function toast(msg, type="warn", ms=2200){
+  const el = document.getElementById("toast");
+  if (!el) return alert(msg);
+  el.className = `toast ${type} show`;
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), ms);
+}
 
 function isoToday() {
   return new Date().toISOString().slice(0, 10);
