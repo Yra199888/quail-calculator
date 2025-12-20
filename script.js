@@ -66,12 +66,13 @@ const AppState = {
     carry: 0,
     totalTrays: 0,
   },
-
+  
   feedCalculator: {
   qty: [],
   price: [],
   volume: 25
 },
+  feedComponents: [], // ✅ НОВЕ
 
   recipes: {
   list: {},
@@ -100,6 +101,10 @@ function loadAppState() {
       Object.assign(AppState.orders, saved.orders || {}); // ✅ ОСЬ ЦЕГО НЕ ВИСТАЧАЛО
       Object.assign(AppState.recipes, saved.recipes || {});
       Object.assign(AppState.feedMixes, saved.feedMixes || {});
+      
+      if (Array.isArray(saved.feedComponents)) {
+      AppState.feedComponents = saved.feedComponents;
+      }
       
       appStateLoadedFromStorage = true;
     }
@@ -179,10 +184,10 @@ function ensureWarehouseShape() {
   if (!AppState.warehouse.minimums || typeof AppState.warehouse.minimums !== "object") {
     AppState.warehouse.minimums = {};
   }
-  
-  for (const [name] of feedComponents) {
-  AppState.warehouse.feed[name] =
-    Number(AppState.warehouse.feed[name] || 0);
+
+for (const c of getAllFeedComponents()) {
+  AppState.warehouse.feed[c.id] =
+    Number(AppState.warehouse.feed[c.id] || 0);
 }
 
   AppState.warehouse.trays = Number(AppState.warehouse.trays || 0);
@@ -194,18 +199,19 @@ function ensureFeedCalculatorShape() {
   if (!AppState.feedCalculator || typeof AppState.feedCalculator !== "object") {
     AppState.feedCalculator = { qty: [], price: [], volume: 25 };
   }
-  if (!Array.isArray(AppState.feedCalculator.qty)) AppState.feedCalculator.qty = [];
-  if (!Array.isArray(AppState.feedCalculator.price)) AppState.feedCalculator.price = [];
 
-  feedComponents.forEach(([, defaultQty], i) => {
-    const q = AppState.feedCalculator.qty[i];
-    const p = AppState.feedCalculator.price[i];
+  const list = getActiveFeedComponents();
 
-    AppState.feedCalculator.qty[i] = Number(q ?? defaultQty);
-    AppState.feedCalculator.price[i] = Number(p ?? 0);
+  list.forEach((c, i) => {
+    AppState.feedCalculator.qty[i] =
+      Number(AppState.feedCalculator.qty[i] ?? c.defaultQty);
+
+    AppState.feedCalculator.price[i] =
+      Number(AppState.feedCalculator.price[i] ?? 0);
   });
 
-  AppState.feedCalculator.volume = Number(AppState.feedCalculator.volume ?? 25);
+  AppState.feedCalculator.volume =
+    Number(AppState.feedCalculator.volume ?? 25);
 }
 
 function ensureRecipesShape() {
@@ -230,29 +236,34 @@ function ensureFeedMixesShape() {
 }
 
 function ensureFeedComponentsShape() {
-  if (!AppState.feed || typeof AppState.feed !== "object") {
-    AppState.feed = { components: [] };
+  // 1) якщо масиву нема — створити
+  if (!Array.isArray(AppState.feedComponents)) {
+    AppState.feedComponents = [];
   }
 
-  if (!Array.isArray(AppState.feed.components)) {
-    AppState.feed.components = [];
-  }
-
-  // якщо components пустий — відновлюємо дефолт
-  if (AppState.feed.components.length === 0) {
-    AppState.feed.components = [
-      { key: "kukurudza", name: "Кукурудза", defaultQty: 10 },
-      { key: "pshenytsia", name: "Пшениця", defaultQty: 5 },
-      { key: "yachmin", name: "Ячмінь", defaultQty: 1.5 },
-      { key: "soieva_makuha", name: "Соева макуха", defaultQty: 3 },
-      { key: "soniashnykova_makuha", name: "Соняшникова макуха", defaultQty: 2.5 },
-      { key: "rybne_boroshno", name: "Рибне борошно", defaultQty: 1 },
-      { key: "drizhdzhi", name: "Дріжджі", defaultQty: 0.7 },
-      { key: "trykaltsii_fosfat", name: "Трикальційфосфат", defaultQty: 0.5 },
-      { key: "dolfos_d", name: "Dolfos D", defaultQty: 0.7 },
-      { key: "sil", name: "Сіль", defaultQty: 0.05 }
+  // 2) якщо пустий — заповнити дефолтними (лише 1 раз)
+  if (AppState.feedComponents.length === 0) {
+    AppState.feedComponents = [
+      { id: "kukurudza", name: "Кукурудза", defaultQty: 10, enabled: true },
+      { id: "pshenytsia", name: "Пшениця", defaultQty: 5, enabled: true },
+      { id: "yachmin", name: "Ячмінь", defaultQty: 1.5, enabled: true },
+      { id: "soieva_makuha", name: "Соева макуха", defaultQty: 3, enabled: true },
+      { id: "soniashnykova_makuha", name: "Соняшникова макуха", defaultQty: 2.5, enabled: true },
+      { id: "rybne_boroshno", name: "Рибне борошно", defaultQty: 1, enabled: true },
+      { id: "drizhdzhi", name: "Дріжджі", defaultQty: 0.7, enabled: true },
+      { id: "trykaltsii_fosfat", name: "Трикальційфосfat", defaultQty: 0.5, enabled: true },
+      { id: "dolfos_d", name: "Dolfos D", defaultQty: 0.7, enabled: true },
+      { id: "sil", name: "Сіль", defaultQty: 0.05, enabled: true },
     ];
   }
+
+  // 3) нормалізація полів
+  AppState.feedComponents = AppState.feedComponents.map(c => ({
+    id: String(c.id || "").trim(),
+    name: String(c.name || "").trim(),
+    defaultQty: Number(c.defaultQty || 0),
+    enabled: c.enabled !== false,
+  })).filter(c => c.id && c.name);
 }
 
 
@@ -418,37 +429,12 @@ function bindNavigation() {
   });
 }
 
-// ============================
-//      КОМПОНЕНТИ КОРМУ (РЕЦЕПТ)
-// ============================
-const feedComponents = [
-  ["Кукурудза", 10],
-  ["Пшениця", 5],
-  ["Ячмінь", 1.5],
-  ["Соева макуха", 3],
-  ["Соняшникова макуха", 2.5],
-  ["Рибне борошно", 1],
-  ["Дріжджі", 0.7],
-  ["Трикальційфосфат", 0.5],
-  ["Dolfos D", 0.7],
-  ["Сіль", 0.05],
-];
+function getActiveFeedComponents() {
+  return (AppState.feedComponents || []).filter(c => c.enabled);
+}
 
-// відповідність назв → ключі мінімумів
-function getMinKeyByName(name) {
-  const map = {
-    "Кукурудза": "kukurudza",
-    "Пшениця": "pshenytsia",
-    "Ячмінь": "yachmin",
-    "Соева макуха": "soieva_makuha",
-    "Соняшникова макуха": "soniashnykova_makuha",
-    "Рибне борошно": "rybne_boroshno",
-    "Дріжджі": "drizhdzhi",
-    "Трикальційфосфат": "trykaltsii_fosfat",
-    "Dolfos D": "dolfos_d",
-    "Сіль": "sil",
-  };
-  return map[name] || null;
+function getAllFeedComponents() {
+  return (AppState.feedComponents || []);
 }
 
 // ============================
@@ -461,14 +447,16 @@ function loadFeedTable() {
   const tbody = $("feedTable");
   if (!tbody) return;
 
-  tbody.innerHTML = feedComponents.map((c, i) => `
-    <tr>
-      <td>${c[0]}</td>
-      <td><input class="qty" data-i="${i}" type="number" value="${AppState.feedCalculator.qty[i] ?? c[1]}"></td>
-      <td><input class="price" data-i="${i}" type="number" value="${AppState.feedCalculator.price[i] ?? 0}"></td>
-      <td id="sum_${i}">0</td>
-    </tr>
-  `).join("");
+  const list = getActiveFeedComponents();
+
+tbody.innerHTML = list.map((c, i) => `
+  <tr>
+    <td>${c.name}</td>
+    <td><input class="qty" data-i="${i}" type="number" value="${AppState.feedCalculator.qty[i] ?? c.defaultQty}"></td>
+    <td><input class="price" data-i="${i}" type="number" value="${AppState.feedCalculator.price[i] ?? 0}"></td>
+    <td id="sum_${i}">0</td>
+  </tr>
+`).join("");
 
   const volEl = $("feedVolume");
   if (volEl) volEl.value = AppState.feedCalculator.volume ?? 25;
@@ -480,13 +468,15 @@ function calculateFeed() {
   let total = 0;
   let totalKg = 0;
 
-  feedComponents.forEach((_, i) => {
+  const list = getActiveFeedComponents();
+
+  list.forEach((c, i) => {
     const qty = Number(document.querySelector(`.qty[data-i="${i}"]`)?.value) || 0;
     const price = Number(document.querySelector(`.price[data-i="${i}"]`)?.value) || 0;
 
     AppState.feedCalculator.qty[i] = qty;
     AppState.feedCalculator.price[i] = price;
-    
+
     const sum = qty * price;
     total += sum;
     totalKg += qty;
@@ -497,63 +487,14 @@ function calculateFeed() {
 
   const perKg = totalKg ? total / totalKg : 0;
   const vol = Number($("feedVolume")?.value) || 0;
-AppState.feedCalculator.volume = vol;
 
-  if ($("feedTotal")) $("feedTotal").textContent = total.toFixed(2);
-  if ($("feedPerKg")) $("feedPerKg").textContent = perKg.toFixed(2);
-  if ($("feedVolumeTotal")) $("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
-  
+  AppState.feedCalculator.volume = vol;
+
+  $("feedTotal").textContent = total.toFixed(2);
+  $("feedPerKg").textContent = perKg.toFixed(2);
+  $("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
+
   saveAppState();
-}
-
-function saveCurrentRecipe(name) {
-  if (!name) {
-    alert("Вкажи назву рецепта");
-    return;
-  }
-
-  const components = {};
-
-  feedComponents.forEach(([label], i) => {
-    const key = getMinKeyByName(label);
-    if (!key) return;
-
-    const qty = Number(AppState.feedCalculator.qty[i] || 0);
-    if (qty > 0) {
-      components[key] = qty;
-    }
-  });
-
-  const recipe = {
-    id: "recipe_" + Date.now(),
-    name,
-    volume: AppState.feedCalculator.volume,
-    components
-  };
-
-  AppState.recipes.feed.push(recipe);
-  saveAppState();
-  refreshRecipeSelect();
-
-  alert("✅ Рецепт збережено");
-}
-
-function applyRecipe(recipe) {
-  // очистка
-  AppState.feedCalculator.qty = AppState.feedCalculator.qty.map(() => 0);
-
-  feedComponents.forEach(([label], i) => {
-    const key = getMinKeyByName(label);
-    if (!key) return;
-
-    if (recipe.components[key] != null) {
-      AppState.feedCalculator.qty[i] = recipe.components[key];
-    }
-  });
-
-  AppState.feedCalculator.volume = recipe.volume;
-  saveAppState();
-  loadFeedTable();
 }
 
 
@@ -575,26 +516,23 @@ function getMinimums() {
 
 function applyWarehouseWarnings() {
   const box = $("warehouseWarning");
-  const list = $("warehouseWarningList");
-  if (!box || !list) return;
+  const listEl = $("warehouseWarningList");
+  if (!box || !listEl) return;
 
-  const mins = getMinimums();
+  const mins = AppState.warehouse.minimums || {};
   const warnings = [];
 
-  // компоненти
-  feedComponents.forEach(([name]) => {
-    const key = getMinKeyByName(name);
-    if (!key) return;
-
-    const stock = Number(AppState.warehouse.feed[name] || 0);
-    const min = Number(mins[key] || 0);
+  // кормові компоненти
+  for (const c of getAllFeedComponents()) {
+    const stock = Number(AppState.warehouse.feed[c.id] || 0);
+    const min = Number(mins[c.id] || 0);
 
     if (min > 0 && stock < min) {
-      warnings.push(`• ${name}: ${stock.toFixed(2)} кг (мін. ${min})`);
+      warnings.push(`• ${c.name}: ${stock.toFixed(2)} кг (мін. ${min})`);
     }
-  });
+  }
 
-  // лотки
+  // порожні лотки
   const trayMin = Number(mins.empty_trays || 0);
   const trayStock = Number(AppState.warehouse.trays || 0);
   if (trayMin > 0 && trayStock < trayMin) {
@@ -602,11 +540,11 @@ function applyWarehouseWarnings() {
   }
 
   if (warnings.length) {
-    list.innerHTML = warnings.join("<br>");
+    listEl.innerHTML = warnings.join("<br>");
     box.style.display = "block";
   } else {
     box.style.display = "none";
-    list.innerHTML = "";
+    listEl.innerHTML = "";
   }
 }
 
@@ -617,41 +555,43 @@ function renderWarehouse() {
   const tbody = $("warehouseTable");
   if (!tbody) return;
 
-  const mins = getMinimums();
+  const mins = AppState.warehouse.minimums || {};
+  const components = getAllFeedComponents();
 
-  tbody.innerHTML = feedComponents
-    .map(([name, need]) => {
-      const stock = Number(AppState.warehouse.feed[name] || 0);
+  tbody.innerHTML = components.map(c => {
+    const stock = Number(AppState.warehouse.feed[c.id] || 0);
+    const min = Number(mins[c.id] || 0);
+    const isLow = min > 0 && stock < min;
 
-      const key = getMinKeyByName(name);
-      const min = Number(mins[key] || 0);
-      const isLow = min > 0 && stock < min;
+    return `
+      <tr style="${isLow ? "background:#3a1c1c;color:#ffb3b3;" : ""}">
+        <td>${isLow ? "⚠️ " : ""}${c.name}</td>
+        <td>
+          <input class="addStock" data-id="${c.id}" type="number" value="0">
+        </td>
+        <td>${c.defaultQty}</td>
+        <td><b>${stock.toFixed(2)}</b></td>
+      </tr>
+    `;
+  }).join("");
 
-      return `
-        <tr style="${isLow ? "background:#3a1c1c;color:#ffb3b3;" : ""}">
-          <td>${isLow ? "⚠️ " : ""}${name}</td>
-          <td><input class="addStock" data-name="${name}" type="number" value="0"></td>
-          <td>${need}</td>
-          <td><b>${stock.toFixed(2)}</b></td>
-        </tr>
-      `;
-    })
-    .join("");
-
-  document.querySelectorAll(".addStock").forEach((inp) => {
-    inp.addEventListener("change", (e) => {
-      const val = Number(e.target.value) || 0;
-      e.target.value = 0;
-      if (val <= 0) return;
-
+  // додавання на склад
+  document.querySelectorAll(".addStock").forEach(inp => {
+    inp.addEventListener("change", e => {
       if (!warehouseEditEnabled) {
         alert("🔒 Спочатку увімкни редагування складу");
+        e.target.value = 0;
         return;
       }
 
-      const name = e.target.dataset.name;
-      AppState.warehouse.feed[name] =
-      Number(AppState.warehouse.feed[name] || 0) + val;
+      const val = Number(e.target.value || 0);
+      if (val <= 0) return;
+
+      const id = e.target.dataset.id;
+      AppState.warehouse.feed[id] =
+        Number(AppState.warehouse.feed[id] || 0) + val;
+
+      e.target.value = 0;
 
       saveAppState();
       renderWarehouse();
@@ -659,31 +599,9 @@ function renderWarehouse() {
     });
   });
 
-  const trayStockEl = $("trayStock");
-  if (trayStockEl) {
-    trayStockEl.value = AppState.warehouse.trays ?? 0;
-    trayStockEl.addEventListener("change", (e) => {
-      if (!warehouseEditEnabled) {
-        alert("🔒 Спочатку увімкни редагування складу");
-        trayStockEl.value = AppState.warehouse.trays ?? 0;
-        return;
-      }
-      AppState.warehouse.trays = Number(e.target.value) || 0;
-      saveAppState();
-      applyWarehouseWarnings();
-    });
-  }
-
-  if ($("fullTrays")) $("fullTrays").textContent = AppState.warehouse.ready ?? 0;
-  if ($("reservedTrays")) $("reservedTrays").textContent = AppState.warehouse.reserved ?? 0;
-
-  const mixHistory = $("mixHistory");
-  if (mixHistory) {
-    mixHistory.innerHTML =
-      AppState.warehouse.history?.length
-        ? "<ul>" + AppState.warehouse.history.map((x) => `<li>${x}</li>`).join("") + "</ul>"
-        : "<i>Порожньо</i>";
-  }
+  // лотки
+  if ($("fullTrays")) $("fullTrays").textContent = AppState.warehouse.ready || 0;
+  if ($("reservedTrays")) $("reservedTrays").textContent = AppState.warehouse.reserved || 0;
 }
 
 // ============================
@@ -694,21 +612,46 @@ function bindMakeFeed() {
   if (!btn) return;
 
   btn.addEventListener("click", () => {
-    const sel = $("recipeSelect");
-    const recipeIndex = Number(sel?.value);
-
-    if (isNaN(recipeIndex)) {
-      alert("Обери рецепт");
+    if (!warehouseEditEnabled) {
+      alert("🔒 Спочатку увімкни редагування складу");
       return;
     }
 
-    const recipe = AppState.recipes.feed[recipeIndex];
-    if (!recipe) {
-      alert("Рецепт не знайдено");
-      return;
+    const components = getActiveFeedComponents();
+
+    // перевірка наявності
+    for (let i = 0; i < components.length; i++) {
+      const c = components[i];
+      const need = Number(AppState.feedCalculator.qty[i] || 0);
+      const stock = Number(AppState.warehouse.feed[c.id] || 0);
+
+      if (need > stock) {
+        alert(`Недостатньо компоненту: ${c.name}`);
+        return;
+      }
     }
 
-    makeFeedFromRecipe(recipe);
+    // списання
+    components.forEach((c, i) => {
+      const need = Number(AppState.feedCalculator.qty[i] || 0);
+      AppState.warehouse.feed[c.id] -= need;
+    });
+
+    // історія
+    AppState.feedMixes.history.push({
+      date: new Date().toISOString(),
+      components: components.map((c, i) => ({
+        id: c.id,
+        name: c.name,
+        qty: AppState.feedCalculator.qty[i] || 0
+      }))
+    });
+
+    saveAppState();
+    renderWarehouse();
+    applyWarehouseWarnings();
+
+    alert("✅ Корм успішно замішано");
   });
 }
 
@@ -1128,32 +1071,23 @@ window.clearEggTrays = clearEggTrays;
 //  НАЛАШТУВАННЯ (мінімальні запаси) — SAVE/LOAD UI
 // ============================
 function saveWarehouseSettings() {
-  try {
-    const mins = {};
+  const mins = {};
 
-    feedComponents.forEach(([name]) => {
-      const key = getMinKeyByName(name);
-      if (!key) return;
+  getAllFeedComponents().forEach(c => {
+    const input = document.getElementById("minFeed_" + c.id);
+    mins[c.id] = Number(input?.value || 0);
+  });
 
-      const input = document.getElementById("minFeed_" + key);
-      mins[key] = Number(input?.value || 0);
-    });
+  mins.empty_trays = Number(document.getElementById("min_empty_trays")?.value || 0);
 
-    mins.empty_trays = Number(document.getElementById("min_empty_trays")?.value || 0);
+  AppState.warehouse.minimums = mins;
+  saveAppState();
 
-    AppState.warehouse.minimums = mins;
-    saveAppState();
+  applyWarehouseWarnings();
+  renderWarehouse();
 
-    const status = $("settingsStatus");
-    if (status) status.innerHTML = "✅ Дані збережено";
-
-    applyWarehouseWarnings();
-    renderWarehouse();
-  } catch (e) {
-    console.error("saveWarehouseSettings error:", e);
-    const status = $("settingsStatus");
-    if (status) status.innerHTML = "❌ Не вдалося зберегти";
-    alert("❌ Не вдалося зберегти налаштування");
+  if ($("settingsStatus")) {
+    $("settingsStatus").textContent = "✅ Дані збережено";
   }
 }
 window.saveWarehouseSettings = saveWarehouseSettings;
@@ -1235,45 +1169,6 @@ function bindOrdersUX(){
   clientEl.addEventListener("input", sync);
   traysEl.addEventListener("input", sync);
   sync();
-}
-
-function canMakeRecipe(recipe) {
-  for (const key in recipe.components) {
-    const label = FEED_KEYS[key];
-    const need = recipe.components[key];
-    const stock = Number(AppState.warehouse.feed[label] || 0);
-
-    if (stock < need) {
-      alert(`❌ Недостатньо: ${label}\nПотрібно: ${need}, є: ${stock}`);
-      return false;
-    }
-  }
-  return true;
-}
-
-function makeFeedFromRecipe(recipe) {
-  if (!canMakeRecipe(recipe)) return;
-
-  // списуємо склад
-  for (const key in recipe.components) {
-    const label = FEED_KEYS[key];
-    AppState.warehouse.feed[label] -= recipe.components[key];
-  }
-
-  // історія
-  AppState.feedMixes.history.push({
-    id: "mix_" + Date.now(),
-    date: new Date().toLocaleString(),
-    recipeName: recipe.name,
-    volume: recipe.volume,
-    components: { ...recipe.components }
-  });
-
-  saveAppState();
-  renderWarehouse();
-  renderFeedMixHistory();
-
-  alert(`✅ Корм "${recipe.name}" успішно замішано`);
 }
 
 function renderComponentsTable() {
@@ -1382,6 +1277,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     // 3) Ensure AppState shapes
     // ============================
+    ensureFeedComponentsShape();
     ensureWarehouseShape();
     ensureFeedCalculatorShape();
     ensureOrdersShape();
