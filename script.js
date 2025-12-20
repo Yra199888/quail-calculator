@@ -1178,12 +1178,16 @@ function renderComponentsTable() {
   tbody.innerHTML = AppState.feedComponents.map(c => `
     <tr>
       <td>
-        <input value="${c.name}" 
-               onchange="renameComponent('${c.id}', this.value)">
+        <input
+          value="${c.name}"
+          onchange="renameComponent('${c.id}', this.value)"
+        >
       </td>
       <td><code>${c.id}</code></td>
       <td>
-        <button onclick="deleteComponent('${c.id}')">🗑️</button>
+        <button onclick="toggleComponent('${c.id}')">
+          ${c.enabled ? "❌" : "✅"}
+        </button>
       </td>
     </tr>
   `).join("");
@@ -1191,23 +1195,42 @@ function renderComponentsTable() {
   refreshReplaceSelectors();
 }
 
+function toggleComponent(id) {
+  const c = AppState.feedComponents.find(x => x.id === id);
+  if (!c) return;
+
+  c.enabled = !c.enabled;
+
+  saveAppState();
+  renderComponentsTable();
+  loadFeedTable();
+}
+
 function renameComponent(id, newName) {
   const c = AppState.feedComponents.find(x => x.id === id);
   if (!c) return;
 
-  c.name = newName.trim();
-  saveAppState();
+  c.name = newName.trim() || c.name;
 
+  saveAppState();
   loadFeedTable();
   renderWarehouse();
 }
 
 function addNewComponent() {
-  const name = document.getElementById("newComponentName").value.trim();
-  const id = document.getElementById("newComponentId").value.trim();
+  const nameEl = document.getElementById("newComponentName");
+  const idEl = document.getElementById("newComponentId");
+
+  const name = nameEl.value.trim();
+  const id = idEl.value.trim().toLowerCase();
 
   if (!name || !id) {
     alert("Вкажи назву і ID");
+    return;
+  }
+
+  if (!/^[a-z0-9_]+$/.test(id)) {
+    alert("ID тільки латиниця, цифри та _");
     return;
   }
 
@@ -1216,9 +1239,17 @@ function addNewComponent() {
     return;
   }
 
-  AppState.feedComponents.push({ id, name, unit: "kg" });
-  saveAppState();
+  AppState.feedComponents.push({
+    id,
+    name,
+    defaultQty: 0,
+    enabled: true
+  });
 
+  nameEl.value = "";
+  idEl.value = "";
+
+  saveAppState();
   renderComponentsTable();
   loadFeedTable();
 }
@@ -1233,6 +1264,39 @@ function replaceComponentUI() {
   }
 
   replaceComponentId(from, AppState.feedComponents.find(c => c.id === to));
+}
+
+function replaceComponentId(fromId, toComponent) {
+  if (!fromId || !toComponent) return;
+
+  // 1️⃣ Замінюємо в рецептах
+  for (const rid in AppState.recipes.list) {
+    const r = AppState.recipes.list[rid];
+    if (r.components[fromId] != null) {
+      r.components[toComponent.id] =
+        (r.components[toComponent.id] || 0) + r.components[fromId];
+      delete r.components[fromId];
+    }
+  }
+
+  // 2️⃣ Замінюємо на складі
+  const stock = AppState.warehouse.feed[fromId];
+  if (stock != null) {
+    AppState.warehouse.feed[toComponent.id] =
+      (AppState.warehouse.feed[toComponent.id] || 0) + stock;
+    delete AppState.warehouse.feed[fromId];
+  }
+
+  // 3️⃣ Вимикаємо старий компонент
+  const old = AppState.feedComponents.find(c => c.id === fromId);
+  if (old) old.enabled = false;
+
+  saveAppState();
+  renderComponentsTable();
+  loadFeedTable();
+  renderWarehouse();
+
+  alert("✅ Компонент замінено без втрати даних");
 }
 
 function refreshReplaceSelectors() {
