@@ -40,7 +40,20 @@ const AppState = {
   },
 
   warehouse: {
-    feed: {},
+    feed: {
+      components: [
+        { key: "kukurudza", name: "Кукурудза", defaultQty: 10 },
+        { key: "pshenytsia", name: "Пшениця", defaultQty: 5 },
+        { key: "yachmin", name: "Ячмінь", defaultQty: 1.5 },
+        { key: "soieva_makuha", name: "Соева макуха", defaultQty: 3 },
+        { key: "soniashnykova_makuha", name: "Соняшникова макуха", defaultQty: 2.5 },
+        { key: "rybne_boroshno", name: "Рибне борошно", defaultQty: 1 },
+        { key: "drizhdzhi", name: "Дріжджі", defaultQty: 0.7 },
+        { key: "trykaltsii_fosfat", name: "Трикальційфосфат", defaultQty: 0.5 },
+        { key: "dolfos_d", name: "Dolfos D", defaultQty: 0.7 },
+        { key: "sil", name: "Сіль", defaultQty: 0.05 }
+      ]
+    },
     trays: 0,
     ready: 0,
     reserved: 0,
@@ -215,6 +228,33 @@ function ensureFeedMixesShape() {
     AppState.feedMixes.history = [];
   }
 }
+
+function ensureFeedComponentsShape() {
+  if (!AppState.feed || typeof AppState.feed !== "object") {
+    AppState.feed = { components: [] };
+  }
+
+  if (!Array.isArray(AppState.feed.components)) {
+    AppState.feed.components = [];
+  }
+
+  // якщо components пустий — відновлюємо дефолт
+  if (AppState.feed.components.length === 0) {
+    AppState.feed.components = [
+      { key: "kukurudza", name: "Кукурудза", defaultQty: 10 },
+      { key: "pshenytsia", name: "Пшениця", defaultQty: 5 },
+      { key: "yachmin", name: "Ячмінь", defaultQty: 1.5 },
+      { key: "soieva_makuha", name: "Соева макуха", defaultQty: 3 },
+      { key: "soniashnykova_makuha", name: "Соняшникова макуха", defaultQty: 2.5 },
+      { key: "rybne_boroshno", name: "Рибне борошно", defaultQty: 1 },
+      { key: "drizhdzhi", name: "Дріжджі", defaultQty: 0.7 },
+      { key: "trykaltsii_fosfat", name: "Трикальційфосфат", defaultQty: 0.5 },
+      { key: "dolfos_d", name: "Dolfos D", defaultQty: 0.7 },
+      { key: "sil", name: "Сіль", defaultQty: 0.05 }
+    ];
+  }
+}
+
 
   function getCurrentFeedSnapshot() {
     // беремо поточні значення з AppState (а не з DOM)
@@ -1347,6 +1387,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ensureOrdersShape();
     ensureRecipesShape();
     ensureFeedMixesShape();
+    ensureFeedComponentsShape();
 
     eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
     warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
