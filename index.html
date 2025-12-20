@@ -261,34 +261,71 @@
   
   <!-- ===== КОМПОНЕНТИ КОРМУ ===== -->
 <div class="container">
-  <h3>🌾 Кормові компоненти</h3>
+  <h2>🧩 Компоненти корму</h2>
+  <p style="opacity:.7">
+    Тут ти керуєш складом корму: додаєш, перейменовуєш або замінюєш компоненти.
+    Це не впливає на історію замісів.
+  </p>
 
-  <table class="feed-table">
-    <thead>
-      <tr>
-        <th>Назва</th>
-        <th>ID</th>
-        <th>Дії</th>
-      </tr>
-    </thead>
-    <tbody id="componentsTable"></tbody>
-  </table>
+  <!-- ДОДАВАННЯ НОВОГО КОМПОНЕНТА -->
+  <div class="card">
+    <h3>➕ Додати компонент</h3>
 
-  <hr>
+    <div class="form-row">
+      <label>Назва</label>
+      <input id="newComponentName" placeholder="Напр. Кальвет">
+    </div>
 
-  <h4>➕ Додати новий компонент</h4>
-  <input id="newComponentName" placeholder="Назва (Calvet)">
-  <input id="newComponentId" placeholder="ID (calvet)">
-  <button class="main-btn" onclick="addNewComponent()">Додати</button>
+    <div class="form-row">
+      <label>ID (латиниця)</label>
+      <input id="newComponentId" placeholder="calvet">
+    </div>
 
-  <hr>
+    <button class="main-btn" onclick="addNewComponent()">Додати</button>
+  </div>
 
-  <h4>🔁 Заміна компонента</h4>
-  <select id="replaceFrom"></select>
-  →
-  <select id="replaceTo"></select>
-  <button class="main-btn danger" onclick="replaceComponentUI()">Замінити</button>
+  <!-- ТАБЛИЦЯ КОМПОНЕНТІВ -->
+  <div class="card">
+    <h3>📋 Список компонентів</h3>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Назва</th>
+          <th>ID</th>
+          <th>Дії</th>
+        </tr>
+      </thead>
+      <tbody id="componentsTable">
+        <!-- JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ЗАМІНА КОМПОНЕНТА -->
+  <div class="card">
+    <h3>🔁 Заміна компонента</h3>
+
+    <div class="form-row">
+      <label>Замість</label>
+      <select id="replaceFrom"></select>
+    </div>
+
+    <div class="form-row">
+      <label>На</label>
+      <select id="replaceTo"></select>
+    </div>
+
+    <button class="main-btn danger" onclick="replaceComponentUI()">
+      Замінити
+    </button>
+
+    <p style="opacity:.6;margin-top:6px">
+      ✔ Рецепти та історія залишаться коректними
+    </p>
+  </div>
 </div>
+
   
 </div>
 
