@@ -142,9 +142,6 @@ if (errors.length) {
   return errors;
 }
 
-
-
-
 function saveAppState() {
   try {
     localStorage.setItem("AppState", JSON.stringify(AppState));
@@ -468,6 +465,57 @@ AppState.feedCalculator.volume = vol;
   
   saveAppState();
 }
+
+function saveCurrentRecipe(name) {
+  if (!name) {
+    alert("Вкажи назву рецепта");
+    return;
+  }
+
+  const components = {};
+
+  feedComponents.forEach(([label], i) => {
+    const key = getMinKeyByName(label);
+    if (!key) return;
+
+    const qty = Number(AppState.feedCalculator.qty[i] || 0);
+    if (qty > 0) {
+      components[key] = qty;
+    }
+  });
+
+  const recipe = {
+    id: "recipe_" + Date.now(),
+    name,
+    volume: AppState.feedCalculator.volume,
+    components
+  };
+
+  AppState.recipes.feed.push(recipe);
+  saveAppState();
+  refreshRecipeSelect();
+
+  alert("✅ Рецепт збережено");
+}
+
+function applyRecipe(recipe) {
+  // очистка
+  AppState.feedCalculator.qty = AppState.feedCalculator.qty.map(() => 0);
+
+  feedComponents.forEach(([label], i) => {
+    const key = getMinKeyByName(label);
+    if (!key) return;
+
+    if (recipe.components[key] != null) {
+      AppState.feedCalculator.qty[i] = recipe.components[key];
+    }
+  });
+
+  AppState.feedCalculator.volume = recipe.volume;
+  saveAppState();
+  loadFeedTable();
+}
+
 
 // ============================
 //      СКЛАД (дані)
