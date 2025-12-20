@@ -1178,16 +1178,20 @@ function renderComponentsTable() {
   tbody.innerHTML = AppState.feedComponents.map(c => `
     <tr>
       <td>
-        <input
-          value="${c.name}"
-          onchange="renameComponent('${c.id}', this.value)"
-        >
+        <input value="${c.name}"
+               onchange="renameComponent('${c.id}', this.value)">
       </td>
+
       <td><code>${c.id}</code></td>
+
       <td>
-        <button onclick="toggleComponent('${c.id}')">
-          ${c.enabled ? "❌" : "✅"}
-        </button>
+        <input type="checkbox"
+               ${c.enabled ? "checked" : ""}
+               onchange="toggleComponent('${c.id}', this.checked)">
+      </td>
+
+      <td>
+        <button onclick="deleteComponent('${c.id}')">🗑️</button>
       </td>
     </tr>
   `).join("");
@@ -1195,15 +1199,21 @@ function renderComponentsTable() {
   refreshReplaceSelectors();
 }
 
-function toggleComponent(id) {
+
+function toggleComponent(id, enabled) {
   const c = AppState.feedComponents.find(x => x.id === id);
   if (!c) return;
 
-  c.enabled = !c.enabled;
+  c.enabled = enabled;
 
   saveAppState();
+
+  // повне оновлення залежностей
   renderComponentsTable();
   loadFeedTable();
+  calculateFeed();
+  renderWarehouse();
+  applyWarehouseWarnings();
 }
 
 function renameComponent(id, newName) {
@@ -1215,6 +1225,21 @@ function renameComponent(id, newName) {
   saveAppState();
   loadFeedTable();
   renderWarehouse();
+}
+
+function deleteComponent(id) {
+  const c = AppState.feedComponents.find(x => x.id === id);
+  if (!c) return;
+
+  if (!confirm(`Видалити компонент "${c.name}"?`)) return;
+
+  // вимикаємо, але НЕ ламаємо дані
+  c.enabled = false;
+
+  saveAppState();
+  loadFeedTable();
+  renderWarehouse();
+  renderComponentsTable();
 }
 
 function addNewComponent() {
@@ -1266,37 +1291,45 @@ function replaceComponentUI() {
   replaceComponentId(from, AppState.feedComponents.find(c => c.id === to));
 }
 
-function replaceComponentId(fromId, toComponent) {
-  if (!fromId || !toComponent) return;
-
-  // 1️⃣ Замінюємо в рецептах
-  for (const rid in AppState.recipes.list) {
-    const r = AppState.recipes.list[rid];
-    if (r.components[fromId] != null) {
-      r.components[toComponent.id] =
-        (r.components[toComponent.id] || 0) + r.components[fromId];
-      delete r.components[fromId];
+function replaceComponentId(oldId, newComponent) {
+  // 1️⃣ рецепти
+  Object.values(AppState.recipes.list || {}).forEach(r => {
+    if (r.components?.[oldId] != null) {
+      r.components[newComponent.id] =
+        (r.components[newComponent.id] || 0) + r.components[oldId];
+      delete r.components[oldId];
     }
+  });
+
+  // 2️⃣ склад
+  if (AppState.warehouse.feed[oldId] != null) {
+    AppState.warehouse.feed[newComponent.id] =
+      Number(AppState.warehouse.feed[newComponent.id] || 0) +
+      Number(AppState.warehouse.feed[oldId] || 0);
+    delete AppState.warehouse.feed[oldId];
   }
 
-  // 2️⃣ Замінюємо на складі
-  const stock = AppState.warehouse.feed[fromId];
-  if (stock != null) {
-    AppState.warehouse.feed[toComponent.id] =
-      (AppState.warehouse.feed[toComponent.id] || 0) + stock;
-    delete AppState.warehouse.feed[fromId];
-  }
+  // 3️⃣ історія
+  AppState.feedMixes.history.forEach(h => {
+    if (h.components?.[oldId] != null) {
+      h.components[newComponent.id] =
+        (h.components[newComponent.id] || 0) + h.components[oldId];
+      delete h.components[oldId];
+    }
+  });
 
-  // 3️⃣ Вимикаємо старий компонент
-  const old = AppState.feedComponents.find(c => c.id === fromId);
+  // 4️⃣ вимикаємо старий компонент
+  const old = AppState.feedComponents.find(c => c.id === oldId);
   if (old) old.enabled = false;
 
   saveAppState();
-  renderComponentsTable();
+
   loadFeedTable();
   renderWarehouse();
+  renderMixHistory();
+  renderComponentsTable();
 
-  alert("✅ Компонент замінено без втрати даних");
+  toast("🔁 Компонент успішно замінено", "ok");
 }
 
 function refreshReplaceSelectors() {
@@ -1399,6 +1432,9 @@ function makeFeedFromRecipe(recipe) {
 
   toast(`✅ Корм "${recipe.name}" замішано`, "ok");
 }
+
+
+
 // ============================
 //      START (ОДИН РАЗ)
 // ============================
