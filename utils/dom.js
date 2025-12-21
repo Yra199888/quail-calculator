@@ -1,8 +1,9 @@
-// src/utils/dom.js
+// utils/dom.js
 
 export const $ = (id) => document.getElementById(id);
 
-export const qs = (sel, root = document) => root.querySelector(sel);
+export const qs = (selector, root = document) =>
+  root.querySelector(selector);
 
-export const qsa = (sel, root = document) =>
-  Array.from(root.querySelectorAll(sel));
+export const qsa = (selector, root = document) =>
+  Array.from(root.querySelectorAll(selector));
