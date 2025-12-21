@@ -216,7 +216,7 @@ function ensureFeedCalculatorShape() {
 
 function ensureRecipesShape() {
   if (!AppState.recipes || typeof AppState.recipes !== "object") {
-    AppState.recipes = {};
+    AppState.recipes = { list: {}, selectedId: null };
   }
   if (!AppState.recipes.list || typeof AppState.recipes.list !== "object") {
     AppState.recipes.list = {};
@@ -496,6 +496,66 @@ function calculateFeed() {
 
   saveAppState();
 }
+
+function saveRecipeFromCalculator() {
+  const nameEl = document.getElementById("recipeName");
+  const name = (nameEl?.value || "").trim();
+  if (!name) return toast("Вкажи назву рецепта", "warn");
+
+  const active = getActiveFeedComponents(); // [{id,name,...}]
+  const components = {};
+
+  active.forEach((c, i) => {
+    const qty = Number(AppState.feedCalculator.qty[i] || 0);
+    if (qty > 0) components[c.id] = qty;
+  });
+
+  const id = "recipe_" + Date.now();
+  const recipe = {
+    id,
+    name,
+    volume: Number(AppState.feedCalculator.volume || 25),
+    components
+  };
+
+  AppState.recipes.list[id] = recipe;
+  AppState.recipes.selectedId = id;
+
+  saveAppState();
+  refreshRecipeSelect();
+  toast("✅ Рецепт збережено", "ok");
+}
+window.saveRecipeFromCalculator = saveRecipeFromCalculator;
+
+
+function applySelectedRecipe() {
+  const sel = document.getElementById("recipeSelect");
+  const id = sel?.value || null;
+  if (!id) return;
+
+  const recipe = AppState.recipes.list[id];
+  if (!recipe) return toast("Рецепт не знайдено", "error");
+
+  const active = getActiveFeedComponents();
+
+  // обнуляємо калькулятор під активні компоненти
+  AppState.feedCalculator.qty = active.map(c => Number(c.defaultQty || 0));
+  AppState.feedCalculator.price = active.map((_, i) => Number(AppState.feedCalculator.price[i] || 0));
+  AppState.feedCalculator.volume = Number(recipe.volume || 25);
+
+  // накладаємо рецепт по ID компонентів
+  active.forEach((c, i) => {
+    if (recipe.components[c.id] != null) {
+      AppState.feedCalculator.qty[i] = Number(recipe.components[c.id] || 0);
+    }
+  });
+
+  saveAppState();
+  loadFeedTable();
+  toast("✅ Рецепт застосовано", "ok");
+}
+window.applySelectedRecipe = applySelectedRecipe;
+
 
 
 // ============================
@@ -1282,47 +1342,42 @@ function replaceComponentUI() {
 
   replaceComponentId(from, AppState.feedComponents.find(c => c.id === to));
 }
+window.replaceComponentUI = replaceComponentUI;
 
-function replaceComponentId(oldId, newComponent) {
-  // 1️⃣ рецепти
-  Object.values(AppState.recipes.list || {}).forEach(r => {
-    if (r.components?.[oldId] != null) {
-      r.components[newComponent.id] =
-        (r.components[newComponent.id] || 0) + r.components[oldId];
-      delete r.components[oldId];
-    }
-  });
-
-  // 2️⃣ склад
-  if (AppState.warehouse.feed[oldId] != null) {
-    AppState.warehouse.feed[newComponent.id] =
-      Number(AppState.warehouse.feed[newComponent.id] || 0) +
-      Number(AppState.warehouse.feed[oldId] || 0);
-    delete AppState.warehouse.feed[oldId];
+function replaceComponentId(fromId, toComponent) {
+  const from = AppState.feedComponents.find(c => c.id === fromId);
+  if (!from || !toComponent) {
+    alert("Компонент не знайдено");
+    return;
   }
 
-  // 3️⃣ історія
-  AppState.feedMixes.history.forEach(h => {
-    if (h.components?.[oldId] != null) {
-      h.components[newComponent.id] =
-        (h.components[newComponent.id] || 0) + h.components[oldId];
-      delete h.components[oldId];
-    }
-  });
+  // 1️⃣ Переносимо залишок зі складу
+  const stock = Number(AppState.warehouse.feed[fromId] || 0);
+  if (stock > 0) {
+    AppState.warehouse.feed[toComponent.id] =
+      Number(AppState.warehouse.feed[toComponent.id] || 0) + stock;
+  }
 
-  // 4️⃣ вимикаємо старий компонент
-  const old = AppState.feedComponents.find(c => c.id === oldId);
-  if (old) old.enabled = false;
+  // 2️⃣ Обнуляємо старий склад
+  delete AppState.warehouse.feed[fromId];
+
+  // 3️⃣ Вимикаємо старий компонент
+  from.enabled = false;
+
+  // 4️⃣ Увімкнути новий
+  toComponent.enabled = true;
 
   saveAppState();
 
+  // 5️⃣ Оновлення UI
   loadFeedTable();
   renderWarehouse();
-  renderMixHistory();
+  applyWarehouseWarnings();
   renderComponentsTable();
 
-  toast("🔁 Компонент успішно замінено", "ok");
+  alert(`✅ Компонент "${from.name}" замінено на "${toComponent.name}"`);
 }
+window.replaceComponentId = replaceComponentId;
 
 function refreshReplaceSelectors() {
   const fromSel = document.getElementById("replaceFrom");
@@ -1425,7 +1480,23 @@ function makeFeedFromRecipe(recipe) {
   toast(`✅ Корм "${recipe.name}" замішано`, "ok");
 }
 
+function refreshRecipeSelect() {
+  const sel = document.getElementById("recipeSelect");
+  if (!sel) return;
 
+  sel.innerHTML = "<option value=''>— обери рецепт —</option>";
+
+  const entries = Object.values(AppState.recipes.list || {});
+  entries.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+  entries.forEach(r => {
+    const opt = document.createElement("option");
+    opt.value = r.id;
+    opt.textContent = r.name;
+    if (AppState.recipes.selectedId === r.id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
 
 // ============================
 //      START (ОДИН РАЗ)
