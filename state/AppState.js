@@ -1,84 +1,137 @@
 // src/state/AppState.js
+// ЄДИНЕ ДЖЕРЕЛО ДАНИХ ДОДАТКУ
+// Без логіки, без DOM, без side-effects
 
 export const AppState = {
-  // =========================
-  // UI / NAVIGATION
-  // =========================
+  // =====================================================
+  // UI / NAVIGATION / GLOBAL FLAGS
+  // =====================================================
   ui: {
-    page: "calculator",
-    eggsEditEnabled: false,
-    warehouseEditEnabled: false,
-    theme: "dark",
+    page: "calculator",          // active page
+    eggsEditEnabled: false,      // toggle eggs editing
+    warehouseEditEnabled: false, // toggle warehouse editing
+    theme: "dark",               // dark | light
   },
 
-  // =========================
+  // =====================================================
   // FEED COMPONENTS (MASTER LIST)
-  // =========================
+  // =====================================================
+  // Це єдина таблиця компонентів корму
+  // Все інше (склад, калькулятор, рецепти) посилається ТІЛЬКИ по id
   feedComponents: [
-    // { id, name, defaultQty, enabled }
+    // {
+    //   id: "kukurudza",
+    //   name: "Кукурудза",
+    //   defaultQty: 10,
+    //   enabled: true
+    // }
   ],
 
-  // =========================
+  // =====================================================
   // FEED CALCULATOR (CURRENT FORM STATE)
-  // =========================
+  // =====================================================
+  // Порядок масивів ЗАВЖДИ відповідає getActiveFeedComponents()
   feedCalculator: {
-    qty: [],        // відповідає активним feedComponents
-    price: [],      // відповідає активним feedComponents
-    volume: 25
+    qty: [],        // number[] — кг кожного активного компонента
+    price: [],      // number[] — ціна за кг
+    volume: 25      // number — обʼєм замісу
   },
 
-  // =========================
+  // =====================================================
   // FEED RECIPES
-  // =========================
+  // =====================================================
   recipes: {
+    // recipeId -> recipe
     list: {
-      // recipeId: { id, name, volume, components:{ componentId: qty } }
+      // recipe_123: {
+      //   id: "recipe_123",
+      //   name: "Несучка стандарт",
+      //   volume: 25,
+      //   components: {
+      //     kukurudza: 10,
+      //     pshenytsia: 5
+      //   }
+      // }
     },
     selectedId: null
   },
 
-  // =========================
+  // =====================================================
   // FEED MIX HISTORY
-  // =========================
+  // =====================================================
   feedMixes: {
     history: [
-      // { id, createdAt, recipeName, volume, components }
+      // {
+      //   id: "mix_123",
+      //   createdAt: "2025-01-01T12:00:00Z",
+      //   recipeName: "Несучка стандарт",
+      //   volume: 25,
+      //   components: {
+      //     kukurudza: 10,
+      //     pshenytsia: 5
+      //   }
+      // }
     ]
   },
 
-  // =========================
+  // =====================================================
   // WAREHOUSE
-  // =========================
+  // =====================================================
   warehouse: {
+    // залишки кормових компонентів
     feed: {
-      // componentId: qty
+      // kukurudza: 120,
+      // pshenytsia: 80
     },
-    trays: 0,
-    ready: 0,
-    reserved: 0,
+
+    // лотки
+    trays: 0,        // порожні лотки
+    ready: 0,        // готові (після recompute)
+    reserved: 0,     // зарезервовані під замовлення
+
+    // мінімальні запаси (для попереджень)
     minimums: {
-      // componentId: minQty
-      empty_trays: 0
+      // kukurudza: 20,
+      // empty_trays: 50
     }
   },
 
-  // =========================
+  // =====================================================
   // EGGS
-  // =========================
+  // =====================================================
   eggs: {
+    // щоденні записи
     records: {
-      // date: { good, bad, home, trays, remainder, carryIn }
+      // "2025-01-01": {
+      //   good: 120,
+      //   bad: 3,
+      //   home: 10,
+      //   commercial: 107,
+      //   carryIn: 5,
+      //   trays: 5,
+      //   remainder: 7
+      // }
     },
-    carry: 0,
-    totalTrays: 0
+
+    carry: 0,        // залишок яєць
+    totalTrays: 0   // всього сформовано лотків
   },
 
-  // =========================
+  // =====================================================
   // ORDERS
-  // =========================
+  // =====================================================
   orders: {
     list: [
-      // { id, date, client, trays, status }
+      // {
+      //   id: "order_123",
+      //   date: "2025-01-02",
+      //   client: "Магазин №1",
+      //   trays: 10,
+      //   details: "",
+      //   status: "confirmed", // draft | confirmed | delivered | cancelled
+      //   createdAt: "2025-01-01T10:00:00Z",
+      //   updatedAt: "2025-01-01T10:00:00Z"
+      // }
     ]
   }
 };
