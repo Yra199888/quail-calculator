@@ -1,53 +1,31 @@
-// /src/controllers/FeedFormController.js
-import { qs } from "../utils/dom.js";
+// src/controllers/EggsFormController.js
+import { recomputeEggs } from "../services/eggsService.js";
+import { recomputeWarehouse } from "../services/warehouseService.js";
+import { saveAppState } from "../storage/storage.js";
 
-export class FeedFormController {
-  constructor({ AppState, onChange }) {
+export class EggsFormController {
+  constructor({ AppState, onUpdate }) {
     this.AppState = AppState;
-    this.onChange = onChange;
+    this.onUpdate = onUpdate;
   }
 
-  init() {
-    this.bindTableInputs();
-    this.bindVolumeInput();
+  save({ date, good, bad, home }) {
+    this.AppState.eggs.records[date] = { good, bad, home };
+
+    recomputeEggs(this.AppState);
+    recomputeWarehouse(this.AppState);
+
+    saveAppState(this.AppState);
+    this.onUpdate?.();
   }
 
-  // 🔹 Делегування подій — ОДИН listener
-  bindTableInputs() {
-    const table = qs("#feedTable");
-    if (!table) return;
+  delete(date) {
+    delete this.AppState.eggs.records[date];
 
-    table.addEventListener("input", (e) => {
-      const el = e.target;
+    recomputeEggs(this.AppState);
+    recomputeWarehouse(this.AppState);
 
-      const index = Number(el.dataset.i);
-      if (Number.isNaN(index)) return;
-
-      if (el.classList.contains("qty")) {
-        this.AppState.feedCalculator.qty[index] = Number(el.value) || 0;
-        this.emit("qty", index, el.value);
-      }
-
-      if (el.classList.contains("price")) {
-        this.AppState.feedCalculator.price[index] = Number(el.value) || 0;
-        this.emit("price", index, el.value);
-      }
-    });
-  }
-
-  bindVolumeInput() {
-    const input = qs("#feedVolume");
-    if (!input) return;
-
-    input.addEventListener("input", () => {
-      this.AppState.feedCalculator.volume = Number(input.value) || 0;
-      this.emit("volume", null, input.value);
-    });
-  }
-
-  emit(type, index, value) {
-    if (typeof this.onChange === "function") {
-      this.onChange({ type, index, value });
-    }
+    saveAppState(this.AppState);
+    this.onUpdate?.();
   }
 }
