@@ -715,27 +715,6 @@ function bindMakeFeed() {
   });
 }
 
-function renderFeedMixHistory() {
-  const box = document.getElementById("mixHistory");
-  if (!box) return;
-
-  if (!AppState.feedMixes.history.length) {
-    box.innerHTML = "<i>Історія замісів порожня</i>";
-    return;
-  }
-
-  box.innerHTML = AppState.feedMixes.history
-    .slice()
-    .reverse()
-    .map(mix => `
-      <div class="mix-entry">
-        <b>${mix.recipeName}</b> — ${mix.volume} кг<br>
-        <small>${mix.date}</small>
-      </div>
-    `)
-    .join("");
-}
-
 
 // ============================
 //      ЯЙЦЯ
@@ -1530,8 +1509,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ensureOrdersShape();
     ensureRecipesShape();
     ensureFeedMixesShape();
-    ensureFeedComponentsShape();
-
+    
     eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
     warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
 
@@ -1558,7 +1536,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderEggsReport();
     renderOrders();
     bindOrdersUX();
-    renderFeedMixHistory();
     renderComponentsTable();
 
     // ============================
