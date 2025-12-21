@@ -1243,19 +1243,11 @@ function deleteComponent(id) {
 }
 
 function addNewComponent() {
-  const nameEl = document.getElementById("newComponentName");
-  const idEl = document.getElementById("newComponentId");
-
-  const name = nameEl.value.trim();
-  const id = idEl.value.trim().toLowerCase();
+  const name = document.getElementById("newComponentName").value.trim();
+  const id = document.getElementById("newComponentId").value.trim();
 
   if (!name || !id) {
     alert("Вкажи назву і ID");
-    return;
-  }
-
-  if (!/^[a-z0-9_]+$/.test(id)) {
-    alert("ID тільки латиниця, цифри та _");
     return;
   }
 
@@ -1271,13 +1263,13 @@ function addNewComponent() {
     enabled: true
   });
 
-  nameEl.value = "";
-  idEl.value = "";
-
   saveAppState();
   renderComponentsTable();
   loadFeedTable();
+  renderWarehouse();
 }
+
+window.addNewComponent = addNewComponent;
 
 function replaceComponentUI() {
   const from = document.getElementById("replaceFrom").value;
