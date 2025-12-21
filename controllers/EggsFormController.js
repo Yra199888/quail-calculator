@@ -1,31 +1,53 @@
-// src/controllers/EggsFormController.js
-import { recomputeEggs } from "../services/eggsService.js";
-import { recomputeWarehouse } from "../services/warehouseService.js";
-import { saveAppState } from "../storage/storage.js";
+// /src/controllers/FeedFormController.js
+import { qs } from "../utils/dom.js";
 
-export class EggsFormController {
-  constructor({ AppState, onUpdate }) {
+export class FeedFormController {
+  constructor({ AppState, onChange }) {
     this.AppState = AppState;
-    this.onUpdate = onUpdate;
+    this.onChange = onChange;
   }
 
-  save({ date, good, bad, home }) {
-    this.AppState.eggs.records[date] = { good, bad, home };
-
-    recomputeEggs(this.AppState);
-    recomputeWarehouse(this.AppState);
-
-    saveAppState(this.AppState);
-    this.onUpdate?.();
+  init() {
+    this.bindTableInputs();
+    this.bindVolumeInput();
   }
 
-  delete(date) {
-    delete this.AppState.eggs.records[date];
+  // 🔹 Делегування подій — ОДИН listener
+  bindTableInputs() {
+    const table = qs("#feedTable");
+    if (!table) return;
 
-    recomputeEggs(this.AppState);
-    recomputeWarehouse(this.AppState);
+    table.addEventListener("input", (e) => {
+      const el = e.target;
 
-    saveAppState(this.AppState);
-    this.onUpdate?.();
+      const index = Number(el.dataset.i);
+      if (Number.isNaN(index)) return;
+
+      if (el.classList.contains("qty")) {
+        this.AppState.feedCalculator.qty[index] = Number(el.value) || 0;
+        this.emit("qty", index, el.value);
+      }
+
+      if (el.classList.contains("price")) {
+        this.AppState.feedCalculator.price[index] = Number(el.value) || 0;
+        this.emit("price", index, el.value);
+      }
+    });
+  }
+
+  bindVolumeInput() {
+    const input = qs("#feedVolume");
+    if (!input) return;
+
+    input.addEventListener("input", () => {
+      this.AppState.feedCalculator.volume = Number(input.value) || 0;
+      this.emit("volume", null, input.value);
+    });
+  }
+
+  emit(type, index, value) {
+    if (typeof this.onChange === "function") {
+      this.onChange({ type, index, value });
+    }
   }
 }
