@@ -1,97 +1,147 @@
-// state/state.ensure.js
+/**
+ * 🛡 state.ensure.js
+ * Гарантує коректну форму AppState
+ *
+ * ❗ Правила:
+ * - НЕ рендерить
+ * - НЕ читає DOM
+ * - НЕ пише в localStorage
+ * - НЕ робить обчислень
+ */
+
 import { AppState } from "./AppState.js";
 
-// ============================
-// ENSURE HELPERS
-// ============================
-function ensureObject(obj, fallback = {}) {
-  return obj && typeof obj === "object" ? obj : fallback;
+/**
+ * 🔹 Головна точка
+ */
+export function ensureAppStateShape() {
+  ensureUI();
+  ensureFeedComponents();
+  ensureFeedCalculator();
+  ensureRecipes();
+  ensureFeedMixes();
+  ensureWarehouse();
+  ensureEggs();
+  ensureOrders();
 }
 
-function ensureArray(arr) {
-  return Array.isArray(arr) ? arr : [];
-}
-
-function ensureNumber(val, def = 0) {
-  return Number.isFinite(Number(val)) ? Number(val) : def;
+// ============================
+// UI
+// ============================
+function ensureUI() {
+  AppState.ui ??= {};
+  AppState.ui.page ??= "feed";
+  AppState.ui.eggsEditEnabled ??= false;
+  AppState.ui.warehouseEditEnabled ??= false;
 }
 
 // ============================
-// MAIN ENSURE
+// КОМПОНЕНТИ КОРМУ
 // ============================
-export function ensureAppState() {
-  // ============================
-  // UI
-  // ============================
-  AppState.ui = ensureObject(AppState.ui, {});
-  AppState.ui.page = AppState.ui.page || "calculator";
-  AppState.ui.eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
-  AppState.ui.warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
-  AppState.ui.theme = AppState.ui.theme || "dark";
+function ensureFeedComponents() {
+  if (!Array.isArray(AppState.feedComponents)) {
+    AppState.feedComponents = [];
+  }
 
-  // ============================
-  // EGGS
-  // ============================
-  AppState.eggs = ensureObject(AppState.eggs, {});
-  AppState.eggs.records = ensureObject(AppState.eggs.records, {});
-  AppState.eggs.carry = ensureNumber(AppState.eggs.carry);
-  AppState.eggs.totalTrays = ensureNumber(AppState.eggs.totalTrays);
+  // дефолтні компоненти — тільки якщо список порожній
+  if (AppState.feedComponents.length === 0) {
+    AppState.feedComponents.push(
+      { id: "kukurudza", name: "Кукурудза", defaultQty: 10, enabled: true },
+      { id: "pshenytsia", name: "Пшениця", defaultQty: 5, enabled: true },
+      { id: "yachmin", name: "Ячмінь", defaultQty: 1.5, enabled: true },
+      { id: "soieva_makuha", name: "Соева макуха", defaultQty: 3, enabled: true },
+      { id: "soniashnykova_makuha", name: "Соняшникова макуха", defaultQty: 2.5, enabled: true },
+      { id: "rybne_boroshno", name: "Рибне борошно", defaultQty: 1, enabled: true },
+      { id: "drizhdzhi", name: "Дріжджі", defaultQty: 0.7, enabled: true },
+      { id: "trykaltsii_fosfat", name: "Трикальційфосфат", defaultQty: 0.5, enabled: true },
+      { id: "dolfos_d", name: "Dolfos D", defaultQty: 0.7, enabled: true },
+      { id: "sil", name: "Сіль", defaultQty: 0.05, enabled: true }
+    );
+  }
 
-  // ============================
-  // WAREHOUSE
-  // ============================
-  AppState.warehouse = ensureObject(AppState.warehouse, {});
-  AppState.warehouse.feed = ensureObject(AppState.warehouse.feed, {});
-  AppState.warehouse.trays = ensureNumber(AppState.warehouse.trays);
-  AppState.warehouse.ready = ensureNumber(AppState.warehouse.ready);
-  AppState.warehouse.reserved = ensureNumber(AppState.warehouse.reserved);
-  AppState.warehouse.history = ensureArray(AppState.warehouse.history);
-  AppState.warehouse.minimums = ensureObject(AppState.warehouse.minimums, {});
-
-  // ============================
-  // FEED COMPONENTS
-  // ============================
-  AppState.feedComponents = ensureArray(AppState.feedComponents);
-
+  // нормалізація кожного компонента
   AppState.feedComponents = AppState.feedComponents
     .map(c => ({
       id: String(c.id || "").trim(),
       name: String(c.name || "").trim(),
-      defaultQty: ensureNumber(c.defaultQty),
+      defaultQty: Number(c.defaultQty || 0),
       enabled: c.enabled !== false
     }))
     .filter(c => c.id && c.name);
+}
 
-  // ============================
-  // FEED CALCULATOR
-  // ============================
-  AppState.feedCalculator = ensureObject(AppState.feedCalculator, {});
-  AppState.feedCalculator.qty = ensureArray(AppState.feedCalculator.qty);
-  AppState.feedCalculator.price = ensureArray(AppState.feedCalculator.price);
-  AppState.feedCalculator.volume = ensureNumber(
-    AppState.feedCalculator.volume,
-    25
-  );
+// ============================
+// КАЛЬКУЛЯТОР КОРМУ
+// ============================
+function ensureFeedCalculator() {
+  AppState.feedCalculator ??= {};
+  AppState.feedCalculator.qty ??= [];
+  AppState.feedCalculator.price ??= [];
+  AppState.feedCalculator.volume ??= 25;
 
-  // ============================
-  // RECIPES
-  // ============================
-  AppState.recipes = ensureObject(AppState.recipes, {});
-  AppState.recipes.list = ensureObject(AppState.recipes.list, {});
-  AppState.recipes.selectedId =
-    AppState.recipes.selectedId || null;
+  AppState.feedCalculator.totals ??= {};
+  AppState.feedCalculator.totals.totalKg ??= 0;
+  AppState.feedCalculator.totals.totalCost ??= 0;
+  AppState.feedCalculator.totals.perKg ??= 0;
+}
 
-  // ============================
-  // FEED MIXES
-  // ============================
-  AppState.feedMixes = ensureObject(AppState.feedMixes, {});
-  AppState.feedMixes.history = ensureArray(
-    AppState.feedMixes.history
-  );
+// ============================
+// РЕЦЕПТИ
+// ============================
+function ensureRecipes() {
+  AppState.recipes ??= {};
+  AppState.recipes.list ??= {};
+  AppState.recipes.selectedId ??= null;
+}
 
-  // ============================
-  // ORDERS
-  // ============================
-  AppState.orders = ensureObject(AppState.orders, {});
-  AppState.orders.list = ensureArray(AppState.orders.list);
+// ============================
+// ІСТОРІЯ ЗАМІСІВ
+// ============================
+function ensureFeedMixes() {
+  AppState.feedMixes ??= {};
+  AppState.feedMixes.history ??= [];
+
+  if (!Array.isArray(AppState.feedMixes.history)) {
+    AppState.feedMixes.history = [];
+  }
+}
+
+// ============================
+// СКЛАД
+// ============================
+function ensureWarehouse() {
+  AppState.warehouse ??= {};
+
+  AppState.warehouse.feed ??= {};
+  AppState.warehouse.trays ??= 0;
+  AppState.warehouse.ready ??= 0;
+  AppState.warehouse.reserved ??= 0;
+  AppState.warehouse.minimums ??= {};
+
+  // гарантуємо наявність всіх компонентів на складі
+  AppState.feedComponents.forEach(c => {
+    AppState.warehouse.feed[c.id] ??= 0;
+  });
+}
+
+// ============================
+// ЯЙЦЯ
+// ============================
+function ensureEggs() {
+  AppState.eggs ??= {};
+  AppState.eggs.records ??= {};
+  AppState.eggs.carry ??= 0;
+  AppState.eggs.totalTrays ??= 0;
+}
+
+// ============================
+// ЗАМОВЛЕННЯ
+// ============================
+function ensureOrders() {
+  AppState.orders ??= {};
+  AppState.orders.list ??= [];
+
+  if (!Array.isArray(AppState.orders.list)) {
+    AppState.orders.list = [];
+  }
 }
