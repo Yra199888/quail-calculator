@@ -1,71 +1,43 @@
-// ============================
-// FeedFormController
-// ВІДПОВІДАЄ ТІЛЬКИ ЗА ФОРМУ КАЛЬКУЛЯТОРА
-// ============================
+// src/controllers/FeedFormController.js
+import { computeFeedTotals } from "../services/feedCalculatorService.js";
+import { saveAppState } from "../storage/storage.js";
 
 export class FeedFormController {
-  constructor({ onChange }) {
-    this.onChange = onChange;
-    this.els = {};
+  constructor({ AppState, onUpdate }) {
+    this.AppState = AppState;
+    this.onUpdate = onUpdate;
   }
 
   init() {
-    this.els = {
-      qty: document.querySelectorAll(".qty"),
-      price: document.querySelectorAll(".price"),
-      volume: document.getElementById("feedVolume"),
-    };
+    document.addEventListener("input", e => {
+      const el = e.target;
+      const i = el.dataset.i;
 
-    this.bind();
-    this.syncFromState();
+      if (el.classList.contains("qty")) {
+        this.AppState.feedCalculator.qty[i] = Number(el.value || 0);
+      }
+
+      if (el.classList.contains("price")) {
+        this.AppState.feedCalculator.price[i] = Number(el.value || 0);
+      }
+
+      if (el.id === "feedVolume") {
+        this.AppState.feedCalculator.volume = Number(el.value || 0);
+      }
+
+      this.recompute();
+    });
   }
 
-  bind() {
-    this.els.qty.forEach((el, i) => {
-      el.addEventListener("input", () => {
-        this.onChange({
-          type: "qty",
-          index: i,
-          value: Number(el.value) || 0
-        });
-      });
-    });
+  recompute() {
+    const { qty, price } = this.AppState.feedCalculator;
 
-    this.els.price.forEach((el, i) => {
-      el.addEventListener("input", () => {
-        this.onChange({
-          type: "price",
-          index: i,
-          value: Number(el.value) || 0
-        });
-      });
-    });
+    const totals = computeFeedTotals(qty, price);
 
-    if (this.els.volume) {
-      this.els.volume.addEventListener("input", () => {
-        this.onChange({
-          type: "volume",
-          value: Number(this.els.volume.value) || 0
-        });
-      });
-    }
-  }
+    this.AppState.feedCalculator.totalCost = totals.totalCost;
+    this.AppState.feedCalculator.perKg = totals.perKg;
 
-  syncFromState() {
-    if (!window.AppState?.feedCalculator) return;
-
-    const { qty, price, volume } = AppState.feedCalculator;
-
-    this.els.qty.forEach((el, i) => {
-      el.value = qty[i] ?? el.value;
-    });
-
-    this.els.price.forEach((el, i) => {
-      el.value = price[i] ?? el.value;
-    });
-
-    if (this.els.volume) {
-      this.els.volume.value = volume ?? this.els.volume.value;
-    }
+    saveAppState(this.AppState);
+    this.onUpdate?.();
   }
 }
