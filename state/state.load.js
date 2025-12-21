@@ -1,29 +1,42 @@
-// state/state.load.js
+/**
+ * 📥 state.load.js
+ * Завантаження AppState з localStorage
+ *
+ * ❗ Файл НЕ:
+ * - виправляє структуру
+ * - не валідовує
+ * - не рендерить
+ *
+ * Він ТІЛЬКИ читає дані
+ */
+
 import { AppState } from "./AppState.js";
-import { ensureAppState } from "./state.ensure.js";
 
 const STORAGE_KEY = "AppState";
 
+/**
+ * 🔹 Завантажити стан з localStorage
+ */
 export function loadAppState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+
     if (!raw) {
-      ensureAppState();
+      // нічого не збережено — працюємо з чистим AppState
       return;
     }
 
-    const data = JSON.parse(raw);
-    if (!data || typeof data !== "object") {
-      ensureAppState();
+    const parsed = JSON.parse(raw);
+
+    if (!parsed || typeof parsed !== "object") {
+      console.warn("⚠️ AppState у localStorage некоректний, ігноруємо");
       return;
     }
 
-    // shallow merge — структура вже є
-    Object.assign(AppState, data);
+    // обережно мержимо тільки верхній рівень
+    Object.assign(AppState, parsed);
 
-    ensureAppState();
   } catch (err) {
-    console.error("❌ loadAppState failed", err);
-    ensureAppState();
+    console.error("❌ Помилка завантаження AppState:", err);
   }
 }
