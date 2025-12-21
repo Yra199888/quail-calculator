@@ -1,137 +1,81 @@
 // src/state/AppState.js
-// ЄДИНЕ ДЖЕРЕЛО ДАНИХ ДОДАТКУ
-// Без логіки, без DOM, без side-effects
+// ЄДИНЕ джерело правди. ТІЛЬКИ ДАНІ. ЖОДНОЇ ЛОГІКИ.
 
 export const AppState = {
-  // =====================================================
-  // UI / NAVIGATION / GLOBAL FLAGS
-  // =====================================================
+  // =========================
+  // UI
+  // =========================
   ui: {
-    page: "calculator",          // active page
-    eggsEditEnabled: false,      // toggle eggs editing
-    warehouseEditEnabled: false, // toggle warehouse editing
-    theme: "dark",               // dark | light
+    page: "calculator",
+    eggsEditEnabled: false,
+    warehouseEditEnabled: false,
+    theme: "dark"
   },
 
-  // =====================================================
-  // FEED COMPONENTS (MASTER LIST)
-  // =====================================================
-  // Це єдина таблиця компонентів корму
-  // Все інше (склад, калькулятор, рецепти) посилається ТІЛЬКИ по id
+  // =========================
+  // FEED COMPONENTS
+  // =========================
   feedComponents: [
-    // {
-    //   id: "kukurudza",
-    //   name: "Кукурудза",
-    //   defaultQty: 10,
-    //   enabled: true
-    // }
+    { id: "kukurudza", name: "Кукурудза", defaultQty: 10, enabled: true },
+    { id: "pshenytsia", name: "Пшениця", defaultQty: 5, enabled: true },
+    { id: "yachmin", name: "Ячмінь", defaultQty: 1.5, enabled: true },
+    { id: "soieva_makuha", name: "Соева макуха", defaultQty: 3, enabled: true },
+    { id: "soniashnykova_makuha", name: "Соняшникова макуха", defaultQty: 2.5, enabled: true },
+    { id: "rybne_boroshno", name: "Рибне борошно", defaultQty: 1, enabled: true },
+    { id: "drizhdzhi", name: "Дріжджі", defaultQty: 0.7, enabled: true },
+    { id: "trykaltsii_fosfat", name: "Трикальційфосфат", defaultQty: 0.5, enabled: true },
+    { id: "dolfos_d", name: "Dolfos D", defaultQty: 0.7, enabled: true },
+    { id: "sil", name: "Сіль", defaultQty: 0.05, enabled: true }
   ],
 
-  // =====================================================
-  // FEED CALCULATOR (CURRENT FORM STATE)
-  // =====================================================
-  // Порядок масивів ЗАВЖДИ відповідає getActiveFeedComponents()
+  // =========================
+  // FEED CALCULATOR
+  // =========================
   feedCalculator: {
-    qty: [],        // number[] — кг кожного активного компонента
-    price: [],      // number[] — ціна за кг
-    volume: 25      // number — обʼєм замісу
+    qty: [],
+    price: [],
+    volume: 25
   },
 
-  // =====================================================
-  // FEED RECIPES
-  // =====================================================
+  // =========================
+  // WAREHOUSE
+  // =========================
+  warehouse: {
+    feed: {},              // { componentId: kg }
+    trays: 0,
+    ready: 0,
+    reserved: 0,
+    minimums: {}           // { componentId: minKg }
+  },
+
+  // =========================
+  // FEED MIXES (HISTORY)
+  // =========================
+  feedMixes: {
+    history: []
+  },
+
+  // =========================
+  // EGGS
+  // =========================
+  eggs: {
+    records: {},           // { date: { good, bad, home, trays, remainder } }
+    carry: 0,
+    totalTrays: 0
+  },
+
+  // =========================
+  // RECIPES
+  // =========================
   recipes: {
-    // recipeId -> recipe
-    list: {
-      // recipe_123: {
-      //   id: "recipe_123",
-      //   name: "Несучка стандарт",
-      //   volume: 25,
-      //   components: {
-      //     kukurudza: 10,
-      //     pshenytsia: 5
-      //   }
-      // }
-    },
+    list: {},              // { id: { id, name, volume, components } }
     selectedId: null
   },
 
-  // =====================================================
-  // FEED MIX HISTORY
-  // =====================================================
-  feedMixes: {
-    history: [
-      // {
-      //   id: "mix_123",
-      //   createdAt: "2025-01-01T12:00:00Z",
-      //   recipeName: "Несучка стандарт",
-      //   volume: 25,
-      //   components: {
-      //     kukurudza: 10,
-      //     pshenytsia: 5
-      //   }
-      // }
-    ]
-  },
-
-  // =====================================================
-  // WAREHOUSE
-  // =====================================================
-  warehouse: {
-    // залишки кормових компонентів
-    feed: {
-      // kukurudza: 120,
-      // pshenytsia: 80
-    },
-
-    // лотки
-    trays: 0,        // порожні лотки
-    ready: 0,        // готові (після recompute)
-    reserved: 0,     // зарезервовані під замовлення
-
-    // мінімальні запаси (для попереджень)
-    minimums: {
-      // kukurudza: 20,
-      // empty_trays: 50
-    }
-  },
-
-  // =====================================================
-  // EGGS
-  // =====================================================
-  eggs: {
-    // щоденні записи
-    records: {
-      // "2025-01-01": {
-      //   good: 120,
-      //   bad: 3,
-      //   home: 10,
-      //   commercial: 107,
-      //   carryIn: 5,
-      //   trays: 5,
-      //   remainder: 7
-      // }
-    },
-
-    carry: 0,        // залишок яєць
-    totalTrays: 0   // всього сформовано лотків
-  },
-
-  // =====================================================
+  // =========================
   // ORDERS
-  // =====================================================
+  // =========================
   orders: {
-    list: [
-      // {
-      //   id: "order_123",
-      //   date: "2025-01-02",
-      //   client: "Магазин №1",
-      //   trays: 10,
-      //   details: "",
-      //   status: "confirmed", // draft | confirmed | delivered | cancelled
-      //   createdAt: "2025-01-01T10:00:00Z",
-      //   updatedAt: "2025-01-01T10:00:00Z"
-      // }
-    ]
+    list: []               // [{ id, date, client, trays, status }]
   }
 };
