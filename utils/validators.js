@@ -1,18 +1,15 @@
-// src/utils/validators.js
+// utils/validators.js
 
-export function required(value) {
-  return value != null && String(value).trim().length > 0;
+export function isNonEmptyString(v) {
+  return typeof v === "string" && v.trim().length > 0;
 }
 
-export function positiveNumber(n) {
-  return Number(n) > 0;
+export function isPositiveNumber(v) {
+  return Number(v) > 0;
 }
 
-export function nonNegativeNumber(n) {
-  return Number(n) >= 0;
-}
-
-export function inRange(n, min, max) {
-  const v = Number(n);
-  return v >= min && v <= max;
+export function markError(el, ms = 1200) {
+  if (!el) return;
+  el.classList.add("input-error");
+  setTimeout(() => el.classList.remove("input-error"), ms);
 }
