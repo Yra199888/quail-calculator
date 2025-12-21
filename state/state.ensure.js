@@ -1,119 +1,97 @@
-// src/state/state.ensure.js
-
+// state/state.ensure.js
 import { AppState } from "./AppState.js";
 
-/**
- * Головна точка забезпечення структури
- * Викликається ОДИН раз при старті
- */
+// ============================
+// ENSURE HELPERS
+// ============================
+function ensureObject(obj, fallback = {}) {
+  return obj && typeof obj === "object" ? obj : fallback;
+}
+
+function ensureArray(arr) {
+  return Array.isArray(arr) ? arr : [];
+}
+
+function ensureNumber(val, def = 0) {
+  return Number.isFinite(Number(val)) ? Number(val) : def;
+}
+
+// ============================
+// MAIN ENSURE
+// ============================
 export function ensureAppState() {
-  ensureUI();
-  ensureWarehouse();
-  ensureEggs();
-  ensureFeedCalculator();
-  ensureFeedComponents();
-  ensureRecipes();
-  ensureFeedMixes();
-  ensureOrders();
-}
+  // ============================
+  // UI
+  // ============================
+  AppState.ui = ensureObject(AppState.ui, {});
+  AppState.ui.page = AppState.ui.page || "calculator";
+  AppState.ui.eggsEditEnabled = !!AppState.ui.eggsEditEnabled;
+  AppState.ui.warehouseEditEnabled = !!AppState.ui.warehouseEditEnabled;
+  AppState.ui.theme = AppState.ui.theme || "dark";
 
-/* =========================
-   UI
-========================= */
-function ensureUI() {
-  AppState.ui ??= {};
-  AppState.ui.page ??= "calculator";
-  AppState.ui.eggsEditEnabled ??= false;
-  AppState.ui.warehouseEditEnabled ??= false;
-}
+  // ============================
+  // EGGS
+  // ============================
+  AppState.eggs = ensureObject(AppState.eggs, {});
+  AppState.eggs.records = ensureObject(AppState.eggs.records, {});
+  AppState.eggs.carry = ensureNumber(AppState.eggs.carry);
+  AppState.eggs.totalTrays = ensureNumber(AppState.eggs.totalTrays);
 
-/* =========================
-   WAREHOUSE
-========================= */
-function ensureWarehouse() {
-  AppState.warehouse ??= {};
-  AppState.warehouse.feed ??= {};
-  AppState.warehouse.feed.stock ??= {};
-  AppState.warehouse.trays ??= 0;
-  AppState.warehouse.ready ??= 0;
-  AppState.warehouse.reserved ??= 0;
-  AppState.warehouse.minimums ??= {};
-}
+  // ============================
+  // WAREHOUSE
+  // ============================
+  AppState.warehouse = ensureObject(AppState.warehouse, {});
+  AppState.warehouse.feed = ensureObject(AppState.warehouse.feed, {});
+  AppState.warehouse.trays = ensureNumber(AppState.warehouse.trays);
+  AppState.warehouse.ready = ensureNumber(AppState.warehouse.ready);
+  AppState.warehouse.reserved = ensureNumber(AppState.warehouse.reserved);
+  AppState.warehouse.history = ensureArray(AppState.warehouse.history);
+  AppState.warehouse.minimums = ensureObject(AppState.warehouse.minimums, {});
 
-/* =========================
-   EGGS
-========================= */
-function ensureEggs() {
-  AppState.eggs ??= {};
-  AppState.eggs.records ??= {};
-  AppState.eggs.carry ??= 0;
-  AppState.eggs.totalTrays ??= 0;
-}
-
-/* =========================
-   FEED CALCULATOR
-========================= */
-function ensureFeedCalculator() {
-  AppState.feedCalculator ??= {};
-  AppState.feedCalculator.qty ??= [];
-  AppState.feedCalculator.price ??= [];
-  AppState.feedCalculator.volume ??= 25;
-}
-
-/* =========================
-   FEED COMPONENTS
-========================= */
-function ensureFeedComponents() {
-  if (!Array.isArray(AppState.feedComponents)) {
-    AppState.feedComponents = [];
-  }
-
-  if (AppState.feedComponents.length === 0) {
-    AppState.feedComponents = [
-      { id: "kukurudza", name: "Кукурудза", defaultQty: 10, enabled: true },
-      { id: "pshenytsia", name: "Пшениця", defaultQty: 5, enabled: true },
-      { id: "yachmin", name: "Ячмінь", defaultQty: 1.5, enabled: true },
-      { id: "soieva_makuha", name: "Соева макуха", defaultQty: 3, enabled: true },
-      { id: "soniashnykova_makuha", name: "Соняшникова макуха", defaultQty: 2.5, enabled: true },
-      { id: "rybne_boroshno", name: "Рибне борошно", defaultQty: 1, enabled: true },
-      { id: "drizhdzhi", name: "Дріжджі", defaultQty: 0.7, enabled: true },
-      { id: "trykaltsii_fosfat", name: "Трикальційфосфат", defaultQty: 0.5, enabled: true },
-      { id: "dolfos_d", name: "Dolfos D", defaultQty: 0.7, enabled: true },
-      { id: "sil", name: "Сіль", defaultQty: 0.05, enabled: true }
-    ];
-  }
+  // ============================
+  // FEED COMPONENTS
+  // ============================
+  AppState.feedComponents = ensureArray(AppState.feedComponents);
 
   AppState.feedComponents = AppState.feedComponents
     .map(c => ({
       id: String(c.id || "").trim(),
       name: String(c.name || "").trim(),
-      defaultQty: Number(c.defaultQty || 0),
+      defaultQty: ensureNumber(c.defaultQty),
       enabled: c.enabled !== false
     }))
     .filter(c => c.id && c.name);
-}
 
-/* =========================
-   RECIPES
-========================= */
-function ensureRecipes() {
-  AppState.recipes ??= {};
-  AppState.recipes.list ??= {};
-  AppState.recipes.selectedId ??= null;
-}
+  // ============================
+  // FEED CALCULATOR
+  // ============================
+  AppState.feedCalculator = ensureObject(AppState.feedCalculator, {});
+  AppState.feedCalculator.qty = ensureArray(AppState.feedCalculator.qty);
+  AppState.feedCalculator.price = ensureArray(AppState.feedCalculator.price);
+  AppState.feedCalculator.volume = ensureNumber(
+    AppState.feedCalculator.volume,
+    25
+  );
 
-/* =========================
-   FEED MIXES
-========================= */
-function ensureFeedMixes() {
-  AppState.feedMixes ??= {};
-  AppState.feedMixes.history ??= [];
-}
+  // ============================
+  // RECIPES
+  // ============================
+  AppState.recipes = ensureObject(AppState.recipes, {});
+  AppState.recipes.list = ensureObject(AppState.recipes.list, {});
+  AppState.recipes.selectedId =
+    AppState.recipes.selectedId || null;
 
-/* =========================
-   ORDERS
-========================= */
-function ensureOrders() {
-  AppState.orders ??= {};
-  AppState.orders.list ??= [];
+  // ============================
+  // FEED MIXES
+  // ============================
+  AppState.feedMixes = ensureObject(AppState.feedMixes, {});
+  AppState.feedMixes.history = ensureArray(
+    AppState.feedMixes.history
+  );
+
+  // ============================
+  // ORDERS
+  // ============================
+  AppState.orders = ensureObject(AppState.orders, {});
+  AppState.orders.list = ensureArray(AppState.orders.list);
 }
