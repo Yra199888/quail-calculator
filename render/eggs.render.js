@@ -43,13 +43,13 @@ export function renderEggs() {
   const recentHtml = recentDates.map((date) => renderEggEntry(date, records[date])).join("");
 
   const oldHtml =
-    oldDates.length === 0
-      ? ""
-      : `
-        <div class="egg-old-wrap" style="${showOld ? "" : "display:none;"}">
-          ${oldDates.map((date) => renderEggEntry(date, records[date])).join("")}
-        </div>
-      `;
+  oldDates.length === 0
+    ? ""
+    : `
+      <div class="egg-old-wrap ${showOld ? "open" : ""}">
+        ${oldDates.map(date => renderEggEntry(date, records[date])).join("")}
+      </div>
+    `;
 
   const toggleBtnHtml =
     oldDates.length === 0
