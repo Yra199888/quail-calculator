@@ -2,15 +2,12 @@
  * feed.render.js
  * ---------------------------------------
  * Render-шар калькулятора корму.
- * Відповідає ТІЛЬКИ за відображення:
- *  - компонентів
- *  - кількості
- *  - ціни
- *  - підсумків
  *
  * ❌ БЕЗ бізнес-логіки
  * ❌ БЕЗ localStorage
  * ❌ БЕЗ мутації AppState
+ *
+ * ✅ ТІЛЬКИ відображення
  */
 
 import { AppState } from "../state/AppState.js";
@@ -25,18 +22,21 @@ export function renderFeed() {
 }
 
 // =======================================
-// 🧾 ТАБЛИЦЯ КОМПОНЕНТІВ (УСІ)
+// 🧾 ТАБЛИЦЯ КОМПОНЕНТІВ
 // =======================================
 function renderFeedTable() {
   const tbody = document.getElementById("feedTable");
   if (!tbody) return;
 
+  // показуємо ТІЛЬКИ не видалені
   const components = (AppState.feedComponents || []).filter(
-  c => c.deleted !== true
-);
+    (c) => c.deleted !== true
+  );
 
   tbody.innerHTML = components
-    .map(c => {
+    .map((c) => {
+      const enabled = c.enabled !== false;
+
       const qty =
         typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
           ? AppState.feedCalculator.qtyById[c.id]
@@ -47,11 +47,12 @@ function renderFeedTable() {
           ? AppState.feedCalculator.priceById[c.id]
           : Number(c.price ?? 0);
 
-      const sum = qty * price;
-      const enabled = c.enabled !== false;
+      const sum = enabled ? qty * price : 0;
 
       return `
         <tr class="${enabled ? "" : "disabled"}">
+
+          <!-- Назва + enable + delete -->
           <td>
             <input
               type="checkbox"
@@ -60,15 +61,18 @@ function renderFeedTable() {
               ${enabled ? "checked" : ""}
             />
 
-            <span
-              class="feed-name"
-              data-id="${c.id}"
-              title="Клікніть для редагування"
-            >
+            <span class="feed-name" data-id="${c.id}">
               ${c.name}
             </span>
+
+            <button
+              class="feed-delete"
+              data-id="${c.id}"
+              title="Видалити компонент"
+            >🗑</button>
           </td>
 
+          <!-- Кількість -->
           <td>
             <input
               class="qty"
@@ -78,9 +82,10 @@ function renderFeedTable() {
               step="0.01"
               value="${qty}"
               ${enabled ? "" : "disabled"}
-            >
+            />
           </td>
 
+          <!-- Ціна -->
           <td>
             <input
               class="price"
@@ -90,10 +95,13 @@ function renderFeedTable() {
               step="0.01"
               value="${price}"
               ${enabled ? "" : "disabled"}
-            >
+            />
           </td>
 
-          <td>${enabled ? sum.toFixed(2) : "—"}</td>
+          <!-- Сума -->
+          <td>
+            ${enabled ? sum.toFixed(2) : "—"}
+          </td>
         </tr>
       `;
     })
@@ -101,7 +109,7 @@ function renderFeedTable() {
 }
 
 // =======================================
-// 📊 ПІДСУМКИ (ТІЛЬКИ ENABLED)
+// 📊 ПІДСУМКИ (ТІЛЬКИ ENABLED + NOT DELETED)
 // =======================================
 function renderFeedTotals() {
   const totalEl = document.getElementById("feedTotal");
@@ -111,13 +119,13 @@ function renderFeedTotals() {
   if (!totalEl || !perKgEl || !volumeTotalEl) return;
 
   const components = (AppState.feedComponents || []).filter(
-    c => c.enabled !== false
+    (c) => c.deleted !== true && c.enabled !== false
   );
 
   let totalKg = 0;
   let totalCost = 0;
 
-  components.forEach(c => {
+  components.forEach((c) => {
     const qty =
       typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
         ? AppState.feedCalculator.qtyById[c.id]
