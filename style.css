@@ -362,6 +362,29 @@ body.compact .feed-summary p {
   font-size: 12px;
 }
 
+.firebase-status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin: 6px;
+  display: inline-block;
+}
+
+.firebase-status.online {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.firebase-status.syncing {
+  background: rgba(251, 192, 45, 0.15);
+  color: #fbc02d;
+}
+
+.firebase-status.offline {
+  background: rgba(229, 57, 53, 0.15);
+  color: #e53935;
+}
+
 /* =========================================
    📱 МОБІЛЬНА АДАПТАЦІЯ
    ========================================= */
