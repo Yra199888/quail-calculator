@@ -1,26 +1,40 @@
 /**
  * 💾 state.save.js
- * Збереження AppState у localStorage
+ * Збереження AppState
  *
- * ❗ Файл НЕ:
+ * ✅ localStorage (offline / fallback)
+ * ✅ Firebase Cloud Firestore (online sync)
+ *
+ * ❌ НЕ:
  * - змінює стан
- * - перевіряє структуру
  * - викликає UI
- *
- * Він ТІЛЬКИ зберігає
+ * - перевіряє структуру
  */
 
 import { AppState } from "./AppState.js";
+import { saveStateToCloud } from "../firebase/firebase.js";
 
 const STORAGE_KEY = "AppState";
 
 /**
  * 💾 Зберегти поточний стан
  */
-export function saveState() {
+export async function saveState() {
+  // -------------------------------
+  // 1️⃣ LocalStorage (як було)
+  // -------------------------------
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
   } catch (err) {
-    console.error("❌ Помилка збереження AppState:", err);
+    console.error("❌ Помилка збереження AppState у localStorage:", err);
+  }
+
+  // -------------------------------
+  // 2️⃣ Firebase Cloud (НОВЕ)
+  // -------------------------------
+  try {
+    await saveStateToCloud(AppState);
+  } catch (err) {
+    console.warn("⚠ Firebase недоступний, працюємо локально", err);
   }
 }
