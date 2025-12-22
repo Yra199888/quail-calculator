@@ -78,13 +78,61 @@ export function ensureState() {
   }
 
   // =========================
-  // КОМПОНЕНТИ КОРМУ (ВАЖЛИВО)
+  // FEED CALCULATOR — МІГРАЦІЯ НА qtyById / priceById
+  // =========================
+  if (
+    !AppState.feedCalculator.qtyById ||
+    typeof AppState.feedCalculator.qtyById !== "object"
+  ) {
+    AppState.feedCalculator.qtyById = {};
+  }
+
+  if (
+    !AppState.feedCalculator.priceById ||
+    typeof AppState.feedCalculator.priceById !== "object"
+  ) {
+    AppState.feedCalculator.priceById = {};
+  }
+
+  const hasOldArrays =
+    Array.isArray(AppState.feedCalculator.qty) ||
+    Array.isArray(AppState.feedCalculator.price);
+
+  const byIdIsEmpty =
+    Object.keys(AppState.feedCalculator.qtyById).length === 0 &&
+    Object.keys(AppState.feedCalculator.priceById).length === 0;
+
+  if (hasOldArrays && byIdIsEmpty && Array.isArray(AppState.feedComponents)) {
+    const qtyArr = Array.isArray(AppState.feedCalculator.qty)
+      ? AppState.feedCalculator.qty
+      : [];
+    const priceArr = Array.isArray(AppState.feedCalculator.price)
+      ? AppState.feedCalculator.price
+      : [];
+
+    AppState.feedComponents.forEach((c, i) => {
+      if (!c || !c.id) return;
+
+      const q = Number(qtyArr[i]);
+      const p = Number(priceArr[i]);
+
+      if (!Number.isNaN(q)) AppState.feedCalculator.qtyById[c.id] = q;
+      if (!Number.isNaN(p)) AppState.feedCalculator.priceById[c.id] = p;
+    });
+
+    // старі масиви більше не використовуються
+    AppState.feedCalculator.qty = [];
+    AppState.feedCalculator.price = [];
+  }
+
+  // =========================
+  // КОМПОНЕНТИ КОРМУ
   // =========================
   if (!Array.isArray(AppState.feedComponents)) {
     AppState.feedComponents = [];
   }
 
-  // ⚠️ ініціалізуємо дефолтні ТІЛЬКИ якщо масив порожній
+  // ініціалізуємо дефолтні ТІЛЬКИ якщо масив порожній
   if (AppState.feedComponents.length === 0) {
     AppState.feedComponents = structuredClone(DEFAULT_FEED_COMPONENTS);
   }
