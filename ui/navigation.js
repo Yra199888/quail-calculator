@@ -1,60 +1,39 @@
 /**
- * navigation.js
+ * ui/navigation.js
  * ---------------------------------------
- * Відповідає за навігацію між сторінками додатку.
- * 
- * Обовʼязки:
- *  - перемикання активної сторінки
- *  - підсвітка активної кнопки
- *  - збереження поточної сторінки в AppState
- *
- * НЕ містить бізнес-логіки
+ * Навігація між вкладками (SPA)
+ * Працює через data-page
  */
 
-// src/ui/navigation.js
-
-// ui/navigation.js
-import { qsa } from "../utils/dom.js";
-
 export function initNavigation() {
-  const buttons = qsa(".nav-btn");
-  const pages = qsa(".page");
+  const buttons = document.querySelectorAll(".nav-btn");
+  const pages = document.querySelectorAll(".page");
 
   if (!buttons.length || !pages.length) {
-    console.warn("🧭 Navigation: buttons or pages not found");
+    console.warn("⚠️ Navigation: buttons або pages не знайдені");
     return;
-  }
-
-  function showPage(page) {
-    let found = false;
-
-    pages.forEach(p => {
-      if (p.dataset.page === page) {
-        p.style.display = "block";
-        found = true;
-      } else {
-        p.style.display = "none";
-      }
-    });
-
-    buttons.forEach(b => {
-      b.classList.toggle("active", b.dataset.page === page);
-    });
-
-    if (!found) {
-      console.warn(`⚠️ Page not found: ${page}`);
-    }
   }
 
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const page = btn.dataset.page;
-      showPage(page);
+      if (!page) return;
+
+      const target = document.querySelector(`.page[data-page="${page}"]`);
+      if (!target) {
+        console.warn(`⚠️ Page not found: ${page}`);
+        return;
+      }
+
+      // прибрати active з усіх
+      pages.forEach(p => p.classList.remove("active"));
+      buttons.forEach(b => b.classList.remove("active"));
+
+      // активувати потрібну
+      target.classList.add("active");
+      btn.classList.add("active");
     });
   });
-
-  // 👉 стартова сторінка
-  showPage(buttons[0].dataset.page);
 
   console.log("🧭 Navigation ready");
 }
