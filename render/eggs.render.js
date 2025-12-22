@@ -1,5 +1,5 @@
 /**
- * render.eggs.js
+ * eggs.render.js
  * ---------------------------------------
  * Render-шар обліку яєць.
  * Відповідає ТІЛЬКИ за відображення
@@ -9,9 +9,16 @@
 import { AppState } from "../state/AppState.js";
 
 /**
- * Основний render списку яєць
+ * ГОЛОВНИЙ render (ТЕ, ЩО ВИКЛИКАЄ app.js)
  */
-export function renderEggsList() {
+export function renderEggs() {
+  renderEggsList();
+}
+
+/**
+ * Render списку яєць
+ */
+function renderEggsList() {
   const container = document.getElementById("eggsList");
   if (!container) return;
 
