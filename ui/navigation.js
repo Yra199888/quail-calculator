@@ -1,77 +1,56 @@
 /**
- * 🧭 ui/navigation.js
+ * 🧭 navigation.js
  * ---------------------------------------
- * Навігація між вкладками додатку.
- *
- * ❗ ВІДПОВІДАЄ ТІЛЬКИ ЗА:
- * - перемикання сторінок
- * - збереження активної сторінки в AppState
- *
- * ❌ НЕ:
- * - не рендерить дані
- * - не змінює бізнес-логіку
+ * Навігація між вкладками
+ * Працює з data-page + id="page-*"
  */
 
 import { AppState } from "../state/AppState.js";
-import { saveState } from "../state/state.save.js";
 
 export function initNavigation() {
-  const navButtons = document.querySelectorAll(".nav-btn");
+  const buttons = document.querySelectorAll(".nav-btn");
   const pages = document.querySelectorAll(".page");
 
-  if (!navButtons.length || !pages.length) {
+  if (!buttons.length || !pages.length) {
     console.warn("⚠️ Navigation: кнопки або сторінки не знайдені");
     return;
   }
 
-  // =========================
-  // ПЕРЕМИКАННЯ ПО КЛІКУ
-  // =========================
-  navButtons.forEach(btn => {
+  buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const page = btn.dataset.page;
-      if (!page) return;
-
       activatePage(page);
     });
   });
 
-  // =========================
-  // ВІДНОВЛЕННЯ СТАНУ
-  // =========================
-  const initialPage = AppState.ui.page || navButtons[0].dataset.page;
-  activatePage(initialPage);
+  // відновлення сторінки зі state
+  activatePage(AppState.ui.page || "feed");
 
   console.log("🧭 Navigation ready");
 }
 
-/**
- * Активувати сторінку
- */
-function activatePage(pageName) {
-  const pages = document.querySelectorAll(".page");
-  const navButtons = document.querySelectorAll(".nav-btn");
+function activatePage(page) {
+  const pageId = `page-${page}`;
+  const target = document.getElementById(pageId);
 
-  let pageFound = false;
-
-  pages.forEach(p => {
-    if (p.id === `page-${pageName}`) {
-      p.classList.add("active-page");
-      pageFound = true;
-    } else {
-      p.classList.remove("active-page");
-    }
-  });
-
-  navButtons.forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.page === pageName);
-  });
-
-  if (!pageFound) {
-    console.warn(`⚠️ Page not found: ${pageName}`);
+  if (!target) {
+    console.warn(`⚠️ Page not found: ${page}`);
     return;
   }
 
-  AppState.ui.page = pageName;
-  saveState();
+  // сховати всі
+  document.querySelectorAll(".page").forEach(p =>
+    p.classList.remove("active")
+  );
+
+  // показати потрібну
+  target.classList.add("active");
+
+  // активна кнопка
+  document.querySelectorAll(".nav-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.page === page)
+  );
+
+  // зберегти в state
+  AppState.ui.page = page;
 }
