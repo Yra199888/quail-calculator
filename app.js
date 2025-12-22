@@ -83,12 +83,22 @@ function initControllers() {
   console.group("🧩 Controllers");
 
   new EggsFormController({
-    onSave: () => {
-      saveState();
-      renderEggs();
-      renderWarehouse();
-    }
-  });
+  onSave: ({ date, good, bad, home }) => {
+    // ✅ 1. ЗАПИС В STATE
+    AppState.eggs.records[date] = {
+      good,
+      bad,
+      home
+    };
+
+    // ✅ 2. ЗБЕРЕЖЕННЯ
+    saveState();
+
+    // ✅ 3. RENDER
+    renderEggs();
+    renderWarehouse();
+  }
+});
 
   const feedForm = new FeedFormController({
     onChange: () => {
