@@ -30,7 +30,7 @@ import { ensureState } from "./state/state.ensure.js";
 import { EggsFormController } from "./controllers/EggsFormController.js";
 import { FeedFormController } from "./controllers/FeedFormController.js";
 import { OrdersFormController } from "./controllers/OrdersFormController.js";
-import { RecipesFormController } from "./controllers/RecipesFormController.js";
+import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
 
 // =======================================
 // RENDER
@@ -127,7 +127,7 @@ function initControllers() {
   });
 
   // 📋 РЕЦЕПТИ
-  new RecipesFormController({
+  new FeedRecipesController({
     onChange: () => {
       saveState();
       renderRecipes();
