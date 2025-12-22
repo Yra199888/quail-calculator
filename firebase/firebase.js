@@ -1,5 +1,17 @@
-// firebase/firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+/**
+ * 🔥 firebase.js
+ * Робота з Firebase Cloud Firestore
+ *
+ * ❌ НЕ:
+ * - рендерить UI
+ * - змінює AppState напряму
+ *
+ * ✅ ТІЛЬКИ:
+ * - load
+ * - save
+ * - realtime subscribe
+ */
+
 import {
   getFirestore,
   doc,
@@ -8,39 +20,66 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-// 🔐 ТВОЯ Firebase-конфігурація
-const firebaseConfig = {
-  apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
-  authDomain: "quail-farm-tracke.firebaseapp.com",
-  projectId: "quail-farm-tracke",
-  storageBucket: "quail-farm-tracke.firebasestorage.app",
-  messagingSenderId: "914329630014",
-  appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
-};
+import { AppState } from "../state/AppState.js";
 
-// 🚀 Init Firebase
-export const firebaseApp = initializeApp(firebaseConfig);
-export const db = getFirestore(firebaseApp);
+// ---------------------------------------
+// FIRESTORE INIT
+// ---------------------------------------
+const db = getFirestore();
 
-// 📄 Один документ = весь стан додатку
-export const STATE_DOC = doc(db, "app", "state");
+// 👉 Один документ = один AppState
+// Можна змінити userId пізніше (auth)
+const STATE_DOC = doc(db, "appState", "default");
 
-// ⬇️ ЗАВАНТАЖИТИ СТАН З ХМАРИ
+// ---------------------------------------
+// 💾 SAVE TO CLOUD
+// ---------------------------------------
+export async function saveStateToCloud() {
+  try {
+    await setDoc(STATE_DOC, {
+      data: JSON.parse(JSON.stringify(AppState)),
+      updatedAt: Date.now()
+    });
+
+    console.log("☁ AppState збережено в Firebase");
+  } catch (err) {
+    console.error("❌ Firebase save error:", err);
+  }
+}
+
+// ---------------------------------------
+// 📥 LOAD FROM CLOUD
+// ---------------------------------------
 export async function loadStateFromCloud() {
-  const snap = await getDoc(STATE_DOC);
-  return snap.exists() ? snap.data() : null;
-}
+  try {
+    const snap = await getDoc(STATE_DOC);
 
-// ⬆️ ЗБЕРЕГТИ СТАН В ХМАРУ
-export async function saveStateToCloud(state) {
-  await setDoc(STATE_DOC, state);
-}
-
-// 🔄 REALTIME СИНХРОНІЗАЦІЯ (інший телефон / ПК)
-export function subscribeToState(callback) {
-  return onSnapshot(STATE_DOC, (snap) => {
-    if (snap.exists()) {
-      callback(snap.data());
+    if (!snap.exists()) {
+      console.log("ℹ Firebase: стану ще немає");
+      return null;
     }
+
+    const payload = snap.data();
+
+    if (!payload?.data) return null;
+
+    return payload.data;
+  } catch (err) {
+    console.error("❌ Firebase load error:", err);
+    return null;
+  }
+}
+
+// ---------------------------------------
+// 🔄 REALTIME SYNC
+// ---------------------------------------
+export function subscribeToCloudState(onUpdate) {
+  return onSnapshot(STATE_DOC, (snap) => {
+    if (!snap.exists()) return;
+
+    const payload = snap.data();
+    if (!payload?.data) return;
+
+    onUpdate(payload.data);
   });
 }
