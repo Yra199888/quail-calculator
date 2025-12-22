@@ -48,42 +48,38 @@ import { initWarnings } from "./ui/warnings.js";
 window.AppState = AppState;
 
 // =======================================
-// DRAG STATE (якщо в тебе було)
+// DRAG STATE
 // =======================================
 let draggedFeedId = null;
 
 // =======================================
-// START (ВАЖЛИВО: async + await loadState)
+// START
 // =======================================
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     console.group("🚀 App start");
 
-    // 1) Спочатку завантажити дані (Firebase -> localStorage)
+    // 1️⃣ Завантажити стан (Firebase → localStorage)
     await loadState();
 
-    // 2) Потім гарантувати структуру
+    // 2️⃣ Гарантувати структуру
     ensureState();
 
-    // 3) UI init
+    // 3️⃣ UI
     initNavigation();
     initToggles();
     initWarnings();
 
-    // 4) Перший рендер
+    // 4️⃣ Перший рендер
     renderAll();
 
-    // 5) Контролери
+    // 5️⃣ Контролери
     initControllers();
 
-    // 6) Global actions (делегація)
+    // 6️⃣ Делеговані дії
     initGlobalActions();
 
-    // ✅ ВАЖЛИВО:
-    // НЕ робимо saveState() на старті,
-    // щоб випадково не перезаписати Cloud/Local дефолтним станом.
-
-    // 7) Авто-рендер коли прийшов стан з Firebase realtime
+    // 7️⃣ Realtime update з Firebase
     window.addEventListener("appstate:updated", () => {
       renderAll();
     });
@@ -96,10 +92,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // =======================================
-// CONTROLLERS INIT
+// CONTROLLERS
 // =======================================
 function initControllers() {
-  // 🥚 Eggs
   new EggsFormController({
     onSave: ({ date, good, bad, home }) => {
       AppState.eggs.records[date] = { good, bad, home };
@@ -109,12 +104,9 @@ function initControllers() {
     }
   });
 
-  // 🌾 Feed
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
-      if (type === "qty" || type === "price") {
-        if (!id) return;
-
+      if ((type === "qty" || type === "price") && id) {
         AppState.feedCalculator.qtyById ||= {};
         AppState.feedCalculator.priceById ||= {};
 
@@ -134,7 +126,6 @@ function initControllers() {
 
   feedForm.init();
 
-  // 📦 Orders
   new OrdersFormController({
     onSave: () => {
       saveState();
@@ -143,7 +134,6 @@ function initControllers() {
     }
   });
 
-  // 📘 Recipes
   new FeedRecipesController({
     AppState,
     saveState,
@@ -156,17 +146,15 @@ function initControllers() {
 }
 
 // =======================================
-// GLOBAL UI ACTIONS (DELEGATION)
+// GLOBAL ACTIONS
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
-    // ➕ Add component
     if (e.target.closest("#addFeedComponentBtn")) {
       addFeedComponent();
       return;
     }
 
-    // ✔ Enable / disable
     const toggle = e.target.closest(".feed-enable");
     if (toggle) {
       const c = AppState.feedComponents.find(x => x.id === toggle.dataset.id);
@@ -178,7 +166,6 @@ function initGlobalActions() {
       return;
     }
 
-    // 🗑 Soft delete
     const del = e.target.closest(".feed-delete");
     if (del) {
       const c = AppState.feedComponents.find(x => x.id === del.dataset.id);
@@ -191,21 +178,17 @@ function initGlobalActions() {
       return;
     }
 
-    // ✏ Inline rename
     const name = e.target.closest(".feed-name");
     if (name) {
       startEditFeedName(name);
       return;
     }
 
-    // ↩ Restore
     if (e.target.closest("#restoreFeedComponentsBtn")) {
       restoreFeedComponents();
-      return;
     }
   });
 
-  // Якщо в тебе був drag&drop — лишаємо як було (не ламає)
   document.addEventListener("dragstart", (e) => {
     const row = e.target.closest("tr[data-id]");
     if (!row) return;
@@ -214,28 +197,22 @@ function initGlobalActions() {
   });
 
   document.addEventListener("dragover", (e) => {
-    const row = e.target.closest("tr[data-id]");
-    if (!row) return;
-    e.preventDefault();
+    if (e.target.closest("tr[data-id]")) e.preventDefault();
   });
 
   document.addEventListener("drop", (e) => {
     const targetRow = e.target.closest("tr[data-id]");
     if (!targetRow || !draggedFeedId) return;
 
-    const targetId = targetRow.dataset.id;
-    if (targetId === draggedFeedId) return;
-
     const list = AppState.feedComponents;
     const from = list.findIndex(c => c.id === draggedFeedId);
-    const to = list.findIndex(c => c.id === targetId);
+    const to = list.findIndex(c => c.id === targetRow.dataset.id);
     if (from === -1 || to === -1) return;
 
     const [moved] = list.splice(from, 1);
     list.splice(to, 0, moved);
 
     draggedFeedId = null;
-
     saveState();
     renderFeed();
     renderWarehouse();
@@ -248,7 +225,7 @@ function initGlobalActions() {
 }
 
 // =======================================
-// ACTIONS
+// HELPERS
 // =======================================
 function addFeedComponent() {
   const c = {
@@ -261,7 +238,6 @@ function addFeedComponent() {
   };
 
   AppState.feedComponents.push(c);
-
   AppState.feedCalculator.qtyById ||= {};
   AppState.feedCalculator.priceById ||= {};
   AppState.feedCalculator.qtyById[c.id] = 0;
@@ -273,8 +249,7 @@ function addFeedComponent() {
 }
 
 function startEditFeedName(span) {
-  const id = span.dataset.id;
-  const c = AppState.feedComponents.find(x => x.id === id);
+  const c = AppState.feedComponents.find(x => x.id === span.dataset.id);
   if (!c) return;
 
   const input = document.createElement("input");
@@ -302,10 +277,7 @@ function startEditFeedName(span) {
 
 function restoreFeedComponents() {
   const deleted = AppState.feedComponents.filter(c => c.deleted);
-  if (!deleted.length) {
-    alert("Немає видалених компонентів");
-    return;
-  }
+  if (!deleted.length) return alert("Немає видалених компонентів");
   if (!confirm(`Відновити ${deleted.length}?`)) return;
 
   deleted.forEach(c => c.deleted = false);
@@ -314,9 +286,6 @@ function restoreFeedComponents() {
   renderWarehouse();
 }
 
-// =======================================
-// GLOBAL RENDER
-// =======================================
 function renderAll() {
   renderEggs();
   renderFeed();
