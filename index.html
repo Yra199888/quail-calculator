@@ -70,6 +70,11 @@
         <div class="panel">
           <div class="panel-title">🌾 Калькулятор корму</div>
 
+          <!--
+            ⚠️ ВАЖЛИВО:
+            Усі кнопки (enable, delete, inline-edit)
+            рендеряться ДИНАМІЧНО через feed.render.js
+          -->
           <table class="feed-table">
             <thead>
               <tr>
@@ -93,6 +98,8 @@
             <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
           </div>
         </div>
+
+        <!-- ➕ КЕРУВАННЯ КОМПОНЕНТАМИ -->
         <div id="feedComponentsControls">
           <button id="addFeedComponentBtn">➕ Додати компонент</button>
         </div>
