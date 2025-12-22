@@ -11,64 +11,43 @@
  * НЕ містить бізнес-логіки
  */
 
-import { AppState } from "../state/AppState.js";
-import { saveState } from "../state/state.save.js";
+// src/ui/navigation.js
+
+import { qs, qsa } from "../utils/dom.js";
 
 /**
- * Ініціалізація навігації
- * Викликається один раз з app.js
+ * Ініціалізація навігації по вкладках
  */
 export function initNavigation() {
-  const buttons = document.querySelectorAll("[data-page]");
+  const buttons = qsa("[data-page]");
+  const pages = qsa(".page");
 
-  if (!buttons.length) return;
+  if (!buttons.length || !pages.length) {
+    console.warn("⚠️ Navigation: кнопки або сторінки не знайдені");
+    return;
+  }
 
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const page = btn.dataset.page;
       if (!page) return;
 
-      setActivePage(page);
+      // кнопки
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // сторінки
+      pages.forEach(p => p.classList.remove("active"));
+
+      const target = qs(`#page-${page}`);
+      if (!target) {
+        console.warn("⚠️ Page not found:", page);
+        return;
+      }
+
+      target.classList.add("active");
     });
   });
 
-  // відновлення сторінки зі state
-  if (AppState.ui?.page) {
-    setActivePage(AppState.ui.page, false);
-  }
-}
-
-/**
- * Увімкнути сторінку
- * @param {string} page
- * @param {boolean} persist - чи зберігати у state
- */
-export function setActivePage(page, persist = true) {
-  // сторінки
-  document.querySelectorAll(".page").forEach(p =>
-    p.classList.remove("active-page")
-  );
-
-  const target = document.getElementById(`page-${page}`);
-  if (!target) {
-    console.warn(`Сторінка page-${page} не знайдена`);
-    return;
-  }
-
-  target.classList.add("active-page");
-
-  // кнопки
-  document.querySelectorAll("[data-page]").forEach(btn =>
-    btn.classList.remove("active")
-  );
-
-  const activeBtn = document.querySelector(`[data-page="${page}"]`);
-  if (activeBtn) activeBtn.classList.add("active");
-
-  // state
-  AppState.ui.page = page;
-
-  if (persist) {
-    saveState();
-  }
+  console.log("🧭 Navigation ready");
 }
