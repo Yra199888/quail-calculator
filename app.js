@@ -4,16 +4,14 @@ console.log("🔥 app.js EXECUTED");
  * =======================================
  * 🚀 Головна точка входу додатку
  *
- * Тут НЕ МАЄ бути:
- *  - бізнес-логіки
- *  - render-коду
- *  - роботи з DOM напряму
+ * ❌ БЕЗ бізнес-логіки
+ * ❌ БЕЗ DOM-маніпуляцій
  *
- * ТУТ Є:
- *  - завантаження state
- *  - ensure структури
- *  - ініціалізація контролерів
- *  - старт UI
+ * ✅ ТІЛЬКИ:
+ *  - state
+ *  - ensure
+ *  - render
+ *  - controllers
  */
 
 // =======================================
@@ -23,8 +21,9 @@ import { AppState } from "./state/AppState.js";
 import { loadState } from "./state/state.load.js";
 import { saveState } from "./state/state.save.js";
 import { ensureState } from "./state/state.ensure.js";
+
 // =======================================
-// CONTROLLERS (ФОРМИ)
+// CONTROLLERS
 // =======================================
 import { EggsFormController } from "./controllers/EggsFormController.js";
 import { FeedFormController } from "./controllers/FeedFormController.js";
@@ -35,7 +34,7 @@ import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
 // RENDER
 // =======================================
 import { renderEggsList } from "./render/eggs.render.js";
-import { renderFeedCalculator } from "./render/feed.render.js";
+import { renderFeed } from "./render/feed.render.js";
 import { renderWarehouse } from "./render/warehouse.render.js";
 import { renderOrders } from "./render/orders.render.js";
 import { renderRecipes } from "./render/recipes.render.js";
@@ -47,9 +46,7 @@ import { initNavigation } from "./ui/navigation.js";
 import { initToggles } from "./ui/toggles.js";
 import { initWarnings } from "./ui/warnings.js";
 
-// =======================================
-// DEBUG (тимчасово)
-// =======================================
+// DEBUG
 window.AppState = AppState;
 
 // =======================================
@@ -59,31 +56,17 @@ document.addEventListener("DOMContentLoaded", () => {
   try {
     console.group("🚀 App start");
 
-    // 1️⃣ Завантажуємо стан
     loadState();
-    console.log("✅ State loaded");
-
-    // 2️⃣ Гарантуємо структуру стану
     ensureState();
-    console.log("✅ State ensured");
 
-    // 3️⃣ UI (навігація, перемикачі, попередження)
     initNavigation();
     initToggles();
     initWarnings();
-    console.log("✅ UI initialized");
 
-    // 4️⃣ Рендер початкового стану
     renderAll();
-    console.log("✅ Initial render");
-
-    // 5️⃣ Контролери форм
     initControllers();
-    console.log("✅ Controllers initialized");
 
-    // 6️⃣ Фінальне збереження
     saveState();
-    console.log("✅ Initial save");
 
     console.groupEnd();
   } catch (e) {
@@ -93,21 +76,19 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =======================================
-// ІНІЦІАЛІЗАЦІЯ КОНТРОЛЕРІВ
+// CONTROLLERS INIT
 // =======================================
 function initControllers() {
   console.group("🧩 Controllers");
 
-  // 🥚 ЯЙЦЯ
   new EggsFormController({
     onSave: () => {
       saveState();
-      renderEggs();
+      renderEggsList();
       renderWarehouse();
     }
   });
 
-  // 🌾 КОРМ
   const feedForm = new FeedFormController({
     onChange: () => {
       saveState();
@@ -117,7 +98,6 @@ function initControllers() {
   });
   feedForm.init();
 
-  // 📑 ЗАМОВЛЕННЯ
   new OrdersFormController({
     onSave: () => {
       saveState();
@@ -125,7 +105,6 @@ function initControllers() {
     }
   });
 
-  // 📋 РЕЦЕПТИ
   new FeedRecipesController({
     onChange: () => {
       saveState();
@@ -138,10 +117,10 @@ function initControllers() {
 }
 
 // =======================================
-// ГЛОБАЛЬНИЙ РЕНДЕР
+// GLOBAL RENDER
 // =======================================
 function renderAll() {
-  renderEggs();
+  renderEggsList();
   renderFeed();
   renderWarehouse();
   renderOrders();
