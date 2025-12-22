@@ -68,8 +68,13 @@ body {
   display: none;
 }
 
-.page.is-active {
+.page.active {
   display: block;
+}
+
+.nav-btn.active {
+  background: #2e7d32;
+  color: #fff;
 }
 
 /* =========================================
