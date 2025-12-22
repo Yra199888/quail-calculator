@@ -31,7 +31,9 @@ function renderFeedTable() {
   const tbody = document.getElementById("feedTable");
   if (!tbody) return;
 
-  const components = AppState.feedComponents || [];
+  const components = (AppState.feedComponents || []).filter(
+  c => c.deleted !== true
+);
 
   tbody.innerHTML = components
     .map(c => {
