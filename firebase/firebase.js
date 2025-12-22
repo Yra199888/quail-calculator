@@ -1,85 +1,72 @@
 /**
  * 🔥 firebase.js
- * Робота з Firebase Cloud Firestore
+ * ---------------------------------------
+ * ЄДИНЕ місце ініціалізації Firebase + Firestore
  *
- * ❌ НЕ:
- * - рендерить UI
- * - змінює AppState напряму
- *
- * ✅ ТІЛЬКИ:
- * - load
- * - save
- * - realtime subscribe
+ * ❗ ВАЖЛИВО:
+ * - initializeApp() ТІЛЬКИ ТУТ
+ * - getFirestore() ТІЛЬКИ ТУТ
+ * - НІЯКОГО DOM
+ * - НІЯКОГО AppState
  */
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import {
   getFirestore,
   doc,
-  getDoc,
   setDoc,
-  onSnapshot
+  getDoc
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-import { AppState } from "../state/AppState.js";
+/* =======================================
+   🔑 FIREBASE CONFIG
+   ======================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
+  authDomain: "quail-farm-tracke.firebaseapp.com",
+  projectId: "quail-farm-tracke",
+  storageBucket: "quail-farm-tracke.firebasestorage.app",
+  messagingSenderId: "914329630014",
+  appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
+};
 
-// ---------------------------------------
-// FIRESTORE INIT
-// ---------------------------------------
-const db = getFirestore();
+/* =======================================
+   🚀 INIT FIREBASE (ОДИН РАЗ)
+   ======================================= */
+const app = initializeApp(firebaseConfig);
 
-// 👉 Один документ = один AppState
-// Можна змінити userId пізніше (auth)
-const STATE_DOC = doc(db, "appState", "default");
+/* =======================================
+   🧠 INIT FIRESTORE
+   ======================================= */
+export const db = getFirestore(app);
 
-// ---------------------------------------
-// 💾 SAVE TO CLOUD
-// ---------------------------------------
-export async function saveStateToCloud() {
-  try {
-    await setDoc(STATE_DOC, {
-      data: JSON.parse(JSON.stringify(AppState)),
-      updatedAt: Date.now()
-    });
+/* =======================================
+   ☁️ CLOUD STORAGE HELPERS
+   ======================================= */
 
-    console.log("☁ AppState збережено в Firebase");
-  } catch (err) {
-    console.error("❌ Firebase save error:", err);
-  }
+/**
+ * 💾 Зберегти стан у Firestore
+ * @param {Object} state
+ */
+export async function saveStateToCloud(state) {
+  if (!state) return;
+
+  await setDoc(
+    doc(db, "appState", "main"),
+    JSON.parse(JSON.stringify(state)) // safe clone
+  );
 }
 
-// ---------------------------------------
-// 📥 LOAD FROM CLOUD
-// ---------------------------------------
+/**
+ * 📥 Завантажити стан з Firestore
+ * @returns {Object|null}
+ */
 export async function loadStateFromCloud() {
-  try {
-    const snap = await getDoc(STATE_DOC);
+  const snap = await getDoc(
+    doc(db, "appState", "main")
+  );
 
-    if (!snap.exists()) {
-      console.log("ℹ Firebase: стану ще немає");
-      return null;
-    }
+  if (!snap.exists()) return null;
 
-    const payload = snap.data();
-
-    if (!payload?.data) return null;
-
-    return payload.data;
-  } catch (err) {
-    console.error("❌ Firebase load error:", err);
-    return null;
-  }
-}
-
-// ---------------------------------------
-// 🔄 REALTIME SYNC
-// ---------------------------------------
-export function subscribeToCloudState(onUpdate) {
-  return onSnapshot(STATE_DOC, (snap) => {
-    if (!snap.exists()) return;
-
-    const payload = snap.data();
-    if (!payload?.data) return;
-
-    onUpdate(payload.data);
-  });
+  return snap.data();
 }
