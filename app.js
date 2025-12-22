@@ -107,6 +107,7 @@ function initControllers() {
 
   new FeedRecipesController({
     AppState,
+    saveState,
     onChange: () => {
       saveState();
       renderRecipes();
