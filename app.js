@@ -30,6 +30,7 @@ import { EggsFormController } from "./controllers/EggsFormController.js";
 import { FeedFormController } from "./controllers/FeedFormController.js";
 import { OrdersFormController } from "./controllers/OrdersFormController.js";
 import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
+import { FeedComponentsController } from "./controllers/FeedComponentsController.js";
 
 // =======================================
 // RENDER
@@ -135,6 +136,30 @@ function initControllers() {
   });
 
   feedForm.init();
+  
+  // ➕ Feed Components
+const feedComponentsController = new FeedComponentsController({
+  onAdd: (component) => {
+    AppState.feedComponents.push(component);
+
+    // ініціалізуємо значення в калькуляторі
+    if (!AppState.feedCalculator.qtyById) {
+      AppState.feedCalculator.qtyById = {};
+    }
+    if (!AppState.feedCalculator.priceById) {
+      AppState.feedCalculator.priceById = {};
+    }
+
+    AppState.feedCalculator.qtyById[component.id] = component.kg;
+    AppState.feedCalculator.priceById[component.id] = component.price;
+
+    saveState();
+    renderFeed();
+    renderWarehouse();
+  }
+});
+
+feedComponentsController.init();
 
   // 📦 Orders
   new OrdersFormController({
