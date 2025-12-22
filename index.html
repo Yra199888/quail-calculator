@@ -3,17 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>🐣 Фермерський трекер</title>
+
+  <!-- Основні стилі -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
   <div class="app">
 
-    <!-- ================= НАВІГАЦІЯ ================= -->
+    <!-- =====================================
+         🧭 НАВІГАЦІЯ (ui/navigation.js)
+         ===================================== -->
     <header class="app-header">
       <nav class="nav">
-        <button class="nav-btn" data-page="eggs">🥚 Яйця</button>
+        <button class="nav-btn active" data-page="eggs">🥚 Яйця</button>
         <button class="nav-btn" data-page="feed">🌾 Корм</button>
         <button class="nav-btn" data-page="warehouse">📦 Склад</button>
         <button class="nav-btn" data-page="orders">📑 Замовлення</button>
@@ -21,11 +26,13 @@
       </nav>
     </header>
 
-    <!-- ================= КОНТЕНТ ================= -->
+    <!-- =====================================
+         📦 ОСНОВНИЙ КОНТЕНТ
+         ===================================== -->
     <main class="app-content">
 
-      <!-- 🥚 ЯЙЦЯ -->
-      <section class="page" data-page="eggs">
+      <!-- ===== 🥚 ЯЙЦЯ ===== -->
+      <section class="page active" data-page="eggs">
         <div class="panel">
           <div class="panel-title">🥚 Облік яєць</div>
 
@@ -58,31 +65,83 @@
         <div id="eggs-report"></div>
       </section>
 
-      <!-- 🌾 КОРМ -->
+      <!-- ===== 🌾 КОРМ ===== -->
       <section class="page" data-page="feed">
         <div class="panel">
           <div class="panel-title">🌾 Калькулятор корму</div>
-          <div id="feed-table"></div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Компонент</th>
+                <th>Кількість (кг)</th>
+                <th>Ціна</th>
+                <th>Сума</th>
+              </tr>
+            </thead>
+            <tbody id="feedTable"></tbody>
+          </table>
+
+          <div class="feed-totals">
+            <div>Разом: <b id="feedTotal">0</b> грн</div>
+            <div>Ціна за кг: <b id="feedPerKg">0</b> грн</div>
+            <div>
+              Обʼєм:
+              <input type="number" id="feedVolume" value="25" />
+              кг → <b id="feedVolumeTotal">0</b> грн
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- 📦 СКЛАД -->
+      <!-- ===== 📦 СКЛАД ===== -->
       <section class="page" data-page="warehouse">
         <div class="panel">
           <div class="panel-title">📦 Склад</div>
-          <div id="warehouse-content"></div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Компонент</th>
+                <th>Залишок (кг)</th>
+                <th>Додати</th>
+                <th>Списати</th>
+              </tr>
+            </thead>
+            <tbody id="warehouseFeedTableBody"></tbody>
+          </table>
+
+          <div class="panel-sub">
+            Порожні лотки:
+            <b id="emptyTraysValue">0</b>
+            <input type="number" id="addEmptyTraysInput" />
+            <button id="addEmptyTraysBtn">➕</button>
+          </div>
+
+          <div id="warehouseWarnings"></div>
         </div>
       </section>
 
-      <!-- 📑 ЗАМОВЛЕННЯ -->
+      <!-- ===== 📑 ЗАМОВЛЕННЯ ===== -->
       <section class="page" data-page="orders">
         <div class="panel">
           <div class="panel-title">📑 Замовлення</div>
-          <div id="orders-content"></div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Клієнт</th>
+                <th>Лотки</th>
+                <th>Примітка</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody"></tbody>
+          </table>
         </div>
       </section>
 
-      <!-- 📋 РЕЦЕПТИ -->
+      <!-- ===== 📋 РЕЦЕПТИ ===== -->
       <section class="page" data-page="recipes">
         <div class="panel">
           <div class="panel-title">📋 Рецепти корму</div>
@@ -97,15 +156,17 @@
             <button id="recipe-load-btn">📂 Завантажити</button>
             <button class="danger" id="recipe-delete-btn">🗑 Видалити</button>
           </div>
-        </div>
 
-        <div id="recipes-content"></div>
+          <div id="recipesList"></div>
+        </div>
       </section>
 
     </main>
   </div>
 
-  <!-- 🚀 START -->
+  <!-- =====================================
+       🚀 ТОЧКА ВХОДУ
+       ===================================== -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
