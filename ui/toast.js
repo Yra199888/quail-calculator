@@ -1,22 +1,57 @@
-// ui/toast.js
+/**
+ * toast.js
+ * ---------------------------------------
+ * Універсальні toast-повідомлення для UI.
+ * Використовується для:
+ *  - попереджень
+ *  - помилок
+ *  - успішних дій
+ *
+ * Без бізнес-логіки.
+ * Працює напряму з DOM.
+ */
 
-export function toast(msg, type = "warn", ms = 2200) {
-  const el = document.getElementById("toast");
-  if (!el) {
-    alert(msg);
-    return;
-  }
+/**
+ * Показати toast-повідомлення
+ * @param {string} message - текст повідомлення
+ * @param {"info"|"success"|"warning"|"error"} type
+ * @param {number} duration - тривалість показу (мс)
+ */
+export function showToast(message, type = "info", duration = 2500) {
+  const container = getToastContainer();
 
-  el.className = `toast ${type} show`;
-  el.textContent = msg;
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
 
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove("show"), ms);
+  container.appendChild(toast);
+
+  // анімація появи
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  // автоматичне закриття
+  setTimeout(() => {
+    toast.classList.remove("show");
+
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, duration);
 }
 
-export function bindGlobalErrors() {
-  window.onerror = function (msg, src, line, col) {
-    console.error("JS error:", msg, src, line, col);
-    toast(`Помилка: ${msg} (${line}:${col})`, "error", 4500);
-  };
+/**
+ * Отримати або створити контейнер для toast
+ */
+function getToastContainer() {
+  let container = document.getElementById("toast-container");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    document.body.appendChild(container);
+  }
+
+  return container;
 }
