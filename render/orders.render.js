@@ -14,7 +14,7 @@ import { AppState } from "../state/AppState.js";
 import { qs } from "../utils/dom.js";
 
 // =======================================
-// ГОЛОВНИЙ РЕНДЕР
+// ГОЛОВНИЙ RENDER
 // =======================================
 export function renderOrders() {
   const tbody = qs("#ordersTableBody");
@@ -22,7 +22,7 @@ export function renderOrders() {
 
   tbody.innerHTML = "";
 
-  const orders = AppState.orders.list || [];
+  const orders = AppState.orders?.list ?? [];
 
   if (orders.length === 0) {
     tbody.innerHTML = `
@@ -37,10 +37,10 @@ export function renderOrders() {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${order.date}</td>
-      <td>${order.client}</td>
-      <td>${order.trays}</td>
-      <td>${order.details || ""}</td>
+      <td>${order.date ?? "—"}</td>
+      <td>${order.client ?? "—"}</td>
+      <td>${order.trays ?? 0}</td>
+      <td>${order.details ?? ""}</td>
     `;
 
     tbody.appendChild(tr);
