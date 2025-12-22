@@ -1,405 +1,210 @@
-/* ============================
-   ТЕМА (Dark / Light через body.light)
-============================ */
+/* =========================================
+   🔧 ГЛОБАЛЬНІ ЗМІННІ (THEME)
+   ========================================= */
 :root {
-    --bg: #0e0e0e;
-    --text: #ffffff;
-    --card: #151515;
-    --border: #262626;
-    --accent: #32c44d;
-    --accent-soft: #2ea043;
-    --input-bg: #111111;
+  --bg-main: #0f1115;
+  --bg-panel: #161a22;
+  --bg-panel-light: #1e2330;
+
+  --color-text: #e6e8ec;
+  --color-muted: #9aa0ad;
+  --color-accent: #4caf50;
+  --color-danger: #e53935;
+  --color-warning: #fbc02d;
+
+  --border-color: #2a2f3a;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  --transition-fast: 0.15s ease;
 }
 
-body.light {
-    --bg: #f5f5f7;
-    --text: #111111;
-    --card: #ffffff;
-    --border: #d0d0d0;
-    --accent: #2a7cda;
-    --accent-soft: #4da2ff;
-    --input-bg: #f0f0f0;
-}
-
-/* ============================
-   Глобальні параметри
-============================ */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-}
-
-/* Контейнер сторінок */
-.page {
-    display: none;              /* <-- важливо для вкладок */
-    padding: 20px;
-    max-width: 900px;
-    margin: 0 auto 32px;
-}
-
-.page.active-page {
-    display: block;
-}
-
-/* Заголовки */
-h2 {
-    margin: 10px 5px 18px;
-    font-size: 26px;
-}
-
-h3 {
-    margin: 22px 8px 10px;
-    font-size: 20px;
-}
-
-/* ============================
-   Навігація (верх + низ)
-============================ */
-.topnav,
-.subnav {
-    display: flex;
-    justify-content: space-around;
-    background: var(--card);
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.nav-btn {
-    font-size: 26px;
-    padding: 6px 10px;
-    border-radius: 12px;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: 0.2s;
-}
-
-.nav-btn.active {
-    opacity: 1;
-    color: var(--accent);
-    background: rgba(50, 196, 77, 0.15);
-}
-
-/* ============================
-   Універсальний контейнер
-============================ */
-.container {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    margin: 10px 0;
-}
-
-/* ============================
-   ФОРМИ (ЯЙЦЯ + ЗАМОВЛЕННЯ)
-============================ */
-.egg-form,
-.order-form {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    margin: 10px 0 15px;
-}
-
-.egg-row,
-.order-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-.egg-row label,
-.order-row label {
-    flex: 0 0 40%;
-    font-size: 17px;
-}
-
-.egg-row input,
-.order-row input,
-.order-row textarea {
-    flex: 1;
-    max-width: 260px;
-    padding: 9px 10px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--input-bg);
-    color: var(--text);
-    font-size: 16px;
-    box-sizing: border-box;
-}
-
-.order-row textarea {
-    height: 70px;
-    resize: none;
-}
-
-/* Кнопки форм */
-.egg-save,
-.order-save,
-.main-btn {
-    width: 100%;
-    padding: 12px;
-    font-size: 18px;
-    border-radius: 12px;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 6px;
-    transition: 0.2s;
-}
-
-.egg-save:hover,
-.order-save:hover,
-.main-btn:hover {
-    background: var(--accent-soft);
-}
-
-/* Інфо-блок під формою яєць */
-.egg-info,
-.orders-summary {
-    margin-top: 12px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: #00000033;
-    border: 1px solid var(--border);
-    font-size: 15px;
-}
-
-/* ============================
-   ТАБЛИЦІ (калькулятор + склад)
-============================ */
-.feed-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.feed-table th {
-    background: var(--accent-soft);
-    padding: 10px 6px;
-    font-size: 16px;
-    text-align: center;
-    color: #fff;
-}
-
-.feed-table td {
-    padding: 8px 6px;
-    border-bottom: 1px solid var(--border);
-    background: var(--card);
-    text-align: center;
-    font-size: 15px;
-}
-
-/* Перша колонка (назва компонента) */
-.feed-table td:first-child,
-.feed-table th:first-child {
-    text-align: left;
-    padding-left: 10px;
-}
-
-/* Вирівнювання ширин колонок */
-.feed-table th:nth-child(1),
-.feed-table td:nth-child(1) { width: 34%; }
-
-.feed-table th:nth-child(2),
-.feed-table td:nth-child(2) { width: 22%; }
-
-.feed-table th:nth-child(3),
-.feed-table td:nth-child(3) { width: 22%; }
-
-.feed-table th:nth-child(4),
-.feed-table td:nth-child(4) { width: 22%; }
-
-/* Інпути в таблиці */
-.feed-table td input {
-    width: 100%;
-    max-width: 90px;
-    padding: 7px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--input-bg);
-    color: var(--text);
-    box-sizing: border-box;
-}
-
-/* ============================
-   Список замовлень
-============================ */
-#ordersList > div {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin: 8px 0;
-    font-size: 15px;
-}
-
-#ordersList button {
-    margin-right: 8px;
-    margin-top: 6px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-}
-
-/* Статуси замовлень */
-.status-active { color: #4caf50; font-weight: 600; }
-.status-done { color: #2a7cda; font-weight: 600; }
-.status-cancel { color: #e53935; font-weight: 600; }
-
-/* ============================
-   Список яєць
-============================ */
-.egg-entry {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 8px 10px;
-    margin: 6px 0;
-    font-size: 14px;
-}
-
-/* ============================
-   Дрібне
-============================ */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-.low-stock {
-  background: rgba(255, 77, 77, 0.15);
-  border-left: 4px solid #ff4d4d;
-}
-
-.low-stock td {
-  color: #ffb3b3;
-}
-
-.low-stock {
-  background: rgba(255, 0, 0, 0.15);
-}
-
-.low-stock td {
-  color: #ff5252;
-  font-weight: bold;
-}
-
-.warehouse-low {
-  background: #3a1c1c;
-  color: #ffb3b3;
-}
-
-.warehouse-warning {
-  background: #3a1c1c;
-  color: #ffb3b3;
-}
-
-/* ============================
-   Форма яєць — фікс вирівнювання
-============================ */
-
-.egg-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.egg-form .form-row {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  align-items: center;
-  gap: 12px;
-}
-
-.egg-form .form-row label {
-  text-align: right;
-  font-size: 16px;
-  opacity: 0.9;
-}
-
-.egg-form .form-row input {
-  height: 38px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--text);
-  font-size: 16px;
+/* =========================================
+   🧱 RESET / BASE
+   ========================================= */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-#saveEggBtn {
-  margin-top: 10px;
-  height: 48px;
-  font-size: 18px;
-  border-radius: 12px;
-}
-
-/* ============================
-   Помилки введення яєць
-============================ */
-
-.input-error {
-  border: 2px solid #ff5252 !important;
-  background: rgba(255, 82, 82, 0.15);
-}
-
-.error-text {
-  margin-top: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(255, 82, 82, 0.15);
-  border: 1px solid #ff5252;
-  color: #ffb3b3;
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-main);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Ubuntu, sans-serif;
   font-size: 14px;
 }
 
-.toast{
-  position: fixed;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
-  background: rgba(20,20,20,.92);
-  border: 1px solid rgba(255,255,255,.12);
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 10px;
+/* =========================================
+   🧭 LAYOUT
+   ========================================= */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Верхня панель / навігація */
+.app-header {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Основний контент */
+.app-content {
+  flex: 1;
+  padding: 12px;
+}
+
+/* =========================================
+   📑 ВКЛАДКИ / СЕКЦІЇ
+   ========================================= */
+.page {
+  display: none;
+}
+
+.page.is-active {
+  display: block;
+}
+
+/* =========================================
+   🧩 ПАНЕЛІ / КАРТКИ
+   ========================================= */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.panel-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* =========================================
+   📝 ФОРМИ
+   ========================================= */
+.form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.form-row > * {
+  flex: 1;
+}
+
+label {
+  display: block;
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-bottom: 4px;
+}
+
+input,
+select,
+button {
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border-color);
+  color: var(--color-text);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
-  max-width: 92vw;
-  z-index: 9999;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s ease, transform .2s ease;
 }
 
-.toast.show{
-  opacity: 1;
-  transform: translateX(-50%) translateY(-4px);
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-accent);
 }
 
-.toast.success{ border-color: rgba(76,175,80,.35); }
-.toast.warn{ border-color: rgba(255,193,7,.35); }
-.toast.error{ border-color: rgba(244,67,54,.35); }
-
-.input-error{
-  outline: 2px solid rgba(244,67,54,.6);
-  border-color: rgba(244,67,54,.6) !important;
-  background: rgba(244,67,54,.08);
+/* =========================================
+   🔘 КНОПКИ
+   ========================================= */
+button {
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              border var(--transition-fast),
+              opacity var(--transition-fast);
 }
 
+button:hover {
+  opacity: 0.9;
+}
+
+button.primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #000;
+}
+
+button.danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+button.warning {
+  background: var(--color-warning);
+  border-color: var(--color-warning);
+  color: #000;
+}
+
+/* =========================================
+   📊 ТАБЛИЦІ
+   ========================================= */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 13px;
+}
+
+th {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+/* =========================================
+   ⚠️ ПОПЕРЕДЖЕННЯ / СТАТУСИ
+   ========================================= */
+.text-muted {
+  color: var(--color-muted);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+/* =========================================
+   📱 МОБІЛЬНА АДАПТАЦІЯ
+   ========================================= */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .app-content {
+    padding: 8px;
+  }
+}
