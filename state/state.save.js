@@ -1,5 +1,6 @@
 /**
  * 💾 state.save.js
+ * ---------------------------------------
  * Збереження AppState
  *
  * ✅ localStorage (offline / fallback)
@@ -33,7 +34,8 @@ export async function saveState() {
   // 2️⃣ Firebase Cloud (онлайн sync)
   // -------------------------------
   try {
-    await saveStateToCloud(); // ✅ БЕЗ параметрів
+    // 🔴 ВАЖЛИВО: передаємо AppState
+    await saveStateToCloud(AppState);
   } catch (err) {
     console.warn("⚠ Firebase недоступний, працюємо локально", err);
   }
