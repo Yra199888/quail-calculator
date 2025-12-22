@@ -1,53 +1,103 @@
-// /src/controllers/FeedFormController.js
-import { qs } from "../utils/dom.js";
+/**
+ * FeedFormController
+ * ------------------
+ * Контролер калькулятора корму.
+ *
+ * Відповідає ТІЛЬКИ за:
+ * - зчитування input (кількість, ціна, обʼєм)
+ * - реакцію на зміну значень
+ * - передачу змін через callback
+ *
+ * ❌ НЕ рахує собівартість
+ * ❌ НЕ працює з AppState напряму
+ * ❌ НЕ лізе у склад або рецепти
+ */
 
 export class FeedFormController {
-  constructor({ AppState, onChange }) {
-    this.AppState = AppState;
+  constructor({ onChange }) {
+    if (typeof onChange !== "function") {
+      throw new Error("FeedFormController: onChange має бути функцією");
+    }
+
     this.onChange = onChange;
+
+    // DOM
+    this.table = null;
+    this.volumeInput = null;
   }
 
+  /**
+   * Ініціалізація контролера
+   * викликається ОДИН РАЗ після рендера таблиці
+   */
   init() {
+    this.table = document.getElementById("feedTable");
+    this.volumeInput = document.getElementById("feedVolume");
+
+    if (!this.table) return;
+
     this.bindTableInputs();
     this.bindVolumeInput();
   }
 
-  // 🔹 Делегування подій — ОДИН listener
+  /**
+   * Підвʼязка input у таблиці (кількість + ціна)
+   */
   bindTableInputs() {
-    const table = qs("#feedTable");
-    if (!table) return;
+    this.table.addEventListener("input", (e) => {
+      const target = e.target;
 
-    table.addEventListener("input", (e) => {
-      const el = e.target;
-
-      const index = Number(el.dataset.i);
-      if (Number.isNaN(index)) return;
-
-      if (el.classList.contains("qty")) {
-        this.AppState.feedCalculator.qty[index] = Number(el.value) || 0;
-        this.emit("qty", index, el.value);
+      if (target.classList.contains("qty")) {
+        this.handleQtyChange(target);
       }
 
-      if (el.classList.contains("price")) {
-        this.AppState.feedCalculator.price[index] = Number(el.value) || 0;
-        this.emit("price", index, el.value);
+      if (target.classList.contains("price")) {
+        this.handlePriceChange(target);
       }
     });
   }
 
+  /**
+   * Підвʼязка input обʼєму замісу
+   */
   bindVolumeInput() {
-    const input = qs("#feedVolume");
-    if (!input) return;
+    if (!this.volumeInput) return;
 
-    input.addEventListener("input", () => {
-      this.AppState.feedCalculator.volume = Number(input.value) || 0;
-      this.emit("volume", null, input.value);
+    this.volumeInput.addEventListener("input", () => {
+      const value = Number(this.volumeInput.value || 0);
+
+      this.onChange({
+        type: "volume",
+        value
+      });
     });
   }
 
-  emit(type, index, value) {
-    if (typeof this.onChange === "function") {
-      this.onChange({ type, index, value });
-    }
+  /**
+   * Обробка зміни кількості компонента
+   */
+  handleQtyChange(input) {
+    const index = Number(input.dataset.i);
+    const value = Number(input.value || 0);
+
+    this.onChange({
+      type: "qty",
+      index,
+      value
+    });
+  }
+
+  /**
+   * Обробка зміни ціни компонента
+   */
+  handlePriceChange(input) {
+    const index = Number(input.dataset.i);
+    const value = Number(input.value || 0);
+
+    this.onChange({
+      type: "price",
+      index,
+      value
+    });
   }
 }
