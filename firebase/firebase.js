@@ -1,75 +1,82 @@
-/**
- * 🔥 firebase.js — SAFE VERSION
- * ❌ НЕ перезаписує яйця
- * ✅ додає / оновлює по датах
- */
+// firebase/firebase.js
+import {
+  initializeApp,
+  getApps
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 
-import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import {
   getFirestore,
   doc,
-  getDoc,
-  updateDoc,
-  setDoc,
+  runTransaction,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-// ================= CONFIG =================
+/* ===============================
+   INIT
+================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
   authDomain: "quail-farm-tracke.firebaseapp.com",
   projectId: "quail-farm-tracke",
-  storageBucket: "quail-farm-tracke.firebasestorage.app",
+  storageBucket: "quail-farm-tracke.appspot.com",
   messagingSenderId: "914329630014",
   appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
 };
 
-// ================= INIT =================
-let app;
-let db;
+const app = getApps().length === 0
+  ? initializeApp(firebaseConfig)
+  : getApps()[0];
 
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-}
-db = getFirestore();
+const db = getFirestore(app);
+const DOC_REF = doc(db, "app", "state");
 
-export function isFirebaseReady() {
-  return !!db;
-}
+/* ===============================
+   SAVE FULL APPSTATE (SAFE)
+================================ */
+export async function saveStateToCloud(localState) {
+  if (!localState) return;
 
-// ❗ Один документ
-const STATE_REF = doc(db, "app", "state");
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(DOC_REF);
 
-// ================= SAVE EGGS SAFELY =================
-export async function saveEggsToCloud(eggsRecords) {
-  if (!db || !eggsRecords) return;
+    const remote = snap.exists()
+      ? snap.data()
+      : {};
 
-  const payload = {};
+    // 🔥 ГЛИБОКЕ ЗЛИТТЯ
+    const merged = deepMerge(remote, localState);
 
-  // 🔥 КЛЮЧОВЕ: update через dot-path
-  Object.entries(eggsRecords).forEach(([date, record]) => {
-    payload[`eggs.records.${date}`] = record;
+    tx.set(DOC_REF, merged);
   });
-
-  await updateDoc(STATE_REF, payload);
 }
 
-// ================= LOAD =================
-export async function loadStateFromCloud() {
-  if (!db) return null;
-
-  const snap = await getDoc(STATE_REF);
-  if (!snap.exists()) return null;
-
-  return snap.data();
-}
-
-// ================= REALTIME =================
+/* ===============================
+   REALTIME SUBSCRIBE
+================================ */
 export function subscribeToCloudState(cb) {
-  if (!db) return;
-
-  onSnapshot(STATE_REF, (snap) => {
+  return onSnapshot(DOC_REF, (snap) => {
     if (!snap.exists()) return;
     cb(snap.data());
   });
+}
+
+/* ===============================
+   HELPERS
+================================ */
+function deepMerge(target, source) {
+  if (typeof target !== "object" || typeof source !== "object") {
+    return source;
+  }
+
+  const out = Array.isArray(target) ? [...target] : { ...target };
+
+  Object.keys(source).forEach((key) => {
+    if (source[key] && typeof source[key] === "object") {
+      out[key] = deepMerge(target[key] || {}, source[key]);
+    } else {
+      out[key] = source[key];
+    }
+  });
+
+  return out;
 }
