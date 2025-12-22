@@ -1,92 +1,115 @@
-/**
- * 🔥 firebase.js
- * ---------------------------------------
- * Firebase init + Cloud sync for AppState
- */
-
+// firebase/firebase.js
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import {
   getFirestore,
   doc,
-  getDoc,
   setDoc,
+  getDoc,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-// =======================================
-// 🔐 CONFIG
-// =======================================
-const firebaseConfig = {
-  apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
-  authDomain: "quail-farm-tracke.firebaseapp.com",
-  projectId: "quail-farm-tracke",
-  storageBucket: "quail-farm-tracke.firebasestorage.app",
-  messagingSenderId: "914329630014",
-  appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
-};
-
-// =======================================
-// 🔥 INIT (SAFE)
-// =======================================
 let app = null;
 let db = null;
+let ready = false;
 
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0];
+// ===============================
+// 🔧 UI STATUS
+// ===============================
+function setFirebaseStatus(state) {
+  const el = document.getElementById("firebase-status");
+  if (!el) return;
+
+  el.className = `firebase-status ${state}`;
+
+  if (state === "online") el.textContent = "🟢 Online";
+  if (state === "syncing") el.textContent = "🟡 Syncing…";
+  if (state === "offline") el.textContent = "🔴 Offline";
 }
 
-db = getFirestore(app);
+// ===============================
+// 🔥 INIT FIREBASE
+// ===============================
+export function initFirebase() {
+  if (ready) return;
 
-// =======================================
-// 📌 CONSTANTS
-// =======================================
-const DOC_PATH = ["app", "state"];
+  const config = {
+    apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
+    authDomain: "quail-farm-tracke.firebaseapp.com",
+    projectId: "quail-farm-tracke",
+    storageBucket: "quail-farm-tracke.appspot.com",
+    messagingSenderId: "914329630014",
+    appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
+  };
 
-// =======================================
-// ✅ CHECK
-// =======================================
+  try {
+    if (!getApps().length) {
+      app = initializeApp(config);
+    } else {
+      app = getApps()[0];
+    }
+
+    db = getFirestore(app);
+    ready = true;
+    setFirebaseStatus("online");
+  } catch (e) {
+    console.error("Firebase init error", e);
+    setFirebaseStatus("offline");
+  }
+}
+
 export function isFirebaseReady() {
-  return !!db;
+  return ready;
 }
 
-// =======================================
-// 📥 LOAD STATE (ONCE)
-// =======================================
-export async function loadStateFromCloud() {
-  const ref = doc(db, ...DOC_PATH);
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) return null;
-  return snap.data();
-}
-
-// =======================================
-// 💾 SAVE STATE (MERGE)
-// =======================================
+// ===============================
+// ☁ SAVE STATE
+// ===============================
 export async function saveStateToCloud(state) {
-  if (!state || typeof state !== "object") return;
+  if (!ready) return;
 
-  const ref = doc(db, ...DOC_PATH);
+  setFirebaseStatus("syncing");
 
-  // 🔴 КЛЮЧОВЕ: merge:true
-  await setDoc(ref, structuredClone(state), {
-    merge: true
-  });
+  try {
+    await setDoc(
+      doc(db, "app", "state"),
+      state,
+      { merge: true } // 🔴 КЛЮЧОВЕ: НЕ ПЕРЕЗАПИСУЄ ВСЕ
+    );
+
+    setFirebaseStatus("online");
+  } catch (e) {
+    console.error("Firebase save error", e);
+    setFirebaseStatus("offline");
+  }
 }
 
-// =======================================
-// 🔄 REALTIME SYNC
-// =======================================
-export function subscribeToCloudState(onUpdate) {
-  const ref = doc(db, ...DOC_PATH);
+// ===============================
+// 📥 LOAD STATE
+// ===============================
+export async function loadStateFromCloud() {
+  if (!ready) return null;
 
-  return onSnapshot(ref, (snap) => {
-    if (!snap.exists()) return;
-    const data = snap.data();
-    if (typeof onUpdate === "function") {
-      onUpdate(data);
+  try {
+    const snap = await getDoc(doc(db, "app", "state"));
+    return snap.exists() ? snap.data() : null;
+  } catch (e) {
+    console.error("Firebase load error", e);
+    setFirebaseStatus("offline");
+    return null;
+  }
+}
+
+// ===============================
+// 🔄 REALTIME SYNC
+// ===============================
+export function subscribeToCloudState(cb) {
+  if (!ready) return;
+
+  onSnapshot(doc(db, "app", "state"), (snap) => {
+    if (snap.exists()) {
+      setFirebaseStatus("syncing");
+      cb(snap.data());
+      setFirebaseStatus("online");
     }
   });
 }
