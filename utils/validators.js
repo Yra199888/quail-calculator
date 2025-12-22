@@ -1,15 +1,64 @@
-// utils/validators.js
+/**
+ * utils/validators.js
+ * ---------------------------------------
+ * Набір простих валідаторів для форм.
+ * Використовується у контролерах перед записом у AppState.
+ */
 
-export function isNonEmptyString(v) {
-  return typeof v === "string" && v.trim().length > 0;
+/**
+ * Перевірка: чи значення є числом
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function isNumber(value) {
+  return typeof value === "number" && !isNaN(value);
 }
 
-export function isPositiveNumber(v) {
-  return Number(v) > 0;
+/**
+ * Перевірка: чи можна привести до числа
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function isNumeric(value) {
+  return value !== null && value !== "" && !isNaN(Number(value));
 }
 
-export function markError(el, ms = 1200) {
-  if (!el) return;
-  el.classList.add("input-error");
-  setTimeout(() => el.classList.remove("input-error"), ms);
+/**
+ * Перевірка: число >= 0
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function isPositive(value) {
+  return isNumeric(value) && Number(value) >= 0;
+}
+
+/**
+ * Перевірка: рядок не порожній
+ * @param {*} value
+ * @returns {boolean}
+ */
+export function isNotEmpty(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+/**
+ * Перевірка: валідна дата (YYYY-MM-DD)
+ * @param {string} value
+ * @returns {boolean}
+ */
+export function isValidDate(value) {
+  if (!isNotEmpty(value)) return false;
+
+  const date = new Date(value);
+  return !isNaN(date.getTime());
+}
+
+/**
+ * Універсальна перевірка кількості (для яєць, корму, складу)
+ * @param {*} value
+ * @returns {number} безпечне число
+ */
+export function toSafeNumber(value) {
+  if (!isNumeric(value)) return 0;
+  return Number(value);
 }
