@@ -1,8 +1,7 @@
 /**
- * 🔥 firebase.js
- * ---------------------------------------
- * Firebase Cloud Firestore
- * ЄДИНЕ джерело синхронізації між пристроями
+ * 🔥 firebase.js — SAFE VERSION
+ * ❌ НЕ перезаписує яйця
+ * ✅ додає / оновлює по датах
  */
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -10,14 +9,12 @@ import {
   getFirestore,
   doc,
   getDoc,
+  updateDoc,
   setDoc,
-  onSnapshot,
-  serverTimestamp
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-/* =======================================
-   CONFIG
-   ======================================= */
+// ================= CONFIG =================
 const firebaseConfig = {
   apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
   authDomain: "quail-farm-tracke.firebaseapp.com",
@@ -27,74 +24,52 @@ const firebaseConfig = {
   appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
 };
 
-/* =======================================
-   INIT
-   ======================================= */
-let app = null;
-let db = null;
+// ================= INIT =================
+let app;
+let db;
+
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+}
+db = getFirestore();
 
 export function isFirebaseReady() {
   return !!db;
 }
 
-function initFirebase() {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  }
-  db = getFirestore();
+// ❗ Один документ
+const STATE_REF = doc(db, "app", "state");
+
+// ================= SAVE EGGS SAFELY =================
+export async function saveEggsToCloud(eggsRecords) {
+  if (!db || !eggsRecords) return;
+
+  const payload = {};
+
+  // 🔥 КЛЮЧОВЕ: update через dot-path
+  Object.entries(eggsRecords).forEach(([date, record]) => {
+    payload[`eggs.records.${date}`] = record;
+  });
+
+  await updateDoc(STATE_REF, payload);
 }
 
-initFirebase();
-
-/* =======================================
-   PATH
-   ❗ ОДИН і той самий документ для всіх
-   ======================================= */
-const STATE_DOC = doc(db, "app", "state");
-
-/* =======================================
-   SAVE (MERGE!)
-   ======================================= */
-export async function saveStateToCloud(AppState) {
-  if (!db) return;
-
-  await setDoc(
-    STATE_DOC,
-    {
-      ...AppState,
-      __updatedAt: serverTimestamp()
-    },
-    { merge: true } // 🔥 КЛЮЧОВЕ
-  );
-}
-
-/* =======================================
-   LOAD
-   ======================================= */
+// ================= LOAD =================
 export async function loadStateFromCloud() {
   if (!db) return null;
 
-  const snap = await getDoc(STATE_DOC);
+  const snap = await getDoc(STATE_REF);
   if (!snap.exists()) return null;
 
-  const data = snap.data();
-  delete data.__updatedAt;
-
-  return data;
+  return snap.data();
 }
 
-/* =======================================
-   REALTIME SYNC
-   ======================================= */
+// ================= REALTIME =================
 export function subscribeToCloudState(cb) {
   if (!db) return;
 
-  onSnapshot(STATE_DOC, (snap) => {
+  onSnapshot(STATE_REF, (snap) => {
     if (!snap.exists()) return;
-
-    const data = snap.data();
-    delete data.__updatedAt;
-
-    cb(data);
+    cb(snap.data());
   });
 }
