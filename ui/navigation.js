@@ -1,56 +1,53 @@
 /**
  * 🧭 navigation.js
  * ---------------------------------------
- * Навігація між вкладками
- * Працює з data-page + id="page-*"
+ * ЄДИНЕ джерело правди для вкладок
  */
 
 import { AppState } from "../state/AppState.js";
 
 export function initNavigation() {
   const buttons = document.querySelectorAll(".nav-btn");
-  const pages = document.querySelectorAll(".page");
 
-  if (!buttons.length || !pages.length) {
-    console.warn("⚠️ Navigation: кнопки або сторінки не знайдені");
+  if (!buttons.length) {
+    console.warn("⚠️ Navigation: кнопки не знайдені");
     return;
   }
 
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const page = btn.dataset.page;
-      activatePage(page);
+      showPage(page);
     });
   });
 
-  // відновлення сторінки зі state
-  activatePage(AppState.ui.page || "feed");
+  // стартова сторінка
+  showPage(AppState.ui.page || "feed");
 
   console.log("🧭 Navigation ready");
 }
 
-function activatePage(page) {
+function showPage(page) {
   const pageId = `page-${page}`;
   const target = document.getElementById(pageId);
 
   if (!target) {
-    console.warn(`⚠️ Page not found: ${page}`);
+    console.warn(`⚠️ Page not found: ${pageId}`);
     return;
   }
 
-  // сховати всі
-  document.querySelectorAll(".page").forEach(p =>
-    p.classList.remove("active")
-  );
+  // приховати всі
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.remove("active");
+  });
 
   // показати потрібну
   target.classList.add("active");
 
-  // активна кнопка
-  document.querySelectorAll(".nav-btn").forEach(b =>
-    b.classList.toggle("active", b.dataset.page === page)
-  );
+  // кнопки
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  });
 
-  // зберегти в state
   AppState.ui.page = page;
 }
