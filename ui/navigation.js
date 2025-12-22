@@ -1,19 +1,25 @@
+// src/ui/navigation.js
+
 /**
- * 🧭 navigation.js
+ * 🧭 Навігація між вкладками
  * ---------------------------------------
- * ЄДИНЕ джерело правди для вкладок
+ * Відповідає ТІЛЬКИ за:
+ * - перемикання сторінок
+ * - активну кнопку
  */
 
 import { AppState } from "../state/AppState.js";
 
 export function initNavigation() {
   const buttons = document.querySelectorAll(".nav-btn");
+  const pages = document.querySelectorAll(".page");
 
-  if (!buttons.length) {
-    console.warn("⚠️ Navigation: кнопки не знайдені");
+  if (!buttons.length || !pages.length) {
+    console.warn("⚠️ Navigation: кнопки або сторінки не знайдені");
     return;
   }
 
+  // клік по кнопці
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
       const page = btn.dataset.page;
@@ -21,33 +27,34 @@ export function initNavigation() {
     });
   });
 
-  // стартова сторінка
+  // показати сторінку зі state або feed за замовчуванням
   showPage(AppState.ui.page || "feed");
 
   console.log("🧭 Navigation ready");
 }
 
 function showPage(page) {
-  const pageId = `page-${page}`;
-  const target = document.getElementById(pageId);
+  const pages = document.querySelectorAll(".page");
+  const buttons = document.querySelectorAll(".nav-btn");
 
-  if (!target) {
-    console.warn(`⚠️ Page not found: ${pageId}`);
+  const targetId = `page-${page}`;
+  const targetPage = document.getElementById(targetId);
+
+  if (!targetPage) {
+    console.warn("⚠️ Page not found:", targetId);
     return;
   }
 
-  // приховати всі
-  document.querySelectorAll(".page").forEach(p => {
-    p.classList.remove("active");
-  });
+  // сховати всі сторінки
+  pages.forEach(p => p.classList.remove("active"));
+  buttons.forEach(b => b.classList.remove("active"));
 
   // показати потрібну
-  target.classList.add("active");
+  targetPage.classList.add("active");
+  document
+    .querySelector(`.nav-btn[data-page="${page}"]`)
+    ?.classList.add("active");
 
-  // кнопки
-  document.querySelectorAll(".nav-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.page === page);
-  });
-
+  // зберегти в state
   AppState.ui.page = page;
 }
