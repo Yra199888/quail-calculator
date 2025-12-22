@@ -1,33 +1,40 @@
+/**
+ * 🥚 trays.service.js
+ * ---------------------------------------
+ * Логіка лотків (20 яєць = 1 лоток)
+ *
+ * ❌ без render
+ * ❌ без Firebase
+ * ❌ без localStorage
+ *
+ * ✅ ТІЛЬКИ обчислення
+ */
+
 import { AppState } from "../state/AppState.js";
 
-const EGGS_PER_TRAY = 20; // ✅ 20 яєць = 1 лоток
+export const EGGS_PER_TRAY = 20;
 
-export function getEggsStats() {
+/**
+ * 🔢 Загальна кількість яєць
+ */
+export function getTotalEggs() {
   const records = AppState.eggs.records || {};
 
-  let totalEggs = 0;
-
-  Object.values(records).forEach(e => {
-    totalEggs += Number(e.good || 0);
-  });
-
-  const fullTrays = Math.floor(totalEggs / EGGS_PER_TRAY);
-  const restEggs = totalEggs % EGGS_PER_TRAY;
-
-  return {
-    totalEggs,
-    fullTrays,
-    restEggs
-  };
+  return Object.values(records).reduce((sum, e) => {
+    return sum + Number(e.good || 0);
+  }, 0);
 }
 
-export function getSoldTrays() {
-  const orders = AppState.orders?.list || [];
-  return orders.reduce((sum, o) => sum + Number(o.trays || 0), 0);
+/**
+ * 📦 Повні лотки
+ */
+export function getFullTrays() {
+  return Math.floor(getTotalEggs() / EGGS_PER_TRAY);
 }
 
-export function getAvailableTrays() {
-  const { fullTrays } = getEggsStats();
-  const sold = getSoldTrays();
-  return Math.max(0, fullTrays - sold);
+/**
+ * 🥚 Залишок яєць
+ */
+export function getEggsRemainder() {
+  return getTotalEggs() % EGGS_PER_TRAY;
 }
