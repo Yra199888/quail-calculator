@@ -57,7 +57,14 @@ function renderFeedTable() {
               data-id="${c.id}"
               ${enabled ? "checked" : ""}
             />
-            ${c.name}
+
+            <span
+              class="feed-name"
+              data-id="${c.id}"
+              title="Клікніть для редагування"
+            >
+              ${c.name}
+            </span>
           </td>
 
           <td>
