@@ -21,7 +21,7 @@ const STORAGE_KEY = "AppState";
  */
 export async function saveState() {
   // -------------------------------
-  // 1️⃣ LocalStorage (як було)
+  // 1️⃣ LocalStorage (офлайн, як було)
   // -------------------------------
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
@@ -30,10 +30,10 @@ export async function saveState() {
   }
 
   // -------------------------------
-  // 2️⃣ Firebase Cloud (НОВЕ)
+  // 2️⃣ Firebase Cloud (онлайн sync)
   // -------------------------------
   try {
-    await saveStateToCloud(AppState);
+    await saveStateToCloud(); // ✅ БЕЗ параметрів
   } catch (err) {
     console.warn("⚠ Firebase недоступний, працюємо локально", err);
   }
