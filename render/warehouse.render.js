@@ -26,13 +26,13 @@ import { AppState } from "../state/AppState.js";
 // =======================================
 export function renderWarehouse() {
   renderFeedWarehouseTable();
-  renderEggTraysBlock();      // 🆕 готові лотки з яєць
-  renderTraysBlock();         // порожні лотки (як було)
+  renderEggTraysBlock();   // 🥚 готові лотки
+  renderTraysBlock();      // 🧺 порожні лотки
   renderWarehouseWarnings();
 }
 
 // =======================================
-// КОРМОВІ КОМПОНЕНТИ
+// 🌾 КОРМОВІ КОМПОНЕНТИ
 // =======================================
 function renderFeedWarehouseTable() {
   const tbody = qs("#warehouseFeedTableBody");
@@ -103,12 +103,12 @@ function bindFeedActions() {
 }
 
 // =======================================
-// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ (НОВЕ)
+// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ
 // =======================================
 function renderEggTraysBlock() {
   let box = qs("#eggTraysBlock");
 
-  // якщо блока ще нема — створюємо
+  // створюємо блок ОДИН РАЗ
   if (!box) {
     const panel = qs("#page-warehouse .panel");
     if (!panel) return;
@@ -116,7 +116,7 @@ function renderEggTraysBlock() {
     panel.insertAdjacentHTML(
       "beforeend",
       `
-      <div class="panel" id="eggTraysBlock">
+      <div id="eggTraysBlock" style="margin-top:12px">
         <div class="panel-title">🥚 Готові лотки з яєць</div>
         <div id="eggTraysContent"></div>
       </div>
@@ -129,31 +129,22 @@ function renderEggTraysBlock() {
   const content = qs("#eggTraysContent");
   if (!content) return;
 
-  const stats = calcTrayStats(AppState);
+  // захист
+  const stats = calcTrayStats(AppState || {});
 
   content.innerHTML = `
     <div class="egg-trays-grid">
-      <div>
-        🥚 Всього яєць: <b>${stats.totalGoodEggs}</b>
-      </div>
-      <div>
-        📦 Повних лотків: <b>${stats.totalTrays}</b>
-      </div>
-      <div>
-        ✅ Доступно на складі: <b>${stats.availableTrays}</b>
-      </div>
-      <div>
-        🧺 Продано: <b>${stats.shippedTrays}</b>
-      </div>
-      <div>
-        ➕ Залишок яєць: <b>${stats.leftoverEggs}</b>
-      </div>
+      <div>🥚 Всього яєць: <b>${stats.totalGoodEggs}</b></div>
+      <div>📦 Повних лотків: <b>${stats.totalTrays}</b></div>
+      <div>✅ Доступно: <b>${stats.availableTrays}</b></div>
+      <div>🧺 Продано: <b>${stats.shippedTrays}</b></div>
+      <div>➕ Залишок яєць: <b>${stats.leftoverEggs}</b></div>
     </div>
   `;
 }
 
 // =======================================
-// 🧺 ПОРОЖНІ ЛОТКИ (ЯК БУЛО)
+// 🧺 ПОРОЖНІ ЛОТКИ
 // =======================================
 function renderTraysBlock() {
   const valueEl = qs("#emptyTraysValue");
