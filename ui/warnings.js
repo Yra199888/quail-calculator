@@ -10,7 +10,7 @@ import { AppState } from "../state/AppState.js";
 /**
  * Оновлення блоку попереджень складу
  */
-export function renderWarehouseWarnings() {
+export function initWarnings () {
   const box = document.getElementById("warehouseWarning");
   const listEl = document.getElementById("warehouseWarningList");
 
