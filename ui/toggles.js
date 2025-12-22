@@ -1,34 +1,52 @@
-// ui/toggles.js
+/**
+ * toggles.js
+ * ---------------------------------------
+ * Відповідає ТІЛЬКИ за UI-перемикачі:
+ *  - редагування яєць
+ *  - редагування складу
+ *
+ * ❌ Без бізнес-логіки
+ * ❌ Без localStorage
+ * ❌ Без знання, ЩО саме редагується
+ */
 
-import { $ } from "../utils/dom.js";
+import { qs } from "../utils/dom.js";
 
-function paint(btn, enabled, label) {
-  if (!btn) return;
-  btn.textContent = `${enabled ? "🔓" : "🔒"} ${label}`;
-  btn.style.background = enabled ? "#b30000" : "#2e7d32";
-  btn.style.color = "#fff";
+// =======================================
+// ПУБЛІЧНИЙ API
+// =======================================
+export function initToggles({ onEggsToggle, onWarehouseToggle }) {
+  const eggsBtn = qs("#toggle-eggs-edit");
+  const warehouseBtn = qs("#toggle-warehouse-edit");
+
+  if (eggsBtn && typeof onEggsToggle === "function") {
+    eggsBtn.addEventListener("click", () => {
+      const enabled = toggleButtonState(eggsBtn);
+      onEggsToggle(enabled);
+    });
+  }
+
+  if (warehouseBtn && typeof onWarehouseToggle === "function") {
+    warehouseBtn.addEventListener("click", () => {
+      const enabled = toggleButtonState(warehouseBtn);
+      onWarehouseToggle(enabled);
+    });
+  }
 }
 
-export function syncToggleButtonsUI(AppState) {
-  paint(
-    document.querySelector(`button[onclick="toggleEggsEdit()"]`) || $("toggleEggsEditBtn"),
-    AppState.ui.eggsEditEnabled,
-    "Редагування яєць"
-  );
+// =======================================
+// ВНУТРІШНЯ ЛОГІКА
+// =======================================
+function toggleButtonState(btn) {
+  const enabled = btn.dataset.enabled !== "true";
 
-  paint(
-    document.querySelector(`button[onclick="toggleWarehouseEdit()"]`) || $("toggleWarehouseEditBtn"),
-    AppState.ui.warehouseEditEnabled,
-    "Редагування складу"
-  );
+  btn.dataset.enabled = String(enabled);
+  paintButton(btn, enabled);
+
+  return enabled;
 }
 
-export function toggleEggsEdit(AppState, saveAppState) {
-  AppState.ui.eggsEditEnabled = !AppState.ui.eggsEditEnabled;
-  saveAppState();
-}
-
-export function toggleWarehouseEdit(AppState, saveAppState) {
-  AppState.ui.warehouseEditEnabled = !AppState.ui.warehouseEditEnabled;
-  saveAppState();
+function paintButton(btn, enabled) {
+  btn.textContent = enabled ? "🔓 УВІМКНЕНО" : "🔒 ВИМКНЕНО";
+  btn.classList.toggle("enabled", enabled);
 }
