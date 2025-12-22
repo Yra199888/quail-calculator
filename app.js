@@ -34,7 +34,7 @@ import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
 // =======================================
 // RENDER
 // =======================================
-import { renderEggs } from "./render/eggs.render.js";
+import { renderEggsList } from "./render/eggs.render.js";
 import { renderFeed } from "./render/feed.render.js";
 import { renderWarehouse } from "./render/warehouse.render.js";
 import { renderOrders } from "./render/orders.render.js";
