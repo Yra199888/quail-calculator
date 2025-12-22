@@ -1,338 +1,130 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>Quail Farm Tools PRO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>🐣 Фермерський трекер</title>
+
+  <!-- Основні стилі -->
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
+  <div class="app">
 
-<!-- ===== ВЕРХНЄ МЕНЮ ===== -->
-<div class="topnav">
-  <div class="nav-btn active" data-page="calculator">🧮</div>
-  <div class="nav-btn" data-page="eggs">🥚</div>
-  <div class="nav-btn" data-page="orders">📦</div>
-  <div class="nav-btn" data-page="finance">💰</div>
-</div>
+    <!-- =====================================
+         🧭 НАВІГАЦІЯ (ui/navigation.js)
+         ===================================== -->
+    <header class="app-header">
+      <nav class="nav">
+        <button class="nav-btn" data-page="eggs">🥚 Яйця</button>
+        <button class="nav-btn" data-page="feed">🌾 Корм</button>
+        <button class="nav-btn" data-page="warehouse">📦 Склад</button>
+        <button class="nav-btn" data-page="orders">📑 Замовлення</button>
+        <button class="nav-btn" data-page="recipes">📋 Рецепти</button>
+      </nav>
+    </header>
 
-<!-- ===== НИЖНЄ МЕНЮ ===== -->
-<div class="subnav">
-  <div class="nav-btn" data-page="warehouse">🏚️</div>
-  <div class="nav-btn" data-page="tools">🔧</div>
-  <div class="nav-btn" data-page="settings">⚙️</div>
-  <div class="nav-btn theme-switch" id="themeSwitch">🌙</div>
-</div>
+    <!-- =====================================
+         📦 ОСНОВНИЙ КОНТЕНТ
+         ===================================== -->
+    <main class="app-content">
 
-<!-- ===== КАЛЬКУЛЯТОР ===== -->
-<div id="page-calculator" class="page active-page">
-  <h2>🧮 Калькулятор корму</h2>
-  <div class="container">
-    <table class="feed-table">
-      <tr>
-        <th>Компонент</th>
-        <th>К-сть</th>
-        <th>Ціна</th>
-        <th>Сума</th>
-      </tr>
-      <tbody id="feedTable"></tbody>
-    </table>
+      <!-- ===== 🥚 ЯЙЦЯ ===== -->
+      <section class="page" id="page-eggs">
+        <div class="panel">
+          <div class="panel-title">🥚 Облік яєць</div>
 
-    <label>Обʼєм корму (кг):</label>
-    <input type="number" id="feedVolume" value="25">
+          <!-- Форма яєць (EggsFormController) -->
+          <form id="eggs-form">
+            <div class="form-row">
+              <div>
+                <label>Дата</label>
+                <input type="date" id="eggs-date" />
+              </div>
+              <div>
+                <label>Хороші</label>
+                <input type="number" id="eggs-good" />
+              </div>
+              <div>
+                <label>Брак</label>
+                <input type="number" id="eggs-bad" />
+              </div>
+              <div>
+                <label>Домашні</label>
+                <input type="number" id="eggs-home" />
+              </div>
+            </div>
 
-    <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
-    <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
-    <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
-  </div>
-  <hr>
+            <button type="button" class="primary" id="eggs-save-btn">
+              💾 Зберегти
+            </button>
+          </form>
+        </div>
 
-    <h3>📋 Рецепти корму</h3>
+        <!-- Рендер статистики яєць -->
+        <div id="eggs-report"></div>
+      </section>
 
-    <input id="recipeName" placeholder="Назва рецепту">
-    
-    <select id="recipeSelect"></select>
-    
-    <button id="saveRecipeBtn" class="main-btn">💾 Зберегти</button>
-    <button id="loadRecipeBtn" class="main-btn">📂 Завантажити</button>
-    <button id="deleteRecipeBtn" class="main-btn danger">🗑️ Видалити</button>
-  </div>
+      <!-- ===== 🌾 КОРМ ===== -->
+      <section class="page" id="page-feed">
+        <div class="panel">
+          <div class="panel-title">🌾 Калькулятор корму</div>
 
-<!-- ===== ЯЙЦЯ ===== -->
-<div id="page-eggs" class="page">
-  <h2>🥚 Облік яєць</h2>
+          <!-- Таблиця калькулятора (feed.render.js) -->
+          <div id="feed-table"></div>
+        </div>
+      </section>
 
-  <div class="egg-form">
-  <div class="form-row">
-    <label for="eggsDate">Дата:</label>
-    <input id="eggsDate" type="date">
-  </div>
+      <!-- ===== 📦 СКЛАД ===== -->
+      <section class="page" id="page-warehouse">
+        <div class="panel">
+          <div class="panel-title">📦 Склад</div>
 
-  <div class="form-row">
-    <label for="eggsGood">Яєць за добу:</label>
-    <input id="eggsGood" type="number">
-  </div>
+          <!-- Рендер складу -->
+          <div id="warehouse-content"></div>
+        </div>
+      </section>
 
-  <div class="form-row">
-    <label for="eggsBad">Браковані:</label>
-    <input id="eggsBad" type="number">
-  </div>
+      <!-- ===== 📑 ЗАМОВЛЕННЯ ===== -->
+      <section class="page" id="page-orders">
+        <div class="panel">
+          <div class="panel-title">📑 Замовлення</div>
 
-  <div class="form-row">
-    <label for="eggsHome">Для дому:</label>
-    <input id="eggsHome" type="number">
-  </div>
+          <!-- Рендер замовлень -->
+          <div id="orders-content"></div>
+        </div>
+      </section>
 
-  <button type="button" id="saveEggBtn" class="main-btn">
-  Зберегти
-</button>
+      <!-- ===== 📋 РЕЦЕПТИ ===== -->
+      <section class="page" id="page-recipes">
+        <div class="panel">
+          <div class="panel-title">📋 Рецепти корму</div>
 
-<div id="eggsInfo"></div>
-<div id="debugEggs" style="margin-top:10px; color:#ffb3b3; font-size:14px;"></div>
-</div>
+          <!-- Управління рецептами -->
+          <div class="form-row">
+            <input id="recipe-name" placeholder="Назва рецепту" />
+            <button class="primary" id="recipe-save-btn">💾 Зберегти</button>
+          </div>
 
-  <div id="eggsList"></div>
-  <!-- 🔐 КЕРУВАННЯ ЯЙЦЯМИ -->
-<div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-  <button class="main-btn" onclick="toggleEggsEdit()">
-    🔒 Дозволити редагування яєць
-  </button>
+          <div class="form-row">
+            <select id="recipe-select"></select>
+            <button id="recipe-load-btn">📂 Завантажити</button>
+            <button class="danger" id="recipe-delete-btn">🗑️ Видалити</button>
+          </div>
+        </div>
 
-  <button class="main-btn danger" onclick="clearAllEggs()">
-    🗑️ Очистити звіт по яйцях
-  </button>
-</div>
-</div>
+        <!-- Рендер складу рецепту -->
+        <div id="recipes-content"></div>
+      </section>
 
-<!-- ============================
-     ЗАМОВЛЕННЯ
-============================ -->
-<div id="page-orders" class="page">
-
-  <h2>📦 Замовлення</h2>
-
-  <!-- Форма додавання замовлення -->
-  <div class="container order-form">
-
-    <div class="form-row">
-      <label for="orderDate">Дата</label>
-      <input type="date" id="orderDate">
-    </div>
-
-    <div class="form-row">
-      <label for="orderClient">Клієнт</label>
-      <input
-        type="text"
-        id="orderClient"
-        placeholder="Імʼя / кафе / магазин"
-      >
-    </div>
-
-    <div class="form-row">
-      <label for="orderTrays">Кількість лотків</label>
-      <input
-        type="number"
-        id="orderTrays"
-        min="1"
-        placeholder="0"
-      >
-    </div>
-
-    <div class="form-row">
-      <label for="orderDetails">Коментар</label>
-      <textarea
-        id="orderDetails"
-        placeholder="Доставка, телефон, примітки…"
-      ></textarea>
-    </div>
-
-    <button id="addOrderBtn" class="main-btn">
-      ➕ Додати замовлення
-    </button>
-  </div>
-  
-  <div id="ordersSummary"
-     style="background:#111;border:1px solid #222;padding:10px;border-radius:10px;margin-bottom:10px;">
-  <b>Активні замовлення:</b> <span id="activeOrdersCount">0</span><br>
-  <b>Заброньовано лотків:</b> <span id="activeOrdersTrays">0</span>
-</div>
-
-  <!-- Список замовлень -->
-  <div id="ordersList"></div>
-
-</div>
-
-<!-- ===== СКЛАД ===== -->
-<div id="page-warehouse" class="page">
-  <h2>🏚️ Склад</h2>
-  <div class="container">
-    <table class="feed-table">
-      <thead>
-        <tr>
-          <th>Компонент</th>
-          <th>Прихід</th>
-          <th>На заміс</th>
-          <th>Залишок</th>
-        </tr>
-      </thead>
-      <tbody id="warehouseTable"></tbody>
-    </table>
-
-    <button id="makeFeedBtn" class="main-btn">🔄 Зробити корм</button>
-    <!-- 🔐 КЕРУВАННЯ СКЛАДОМ -->
-<div style="margin:15px 0; display:flex; gap:10px; flex-wrap:wrap;">
-  <button class="main-btn" onclick="toggleWarehouseEdit()">
-    🔒 Дозволити редагування складу
-  </button>
-
-  <button class="main-btn danger" onclick="clearFeedComponents()">
-    🧹 Очистити компоненти
-  </button>
-
-  <button class="main-btn danger" onclick="clearEggTrays()">
-    🗑️ Очистити лотки
-  </button>
-</div>
-    <!-- ⚠️ ПОПЕРЕДЖЕННЯ СКЛАДУ -->
-<div id="warehouseWarning" style="
-  display:none;
-  background:#3b0f0f;
-  border:1px solid #ff4d4d;
-  color:#ffd6d6;
-  padding:12px;
-  border-radius:8px;
-  margin:10px 0;
-  font-weight:600;
-">
-  ⚠️ УВАГА! Деякі запаси нижче мінімуму
-  <div id="warehouseWarningList" style="margin-top:6px; font-weight:400;"></div>
-</div>
-    
-    <h3>📜 Історія замісів</h3>
-
-    <div class="container" style="margin-top:10px;">
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-        <button id="clearMixHistoryBtn" class="main-btn danger">🧹 Очистити історію</button>
-      </div>
-    
-      <div id="mixHistory"><i>Порожньо</i></div>
-    </div>
-    
-    <h4>Порожні лотки</h4>
-    <input id="trayStock" type="number">
-
-    <p>Готові: <b id="fullTrays">0</b></p>
-    <p>Заброньовані: <b id="reservedTrays">0</b></p>
-  </div>
-</div>
-
-<!-- ===== НАЛАШТУВАННЯ ===== -->
-<div id="page-settings" class="page">
-  <h2>⚙️ Налаштування</h2>
-
-  <div class="container">
-    <h3>📦 Мінімальні залишки складу</h3>
-
-    <table class="feed-table">
-      <tr><th>Компонент</th><th>Мінімум</th></tr>
-      <tr><td>Кукурудза</td><td><input id="minFeed_kukurudza" type="number"></td></tr>
-      <tr><td>Пшениця</td><td><input id="minFeed_pshenytsia" type="number"></td></tr>
-      <tr><td>Ячмінь</td><td><input id="minFeed_yachmin" type="number"></td></tr>
-      <tr><td>Соева макуха</td><td><input id="minFeed_soieva_makuha" type="number"></td></tr>
-      <tr><td>Соняшникова макуха</td><td><input id="minFeed_soniashnykova_makuha" type="number"></td></tr>
-      <tr><td>Рибне борошно</td><td><input id="minFeed_rybne_boroshno" type="number"></td></tr>
-      <tr><td>Дріжджі</td><td><input id="minFeed_drizhdzhi" type="number"></td></tr>
-      <tr><td>Трикальційфосфат</td><td><input id="minFeed_trykaltsii_fosfat" type="number"></td></tr>
-      <tr><td>Dolfos D</td><td><input id="minFeed_dolfos_d" type="number"></td></tr>
-      <tr><td>Сіль</td><td><input id="minFeed_sil" type="number"></td></tr>
-    </table>
-
-    <h4>Порожні лотки</h4>
-    <input id="min_empty_trays" type="number">
-
-    <br><br>
-    <button id="saveWarehouseSettingsBtn" class="main-btn">
-      💾 Зберегти налаштування
-    </button>
-
-    <div id="settingsStatus"></div>
-  </div>
-  
-  <!-- ===== КОМПОНЕНТИ КОРМУ ===== -->
-<div class="container">
-  <h2>🧩 Компоненти корму</h2>
-  <p style="opacity:.7">
-    Тут ти керуєш складом корму: додаєш, перейменовуєш або замінюєш компоненти.
-    Це не впливає на історію замісів.
-  </p>
-
-  <!-- ДОДАВАННЯ НОВОГО КОМПОНЕНТА -->
-  <div class="card">
-    <h3>➕ Додати компонент</h3>
-
-    <div class="form-row">
-      <label>Назва</label>
-      <input id="newComponentName" placeholder="Напр. Кальвет">
-    </div>
-
-    <div class="form-row">
-      <label>ID (латиниця)</label>
-      <input id="newComponentId" placeholder="calvet">
-    </div>
-
-    <button class="main-btn" onclick="addNewComponent()">Додати</button>
+    </main>
   </div>
 
-  <!-- ТАБЛИЦЯ КОМПОНЕНТІВ -->
-  <div class="card">
-    <h3>📋 Список компонентів</h3>
-
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Назва</th>
-          <th>ID</th>
-          <th>Дії</th>
-        </tr>
-      </thead>
-      <tbody id="componentsTable">
-        <!-- JS -->
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ЗАМІНА КОМПОНЕНТА -->
-  <div class="card">
-    <h3>🔁 Заміна компонента</h3>
-
-    <div class="form-row">
-      <label>Замість</label>
-      <select id="replaceFrom"></select>
-    </div>
-
-    <div class="form-row">
-      <label>На</label>
-      <select id="replaceTo"></select>
-    </div>
-
-    <button class="main-btn danger" onclick="replaceComponentUI()">
-      Замінити
-    </button>
-
-    <p style="opacity:.6;margin-top:6px">
-      ✔ Рецепти та історія залишаться коректними
-    </p>
-  </div>
-</div>
-
-  
-</div>
-
-<!-- ===== SCRIPT ===== -->
-<script type="module" src="script.js"></script>
-
-<div id="toast" class="toast"></div>
-
+  <!-- =====================================
+       🚀 ТОЧКА ВХОДУ
+       ===================================== -->
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
