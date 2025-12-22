@@ -30,7 +30,6 @@ import { EggsFormController } from "./controllers/EggsFormController.js";
 import { FeedFormController } from "./controllers/FeedFormController.js";
 import { OrdersFormController } from "./controllers/OrdersFormController.js";
 import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
-import { FeedComponentsController } from "./controllers/FeedComponentsController.js";
 
 // =======================================
 // RENDER
@@ -73,7 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4) Init controllers
     initControllers();
 
-    // 5) Save after init
+    // 5) Global UI actions (delegation)
+    initGlobalActions();
+
+    // 6) Save after init
     saveState();
 
     console.groupEnd();
@@ -103,8 +105,8 @@ function initControllers() {
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
 
-      // qty / price
       if (type === "qty" || type === "price") {
+        if (!id) return;
 
         if (!AppState.feedCalculator.qtyById) {
           AppState.feedCalculator.qtyById = {};
@@ -113,18 +115,14 @@ function initControllers() {
           AppState.feedCalculator.priceById = {};
         }
 
-        if (!id) return;
-
         if (type === "qty") {
           AppState.feedCalculator.qtyById[id] = value;
         }
-
         if (type === "price") {
           AppState.feedCalculator.priceById[id] = value;
         }
       }
 
-      // volume
       if (type === "volume") {
         AppState.feedCalculator.volume = value;
       }
@@ -136,30 +134,6 @@ function initControllers() {
   });
 
   feedForm.init();
-  
-  // ➕ Feed Components
-const feedComponentsController = new FeedComponentsController({
-  onAdd: (component) => {
-    AppState.feedComponents.push(component);
-
-    // ініціалізуємо значення в калькуляторі
-    if (!AppState.feedCalculator.qtyById) {
-      AppState.feedCalculator.qtyById = {};
-    }
-    if (!AppState.feedCalculator.priceById) {
-      AppState.feedCalculator.priceById = {};
-    }
-
-    AppState.feedCalculator.qtyById[component.id] = component.kg;
-    AppState.feedCalculator.priceById[component.id] = component.price;
-
-    saveState();
-    renderFeed();
-    renderWarehouse();
-  }
-});
-
-feedComponentsController.init();
 
   // 📦 Orders
   new OrdersFormController({
@@ -180,6 +154,51 @@ feedComponentsController.init();
       renderFeed();
     }
   });
+}
+
+// =======================================
+// GLOBAL UI ACTIONS (EVENT DELEGATION)
+// =======================================
+function initGlobalActions() {
+  document.addEventListener("click", (e) => {
+
+    // ➕ Додати компонент корму
+    const addBtn = e.target.closest("#addFeedComponentBtn");
+    if (addBtn) {
+      addFeedComponent();
+      return;
+    }
+
+  });
+}
+
+// =======================================
+// ACTION: ADD FEED COMPONENT
+// =======================================
+function addFeedComponent() {
+  const component = {
+    id: `custom_${Date.now()}`,
+    name: "Новий компонент",
+    kg: 0,
+    price: 0,
+    enabled: true
+  };
+
+  AppState.feedComponents.push(component);
+
+  if (!AppState.feedCalculator.qtyById) {
+    AppState.feedCalculator.qtyById = {};
+  }
+  if (!AppState.feedCalculator.priceById) {
+    AppState.feedCalculator.priceById = {};
+  }
+
+  AppState.feedCalculator.qtyById[component.id] = component.kg;
+  AppState.feedCalculator.priceById[component.id] = component.price;
+
+  saveState();
+  renderFeed();
+  renderWarehouse();
 }
 
 // =======================================
