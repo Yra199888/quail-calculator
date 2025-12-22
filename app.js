@@ -206,6 +206,13 @@ function initGlobalActions() {
       startEditFeedName(nameSpan);
       return;
     }
+    
+    // ↩ Restore deleted feed components
+    const restoreBtn = e.target.closest("#restoreFeedComponentsBtn");
+    if (restoreBtn) {
+      restoreFeedComponents();
+      return;
+    }
   });
 }
 
@@ -272,6 +279,33 @@ function startEditFeedName(span) {
     if (e.key === "Enter") finish(true);
     if (e.key === "Escape") finish(false);
   });
+}
+
+// =======================================
+// ACTION: RESTORE DELETED FEED COMPONENTS
+// =======================================
+function restoreFeedComponents() {
+  const deleted = (AppState.feedComponents || []).filter(
+    c => c.deleted === true
+  );
+
+  if (deleted.length === 0) {
+    alert("Немає видалених компонентів");
+    return;
+  }
+
+  const ok = confirm(
+    `Відновити ${deleted.length} компонент(ів)?`
+  );
+  if (!ok) return;
+
+  deleted.forEach(c => {
+    c.deleted = false;
+  });
+
+  saveState();
+  renderFeed();
+  renderWarehouse();
 }
 
 // =======================================
