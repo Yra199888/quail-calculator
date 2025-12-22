@@ -3,7 +3,7 @@
  * ---------------------------------------
  * Render-шар калькулятора корму.
  * Відповідає ТІЛЬКИ за відображення:
- *  - активних компонентів
+ *  - компонентів
  *  - кількості
  *  - ціни
  *  - підсумків
@@ -25,13 +25,13 @@ export function renderFeed() {
 }
 
 // =======================================
-// 🧾 ТАБЛИЦЯ КОМПОНЕНТІВ
+// 🧾 ТАБЛИЦЯ КОМПОНЕНТІВ (УСІ)
 // =======================================
 function renderFeedTable() {
   const tbody = document.getElementById("feedTable");
   if (!tbody) return;
 
-  const components = getActiveFeedComponents();
+  const components = AppState.feedComponents || [];
 
   tbody.innerHTML = components
     .map(c => {
@@ -46,10 +46,19 @@ function renderFeedTable() {
           : Number(c.price ?? 0);
 
       const sum = qty * price;
+      const enabled = c.enabled !== false;
 
       return `
-        <tr>
-          <td>${c.name}</td>
+        <tr class="${enabled ? "" : "disabled"}">
+          <td>
+            <input
+              type="checkbox"
+              class="feed-enable"
+              data-id="${c.id}"
+              ${enabled ? "checked" : ""}
+            />
+            ${c.name}
+          </td>
 
           <td>
             <input
@@ -59,6 +68,7 @@ function renderFeedTable() {
               min="0"
               step="0.01"
               value="${qty}"
+              ${enabled ? "" : "disabled"}
             >
           </td>
 
@@ -70,10 +80,11 @@ function renderFeedTable() {
               min="0"
               step="0.01"
               value="${price}"
+              ${enabled ? "" : "disabled"}
             >
           </td>
 
-          <td>${sum.toFixed(2)}</td>
+          <td>${enabled ? sum.toFixed(2) : "—"}</td>
         </tr>
       `;
     })
@@ -81,7 +92,7 @@ function renderFeedTable() {
 }
 
 // =======================================
-// 📊 ПІДСУМКИ КАЛЬКУЛЯТОРА
+// 📊 ПІДСУМКИ (ТІЛЬКИ ENABLED)
 // =======================================
 function renderFeedTotals() {
   const totalEl = document.getElementById("feedTotal");
@@ -90,7 +101,9 @@ function renderFeedTotals() {
 
   if (!totalEl || !perKgEl || !volumeTotalEl) return;
 
-  const components = getActiveFeedComponents();
+  const components = (AppState.feedComponents || []).filter(
+    c => c.enabled !== false
+  );
 
   let totalKg = 0;
   let totalCost = 0;
@@ -126,13 +139,4 @@ function renderFeedVolume() {
   if (!volInput) return;
 
   volInput.value = AppState.feedCalculator.volume ?? 25;
-}
-
-// =======================================
-// 🔎 АКТИВНІ КОМПОНЕНТИ
-// =======================================
-function getActiveFeedComponents() {
-  return (AppState.feedComponents || []).filter(
-    c => c.enabled !== false   // ← за замовчуванням ВКЛЮЧЕНІ
-  );
 }
