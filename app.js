@@ -79,18 +79,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // CONTROLLERS INIT
 // =======================================
 console.log("typeof saveState =", typeof saveState);
-function initControllers() {
-  console.group("🧩 Controllers");
-
-  new EggsFormController({
+new EggsFormController({
   onSave: ({ date, good, bad, home }) => {
-    // 1) записуємо у стан
-    AppState.eggs.records[date] = { date, good, bad, home };
-
-    // 2) зберігаємо
+    AppState.eggs.records[date] = { good, bad, home };
     saveState();
-
-    // 3) оновлюємо UI
     renderEggs();
     renderWarehouse();
   }
