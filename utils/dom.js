@@ -1,9 +1,36 @@
-// utils/dom.js
+/**
+ * utils/dom.js
+ * ---------------------------------------
+ * Утиліти для роботи з DOM.
+ * ТУТ НЕМАЄ бізнес-логіки.
+ * Лише спрощення доступу до елементів.
+ */
 
-export const $ = (id) => document.getElementById(id);
+/**
+ * Швидкий доступ до елемента по ID
+ * @param {string} id
+ * @returns {HTMLElement|null}
+ */
+export function $(id) {
+  return document.getElementById(id);
+}
 
-export const qs = (selector, root = document) =>
-  root.querySelector(selector);
+/**
+ * Пошук одного елемента по CSS-селектору
+ * @param {string} selector
+ * @param {HTMLElement|Document} scope
+ * @returns {Element|null}
+ */
+export function qs(selector, scope = document) {
+  return scope.querySelector(selector);
+}
 
-export const qsa = (selector, root = document) =>
-  Array.from(root.querySelectorAll(selector));
+/**
+ * Пошук всіх елементів по CSS-селектору
+ * @param {string} selector
+ * @param {HTMLElement|Document} scope
+ * @returns {Element[]}
+ */
+export function qsa(selector, scope = document) {
+  return Array.from(scope.querySelectorAll(selector));
+}
