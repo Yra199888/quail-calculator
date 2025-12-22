@@ -1,3 +1,5 @@
+// src/controllers/EggsFormController.js
+
 /**
  * 🥚 EggsFormController
  * ---------------------------------------
@@ -8,8 +10,6 @@
  * - валідацію
  * - виклик onSave
  */
-
-import { AppState } from "../state/AppState.js";
 
 export class EggsFormController {
   constructor({ onSave }) {
@@ -56,7 +56,7 @@ export class EggsFormController {
 
     this.onSave({ date, good, bad, home });
 
-    // очистка (опційно)
+    // очистка форми
     this.goodEl.value = "";
     this.badEl.value = "";
     this.homeEl.value = "";
