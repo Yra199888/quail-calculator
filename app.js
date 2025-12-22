@@ -4,13 +4,12 @@ console.log("🔥 app.js EXECUTED");
  * app.js
  * =======================================
  * 🚀 Головна точка входу додатку
- *
- * ✅ ТІЛЬКИ:
- *  - state
- *  - ensure
- *  - render
- *  - controllers
  */
+
+// =======================================
+// FIREBASE (ВАЖЛИВО)
+// =======================================
+import { initFirebase } from "./firebase/firebase.js";
 
 // =======================================
 // STATE
@@ -59,10 +58,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     console.group("🚀 App start");
 
-    // 1️⃣ Завантажити стан (Firebase → localStorage)
+    // ✅ 0️⃣ Firebase INIT — ПЕРШИМ
+    initFirebase();
+
+    // 1️⃣ Load state (Firebase → localStorage)
     await loadState();
 
-    // 2️⃣ Гарантувати структуру
+    // 2️⃣ Ensure structure
     ensureState();
 
     // 3️⃣ UI
@@ -70,16 +72,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     initToggles();
     initWarnings();
 
-    // 4️⃣ Перший рендер
+    // 4️⃣ First render
     renderAll();
 
-    // 5️⃣ Контролери
+    // 5️⃣ Controllers
     initControllers();
 
-    // 6️⃣ Делеговані дії
+    // 6️⃣ Global actions
     initGlobalActions();
 
-    // 7️⃣ Realtime update з Firebase
+    // 7️⃣ Realtime Firebase updates
     window.addEventListener("appstate:updated", () => {
       renderAll();
     });
@@ -109,7 +111,6 @@ function initControllers() {
       if ((type === "qty" || type === "price") && id) {
         AppState.feedCalculator.qtyById ||= {};
         AppState.feedCalculator.priceById ||= {};
-
         if (type === "qty") AppState.feedCalculator.qtyById[id] = value;
         if (type === "price") AppState.feedCalculator.priceById[id] = value;
       }
@@ -187,40 +188,6 @@ function initGlobalActions() {
     if (e.target.closest("#restoreFeedComponentsBtn")) {
       restoreFeedComponents();
     }
-  });
-
-  document.addEventListener("dragstart", (e) => {
-    const row = e.target.closest("tr[data-id]");
-    if (!row) return;
-    draggedFeedId = row.dataset.id;
-    row.classList.add("dragging");
-  });
-
-  document.addEventListener("dragover", (e) => {
-    if (e.target.closest("tr[data-id]")) e.preventDefault();
-  });
-
-  document.addEventListener("drop", (e) => {
-    const targetRow = e.target.closest("tr[data-id]");
-    if (!targetRow || !draggedFeedId) return;
-
-    const list = AppState.feedComponents;
-    const from = list.findIndex(c => c.id === draggedFeedId);
-    const to = list.findIndex(c => c.id === targetRow.dataset.id);
-    if (from === -1 || to === -1) return;
-
-    const [moved] = list.splice(from, 1);
-    list.splice(to, 0, moved);
-
-    draggedFeedId = null;
-    saveState();
-    renderFeed();
-    renderWarehouse();
-  });
-
-  document.addEventListener("dragend", () => {
-    draggedFeedId = null;
-    document.querySelectorAll(".dragging").forEach(el => el.classList.remove("dragging"));
   });
 }
 
