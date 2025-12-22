@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // CONTROLLERS INIT
 // =======================================
 function initControllers() {
+
   // 🥚 Eggs
   new EggsFormController({
     onSave: ({ date, good, bad, home }) => {
@@ -99,6 +100,7 @@ function initControllers() {
   // 🌾 Feed
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
+
       if (type === "qty" || type === "price") {
         if (!id) return;
 
@@ -186,7 +188,7 @@ function initGlobalActions() {
       return;
     }
 
-    // ↩ Restore
+    // ↩ Restore deleted
     if (e.target.closest("#restoreFeedComponentsBtn")) {
       restoreFeedComponents();
     }
@@ -276,6 +278,7 @@ function startEditFeedName(span) {
 
   span.replaceWith(input);
   input.focus();
+  input.select();
 
   const finish = (ok) => {
     if (ok && input.value.trim()) {
