@@ -104,7 +104,6 @@ function initControllers() {
   // 🌾 Feed (100% id)
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
-
       if (type === "qty" || type === "price") {
         if (!id) return;
 
@@ -161,7 +160,6 @@ function initControllers() {
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
-
     // ➕ Додати компонент корму
     const addBtn = e.target.closest("#addFeedComponentBtn");
     if (addBtn) {
@@ -173,7 +171,7 @@ function initGlobalActions() {
     const toggle = e.target.closest(".feed-enable");
     if (toggle) {
       const id = toggle.dataset.id;
-      const component = AppState.feedComponents.find(c => c.id === id);
+      const component = AppState.feedComponents.find((c) => c.id === id);
       if (!component) return;
 
       component.enabled = toggle.checked;
@@ -184,6 +182,12 @@ function initGlobalActions() {
       return;
     }
 
+    // ✏️ Inline edit назви компонента (КРОК 3)
+    const nameSpan = e.target.closest(".feed-name");
+    if (nameSpan) {
+      startEditFeedName(nameSpan);
+      return;
+    }
   });
 }
 
@@ -214,6 +218,42 @@ function addFeedComponent() {
   saveState();
   renderFeed();
   renderWarehouse();
+}
+
+// =======================================
+// INLINE EDIT: FEED COMPONENT NAME
+// =======================================
+function startEditFeedName(span) {
+  const id = span.dataset.id;
+  const component = AppState.feedComponents.find((c) => c.id === id);
+  if (!component) return;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = component.name || "";
+  input.className = "feed-name-input";
+
+  // заміна span -> input (це мінімальна UI дія, без бізнес-логіки)
+  span.replaceWith(input);
+
+  input.focus();
+  input.select();
+
+  const finish = (save) => {
+    if (save) {
+      const value = (input.value || "").trim();
+      if (value) component.name = value;
+      saveState();
+    }
+    // повертаємо UI в нормальний режим
+    renderFeed();
+  };
+
+  input.addEventListener("blur", () => finish(true));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") finish(true);
+    if (e.key === "Escape") finish(false);
+  });
 }
 
 // =======================================
