@@ -290,4 +290,39 @@ tr.disabled {
   .egg-stats {
     grid-template-columns: 1fr;
   }
+  
+  /* ===============================
+   🥚 EGGS – ANIMATED COLLAPSE
+   =============================== */
+
+.egg-old-wrap {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height 0.35s ease,
+    opacity 0.25s ease;
+}
+
+.egg-old-wrap.open {
+  max-height: 2000px; /* достатньо велике значення */
+  opacity: 1;
+}
+
+.egg-toggle-wrap {
+  margin: 8px 0;
+}
+
+.egg-toggle-btn {
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  color: var(--color-muted);
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+.egg-toggle-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
 }
