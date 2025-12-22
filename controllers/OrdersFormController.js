@@ -1,31 +1,44 @@
 // src/controllers/OrdersFormController.js
+// =======================================
+// Контролер форми замовлень
+// ---------------------------------------
+// ❗ НЕ працює з localStorage
+// ❗ НЕ імпортує state.load / state.save
+// Працює ТІЛЬКИ з AppState через app.js
+// =======================================
 
-import { loadState } from "./state/state.load.js";
-import { saveState } from "./state/state.save.js";
-import { recomputeWarehouse } from "./services/warehouse.service.js";
+import { saveState } from "../state/state.save.js";
+import { renderWarehouse } from "../render/warehouse.render.js";
+import { renderOrders } from "../render/orders.render.js";
 
 export class OrdersFormController {
-  constructor({ AppState, onUpdate }) {
+  constructor({ AppState }) {
     this.AppState = AppState;
-    this.onUpdate = onUpdate;
   }
 
+  /**
+   * Додати нове замовлення
+   */
   add(order) {
     this.AppState.orders.list.push(order);
-    recomputeWarehouse(this.AppState);
-    saveAppState(this.AppState);
-    this.onUpdate?.();
+
+    saveState();
+    renderOrders();
+    renderWarehouse();
   }
 
+  /**
+   * Змінити статус замовлення
+   */
   setStatus(id, status) {
-    const o = this.AppState.orders.list.find(x => x.id === id);
-    if (!o) return;
+    const order = this.AppState.orders.list.find(o => o.id === id);
+    if (!order) return;
 
-    o.status = status;
-    o.updatedAt = new Date().toISOString();
+    order.status = status;
+    order.updatedAt = new Date().toISOString();
 
-    recomputeWarehouse(this.AppState);
-    saveAppState(this.AppState);
-    this.onUpdate?.();
+    saveState();
+    renderOrders();
+    renderWarehouse();
   }
 }
