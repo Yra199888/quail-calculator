@@ -19,11 +19,10 @@ console.log("🔥 app.js EXECUTED");
 // =======================================
 // STATE
 // =======================================
-import { AppState } from "/state/AppState.js";
-import { loadState } from "/state/state.load.js";
-import { saveState } from "/state/state.save.js";
-import { ensureState } from "/state/state.ensure.js";
-
+import { AppState } from "./state/AppState.js";
+import { loadState } from "./state/state.load.js";
+import { saveState } from "./state/state.save.js";
+import { ensureState } from "./state/state.ensure.js";
 // =======================================
 // CONTROLLERS (ФОРМИ)
 // =======================================
