@@ -1,17 +1,9 @@
 /**
  * warehouse.render.js
  * ---------------------------------------
- * Відповідає ТІЛЬКИ за відображення складу:
- *  - залишки кормових компонентів
- *  - порожні лотки
- *  - попередження по мінімумам
- *
- * ❌ БЕЗ бізнес-логіки
- * ❌ БЕЗ localStorage
- * ❌ БЕЗ AppState напряму
+ * Відповідає ТІЛЬКИ за відображення складу
  */
 
-import { AppState } from "../state/AppState.js";
 import {
   getFeedStock,
   addFeedStock,
@@ -21,11 +13,12 @@ import {
   getWarehouseWarnings
 } from "../services/warehouse.service.js";
 
+import { getFeedComponents } from "../services/feed.service.js";
 import { saveState } from "../state/state.save.js";
 import { qs, qsa } from "../utils/dom.js";
 
 // =======================================
-// ГОЛОВНИЙ РЕНДЕР
+// ГОЛОВНИЙ RENDER
 // =======================================
 export function renderWarehouse() {
   renderFeedWarehouseTable();
@@ -42,102 +35,86 @@ function renderFeedWarehouseTable() {
 
   tbody.innerHTML = "";
 
-  const components = AppState.feedComponents || [];
+  const components = getFeedComponents();
 
-  components.forEach(component => {
-    const tr = document.createElement("tr");
+  components.forEach(c => {
+    const stock = getFeedStock(c.id);
 
-    const stock = getFeedStock(component.id);
-
-    tr.innerHTML = `
-      <td>${component.name}</td>
-      <td>${stock.toFixed(2)}</td>
-      <td>
-        <input 
-          type="number" 
-          min="0" 
-          step="0.1"
-          data-add-id="${component.id}"
-          placeholder="+ кг"
-        />
-        <button data-add-btn="${component.id}">➕</button>
-      </td>
-      <td>
-        <input 
-          type="number" 
-          min="0" 
-          step="0.1"
-          data-use-id="${component.id}"
-          placeholder="- кг"
-        />
-        <button data-use-btn="${component.id}">➖</button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
+    tbody.insertAdjacentHTML(
+      "beforeend",
+      `
+      <tr>
+        <td>${c.name}</td>
+        <td>${stock.toFixed(2)}</td>
+        <td>
+          <input type="number" step="0.1" data-add="${c.id}">
+          <button data-add-btn="${c.id}">➕</button>
+        </td>
+        <td>
+          <input type="number" step="0.1" data-use="${c.id}">
+          <button data-use-btn="${c.id}">➖</button>
+        </td>
+      </tr>
+    `
+    );
   });
 
-  bindFeedWarehouseActions();
+  bindFeedActions();
 }
 
 // =======================================
-// ОБРОБКА ПОДІЙ (КОРМ)
+// PODIЇ (тимчасово тут)
 // =======================================
-function bindFeedWarehouseActions() {
-  // ➕ ДОДАТИ
+function bindFeedActions() {
   qsa("[data-add-btn]").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.onclick = () => {
       const id = btn.dataset.addBtn;
-      const input = qs(`[data-add-id="${id}"]`);
-      const value = Number(input?.value || 0);
+      const input = qs(`[data-add="${id}"]`);
+      const val = Number(input?.value || 0);
+      if (val <= 0) return;
 
-      if (value <= 0) return;
-
-      addFeedStock(id, value);
+      addFeedStock(id, val);
       saveState();
       renderWarehouse();
-    });
+    };
   });
 
-  // ➖ СПИСАТИ
   qsa("[data-use-btn]").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.onclick = () => {
       const id = btn.dataset.useBtn;
-      const input = qs(`[data-use-id="${id}"]`);
-      const value = Number(input?.value || 0);
+      const input = qs(`[data-use="${id}"]`);
+      const val = Number(input?.value || 0);
+      if (val <= 0) return;
 
-      if (value <= 0) return;
-
-      const ok = consumeFeedStock(id, value);
-      if (!ok) {
-        alert("❌ Недостатньо компонента на складі");
+      if (!consumeFeedStock(id, val)) {
+        alert("❌ Недостатньо компонента");
         return;
       }
 
       saveState();
       renderWarehouse();
-    });
+    };
   });
 }
 
 // =======================================
-// ПУСТІ ЛОТКИ
+// ЛОТКИ
 // =======================================
 function renderTraysBlock() {
-  const traysValue = qs("#emptyTraysValue");
-  if (!traysValue) return;
+  const valueEl = qs("#emptyTraysValue");
+  if (!valueEl) return;
 
-  traysValue.textContent = getEmptyTrays();
+  valueEl.textContent = getEmptyTrays();
 
-  const addBtn = qs("#addEmptyTraysBtn");
+  const btn = qs("#addEmptyTraysBtn");
   const input = qs("#addEmptyTraysInput");
 
-  if (addBtn && input) {
-    addBtn.onclick = () => {
-      const value = Number(input.value || 0);
-      if (value <= 0) return;
+  if (btn && input) {
+    btn.onclick = () => {
+      const val = Number(input.value || 0);
+      if (val <= 0) return;
 
-      addEmptyTrays(value);
+      addEmptyTrays(val);
       saveState();
       renderWarehouse();
     };
@@ -147,16 +124,13 @@ function renderTraysBlock() {
 // =======================================
 // ПОПЕРЕДЖЕННЯ
 // =======================================
-function initWarnings() {
+function renderWarehouseWarnings() {
   const box = qs("#warehouseWarnings");
   if (!box) return;
 
   box.innerHTML = "";
 
-  const warnings = getWarehouseWarnings(id => {
-    const c = (AppState.feedComponents || []).find(x => x.id === id);
-    return c ? c.name : id;
-  });
+  const warnings = getWarehouseWarnings();
 
   if (warnings.length === 0) {
     box.innerHTML = `<div class="ok">✅ Склад у нормі</div>`;
@@ -164,14 +138,13 @@ function initWarnings() {
   }
 
   warnings.forEach(w => {
-    const div = document.createElement("div");
-    div.className = "warning";
-
-    div.textContent =
-      w.type === "trays"
-        ? `⚠️ Мало лотків: ${w.stock} / мін ${w.min}`
-        : `⚠️ ${w.name}: ${w.stock} кг / мін ${w.min} кг`;
-
-    box.appendChild(div);
+    box.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div class="warning">
+        ⚠️ ${w.name}: ${w.stock} / мін ${w.min}
+      </div>
+    `
+    );
   });
 }
