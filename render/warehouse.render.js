@@ -147,7 +147,7 @@ function renderTraysBlock() {
 // =======================================
 // ПОПЕРЕДЖЕННЯ
 // =======================================
-function renderWarehouseWarnings() {
+function initWarnings() {
   const box = qs("#warehouseWarnings");
   if (!box) return;
 
