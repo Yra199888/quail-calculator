@@ -1,5 +1,6 @@
 /**
  * 📥 state.load.js
+ * ---------------------------------------
  * Завантаження AppState
  *
  * Пріоритет:
@@ -12,7 +13,11 @@
  */
 
 import { AppState } from "./AppState.js";
-import { loadStateFromCloud, subscribeToCloudState } from "../firebase/firebase.js";
+import {
+  loadStateFromCloud,
+  subscribeToCloudState,
+  isFirebaseReady
+} from "../firebase/firebase.js";
 
 const STORAGE_KEY = "AppState";
 
@@ -20,31 +25,34 @@ const STORAGE_KEY = "AppState";
  * 📥 Завантажити стан
  */
 export async function loadState() {
-  let loaded = false;
+  let loadedFrom = null;
 
   // -------------------------------
-  // 1️⃣ Firebase
+  // 1️⃣ Firebase (якщо доступний)
   // -------------------------------
-  try {
-    const cloudState = await loadStateFromCloud();
+  if (isFirebaseReady()) {
+    try {
+      const cloudState = await loadStateFromCloud();
 
-    if (cloudState && typeof cloudState === "object") {
-      Object.assign(AppState, cloudState);
-      loaded = true;
-      console.log("☁ AppState завантажено з Firebase");
+      if (cloudState && typeof cloudState === "object") {
+        Object.assign(AppState, cloudState);
+        loadedFrom = "cloud";
+        console.log("☁ AppState завантажено з Firebase");
+      }
+    } catch (err) {
+      console.warn("⚠ Firebase load error, fallback → localStorage", err);
     }
-  } catch (err) {
-    console.warn("⚠ Firebase недоступний, fallback → localStorage", err);
   }
 
   // -------------------------------
   // 2️⃣ localStorage (fallback)
   // -------------------------------
-  if (!loaded) {
+  if (!loadedFrom) {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         Object.assign(AppState, JSON.parse(raw));
+        loadedFrom = "local";
         console.log("💾 AppState завантажено з localStorage");
       }
     } catch (err) {
@@ -53,21 +61,24 @@ export async function loadState() {
   }
 
   // -------------------------------
-  // 3️⃣ Realtime sync (ПІСЛЯ load)
+  // 3️⃣ Realtime sync (ТІЛЬКИ якщо Firebase готовий)
   // -------------------------------
-  try {
-    subscribeToCloudState((remoteState) => {
-      if (!remoteState) return;
+  if (isFirebaseReady()) {
+    try {
+      subscribeToCloudState((remoteState) => {
+        if (!remoteState || typeof remoteState !== "object") return;
 
-      console.log("🔄 Оновлення AppState з Firebase");
+        console.log("🔄 Realtime update з Firebase");
 
-      Object.keys(AppState).forEach(k => delete AppState[k]);
-      Object.assign(AppState, remoteState);
+        // акуратна заміна state
+        Object.keys(AppState).forEach(k => delete AppState[k]);
+        Object.assign(AppState, remoteState);
 
-      // UI оновиться автоматично через renderAll()
-      window.dispatchEvent(new Event("appstate:updated"));
-    });
-  } catch (err) {
-    console.warn("⚠ Realtime sync не активний", err);
+        // сигнал для UI
+        window.dispatchEvent(new Event("appstate:updated"));
+      });
+    } catch (err) {
+      console.warn("⚠ Realtime sync не активний", err);
+    }
   }
 }
