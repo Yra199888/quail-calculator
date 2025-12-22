@@ -182,7 +182,25 @@ function initGlobalActions() {
       return;
     }
 
-    // ✏️ Inline edit назви компонента (КРОК 3)
+    // 🗑 Soft delete компонента (після toggle, як ти просив)
+    const delBtn = e.target.closest(".feed-delete");
+    if (delBtn) {
+      const id = delBtn.dataset.id;
+      const component = AppState.feedComponents.find((c) => c.id === id);
+      if (!component) return;
+
+      const ok = confirm(`Видалити компонент "${component.name}"?`);
+      if (!ok) return;
+
+      component.deleted = true;
+
+      saveState();
+      renderFeed();
+      renderWarehouse();
+      return;
+    }
+
+    // ✏️ Inline edit назви компонента
     const nameSpan = e.target.closest(".feed-name");
     if (nameSpan) {
       startEditFeedName(nameSpan);
@@ -200,7 +218,8 @@ function addFeedComponent() {
     name: "Новий компонент",
     kg: 0,
     price: 0,
-    enabled: true
+    enabled: true,
+    deleted: false
   };
 
   AppState.feedComponents.push(component);
@@ -233,7 +252,7 @@ function startEditFeedName(span) {
   input.value = component.name || "";
   input.className = "feed-name-input";
 
-  // заміна span -> input (це мінімальна UI дія, без бізнес-логіки)
+  // заміна span -> input
   span.replaceWith(input);
 
   input.focus();
@@ -245,7 +264,6 @@ function startEditFeedName(span) {
       if (value) component.name = value;
       saveState();
     }
-    // повертаємо UI в нормальний режим
     renderFeed();
   };
 
