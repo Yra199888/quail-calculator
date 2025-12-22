@@ -46,6 +46,7 @@ export class FeedFormController {
   bindTableInputs() {
     this.table.addEventListener("input", (e) => {
       const target = e.target;
+      if (!(target instanceof HTMLInputElement)) return;
 
       if (target.classList.contains("qty")) {
         this.handleQtyChange(target);
@@ -75,29 +76,57 @@ export class FeedFormController {
 
   /**
    * Обробка зміни кількості компонента
+   * Підтримує:
+   * - data-id (новий варіант)
+   * - data-i  (старий варіант, fallback)
    */
   handleQtyChange(input) {
-    const index = Number(input.dataset.i);
     const value = Number(input.value || 0);
 
-    this.onChange({
-      type: "qty",
-      index,
-      value
-    });
+    if (input.dataset.id) {
+      this.onChange({
+        type: "qty",
+        id: input.dataset.id,
+        value
+      });
+      return;
+    }
+
+    // fallback (старі таблиці)
+    if (input.dataset.i !== undefined) {
+      this.onChange({
+        type: "qty",
+        index: Number(input.dataset.i),
+        value
+      });
+    }
   }
 
   /**
    * Обробка зміни ціни компонента
+   * Підтримує:
+   * - data-id (новий варіант)
+   * - data-i  (старий варіант, fallback)
    */
   handlePriceChange(input) {
-    const index = Number(input.dataset.i);
     const value = Number(input.value || 0);
 
-    this.onChange({
-      type: "price",
-      index,
-      value
-    });
+    if (input.dataset.id) {
+      this.onChange({
+        type: "price",
+        id: input.dataset.id,
+        value
+      });
+      return;
+    }
+
+    // fallback (старі таблиці)
+    if (input.dataset.i !== undefined) {
+      this.onChange({
+        type: "price",
+        index: Number(input.dataset.i),
+        value
+      });
+    }
   }
 }
