@@ -160,7 +160,7 @@ if (errors.length) {
   return errors;
 }
 
-function saveAppState() {
+function saveState() {
   try {
     localStorage.setItem("AppState", JSON.stringify(AppState));
   } catch (e) {
@@ -306,7 +306,7 @@ function ensureFeedComponentsShape() {
     };
   
     AppState.feedMixes.history.unshift(entry);
-    saveAppState();
+    saveState();
   }
   
   function renderMixHistory() {
@@ -350,7 +350,7 @@ function ensureFeedComponentsShape() {
   
   function deleteMix(id) {
     AppState.feedMixes.history = (AppState.feedMixes.history || []).filter(x => x.id !== id);
-    saveAppState();
+    saveState();
     renderMixHistory();
   }
   window.deleteMix = deleteMix;
@@ -362,7 +362,7 @@ function ensureFeedComponentsShape() {
     btn.addEventListener("click", () => {
       if (!confirm("Очистити історію замісів?")) return;
       AppState.feedMixes.history = [];
-      saveAppState();
+      saveState();
       renderMixHistory();
     });
   }
@@ -424,7 +424,7 @@ function bindNavigation() {
       btn.classList.add("active");
 
       AppState.ui.page = page;
-      saveAppState();
+      saveState();
     });
   });
 }
@@ -494,7 +494,7 @@ function calculateFeed() {
   $("feedPerKg").textContent = perKg.toFixed(2);
   $("feedVolumeTotal").textContent = (perKg * vol).toFixed(2);
 
-  saveAppState();
+  saveState();
 }
 
 function saveRecipeFromCalculator() {
@@ -521,7 +521,7 @@ function saveRecipeFromCalculator() {
   AppState.recipes.list[id] = recipe;
   AppState.recipes.selectedId = id;
 
-  saveAppState();
+  saveState();
   refreshRecipeSelect();
   toast("✅ Рецепт збережено", "ok");
 }
@@ -550,7 +550,7 @@ function applySelectedRecipe() {
     }
   });
 
-  saveAppState();
+  saveState();
   loadFeedTable();
   toast("✅ Рецепт застосовано", "ok");
 }
@@ -653,7 +653,7 @@ function renderWarehouse() {
 
       e.target.value = 0;
 
-      saveAppState();
+      saveState();
       renderWarehouse();
       applyWarehouseWarnings();
     });
@@ -707,7 +707,7 @@ function bindMakeFeed() {
       }))
     });
 
-    saveAppState();
+    saveState();
     renderWarehouse();
     applyWarehouseWarnings();
 
@@ -765,7 +765,7 @@ delete AppState.eggs.records[date];
 
 
   recomputeEggsAccumulation();
-  saveAppState();
+  saveState();
   renderEggsReport();
   renderWarehouse();
   applyWarehouseWarnings();
@@ -785,7 +785,7 @@ AppState.eggs.carry = 0;
 AppState.eggs.totalTrays = 0;
 AppState.eggs.appliedTotalTrays = 0;
 
-saveAppState();
+saveState();
 
   
   recomputeEggsAccumulation();
@@ -888,7 +888,7 @@ if (trays <= 0) {
     updatedAt: new Date().toISOString()
   });
 
-  saveAppState();
+  saveState();
   renderWarehouse();
   renderOrders();
 
@@ -921,7 +921,7 @@ function setOrderStatus(id, nextStatus) {
   o.updatedAt = new Date().toISOString();
 
   recomputeWarehouseFromSources();
-  saveAppState();
+  saveState();
   renderWarehouse();
   renderOrders();
 }
@@ -940,7 +940,7 @@ function deleteOrder(id) {
   AppState.orders.list = AppState.orders.list.filter(x => x.id !== id);
 
   recomputeWarehouseFromSources();
-  saveAppState();
+  saveState();
   renderWarehouse();
   renderOrders();
 }
@@ -1055,7 +1055,7 @@ window.exportCSV = exportCSV;
 function toggleEggsEdit() {
   eggsEditEnabled = !eggsEditEnabled;
   AppState.ui.eggsEditEnabled = eggsEditEnabled;
-  saveAppState();
+  saveState();
   syncToggleButtonsUI();
   alert(eggsEditEnabled ? "🔓 Редагування яєць УВІМКНЕНО" : "🔒 Редагування яєць ВИМКНЕНО");
 }
@@ -1064,7 +1064,7 @@ window.toggleEggsEdit = toggleEggsEdit;
 function toggleWarehouseEdit() {
   warehouseEditEnabled = !warehouseEditEnabled;
   AppState.ui.warehouseEditEnabled = warehouseEditEnabled;
-  saveAppState();
+  saveState();
   syncToggleButtonsUI();
   alert(warehouseEditEnabled ? "🔓 Редагування складу УВІМКНЕНО" : "🔒 Редагування складу ВИМКНЕНО");
 }
@@ -1081,7 +1081,7 @@ function clearFeedComponents() {
   if (!confirm("Очистити ВСІ кормові компоненти на складі?")) return;
 
   AppState.warehouse.feed = {};
-  saveAppState();
+  saveState();
   renderWarehouse();
   applyWarehouseWarnings();
 
@@ -1098,7 +1098,7 @@ function clearEggTrays() {
 
   AppState.warehouse.reserved = 0;
   recomputeWarehouseFromSources();
-  saveAppState();
+  saveState();
   renderWarehouse();
   applyWarehouseWarnings();
 
@@ -1120,7 +1120,7 @@ function saveWarehouseSettings() {
   mins.empty_trays = Number(document.getElementById("min_empty_trays")?.value || 0);
 
   AppState.warehouse.minimums = mins;
-  saveAppState();
+  saveState();
 
   applyWarehouseWarnings();
   renderWarehouse();
@@ -1245,7 +1245,7 @@ function toggleComponent(id, enabled) {
 
   c.enabled = enabled;
 
-  saveAppState();
+  saveState();
 
   // повне оновлення залежностей
   renderComponentsTable();
@@ -1261,7 +1261,7 @@ function renameComponent(id, newName) {
 
   c.name = newName.trim() || c.name;
 
-  saveAppState();
+  saveState();
   loadFeedTable();
   renderWarehouse();
 }
@@ -1275,7 +1275,7 @@ function deleteComponent(id) {
   // вимикаємо, але НЕ ламаємо дані
   c.enabled = false;
 
-  saveAppState();
+  saveState();
   loadFeedTable();
   renderWarehouse();
   renderComponentsTable();
@@ -1302,7 +1302,7 @@ function addNewComponent() {
     enabled: true
   });
 
-  saveAppState();
+  saveState();
   renderComponentsTable();
   loadFeedTable();
   renderWarehouse();
@@ -1346,7 +1346,7 @@ function replaceComponentId(fromId, toComponent) {
   // 4️⃣ Увімкнути новий
   toComponent.enabled = true;
 
-  saveAppState();
+  saveState();
 
   // 5️⃣ Оновлення UI
   loadFeedTable();
@@ -1395,7 +1395,7 @@ function saveCurrentRecipe(name) {
 
   AppState.recipes.list[recipe.id] = recipe;
 
-  saveAppState();
+  saveState();
   refreshRecipeSelect();
 
   toast("✅ Рецепт збережено", "ok");
@@ -1414,7 +1414,7 @@ function applyRecipe(recipe) {
 
   AppState.feedCalculator.volume = recipe.volume || 25;
 
-  saveAppState();
+  saveState();
   loadFeedTable();
   calculateFeed();
 
@@ -1452,7 +1452,7 @@ function makeFeedFromRecipe(recipe) {
     components: { ...recipe.components }
   });
 
-  saveAppState();
+  saveState();
   renderWarehouse();
   renderMixHistory();
 
@@ -1548,7 +1548,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (type === "volume") AppState.feedCalculator.volume = value;
 
         calculateFeed();
-        saveAppState();
+        saveState();
       }
     });
     feedForm.init();
@@ -1558,7 +1558,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     feedRecipesController = new FeedRecipesController({
       AppState,
-      saveAppState,
+      saveState,
       refreshUI: () => {
         loadFeedTable();
         calculateFeed();
@@ -1573,7 +1573,7 @@ document.addEventListener("DOMContentLoaded", () => {
         AppState.eggs.records[date] = { good, bad, home };
 
         recomputeEggsAccumulation();
-        saveAppState();
+        saveState();
 
         renderEggsReport();
         renderWarehouse();
@@ -1595,7 +1595,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ============================
     // 11) Final validation
     // ============================
-    saveAppState();
+    saveState();
     validateState("after START");
     console.log("✅ App initialized");
 
