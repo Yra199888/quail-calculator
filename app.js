@@ -84,17 +84,13 @@ function initControllers() {
 
   new EggsFormController({
   onSave: ({ date, good, bad, home }) => {
-    // ✅ 1. ЗАПИС В STATE
-    AppState.eggs.records[date] = {
-      good,
-      bad,
-      home
-    };
+    // 1) записуємо у стан
+    AppState.eggs.records[date] = { date, good, bad, home };
 
-    // ✅ 2. ЗБЕРЕЖЕННЯ
+    // 2) зберігаємо
     saveState();
 
-    // ✅ 3. RENDER
+    // 3) оновлюємо UI
     renderEggs();
     renderWarehouse();
   }
