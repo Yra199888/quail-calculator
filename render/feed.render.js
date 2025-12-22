@@ -2,24 +2,31 @@
  * feed.render.js
  * ---------------------------------------
  * Render-шар калькулятора корму.
- * Відображає активні компоненти,
- * їх кількість, ціну та підсумки.
+ * Відповідає ТІЛЬКИ за відображення:
+ *  - активних компонентів
+ *  - кількості
+ *  - ціни
+ *  - підсумків
+ *
+ * ❌ БЕЗ бізнес-логіки
+ * ❌ БЕЗ localStorage
+ * ❌ БЕЗ мутації AppState
  */
 
 import { AppState } from "../state/AppState.js";
 
-/**
- * 🔹 ГОЛОВНИЙ render (викликається з app.js)
- */
+// =======================================
+// 🔹 ГОЛОВНИЙ RENDER
+// =======================================
 export function renderFeed() {
   renderFeedTable();
   renderFeedTotals();
   renderFeedVolume();
 }
 
-/**
- * Таблиця компонентів корму
- */
+// =======================================
+// 🧾 ТАБЛИЦЯ КОМПОНЕНТІВ
+// =======================================
 function renderFeedTable() {
   const tbody = document.getElementById("feedTable");
   if (!tbody) return;
@@ -27,9 +34,17 @@ function renderFeedTable() {
   const components = getActiveFeedComponents();
 
   tbody.innerHTML = components
-    .map((c, i) => {
-      const qty = AppState.feedCalculator.qty[i] ?? c.defaultQty ?? 0;
-      const price = AppState.feedCalculator.price[i] ?? 0;
+    .map(c => {
+      const qty =
+        typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
+          ? AppState.feedCalculator.qtyById[c.id]
+          : (c.defaultQty ?? 0);
+
+      const price =
+        typeof AppState.feedCalculator.priceById?.[c.id] === "number"
+          ? AppState.feedCalculator.priceById[c.id]
+          : 0;
+
       const sum = Number(qty) * Number(price);
 
       return `
@@ -39,8 +54,10 @@ function renderFeedTable() {
           <td>
             <input
               class="qty"
-              data-index="${i}"
+              data-id="${c.id}"
               type="number"
+              min="0"
+              step="0.1"
               value="${qty}"
             >
           </td>
@@ -48,8 +65,10 @@ function renderFeedTable() {
           <td>
             <input
               class="price"
-              data-index="${i}"
+              data-id="${c.id}"
               type="number"
+              min="0"
+              step="0.01"
               value="${price}"
             >
           </td>
@@ -61,9 +80,9 @@ function renderFeedTable() {
     .join("");
 }
 
-/**
- * Підсумки калькулятора
- */
+// =======================================
+// 📊 ПІДСУМКИ КАЛЬКУЛЯТОРА
+// =======================================
 function renderFeedTotals() {
   const totalEl = document.getElementById("feedTotal");
   const perKgEl = document.getElementById("feedPerKg");
@@ -73,12 +92,12 @@ function renderFeedTotals() {
 
   const components = getActiveFeedComponents();
 
-  let totalCost = 0;
   let totalKg = 0;
+  let totalCost = 0;
 
-  components.forEach((_, i) => {
-    const qty = Number(AppState.feedCalculator.qty[i] || 0);
-    const price = Number(AppState.feedCalculator.price[i] || 0);
+  components.forEach(c => {
+    const qty = Number(AppState.feedCalculator.qtyById?.[c.id] || 0);
+    const price = Number(AppState.feedCalculator.priceById?.[c.id] || 0);
 
     totalKg += qty;
     totalCost += qty * price;
@@ -92,9 +111,9 @@ function renderFeedTotals() {
   volumeTotalEl.textContent = (perKg * volume).toFixed(2);
 }
 
-/**
- * Обʼєм корму
- */
+// =======================================
+// ⚖️ ОБʼЄМ КОРМУ
+// =======================================
 function renderFeedVolume() {
   const volInput = document.getElementById("feedVolume");
   if (!volInput) return;
@@ -102,9 +121,9 @@ function renderFeedVolume() {
   volInput.value = AppState.feedCalculator.volume ?? 25;
 }
 
-/**
- * Активні компоненти корму
- */
+// =======================================
+// 🔎 АКТИВНІ КОМПОНЕНТИ
+// =======================================
 function getActiveFeedComponents() {
   return (AppState.feedComponents || []).filter(c => c.enabled);
 }
