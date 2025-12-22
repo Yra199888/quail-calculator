@@ -33,7 +33,7 @@ import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
 // =======================================
 // RENDER
 // =======================================
-import { renderEggsList } from "./render/eggs.render.js";
+import { renderEggs } from "./render/eggs.render.js";
 import { renderFeed } from "./render/feed.render.js";
 import { renderWarehouse } from "./render/warehouse.render.js";
 import { renderOrders } from "./render/orders.render.js";
@@ -84,7 +84,7 @@ function initControllers() {
   new EggsFormController({
     onSave: () => {
       saveState();
-      renderEggsList();
+      renderEggs();
       renderWarehouse();
     }
   });
@@ -120,7 +120,7 @@ function initControllers() {
 // GLOBAL RENDER
 // =======================================
 function renderAll() {
-  renderEggsList();
+  renderEggs();
   renderFeed();
   renderWarehouse();
   renderOrders();
