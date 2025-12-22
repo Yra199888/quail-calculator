@@ -6,7 +6,7 @@
 
   <title>🐣 Фермерський трекер</title>
 
-  <!-- Основні стилі -->
+  <!-- СТИЛІ -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -31,8 +31,8 @@
          ===================================== -->
     <main class="app-content">
 
-      <!-- ===== 🥚 ЯЙЦЯ ===== -->
-      <section class="page active" data-page="eggs">
+      <!-- ===================== 🥚 ЯЙЦЯ ===================== -->
+      <section class="page active" id="page-eggs">
         <div class="panel">
           <div class="panel-title">🥚 Облік яєць</div>
 
@@ -65,16 +65,16 @@
         <div id="eggs-report"></div>
       </section>
 
-      <!-- ===== 🌾 КОРМ ===== -->
-      <section class="page" data-page="feed">
+      <!-- ===================== 🌾 КОРМ ===================== -->
+      <section class="page" id="page-feed">
         <div class="panel">
           <div class="panel-title">🌾 Калькулятор корму</div>
 
-          <table class="table">
+          <table class="feed-table">
             <thead>
               <tr>
                 <th>Компонент</th>
-                <th>Кількість (кг)</th>
+                <th>К-сть</th>
                 <th>Ціна</th>
                 <th>Сума</th>
               </tr>
@@ -82,28 +82,29 @@
             <tbody id="feedTable"></tbody>
           </table>
 
-          <div class="feed-totals">
-            <div>Разом: <b id="feedTotal">0</b> грн</div>
-            <div>Ціна за кг: <b id="feedPerKg">0</b> грн</div>
-            <div>
-              Обʼєм:
-              <input type="number" id="feedVolume" value="25" />
-              кг → <b id="feedVolumeTotal">0</b> грн
-            </div>
+          <div class="form-row">
+            <label>Обʼєм (кг)</label>
+            <input type="number" id="feedVolume" />
+          </div>
+
+          <div class="feed-summary">
+            <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
+            <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
+            <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
           </div>
         </div>
       </section>
 
-      <!-- ===== 📦 СКЛАД ===== -->
-      <section class="page" data-page="warehouse">
+      <!-- ===================== 📦 СКЛАД ===================== -->
+      <section class="page" id="page-warehouse">
         <div class="panel">
           <div class="panel-title">📦 Склад</div>
 
-          <table class="table">
+          <table class="feed-table">
             <thead>
               <tr>
                 <th>Компонент</th>
-                <th>Залишок (кг)</th>
+                <th>Залишок</th>
                 <th>Додати</th>
                 <th>Списати</th>
               </tr>
@@ -111,10 +112,9 @@
             <tbody id="warehouseFeedTableBody"></tbody>
           </table>
 
-          <div class="panel-sub">
-            Порожні лотки:
-            <b id="emptyTraysValue">0</b>
-            <input type="number" id="addEmptyTraysInput" />
+          <div class="warehouse-trays">
+            <p>Порожні лотки: <b id="emptyTraysValue">0</b></p>
+            <input type="number" id="addEmptyTraysInput" placeholder="+ лотки" />
             <button id="addEmptyTraysBtn">➕</button>
           </div>
 
@@ -122,12 +122,12 @@
         </div>
       </section>
 
-      <!-- ===== 📑 ЗАМОВЛЕННЯ ===== -->
-      <section class="page" data-page="orders">
+      <!-- ===================== 📑 ЗАМОВЛЕННЯ ===================== -->
+      <section class="page" id="page-orders">
         <div class="panel">
           <div class="panel-title">📑 Замовлення</div>
 
-          <table class="table">
+          <table class="feed-table">
             <thead>
               <tr>
                 <th>Дата</th>
@@ -141,8 +141,8 @@
         </div>
       </section>
 
-      <!-- ===== 📋 РЕЦЕПТИ ===== -->
-      <section class="page" data-page="recipes">
+      <!-- ===================== 📋 РЕЦЕПТИ ===================== -->
+      <section class="page" id="page-recipes">
         <div class="panel">
           <div class="panel-title">📋 Рецепти корму</div>
 
@@ -156,9 +156,9 @@
             <button id="recipe-load-btn">📂 Завантажити</button>
             <button class="danger" id="recipe-delete-btn">🗑 Видалити</button>
           </div>
-
-          <div id="recipesList"></div>
         </div>
+
+        <div id="recipes-content"></div>
       </section>
 
     </main>
