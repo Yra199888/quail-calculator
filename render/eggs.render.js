@@ -1,3 +1,4 @@
+console.log("🥚 renderEggs records:", AppState.eggs.records);
 /**
  * eggs.render.js
  * ---------------------------------------
