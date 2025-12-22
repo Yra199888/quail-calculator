@@ -70,6 +70,14 @@ body {
   display: block;
 }
 
+/* NAV (не ламає, просто стабілізує вигляд) */
+.nav {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  overflow-x: auto;
+}
+
 .nav-btn.active {
   background: #2e7d32;
   color: #fff;
@@ -275,26 +283,10 @@ tr.disabled {
   color: var(--color-warning);
 }
 
-/* =========================================
-   📱 МОБІЛЬНА АДАПТАЦІЯ
-   ========================================= */
-@media (max-width: 600px) {
-  .form-row {
-    flex-direction: column;
-  }
-
-  .app-content {
-    padding: 8px;
-  }
-
-  .egg-stats {
-    grid-template-columns: 1fr;
-  }
-  
-  /* ===============================
+/* ===============================
    🥚 EGGS – ANIMATED COLLAPSE
+   (має бути поза @media, щоб не “ламало” дужки і працювало стабільно)
    =============================== */
-
 .egg-old-wrap {
   overflow: hidden;
   max-height: 0;
@@ -305,7 +297,7 @@ tr.disabled {
 }
 
 .egg-old-wrap.open {
-  max-height: 2000px; /* достатньо велике значення */
+  max-height: 2000px;
   opacity: 1;
 }
 
@@ -325,25 +317,23 @@ tr.disabled {
   color: var(--color-accent);
   border-color: var(--color-accent);
 }
+
 /* ===============================
    📱 COMPACT VIEW (MOBILE)
+   (вмикається через body.compact)
    =============================== */
-
 body.compact {
   font-size: 13px;
 }
 
-/* панелі */
 body.compact .panel {
   padding: 8px;
 }
 
-/* заголовки */
 body.compact .panel-title {
   font-size: 14px;
 }
 
-/* форми */
 body.compact .form-row {
   gap: 6px;
 }
@@ -371,4 +361,20 @@ body.compact .feed-summary p {
   margin: 4px 0;
   font-size: 12px;
 }
+
+/* =========================================
+   📱 МОБІЛЬНА АДАПТАЦІЯ
+   ========================================= */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+
+  .app-content {
+    padding: 8px;
+  }
+
+  .egg-stats {
+    grid-template-columns: 1fr;
+  }
 }
