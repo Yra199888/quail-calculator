@@ -325,4 +325,50 @@ tr.disabled {
   color: var(--color-accent);
   border-color: var(--color-accent);
 }
+/* ===============================
+   📱 COMPACT VIEW (MOBILE)
+   =============================== */
+
+body.compact {
+  font-size: 13px;
+}
+
+/* панелі */
+body.compact .panel {
+  padding: 8px;
+}
+
+/* заголовки */
+body.compact .panel-title {
+  font-size: 14px;
+}
+
+/* форми */
+body.compact .form-row {
+  gap: 6px;
+}
+
+body.compact input,
+body.compact button {
+  padding: 5px 6px;
+  font-size: 13px;
+}
+
+/* кнопки — на всю ширину */
+body.compact button {
+  width: 100%;
+}
+
+/* таблиці */
+body.compact table th,
+body.compact table td {
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+/* feed summary */
+body.compact .feed-summary p {
+  margin: 4px 0;
+  font-size: 12px;
+}
 }
