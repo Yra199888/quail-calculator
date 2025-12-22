@@ -51,31 +51,28 @@ import { initWarnings } from "./ui/warnings.js";
 window.AppState = AppState;
 
 // =======================================
+// DRAG STATE
+// =======================================
+let draggedFeedId = null;
+
+// =======================================
 // START
 // =======================================
 document.addEventListener("DOMContentLoaded", () => {
   try {
     console.group("🚀 App start");
 
-    // 1) Load + ensure state
     loadState();
     ensureState();
 
-    // 2) Init UI
     initNavigation();
     initToggles();
     initWarnings();
 
-    // 3) First render
     renderAll();
-
-    // 4) Init controllers
     initControllers();
-
-    // 5) Global UI actions (delegation)
     initGlobalActions();
 
-    // 6) Save after init
     saveState();
 
     console.groupEnd();
@@ -89,8 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // CONTROLLERS INIT
 // =======================================
 function initControllers() {
-  console.log("typeof saveState =", typeof saveState);
-
   // 🥚 Eggs
   new EggsFormController({
     onSave: ({ date, good, bad, home }) => {
@@ -101,25 +96,17 @@ function initControllers() {
     }
   });
 
-  // 🌾 Feed (100% id)
+  // 🌾 Feed
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
       if (type === "qty" || type === "price") {
         if (!id) return;
 
-        if (!AppState.feedCalculator.qtyById) {
-          AppState.feedCalculator.qtyById = {};
-        }
-        if (!AppState.feedCalculator.priceById) {
-          AppState.feedCalculator.priceById = {};
-        }
+        AppState.feedCalculator.qtyById ||= {};
+        AppState.feedCalculator.priceById ||= {};
 
-        if (type === "qty") {
-          AppState.feedCalculator.qtyById[id] = value;
-        }
-        if (type === "price") {
-          AppState.feedCalculator.priceById[id] = value;
-        }
+        if (type === "qty") AppState.feedCalculator.qtyById[id] = value;
+        if (type === "price") AppState.feedCalculator.priceById[id] = value;
       }
 
       if (type === "volume") {
@@ -156,71 +143,107 @@ function initControllers() {
 }
 
 // =======================================
-// GLOBAL UI ACTIONS (EVENT DELEGATION)
+// GLOBAL UI ACTIONS (DELEGATION)
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
-    // ➕ Додати компонент корму
-    const addBtn = e.target.closest("#addFeedComponentBtn");
-    if (addBtn) {
+
+    // ➕ Add component
+    if (e.target.closest("#addFeedComponentBtn")) {
       addFeedComponent();
       return;
     }
 
-    // ✔ Enable / Disable компонент
+    // ✔ Enable / disable
     const toggle = e.target.closest(".feed-enable");
     if (toggle) {
-      const id = toggle.dataset.id;
-      const component = AppState.feedComponents.find((c) => c.id === id);
-      if (!component) return;
-
-      component.enabled = toggle.checked;
-
+      const c = AppState.feedComponents.find(x => x.id === toggle.dataset.id);
+      if (!c) return;
+      c.enabled = toggle.checked;
       saveState();
       renderFeed();
       renderWarehouse();
       return;
     }
 
-    // 🗑 Soft delete компонента (після toggle, як ти просив)
-    const delBtn = e.target.closest(".feed-delete");
-    if (delBtn) {
-      const id = delBtn.dataset.id;
-      const component = AppState.feedComponents.find((c) => c.id === id);
-      if (!component) return;
-
-      const ok = confirm(`Видалити компонент "${component.name}"?`);
-      if (!ok) return;
-
-      component.deleted = true;
-
+    // 🗑 Soft delete
+    const del = e.target.closest(".feed-delete");
+    if (del) {
+      const c = AppState.feedComponents.find(x => x.id === del.dataset.id);
+      if (!c) return;
+      if (!confirm(`Видалити "${c.name}"?`)) return;
+      c.deleted = true;
       saveState();
       renderFeed();
       renderWarehouse();
       return;
     }
 
-    // ✏️ Inline edit назви компонента
-    const nameSpan = e.target.closest(".feed-name");
-    if (nameSpan) {
-      startEditFeedName(nameSpan);
+    // ✏ Inline rename
+    const name = e.target.closest(".feed-name");
+    if (name) {
+      startEditFeedName(name);
       return;
     }
-    
-    // ↩ Restore deleted feed components
-    const restoreBtn = e.target.closest("#restoreFeedComponentsBtn");
-    if (restoreBtn) {
+
+    // ↩ Restore
+    if (e.target.closest("#restoreFeedComponentsBtn")) {
       restoreFeedComponents();
-      return;
     }
+  });
+
+  // ===============================
+  // DRAG & DROP (DELEGATION)
+  // ===============================
+  document.addEventListener("dragstart", (e) => {
+    const row = e.target.closest("tr[data-id]");
+    if (!row) return;
+    draggedFeedId = row.dataset.id;
+    row.classList.add("dragging");
+  });
+
+  document.addEventListener("dragover", (e) => {
+    const row = e.target.closest("tr[data-id]");
+    if (!row) return;
+    e.preventDefault();
+  });
+
+  document.addEventListener("drop", (e) => {
+    const targetRow = e.target.closest("tr[data-id]");
+    if (!targetRow || !draggedFeedId) return;
+
+    const targetId = targetRow.dataset.id;
+    if (targetId === draggedFeedId) return;
+
+    const list = AppState.feedComponents;
+    const from = list.findIndex(c => c.id === draggedFeedId);
+    const to = list.findIndex(c => c.id === targetId);
+
+    if (from === -1 || to === -1) return;
+
+    const [moved] = list.splice(from, 1);
+    list.splice(to, 0, moved);
+
+    draggedFeedId = null;
+
+    saveState();
+    renderFeed();
+    renderWarehouse();
+  });
+
+  document.addEventListener("dragend", () => {
+    draggedFeedId = null;
+    document
+      .querySelectorAll(".dragging")
+      .forEach(el => el.classList.remove("dragging"));
   });
 }
 
 // =======================================
-// ACTION: ADD FEED COMPONENT
+// ACTIONS
 // =======================================
 function addFeedComponent() {
-  const component = {
+  const c = {
     id: `custom_${Date.now()}`,
     name: "Новий компонент",
     kg: 0,
@@ -229,80 +252,55 @@ function addFeedComponent() {
     deleted: false
   };
 
-  AppState.feedComponents.push(component);
+  AppState.feedComponents.push(c);
 
-  if (!AppState.feedCalculator.qtyById) {
-    AppState.feedCalculator.qtyById = {};
-  }
-  if (!AppState.feedCalculator.priceById) {
-    AppState.feedCalculator.priceById = {};
-  }
+  AppState.feedCalculator.qtyById ||= {};
+  AppState.feedCalculator.priceById ||= {};
 
-  AppState.feedCalculator.qtyById[component.id] = component.kg;
-  AppState.feedCalculator.priceById[component.id] = component.price;
+  AppState.feedCalculator.qtyById[c.id] = 0;
+  AppState.feedCalculator.priceById[c.id] = 0;
 
   saveState();
   renderFeed();
   renderWarehouse();
 }
 
-// =======================================
-// INLINE EDIT: FEED COMPONENT NAME
-// =======================================
 function startEditFeedName(span) {
   const id = span.dataset.id;
-  const component = AppState.feedComponents.find((c) => c.id === id);
-  if (!component) return;
+  const c = AppState.feedComponents.find(x => x.id === id);
+  if (!c) return;
 
   const input = document.createElement("input");
-  input.type = "text";
-  input.value = component.name || "";
+  input.value = c.name;
   input.className = "feed-name-input";
 
-  // заміна span -> input
   span.replaceWith(input);
-
   input.focus();
-  input.select();
 
-  const finish = (save) => {
-    if (save) {
-      const value = (input.value || "").trim();
-      if (value) component.name = value;
+  const finish = (ok) => {
+    if (ok && input.value.trim()) {
+      c.name = input.value.trim();
       saveState();
     }
     renderFeed();
   };
 
   input.addEventListener("blur", () => finish(true));
-  input.addEventListener("keydown", (e) => {
+  input.addEventListener("keydown", e => {
     if (e.key === "Enter") finish(true);
     if (e.key === "Escape") finish(false);
   });
 }
 
-// =======================================
-// ACTION: RESTORE DELETED FEED COMPONENTS
-// =======================================
 function restoreFeedComponents() {
-  const deleted = (AppState.feedComponents || []).filter(
-    c => c.deleted === true
-  );
-
-  if (deleted.length === 0) {
+  const deleted = AppState.feedComponents.filter(c => c.deleted);
+  if (!deleted.length) {
     alert("Немає видалених компонентів");
     return;
   }
+  if (!confirm(`Відновити ${deleted.length}?`)) return;
 
-  const ok = confirm(
-    `Відновити ${deleted.length} компонент(ів)?`
-  );
-  if (!ok) return;
-
-  deleted.forEach(c => {
-    c.deleted = false;
-  });
-
+  deleted.forEach(c => c.deleted = false);
   saveState();
   renderFeed();
   renderWarehouse();
