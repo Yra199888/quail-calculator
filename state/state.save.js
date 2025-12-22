@@ -15,12 +15,11 @@ import { AppState } from "./AppState.js";
 const STORAGE_KEY = "AppState";
 
 /**
- * 🔹 Зберегти поточний AppState
+ * 💾 Зберегти поточний стан
  */
-export function saveAppState() {
+export function saveState() {
   try {
-    const json = JSON.stringify(AppState);
-    localStorage.setItem(STORAGE_KEY, json);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState));
   } catch (err) {
     console.error("❌ Помилка збереження AppState:", err);
   }
