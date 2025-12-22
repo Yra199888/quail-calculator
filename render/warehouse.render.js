@@ -17,12 +17,17 @@ import { getFeedComponents } from "../services/feed.service.js";
 import { saveState } from "../state/state.save.js";
 import { qs, qsa } from "../utils/dom.js";
 
+// 🧮 ЛОТКИ З ЯЄЦЬ
+import { calcTrayStats } from "../utils/trays.calc.js";
+import { AppState } from "../state/AppState.js";
+
 // =======================================
 // ГОЛОВНИЙ RENDER
 // =======================================
 export function renderWarehouse() {
   renderFeedWarehouseTable();
-  renderTraysBlock();
+  renderEggTraysBlock();      // 🆕 готові лотки з яєць
+  renderTraysBlock();         // порожні лотки (як було)
   renderWarehouseWarnings();
 }
 
@@ -63,7 +68,7 @@ function renderFeedWarehouseTable() {
 }
 
 // =======================================
-// PODIЇ (тимчасово тут)
+// PODIЇ КОРМУ
 // =======================================
 function bindFeedActions() {
   qsa("[data-add-btn]").forEach(btn => {
@@ -98,7 +103,57 @@ function bindFeedActions() {
 }
 
 // =======================================
-// ЛОТКИ
+// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ (НОВЕ)
+// =======================================
+function renderEggTraysBlock() {
+  let box = qs("#eggTraysBlock");
+
+  // якщо блока ще нема — створюємо
+  if (!box) {
+    const panel = qs("#page-warehouse .panel");
+    if (!panel) return;
+
+    panel.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div class="panel" id="eggTraysBlock">
+        <div class="panel-title">🥚 Готові лотки з яєць</div>
+        <div id="eggTraysContent"></div>
+      </div>
+      `
+    );
+
+    box = qs("#eggTraysBlock");
+  }
+
+  const content = qs("#eggTraysContent");
+  if (!content) return;
+
+  const stats = calcTrayStats(AppState);
+
+  content.innerHTML = `
+    <div class="egg-trays-grid">
+      <div>
+        🥚 Всього яєць: <b>${stats.totalGoodEggs}</b>
+      </div>
+      <div>
+        📦 Повних лотків: <b>${stats.totalTrays}</b>
+      </div>
+      <div>
+        ✅ Доступно на складі: <b>${stats.availableTrays}</b>
+      </div>
+      <div>
+        🧺 Продано: <b>${stats.shippedTrays}</b>
+      </div>
+      <div>
+        ➕ Залишок яєць: <b>${stats.leftoverEggs}</b>
+      </div>
+    </div>
+  `;
+}
+
+// =======================================
+// 🧺 ПОРОЖНІ ЛОТКИ (ЯК БУЛО)
 // =======================================
 function renderTraysBlock() {
   const valueEl = qs("#emptyTraysValue");
@@ -122,7 +177,7 @@ function renderTraysBlock() {
 }
 
 // =======================================
-// ПОПЕРЕДЖЕННЯ
+// ⚠️ ПОПЕРЕДЖЕННЯ
 // =======================================
 function renderWarehouseWarnings() {
   const box = qs("#warehouseWarnings");
