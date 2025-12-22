@@ -78,6 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // =======================================
 // CONTROLLERS INIT
 // =======================================
+console.log("typeof saveState =", typeof saveState);
 function initControllers() {
   console.group("🧩 Controllers");
 
