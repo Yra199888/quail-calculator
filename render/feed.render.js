@@ -38,14 +38,14 @@ function renderFeedTable() {
       const qty =
         typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
           ? AppState.feedCalculator.qtyById[c.id]
-          : (c.defaultQty ?? 0);
+          : Number(c.kg ?? 0);
 
       const price =
         typeof AppState.feedCalculator.priceById?.[c.id] === "number"
           ? AppState.feedCalculator.priceById[c.id]
-          : 0;
+          : Number(c.price ?? 0);
 
-      const sum = Number(qty) * Number(price);
+      const sum = qty * price;
 
       return `
         <tr>
@@ -57,7 +57,7 @@ function renderFeedTable() {
               data-id="${c.id}"
               type="number"
               min="0"
-              step="0.1"
+              step="0.01"
               value="${qty}"
             >
           </td>
@@ -96,8 +96,15 @@ function renderFeedTotals() {
   let totalCost = 0;
 
   components.forEach(c => {
-    const qty = Number(AppState.feedCalculator.qtyById?.[c.id] || 0);
-    const price = Number(AppState.feedCalculator.priceById?.[c.id] || 0);
+    const qty =
+      typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
+        ? AppState.feedCalculator.qtyById[c.id]
+        : Number(c.kg ?? 0);
+
+    const price =
+      typeof AppState.feedCalculator.priceById?.[c.id] === "number"
+        ? AppState.feedCalculator.priceById[c.id]
+        : Number(c.price ?? 0);
 
     totalKg += qty;
     totalCost += qty * price;
@@ -125,5 +132,7 @@ function renderFeedVolume() {
 // 🔎 АКТИВНІ КОМПОНЕНТИ
 // =======================================
 function getActiveFeedComponents() {
-  return (AppState.feedComponents || []).filter(c => c.enabled);
+  return (AppState.feedComponents || []).filter(
+    c => c.enabled !== false   // ← за замовчуванням ВКЛЮЧЕНІ
+  );
 }
