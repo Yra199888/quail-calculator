@@ -5,9 +5,6 @@ console.log("🔥 app.js EXECUTED");
  * =======================================
  * 🚀 Головна точка входу додатку
  *
- * ❌ БЕЗ бізнес-логіки
- * ❌ БЕЗ прямої DOM-маніпуляції
- *
  * ✅ ТІЛЬКИ:
  *  - state
  *  - ensure
@@ -51,29 +48,45 @@ import { initWarnings } from "./ui/warnings.js";
 window.AppState = AppState;
 
 // =======================================
-// DRAG STATE
+// DRAG STATE (якщо в тебе було)
 // =======================================
 let draggedFeedId = null;
 
 // =======================================
-// START
+// START (ВАЖЛИВО: async + await loadState)
 // =======================================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     console.group("🚀 App start");
 
-    loadState();
+    // 1) Спочатку завантажити дані (Firebase -> localStorage)
+    await loadState();
+
+    // 2) Потім гарантувати структуру
     ensureState();
 
+    // 3) UI init
     initNavigation();
     initToggles();
     initWarnings();
 
+    // 4) Перший рендер
     renderAll();
+
+    // 5) Контролери
     initControllers();
+
+    // 6) Global actions (делегація)
     initGlobalActions();
 
-    saveState();
+    // ✅ ВАЖЛИВО:
+    // НЕ робимо saveState() на старті,
+    // щоб випадково не перезаписати Cloud/Local дефолтним станом.
+
+    // 7) Авто-рендер коли прийшов стан з Firebase realtime
+    window.addEventListener("appstate:updated", () => {
+      renderAll();
+    });
 
     console.groupEnd();
   } catch (e) {
@@ -86,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // CONTROLLERS INIT
 // =======================================
 function initControllers() {
-
   // 🥚 Eggs
   new EggsFormController({
     onSave: ({ date, good, bad, home }) => {
@@ -100,7 +112,6 @@ function initControllers() {
   // 🌾 Feed
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
-
       if (type === "qty" || type === "price") {
         if (!id) return;
 
@@ -149,7 +160,6 @@ function initControllers() {
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
-
     // ➕ Add component
     if (e.target.closest("#addFeedComponentBtn")) {
       addFeedComponent();
@@ -188,15 +198,14 @@ function initGlobalActions() {
       return;
     }
 
-    // ↩ Restore deleted
+    // ↩ Restore
     if (e.target.closest("#restoreFeedComponentsBtn")) {
       restoreFeedComponents();
+      return;
     }
   });
 
-  // ===============================
-  // DRAG & DROP (DELEGATION)
-  // ===============================
+  // Якщо в тебе був drag&drop — лишаємо як було (не ламає)
   document.addEventListener("dragstart", (e) => {
     const row = e.target.closest("tr[data-id]");
     if (!row) return;
@@ -220,7 +229,6 @@ function initGlobalActions() {
     const list = AppState.feedComponents;
     const from = list.findIndex(c => c.id === draggedFeedId);
     const to = list.findIndex(c => c.id === targetId);
-
     if (from === -1 || to === -1) return;
 
     const [moved] = list.splice(from, 1);
@@ -235,9 +243,7 @@ function initGlobalActions() {
 
   document.addEventListener("dragend", () => {
     draggedFeedId = null;
-    document
-      .querySelectorAll(".dragging")
-      .forEach(el => el.classList.remove("dragging"));
+    document.querySelectorAll(".dragging").forEach(el => el.classList.remove("dragging"));
   });
 }
 
@@ -258,7 +264,6 @@ function addFeedComponent() {
 
   AppState.feedCalculator.qtyById ||= {};
   AppState.feedCalculator.priceById ||= {};
-
   AppState.feedCalculator.qtyById[c.id] = 0;
   AppState.feedCalculator.priceById[c.id] = 0;
 
@@ -273,7 +278,7 @@ function startEditFeedName(span) {
   if (!c) return;
 
   const input = document.createElement("input");
-  input.value = c.name;
+  input.value = c.name || "";
   input.className = "feed-name-input";
 
   span.replaceWith(input);
