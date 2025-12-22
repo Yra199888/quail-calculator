@@ -1,71 +1,51 @@
 /**
  * warnings.js
  * ---------------------------------------
- * Відповідає за відображення попереджень у UI.
- *
- * Обовʼязки:
- *  - показ / приховування блоку попереджень
- *  - рендер списку проблем
- *
+ * UI-попередження (мінімальні залишки, проблеми)
  * НЕ містить бізнес-логіки
  */
 
 import { AppState } from "../state/AppState.js";
 
 /**
- * Оновити всі попередження
- * Викликається після render або зміни state
+ * Оновлення блоку попереджень складу
  */
-export function renderWarnings() {
+export function renderWarehouseWarnings() {
   const box = document.getElementById("warehouseWarning");
-  const list = document.getElementById("warehouseWarningList");
+  const listEl = document.getElementById("warehouseWarningList");
 
-  if (!box || !list) return;
+  if (!box || !listEl) return;
 
-  const warnings = collectWarnings();
+  const mins = AppState.warehouse.minimums || {};
+  const warnings = [];
 
-  if (!warnings.length) {
-    box.style.display = "none";
-    list.innerHTML = "";
-    return;
-  }
-
-  list.innerHTML = warnings.map(w => `• ${w}`).join("<br>");
-  box.style.display = "block";
-}
-
-/**
- * Зібрати всі попередження з AppState
- * @returns {string[]}
- */
-function collectWarnings() {
-  const result = [];
-
-  // ===== КОРМОВІ КОМПОНЕНТИ =====
-  const components = AppState.feedComponents || [];
-  const mins = AppState.warehouse?.minimums || {};
-  const stock = AppState.warehouse?.feed || {};
-
-  components.forEach(c => {
+  // кормові компоненти
+  for (const c of AppState.feedComponents) {
+    const stock = Number(AppState.warehouse.feed[c.id] || 0);
     const min = Number(mins[c.id] || 0);
-    const qty = Number(stock[c.id] || 0);
 
-    if (min > 0 && qty < min) {
-      result.push(
-        `${c.name}: ${qty.toFixed(2)} кг (мін. ${min})`
+    if (min > 0 && stock < min) {
+      warnings.push(
+        `• ${c.name}: ${stock.toFixed(2)} (мін. ${min})`
       );
     }
-  });
+  }
 
-  // ===== ПОРОЖНІ ЛОТКИ =====
-  const traysMin = Number(mins.empty_trays || 0);
-  const traysQty = Number(AppState.warehouse?.trays || 0);
+  // порожні лотки
+  const trayMin = Number(mins.empty_trays || 0);
+  const trayStock = Number(AppState.warehouse.trays || 0);
 
-  if (traysMin > 0 && traysQty < traysMin) {
-    result.push(
-      `Порожні лотки: ${traysQty} (мін. ${traysMin})`
+  if (trayMin > 0 && trayStock < trayMin) {
+    warnings.push(
+      `• Порожні лотки: ${trayStock} (мін. ${trayMin})`
     );
   }
 
-  return result;
+  if (warnings.length) {
+    listEl.innerHTML = warnings.join("<br>");
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+    listEl.innerHTML = "";
+  }
 }
