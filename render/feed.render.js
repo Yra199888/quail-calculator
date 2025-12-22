@@ -1,48 +1,110 @@
-// /src/render/feed.render.js
-import { qs } from "../utils/dom.js";
-import { getActiveFeedComponents } from "../services/feed.service.js";
+/**
+ * render.feed.js
+ * ---------------------------------------
+ * Render-шар калькулятора корму.
+ * Відображає активні компоненти,
+ * їх кількість, ціну та підсумки.
+ */
 
-export function renderFeedTable(AppState) {
-  const tbody = qs("#feedTable");
-  if (!tbody) return;
+import { AppState } from "../state/AppState.js";
 
-  const components = getActiveFeedComponents(AppState);
-  const qty = AppState.feedCalculator.qty || [];
-  const price = AppState.feedCalculator.price || [];
-
-  tbody.innerHTML = components.map((c, i) => `
-    <tr>
-      <td>${c.name}</td>
-
-      <td>
-        <input
-          type="number"
-          class="qty"
-          data-i="${i}"
-          value="${qty[i] ?? c.defaultQty ?? 0}"
-        >
-      </td>
-
-      <td>
-        <input
-          type="number"
-          class="price"
-          data-i="${i}"
-          value="${price[i] ?? 0}"
-        >
-      </td>
-
-      <td id="sum_${i}">0</td>
-    </tr>
-  `).join("");
+/**
+ * Основний render калькулятора
+ */
+export function renderFeedCalculator() {
+  renderFeedTable();
+  renderFeedTotals();
+  renderFeedVolume();
 }
 
-export function renderFeedTotals(AppState) {
-  const totals = AppState.feedCalculator.totals;
-  if (!totals) return;
+/**
+ * Таблиця компонентів корму
+ */
+function renderFeedTable() {
+  const tbody = document.getElementById("feedTable");
+  if (!tbody) return;
 
-  qs("#feedTotal").textContent = totals.totalCost.toFixed(2);
-  qs("#feedPerKg").textContent = totals.perKg.toFixed(2);
-  qs("#feedVolumeTotal").textContent =
-    (totals.perKg * totals.volume).toFixed(2);
+  const components = getActiveFeedComponents();
+
+  tbody.innerHTML = components
+    .map((c, i) => {
+      const qty = AppState.feedCalculator.qty[i] ?? c.defaultQty;
+      const price = AppState.feedCalculator.price[i] ?? 0;
+      const sum = Number(qty) * Number(price);
+
+      return `
+        <tr>
+          <td>${c.name}</td>
+
+          <td>
+            <input
+              class="qty"
+              data-index="${i}"
+              type="number"
+              value="${qty}"
+            >
+          </td>
+
+          <td>
+            <input
+              class="price"
+              data-index="${i}"
+              type="number"
+              value="${price}"
+            >
+          </td>
+
+          <td>${sum.toFixed(2)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+/**
+ * Підсумки калькулятора
+ */
+function renderFeedTotals() {
+  const totalEl = document.getElementById("feedTotal");
+  const perKgEl = document.getElementById("feedPerKg");
+  const volumeTotalEl = document.getElementById("feedVolumeTotal");
+
+  if (!totalEl || !perKgEl || !volumeTotalEl) return;
+
+  const components = getActiveFeedComponents();
+
+  let totalCost = 0;
+  let totalKg = 0;
+
+  components.forEach((_, i) => {
+    const qty = Number(AppState.feedCalculator.qty[i] || 0);
+    const price = Number(AppState.feedCalculator.price[i] || 0);
+
+    totalKg += qty;
+    totalCost += qty * price;
+  });
+
+  const perKg = totalKg > 0 ? totalCost / totalKg : 0;
+  const volume = Number(AppState.feedCalculator.volume || 0);
+
+  totalEl.textContent = totalCost.toFixed(2);
+  perKgEl.textContent = perKg.toFixed(2);
+  volumeTotalEl.textContent = (perKg * volume).toFixed(2);
+}
+
+/**
+ * Обʼєм корму
+ */
+function renderFeedVolume() {
+  const volInput = document.getElementById("feedVolume");
+  if (!volInput) return;
+
+  volInput.value = AppState.feedCalculator.volume ?? 25;
+}
+
+/**
+ * Активні компоненти
+ */
+function getActiveFeedComponents() {
+  return (AppState.feedComponents || []).filter(c => c.enabled);
 }
