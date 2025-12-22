@@ -1,44 +1,43 @@
-// ui/navigation.js
+/**
+ * navigation.js
+ * ---------------------------------------
+ * Відповідає ТІЛЬКИ за навігацію між сторінками (вкладками):
+ *  - перемикання active-page
+ *  - підсвітка активної кнопки
+ *
+ * ❌ БЕЗ бізнес-логіки
+ * ❌ БЕЗ AppState
+ * ❌ БЕЗ localStorage
+ */
 
-import { $ } from "../utils/dom.js";
+import { qs, qsa } from "../utils/dom.js";
 
-export function bindNavigation(AppState, saveAppState) {
-  document.querySelectorAll(".nav-btn").forEach(btn => {
+// =======================================
+// ІНІЦІАЛІЗАЦІЯ НАВІГАЦІЇ
+// =======================================
+export function initNavigation() {
+  const buttons = qsa("[data-page]");
+  const pages = qsa(".page");
+
+  if (!buttons.length || !pages.length) return;
+
+  buttons.forEach(btn => {
     btn.addEventListener("click", () => {
-      const page = btn.dataset.page;
-      if (!page) return;
+      const targetPage = btn.dataset.page;
+      if (!targetPage) return;
 
-      document.querySelectorAll(".page")
-        .forEach(p => p.classList.remove("active-page"));
+      // 1️⃣ Ховаємо всі сторінки
+      pages.forEach(p => p.classList.remove("active-page"));
 
-      const target = $("page-" + page);
-      if (!target) return;
+      // 2️⃣ Показуємо потрібну
+      const pageEl = qs(`#page-${targetPage}`);
+      if (pageEl) pageEl.classList.add("active-page");
 
-      target.classList.add("active-page");
+      // 3️⃣ Знімаємо active з усіх кнопок
+      buttons.forEach(b => b.classList.remove("active"));
 
-      document.querySelectorAll(".nav-btn")
-        .forEach(b => b.classList.remove("active"));
-
+      // 4️⃣ Активуємо поточну кнопку
       btn.classList.add("active");
-
-      AppState.ui.page = page;
-      saveAppState();
     });
   });
-}
-
-export function restoreActivePage(AppState) {
-  const page = AppState.ui.page || "calculator";
-
-  document.querySelectorAll(".page")
-    .forEach(p => p.classList.remove("active-page"));
-
-  const target = document.getElementById("page-" + page);
-  if (target) target.classList.add("active-page");
-
-  document.querySelectorAll(".nav-btn")
-    .forEach(b => b.classList.remove("active"));
-
-  const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
-  if (btn) btn.classList.add("active");
 }
