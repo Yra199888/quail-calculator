@@ -1,91 +1,186 @@
+/**
+ * FeedRecipesController
+ * ---------------------
+ * Контролер рецептів корму.
+ *
+ * Відповідає ТІЛЬКИ за:
+ * - збереження рецепта з калькулятора
+ * - застосування рецепта до калькулятора
+ * - видалення рецепта
+ * - синхронізацію select (UI)
+ *
+ * ❌ НЕ рахує собівартість
+ * ❌ НЕ працює зі складом
+ * ❌ НЕ списує корм
+ */
+
 export class FeedRecipesController {
-  constructor({ AppState, saveAppState, refreshUI }) {
-    this.AppState = AppState;
-    this.saveAppState = saveAppState;
+  constructor({ AppState, saveState, refreshUI }) {
+    if (!AppState) throw new Error("FeedRecipesController: AppState обовʼязковий");
+    if (typeof saveState !== "function") {
+      throw new Error("FeedRecipesController: saveState має бути функцією");
+    }
+
+    this.state = AppState;
+    this.saveState = saveState;
     this.refreshUI = refreshUI;
 
-    this.els = {
-      name: document.getElementById("recipeName"),
-      select: document.getElementById("recipeSelect"),
-      save: document.getElementById("saveRecipeBtn"),
-      load: document.getElementById("loadRecipeBtn"),
-      del: document.getElementById("deleteRecipeBtn"),
-    };
+    // DOM
+    this.nameInput = document.getElementById("recipeName");
+    this.select = document.getElementById("recipeSelect");
+    this.saveBtn = document.getElementById("saveRecipeBtn");
+    this.loadBtn = document.getElementById("loadRecipeBtn");
+    this.deleteBtn = document.getElementById("deleteRecipeBtn");
 
-    this.bind();
+    this.bindUI();
     this.renderSelect();
   }
 
-  bind() {
-    this.els.save?.addEventListener("click", () => this.save());
-    this.els.load?.addEventListener("click", () => this.load());
-    this.els.del?.addEventListener("click", () => this.remove());
-    this.els.select?.addEventListener("change", e => {
-      this.AppState.recipes.selectedId = e.target.value || null;
-    });
+  // ============================
+  // UI
+  // ============================
+
+  bindUI() {
+    if (this.saveBtn) {
+      this.saveBtn.addEventListener("click", () => this.saveFromCalculator());
+    }
+
+    if (this.loadBtn) {
+      this.loadBtn.addEventListener("click", () => this.applySelected());
+    }
+
+    if (this.deleteBtn) {
+      this.deleteBtn.addEventListener("click", () => this.deleteSelected());
+    }
+
+    if (this.select) {
+      this.select.addEventListener("change", () => {
+        this.state.recipes.selectedId = this.select.value || null;
+        this.saveState();
+      });
+    }
   }
 
-  save() {
-    const name = this.els.name.value.trim();
-    if (!name) return alert("Вкажи назву рецепту");
+  // ============================
+  // ЛОГІКА РЕЦЕПТІВ
+  // ============================
 
-    const id = this.AppState.recipes.selectedId || Date.now().toString();
+  saveFromCalculator() {
+    const name = (this.nameInput?.value || "").trim();
+    if (!name) {
+      alert("Вкажи назву рецепта");
+      return;
+    }
 
-    this.AppState.recipes.list[id] = {
+    const active = this.getActiveComponents();
+    const components = {};
+
+    active.forEach((c, i) => {
+      const qty = Number(this.state.feedCalculator.qty[i] || 0);
+      if (qty > 0) components[c.id] = qty;
+    });
+
+    const id = "recipe_" + Date.now();
+
+    this.state.recipes.list[id] = {
       id,
       name,
-      qty: [...this.AppState.feedCalculator.qty],
-      price: [...this.AppState.feedCalculator.price],
-      volume: this.AppState.feedCalculator.volume,
-      updatedAt: new Date().toISOString()
+      volume: Number(this.state.feedCalculator.volume || 25),
+      components
     };
 
-    this.AppState.recipes.selectedId = id;
-    this.saveAppState();
+    this.state.recipes.selectedId = id;
+
+    this.saveState();
     this.renderSelect();
+    this.refreshUI?.();
+
     alert("✅ Рецепт збережено");
   }
 
-  load() {
-    const id = this.AppState.recipes.selectedId;
-    if (!id) return alert("Рецепт не вибрано");
+  applySelected() {
+    const id = this.select?.value;
+    if (!id) return;
 
-    const r = this.AppState.recipes.list[id];
-    if (!r) return;
+    const recipe = this.state.recipes.list[id];
+    if (!recipe) {
+      alert("Рецепт не знайдено");
+      return;
+    }
 
-    this.AppState.feedCalculator.qty = [...r.qty];
-    this.AppState.feedCalculator.price = [...r.price];
-    this.AppState.feedCalculator.volume = r.volume;
+    const active = this.getActiveComponents();
 
-    this.saveAppState();
-    this.refreshUI();
-    alert("📂 Рецепт завантажено");
+    // очистка калькулятора
+    this.state.feedCalculator.qty = active.map(() => 0);
+    this.state.feedCalculator.volume = recipe.volume || 25;
+
+    // накладання рецепта
+    active.forEach((c, i) => {
+      if (recipe.components[c.id] != null) {
+        this.state.feedCalculator.qty[i] =
+          Number(recipe.components[c.id] || 0);
+      }
+    });
+
+    this.state.recipes.selectedId = id;
+
+    this.saveState();
+    this.refreshUI?.();
+
+    alert(`🍲 Рецепт "${recipe.name}" застосовано`);
   }
 
-  remove() {
-    const id = this.AppState.recipes.selectedId;
-    if (!id) return alert("Рецепт не вибрано");
-    if (!confirm("Видалити рецепт?")) return;
+  deleteSelected() {
+    const id = this.select?.value;
+    if (!id) return;
 
-    delete this.AppState.recipes.list[id];
-    this.AppState.recipes.selectedId = null;
+    const recipe = this.state.recipes.list[id];
+    if (!recipe) return;
 
-    this.saveAppState();
+    if (!confirm(`Видалити рецепт "${recipe.name}"?`)) return;
+
+    delete this.state.recipes.list[id];
+
+    if (this.state.recipes.selectedId === id) {
+      this.state.recipes.selectedId = null;
+    }
+
+    this.saveState();
     this.renderSelect();
+
     alert("🗑️ Рецепт видалено");
   }
 
+  // ============================
+  // RENDER
+  // ============================
+
   renderSelect() {
-    if (!this.els.select) return;
+    if (!this.select) return;
 
-    this.els.select.innerHTML = `<option value="">— обери рецепт —</option>`;
+    this.select.innerHTML = "<option value=''>— обери рецепт —</option>";
 
-    Object.values(this.AppState.recipes.list).forEach(r => {
+    const recipes = Object.values(this.state.recipes.list || {});
+    recipes.sort((a, b) => a.name.localeCompare(b.name));
+
+    recipes.forEach(r => {
       const opt = document.createElement("option");
       opt.value = r.id;
       opt.textContent = r.name;
-      if (r.id === this.AppState.recipes.selectedId) opt.selected = true;
-      this.els.select.appendChild(opt);
+
+      if (this.state.recipes.selectedId === r.id) {
+        opt.selected = true;
+      }
+
+      this.select.appendChild(opt);
     });
+  }
+
+  // ============================
+  // HELPERS
+  // ============================
+
+  getActiveComponents() {
+    return (this.state.feedComponents || []).filter(c => c.enabled);
   }
 }
