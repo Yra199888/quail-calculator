@@ -249,3 +249,11 @@ tr.disabled input[type="number"] {
     padding: 8px;
   }
 }
+
+.feed-row {
+  cursor: grab;
+}
+
+.feed-row:active {
+  cursor: grabbing;
+}
