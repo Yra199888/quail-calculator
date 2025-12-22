@@ -1,42 +1,73 @@
 /**
  * 📥 state.load.js
- * Завантаження AppState з localStorage
+ * Завантаження AppState
  *
- * ❗ Файл НЕ:
- * - виправляє структуру
- * - не валідовує
- * - не рендерить
+ * Пріоритет:
+ * 1️⃣ Firebase Cloud Firestore
+ * 2️⃣ localStorage (fallback)
  *
- * Він ТІЛЬКИ читає дані
+ * ❌ НЕ:
+ * - рендерить UI
+ * - змінює структуру (це робить ensureState)
  */
 
 import { AppState } from "./AppState.js";
+import { loadStateFromCloud, subscribeToCloudState } from "../firebase/firebase.js";
 
 const STORAGE_KEY = "AppState";
 
 /**
- * 🔹 Завантажити стан з localStorage
+ * 📥 Завантажити стан
  */
-export function loadState() {
+export async function loadState() {
+  let loaded = false;
+
+  // -------------------------------
+  // 1️⃣ Firebase
+  // -------------------------------
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const cloudState = await loadStateFromCloud();
 
-    if (!raw) {
-      // нічого не збережено — працюємо з чистим AppState
-      return;
+    if (cloudState && typeof cloudState === "object") {
+      Object.assign(AppState, cloudState);
+      loaded = true;
+      console.log("☁ AppState завантажено з Firebase");
     }
-
-    const parsed = JSON.parse(raw);
-
-    if (!parsed || typeof parsed !== "object") {
-      console.warn("⚠️ AppState у localStorage некоректний, ігноруємо");
-      return;
-    }
-
-    // обережно мержимо тільки верхній рівень
-    Object.assign(AppState, parsed);
-
   } catch (err) {
-    console.error("❌ Помилка завантаження AppState:", err);
+    console.warn("⚠ Firebase недоступний, fallback → localStorage", err);
+  }
+
+  // -------------------------------
+  // 2️⃣ localStorage (fallback)
+  // -------------------------------
+  if (!loaded) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        Object.assign(AppState, JSON.parse(raw));
+        console.log("💾 AppState завантажено з localStorage");
+      }
+    } catch (err) {
+      console.error("❌ Помилка читання localStorage:", err);
+    }
+  }
+
+  // -------------------------------
+  // 3️⃣ Realtime sync (ПІСЛЯ load)
+  // -------------------------------
+  try {
+    subscribeToCloudState((remoteState) => {
+      if (!remoteState) return;
+
+      console.log("🔄 Оновлення AppState з Firebase");
+
+      Object.keys(AppState).forEach(k => delete AppState[k]);
+      Object.assign(AppState, remoteState);
+
+      // UI оновиться автоматично через renderAll()
+      window.dispatchEvent(new Event("appstate:updated"));
+    });
+  } catch (err) {
+    console.warn("⚠ Realtime sync не активний", err);
   }
 }
