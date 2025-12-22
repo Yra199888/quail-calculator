@@ -15,7 +15,7 @@ import { AppState } from "../state/AppState.js";
 import { qs } from "../utils/dom.js";
 
 // =======================================
-// ГОЛОВНИЙ РЕНДЕР
+// ГОЛОВНИЙ RENDER
 // =======================================
 export function renderRecipes() {
   const listEl = qs("#recipesList");
@@ -23,7 +23,8 @@ export function renderRecipes() {
 
   listEl.innerHTML = "";
 
-  const recipes = Object.values(AppState.recipes.list || {});
+  const recipesMap = AppState.recipes?.list ?? {};
+  const recipes = Object.values(recipesMap);
 
   if (recipes.length === 0) {
     listEl.innerHTML = `<div class="muted">Рецептів ще немає</div>`;
@@ -35,9 +36,12 @@ export function renderRecipes() {
     item.className = "recipe-item";
 
     item.innerHTML = `
-      <div class="recipe-title">${recipe.name}</div>
+      <div class="recipe-title">
+        ${recipe.name ?? "Без назви"}
+      </div>
+
       <div class="recipe-meta">
-        Обʼєм: <b>${recipe.volume}</b> кг
+        Обʼєм: <b>${recipe.volume ?? 0}</b> кг
       </div>
     `;
 
