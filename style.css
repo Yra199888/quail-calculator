@@ -257,3 +257,20 @@ tr.disabled input[type="number"] {
 .feed-row:active {
   cursor: grabbing;
 }
+
+/* ===============================
+   DRAG & DROP – FEED COMPONENTS
+   =============================== */
+
+#feedTable tr {
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+#feedTable tr.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+#feedTable tr.drag-over {
+  background: rgba(76, 175, 80, 0.15);
+}
