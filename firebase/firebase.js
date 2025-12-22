@@ -1,26 +1,24 @@
 /**
  * 🔥 firebase.js
- * ---------------------------------------
- * ЄДИНЕ місце ініціалізації Firebase + Firestore
- *
- * ❗ ВАЖЛИВО:
- * - initializeApp() ТІЛЬКИ ТУТ
- * - getFirestore() ТІЛЬКИ ТУТ
- * - НІЯКОГО DOM
- * - НІЯКОГО AppState
+ * ------------------------------------
+ * ЄДИНА точка ініціалізації Firebase
+ * Firestore + realtime sync
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import {
   getFirestore,
   doc,
+  getDoc,
   setDoc,
-  getDoc
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-/* =======================================
-   🔑 FIREBASE CONFIG
-   ======================================= */
+import { AppState } from "../state/AppState.js";
+
+// =====================================
+// 🔐 CONFIG
+// =====================================
 const firebaseConfig = {
   apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
   authDomain: "quail-farm-tracke.firebaseapp.com",
@@ -30,43 +28,67 @@ const firebaseConfig = {
   appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
 };
 
-/* =======================================
-   🚀 INIT FIREBASE (ОДИН РАЗ)
-   ======================================= */
-const app = initializeApp(firebaseConfig);
+// =====================================
+// 🚀 INIT (ВАЖЛИВО: ПОРЯДОК)
+// =====================================
+let app = null;
+let db = null;
+let ready = false;
 
-/* =======================================
-   🧠 INIT FIRESTORE
-   ======================================= */
-export const db = getFirestore(app);
-
-/* =======================================
-   ☁️ CLOUD STORAGE HELPERS
-   ======================================= */
-
-/**
- * 💾 Зберегти стан у Firestore
- * @param {Object} state
- */
-export async function saveStateToCloud(state) {
-  if (!state) return;
-
-  await setDoc(
-    doc(db, "appState", "main"),
-    JSON.parse(JSON.stringify(state)) // safe clone
-  );
+try {
+  app = initializeApp(firebaseConfig);   // ✅ 1
+  db = getFirestore(app);                // ✅ 2
+  ready = true;
+  console.log("🔥 Firebase initialized");
+} catch (err) {
+  console.warn("⚠ Firebase init failed", err);
 }
 
-/**
- * 📥 Завантажити стан з Firestore
- * @returns {Object|null}
- */
-export async function loadStateFromCloud() {
-  const snap = await getDoc(
-    doc(db, "appState", "main")
+// =====================================
+// 🧠 HELPERS
+// =====================================
+export function isFirebaseReady() {
+  return ready;
+}
+
+function getStateRef() {
+  if (!ready) throw new Error("Firebase not ready");
+  return doc(db, "app", "state");
+}
+
+// =====================================
+// ☁ SAVE
+// =====================================
+export async function saveStateToCloud() {
+  if (!ready) return;
+
+  await setDoc(
+    getStateRef(),
+    JSON.parse(JSON.stringify(AppState)), // без proxy
+    { merge: true }
   );
 
-  if (!snap.exists()) return null;
+  console.log("☁ AppState saved to Firebase");
+}
 
-  return snap.data();
+// =====================================
+// ☁ LOAD
+// =====================================
+export async function loadStateFromCloud() {
+  if (!ready) return null;
+
+  const snap = await getDoc(getStateRef());
+  return snap.exists() ? snap.data() : null;
+}
+
+// =====================================
+// 🔄 REALTIME SYNC
+// =====================================
+export function subscribeToCloudState(callback) {
+  if (!ready) return;
+
+  return onSnapshot(getStateRef(), (snap) => {
+    if (!snap.exists()) return;
+    callback(snap.data());
+  });
 }
