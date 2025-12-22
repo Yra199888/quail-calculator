@@ -1,82 +1,92 @@
-// firebase/firebase.js
-import {
-  initializeApp,
-  getApps
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+/**
+ * 🔥 firebase.js
+ * ---------------------------------------
+ * Firebase init + Cloud sync for AppState
+ */
 
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import {
   getFirestore,
   doc,
-  runTransaction,
+  getDoc,
+  setDoc,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-/* ===============================
-   INIT
-================================ */
+// =======================================
+// 🔐 CONFIG
+// =======================================
 const firebaseConfig = {
   apiKey: "AIzaSyDp_Vf7rPpGUNJROAGD-2o-fA-0Ux5VBZw",
   authDomain: "quail-farm-tracke.firebaseapp.com",
   projectId: "quail-farm-tracke",
-  storageBucket: "quail-farm-tracke.appspot.com",
+  storageBucket: "quail-farm-tracke.firebasestorage.app",
   messagingSenderId: "914329630014",
   appId: "1:914329630014:web:ef1cce3719b6a0e1cea86f"
 };
 
-const app = getApps().length === 0
-  ? initializeApp(firebaseConfig)
-  : getApps()[0];
+// =======================================
+// 🔥 INIT (SAFE)
+// =======================================
+let app = null;
+let db = null;
 
-const db = getFirestore(app);
-const DOC_REF = doc(db, "app", "state");
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
 
-/* ===============================
-   SAVE FULL APPSTATE (SAFE)
-================================ */
-export async function saveStateToCloud(localState) {
-  if (!localState) return;
+db = getFirestore(app);
 
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(DOC_REF);
+// =======================================
+// 📌 CONSTANTS
+// =======================================
+const DOC_PATH = ["app", "state"];
 
-    const remote = snap.exists()
-      ? snap.data()
-      : {};
+// =======================================
+// ✅ CHECK
+// =======================================
+export function isFirebaseReady() {
+  return !!db;
+}
 
-    // 🔥 ГЛИБОКЕ ЗЛИТТЯ
-    const merged = deepMerge(remote, localState);
+// =======================================
+// 📥 LOAD STATE (ONCE)
+// =======================================
+export async function loadStateFromCloud() {
+  const ref = doc(db, ...DOC_PATH);
+  const snap = await getDoc(ref);
 
-    tx.set(DOC_REF, merged);
+  if (!snap.exists()) return null;
+  return snap.data();
+}
+
+// =======================================
+// 💾 SAVE STATE (MERGE)
+// =======================================
+export async function saveStateToCloud(state) {
+  if (!state || typeof state !== "object") return;
+
+  const ref = doc(db, ...DOC_PATH);
+
+  // 🔴 КЛЮЧОВЕ: merge:true
+  await setDoc(ref, structuredClone(state), {
+    merge: true
   });
 }
 
-/* ===============================
-   REALTIME SUBSCRIBE
-================================ */
-export function subscribeToCloudState(cb) {
-  return onSnapshot(DOC_REF, (snap) => {
+// =======================================
+// 🔄 REALTIME SYNC
+// =======================================
+export function subscribeToCloudState(onUpdate) {
+  const ref = doc(db, ...DOC_PATH);
+
+  return onSnapshot(ref, (snap) => {
     if (!snap.exists()) return;
-    cb(snap.data());
-  });
-}
-
-/* ===============================
-   HELPERS
-================================ */
-function deepMerge(target, source) {
-  if (typeof target !== "object" || typeof source !== "object") {
-    return source;
-  }
-
-  const out = Array.isArray(target) ? [...target] : { ...target };
-
-  Object.keys(source).forEach((key) => {
-    if (source[key] && typeof source[key] === "object") {
-      out[key] = deepMerge(target[key] || {}, source[key]);
-    } else {
-      out[key] = source[key];
+    const data = snap.data();
+    if (typeof onUpdate === "function") {
+      onUpdate(data);
     }
   });
-
-  return out;
 }
