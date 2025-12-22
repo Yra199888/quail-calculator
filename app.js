@@ -98,53 +98,43 @@ function initControllers() {
     }
   });
 
-  // 🌾 Feed
-const feedForm = new FeedFormController({
-  onChange: ({ type, id, index, value }) => {
+  // 🌾 Feed (100% id)
+  const feedForm = new FeedFormController({
+    onChange: ({ type, id, value }) => {
 
-    // --- qty / price ---
-    if (type === "qty" || type === "price") {
+      // qty / price
+      if (type === "qty" || type === "price") {
 
-      // ініціалізація мап
-      if (!AppState.feedCalculator.qtyById) {
-        AppState.feedCalculator.qtyById = {};
-      }
-      if (!AppState.feedCalculator.priceById) {
-        AppState.feedCalculator.priceById = {};
-      }
+        if (!AppState.feedCalculator.qtyById) {
+          AppState.feedCalculator.qtyById = {};
+        }
+        if (!AppState.feedCalculator.priceById) {
+          AppState.feedCalculator.priceById = {};
+        }
 
-      // новий варіант (через id)
-      if (id) {
+        if (!id) return;
+
         if (type === "qty") {
           AppState.feedCalculator.qtyById[id] = value;
         }
+
         if (type === "price") {
           AppState.feedCalculator.priceById[id] = value;
         }
       }
 
-      // fallback (старий варіант через index)
-      if (id === undefined && typeof index === "number") {
-        if (type === "qty") {
-          AppState.feedCalculator.qty[index] = value;
-        }
-        if (type === "price") {
-          AppState.feedCalculator.price[index] = value;
-        }
+      // volume
+      if (type === "volume") {
+        AppState.feedCalculator.volume = value;
       }
-    }
 
-    // --- volume ---
-    if (type === "volume") {
-      AppState.feedCalculator.volume = value;
+      saveState();
+      renderFeed();
+      renderWarehouse();
     }
+  });
 
-    saveState();
-    renderFeed();
-    renderWarehouse();
-  }
-});
-feedForm.init();
+  feedForm.init();
 
   // 📦 Orders
   new OrdersFormController({
