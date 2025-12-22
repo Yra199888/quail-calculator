@@ -1,5 +1,5 @@
 /**
- * render.feed.js
+ * feed.render.js
  * ---------------------------------------
  * Render-шар калькулятора корму.
  * Відображає активні компоненти,
@@ -9,9 +9,9 @@
 import { AppState } from "../state/AppState.js";
 
 /**
- * Основний render калькулятора
+ * 🔹 ГОЛОВНИЙ render (викликається з app.js)
  */
-export function renderFeedCalculator() {
+export function renderFeed() {
   renderFeedTable();
   renderFeedTotals();
   renderFeedVolume();
@@ -28,7 +28,7 @@ function renderFeedTable() {
 
   tbody.innerHTML = components
     .map((c, i) => {
-      const qty = AppState.feedCalculator.qty[i] ?? c.defaultQty;
+      const qty = AppState.feedCalculator.qty[i] ?? c.defaultQty ?? 0;
       const price = AppState.feedCalculator.price[i] ?? 0;
       const sum = Number(qty) * Number(price);
 
@@ -103,7 +103,7 @@ function renderFeedVolume() {
 }
 
 /**
- * Активні компоненти
+ * Активні компоненти корму
  */
 function getActiveFeedComponents() {
   return (AppState.feedComponents || []).filter(c => c.enabled);
