@@ -49,13 +49,11 @@ body {
   flex-direction: column;
 }
 
-/* Верхня панель / навігація */
 .app-header {
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border-color);
 }
 
-/* Основний контент */
 .app-content {
   flex: 1;
   padding: 12px;
@@ -78,7 +76,7 @@ body {
 }
 
 /* =========================================
-   🧩 ПАНЕЛІ / КАРТКИ
+   🧩 ПАНЕЛІ
    ========================================= */
 .panel {
   background: var(--bg-panel);
@@ -183,58 +181,98 @@ th {
 }
 
 /* =========================================
-   ⚠️ ПОПЕРЕДЖЕННЯ / СТАТУСИ
+   ✏️ FEED INLINE EDIT / ENABLE
    ========================================= */
-.text-muted {
-  color: var(--color-muted);
-}
-
-.text-danger {
-  color: var(--color-danger);
-}
-
-.text-warning {
-  color: var(--color-warning);
-}
-
-.text-accent {
-  color: var(--color-accent);
-}
-
-/* =========================================
-   ✏️ FEED: INLINE EDIT + ENABLE/DISABLE
-   ========================================= */
-
-/* Назва компонента (клік для редагування) */
 .feed-name {
   cursor: pointer;
   margin-left: 6px;
-  transition: color var(--transition-fast);
 }
 
 .feed-name:hover {
   color: var(--color-accent);
 }
 
-/* Input під час inline-редагування */
 .feed-name-input {
   background: var(--bg-panel-light);
   border: 1px solid var(--color-accent);
   color: var(--color-text);
   padding: 4px 6px;
   border-radius: var(--radius-sm);
-  font-size: inherit;
   width: 100%;
 }
 
-/* Вимкнений компонент */
 tr.disabled {
   opacity: 0.45;
 }
 
-/* Заблоковані input у вимкненому компоненті */
-tr.disabled input[type="number"] {
-  cursor: not-allowed;
+/* =========================================
+   🧲 DRAG & DROP FEED
+   ========================================= */
+#feedTable tr {
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+#feedTable tr.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+#feedTable tr.drag-over {
+  background: rgba(76, 175, 80, 0.15);
+}
+
+/* =========================================
+   🥚 ОБЛІК ЯЄЦЬ – КАРТКИ
+   ========================================= */
+#eggs-report {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.egg-day-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.egg-day-date {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.egg-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.egg-stat {
+  background: var(--bg-panel-light);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.egg-stat b {
+  display: block;
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.egg-total b {
+  color: var(--color-accent);
+}
+
+.egg-bad b {
+  color: var(--color-danger);
+}
+
+.egg-home b {
+  color: var(--color-warning);
 }
 
 /* =========================================
@@ -248,29 +286,8 @@ tr.disabled input[type="number"] {
   .app-content {
     padding: 8px;
   }
-}
 
-.feed-row {
-  cursor: grab;
-}
-
-.feed-row:active {
-  cursor: grabbing;
-}
-
-/* ===============================
-   DRAG & DROP – FEED COMPONENTS
-   =============================== */
-
-#feedTable tr {
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-#feedTable tr.dragging {
-  opacity: 0.5;
-  transform: scale(0.98);
-}
-
-#feedTable tr.drag-over {
-  background: rgba(76, 175, 80, 0.15);
+  .egg-stats {
+    grid-template-columns: 1fr;
+  }
 }
