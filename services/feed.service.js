@@ -1,21 +1,33 @@
-// /src/services/feed.service.js
+/**
+ * feed.service.js
+ * ---------------------------------------
+ * Бізнес-логіка кормів:
+ *  - компоненти
+ *  - калькулятор
+ *  - рецепти
+ *  - перевірка складу
+ *
+ * ❌ БЕЗ DOM
+ */
+
+import { AppState } from "../state/AppState.js";
 
 // ============================
 //  COMPONENTS
 // ============================
-export function getAllFeedComponents(AppState) {
+export function getFeedComponents() {
   return AppState.feedComponents || [];
 }
 
-export function getActiveFeedComponents(AppState) {
-  return (AppState.feedComponents || []).filter(c => c.enabled);
+export function getActiveFeedComponents() {
+  return getFeedComponents().filter(c => c.enabled);
 }
 
 // ============================
 //  CALCULATOR CORE
 // ============================
-export function calculateFeed(AppState) {
-  const active = getActiveFeedComponents(AppState);
+export function calculateFeed() {
+  const active = getActiveFeedComponents();
 
   const qty = AppState.feedCalculator.qty || [];
   const price = AppState.feedCalculator.price || [];
@@ -24,7 +36,7 @@ export function calculateFeed(AppState) {
   let totalKg = 0;
   let totalCost = 0;
 
-  active.forEach((c, i) => {
+  active.forEach((_, i) => {
     const q = Number(qty[i] || 0);
     const p = Number(price[i] || 0);
 
@@ -45,10 +57,9 @@ export function calculateFeed(AppState) {
 // ============================
 //  RECIPES (LOGIC ONLY)
 // ============================
-export function snapshotFromCalculator(AppState) {
-  const active = getActiveFeedComponents(AppState);
+export function snapshotFromCalculator() {
+  const active = getActiveFeedComponents();
   const qty = AppState.feedCalculator.qty || [];
-  const price = AppState.feedCalculator.price || [];
 
   const components = {};
 
@@ -63,8 +74,8 @@ export function snapshotFromCalculator(AppState) {
   };
 }
 
-export function applyRecipeToCalculator(AppState, recipe) {
-  const active = getActiveFeedComponents(AppState);
+export function applyRecipeToCalculator(recipe) {
+  const active = getActiveFeedComponents();
 
   AppState.feedCalculator.qty = [];
   AppState.feedCalculator.price = AppState.feedCalculator.price || [];
@@ -81,8 +92,8 @@ export function applyRecipeToCalculator(AppState, recipe) {
 // ============================
 //  WAREHOUSE CHECK
 // ============================
-export function canMakeFeed(AppState) {
-  const active = getActiveFeedComponents(AppState);
+export function canMakeFeed() {
+  const active = getActiveFeedComponents();
   const qty = AppState.feedCalculator.qty || [];
 
   for (let i = 0; i < active.length; i++) {
@@ -91,18 +102,15 @@ export function canMakeFeed(AppState) {
     const stock = Number(AppState.warehouse.feed?.[c.id] || 0);
 
     if (need > stock) {
-      return {
-        ok: false,
-        component: c
-      };
+      return { ok: false, component: c };
     }
   }
 
   return { ok: true };
 }
 
-export function consumeFeedFromWarehouse(AppState) {
-  const active = getActiveFeedComponents(AppState);
+export function consumeFeedFromWarehouse() {
+  const active = getActiveFeedComponents();
   const qty = AppState.feedCalculator.qty || [];
 
   active.forEach((c, i) => {
