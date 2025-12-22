@@ -202,6 +202,42 @@ th {
 }
 
 /* =========================================
+   ✏️ FEED: INLINE EDIT + ENABLE/DISABLE
+   ========================================= */
+
+/* Назва компонента (клік для редагування) */
+.feed-name {
+  cursor: pointer;
+  margin-left: 6px;
+  transition: color var(--transition-fast);
+}
+
+.feed-name:hover {
+  color: var(--color-accent);
+}
+
+/* Input під час inline-редагування */
+.feed-name-input {
+  background: var(--bg-panel-light);
+  border: 1px solid var(--color-accent);
+  color: var(--color-text);
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  font-size: inherit;
+  width: 100%;
+}
+
+/* Вимкнений компонент */
+tr.disabled {
+  opacity: 0.45;
+}
+
+/* Заблоковані input у вимкненому компоненті */
+tr.disabled input[type="number"] {
+  cursor: not-allowed;
+}
+
+/* =========================================
    📱 МОБІЛЬНА АДАПТАЦІЯ
    ========================================= */
 @media (max-width: 600px) {
