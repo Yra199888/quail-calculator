@@ -3,19 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>🐣 Фермерський трекер</title>
-
-  <!-- Основні стилі -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
   <div class="app">
 
-    <!-- =====================================
-         🧭 НАВІГАЦІЯ (ui/navigation.js)
-         ===================================== -->
+    <!-- ================= НАВІГАЦІЯ ================= -->
     <header class="app-header">
       <nav class="nav">
         <button class="nav-btn" data-page="eggs">🥚 Яйця</button>
@@ -26,17 +21,14 @@
       </nav>
     </header>
 
-    <!-- =====================================
-         📦 ОСНОВНИЙ КОНТЕНТ
-         ===================================== -->
+    <!-- ================= КОНТЕНТ ================= -->
     <main class="app-content">
 
-      <!-- ===== 🥚 ЯЙЦЯ ===== -->
-      <section class="page" id="page-eggs">
+      <!-- 🥚 ЯЙЦЯ -->
+      <section class="page" data-page="eggs">
         <div class="panel">
           <div class="panel-title">🥚 Облік яєць</div>
 
-          <!-- Форма яєць (EggsFormController) -->
           <form id="eggs-form">
             <div class="form-row">
               <div>
@@ -63,46 +55,38 @@
           </form>
         </div>
 
-        <!-- Рендер статистики яєць -->
         <div id="eggs-report"></div>
       </section>
 
-      <!-- ===== 🌾 КОРМ ===== -->
-      <section class="page" id="page-feed">
+      <!-- 🌾 КОРМ -->
+      <section class="page" data-page="feed">
         <div class="panel">
           <div class="panel-title">🌾 Калькулятор корму</div>
-
-          <!-- Таблиця калькулятора (feed.render.js) -->
           <div id="feed-table"></div>
         </div>
       </section>
 
-      <!-- ===== 📦 СКЛАД ===== -->
-      <section class="page" id="page-warehouse">
+      <!-- 📦 СКЛАД -->
+      <section class="page" data-page="warehouse">
         <div class="panel">
           <div class="panel-title">📦 Склад</div>
-
-          <!-- Рендер складу -->
           <div id="warehouse-content"></div>
         </div>
       </section>
 
-      <!-- ===== 📑 ЗАМОВЛЕННЯ ===== -->
-      <section class="page" id="page-orders">
+      <!-- 📑 ЗАМОВЛЕННЯ -->
+      <section class="page" data-page="orders">
         <div class="panel">
           <div class="panel-title">📑 Замовлення</div>
-
-          <!-- Рендер замовлень -->
           <div id="orders-content"></div>
         </div>
       </section>
 
-      <!-- ===== 📋 РЕЦЕПТИ ===== -->
-      <section class="page" id="page-recipes">
+      <!-- 📋 РЕЦЕПТИ -->
+      <section class="page" data-page="recipes">
         <div class="panel">
           <div class="panel-title">📋 Рецепти корму</div>
 
-          <!-- Управління рецептами -->
           <div class="form-row">
             <input id="recipe-name" placeholder="Назва рецепту" />
             <button class="primary" id="recipe-save-btn">💾 Зберегти</button>
@@ -111,20 +95,17 @@
           <div class="form-row">
             <select id="recipe-select"></select>
             <button id="recipe-load-btn">📂 Завантажити</button>
-            <button class="danger" id="recipe-delete-btn">🗑️ Видалити</button>
+            <button class="danger" id="recipe-delete-btn">🗑 Видалити</button>
           </div>
         </div>
 
-        <!-- Рендер складу рецепту -->
         <div id="recipes-content"></div>
       </section>
 
     </main>
   </div>
 
-  <!-- =====================================
-       🚀 ТОЧКА ВХОДУ
-       ===================================== -->
+  <!-- 🚀 START -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
