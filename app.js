@@ -169,6 +169,21 @@ function initGlobalActions() {
       return;
     }
 
+    // ✔ Enable / Disable компонент
+    const toggle = e.target.closest(".feed-enable");
+    if (toggle) {
+      const id = toggle.dataset.id;
+      const component = AppState.feedComponents.find(c => c.id === id);
+      if (!component) return;
+
+      component.enabled = toggle.checked;
+
+      saveState();
+      renderFeed();
+      renderWarehouse();
+      return;
+    }
+
   });
 }
 
