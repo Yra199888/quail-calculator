@@ -50,7 +50,11 @@ function renderFeedTable() {
       const sum = enabled ? qty * price : 0;
 
       return `
-        <tr class="${enabled ? "" : "disabled"}">
+        <tr
+          data-id="${c.id}"
+          draggable="true"
+          class="${enabled ? "" : "disabled"}"
+        >
 
           <!-- Назва + enable + delete -->
           <td>
