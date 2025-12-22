@@ -1,11 +1,12 @@
 console.log("🔥 app.js EXECUTED");
+
 /**
  * app.js
  * =======================================
  * 🚀 Головна точка входу додатку
  *
  * ❌ БЕЗ бізнес-логіки
- * ❌ БЕЗ DOM-маніпуляцій
+ * ❌ БЕЗ прямої DOM-маніпуляції
  *
  * ✅ ТІЛЬКИ:
  *  - state
@@ -56,16 +57,22 @@ document.addEventListener("DOMContentLoaded", () => {
   try {
     console.group("🚀 App start");
 
+    // 1) Load + ensure state
     loadState();
     ensureState();
 
+    // 2) Init UI
     initNavigation();
     initToggles();
     initWarnings();
 
+    // 3) First render
     renderAll();
+
+    // 4) Init controllers
     initControllers();
 
+    // 5) Save after init
     saveState();
 
     console.groupEnd();
@@ -78,16 +85,20 @@ document.addEventListener("DOMContentLoaded", () => {
 // =======================================
 // CONTROLLERS INIT
 // =======================================
-console.log("typeof saveState =", typeof saveState);
-new EggsFormController({
-  onSave: ({ date, good, bad, home }) => {
-    AppState.eggs.records[date] = { good, bad, home };
-    saveState();
-    renderEggs();
-    renderWarehouse();
-  }
-});
+function initControllers() {
+  console.log("typeof saveState =", typeof saveState);
 
+  // 🥚 Eggs
+  new EggsFormController({
+    onSave: ({ date, good, bad, home }) => {
+      AppState.eggs.records[date] = { good, bad, home };
+      saveState();
+      renderEggs();
+      renderWarehouse();
+    }
+  });
+
+  // 🌾 Feed
   const feedForm = new FeedFormController({
     onChange: () => {
       saveState();
@@ -97,13 +108,16 @@ new EggsFormController({
   });
   feedForm.init();
 
+  // 📦 Orders
   new OrdersFormController({
     onSave: () => {
       saveState();
       renderOrders();
+      renderWarehouse();
     }
   });
 
+  // 📘 Recipes
   new FeedRecipesController({
     AppState,
     saveState,
@@ -113,8 +127,6 @@ new EggsFormController({
       renderFeed();
     }
   });
-
-  console.groupEnd();
 }
 
 // =======================================
