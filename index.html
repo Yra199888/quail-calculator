@@ -13,9 +13,7 @@
 <body>
   <div class="app">
 
-    <!-- =====================================
-         🧭 НАВІГАЦІЯ (ui/navigation.js)
-         ===================================== -->
+    <!-- 🧭 НАВІГАЦІЯ -->
     <header class="app-header">
       <nav class="nav">
         <button class="nav-btn active" data-page="eggs">🥚 Яйця</button>
@@ -26,12 +24,10 @@
       </nav>
     </header>
 
-    <!-- =====================================
-         📦 ОСНОВНИЙ КОНТЕНТ
-         ===================================== -->
+    <!-- 📦 ОСНОВНИЙ КОНТЕНТ -->
     <main class="app-content">
 
-      <!-- ===================== 🥚 ЯЙЦЯ ===================== -->
+      <!-- 🥚 ЯЙЦЯ -->
       <section class="page active" id="page-eggs">
         <div class="panel">
           <div class="panel-title">🥚 Облік яєць</div>
@@ -62,19 +58,15 @@
           </form>
         </div>
 
+        <!-- ⬇️ СЮДИ renderEggs() буде вставляти КАРТКИ -->
         <div id="eggs-report"></div>
       </section>
 
-      <!-- ===================== 🌾 КОРМ ===================== -->
+      <!-- 🌾 КОРМ -->
       <section class="page" id="page-feed">
         <div class="panel">
           <div class="panel-title">🌾 Калькулятор корму</div>
 
-          <!--
-            ⚠️ ВАЖЛИВО:
-            Усі кнопки (enable, delete, inline-edit)
-            рендеряться ДИНАМІЧНО через feed.render.js
-          -->
           <table class="feed-table">
             <thead>
               <tr>
@@ -99,14 +91,13 @@
           </div>
         </div>
 
-        <!-- ➕ КЕРУВАННЯ КОМПОНЕНТАМИ -->
         <div id="feedComponentsControls">
           <button id="addFeedComponentBtn">➕ Додати компонент</button>
           <button id="restoreFeedComponentsBtn">↩ Відновити видалені</button>
         </div>
       </section>
 
-      <!-- ===================== 📦 СКЛАД ===================== -->
+      <!-- 📦 СКЛАД -->
       <section class="page" id="page-warehouse">
         <div class="panel">
           <div class="panel-title">📦 Склад</div>
@@ -133,7 +124,7 @@
         </div>
       </section>
 
-      <!-- ===================== 📑 ЗАМОВЛЕННЯ ===================== -->
+      <!-- 📑 ЗАМОВЛЕННЯ -->
       <section class="page" id="page-orders">
         <div class="panel">
           <div class="panel-title">📑 Замовлення</div>
@@ -152,7 +143,7 @@
         </div>
       </section>
 
-      <!-- ===================== 📋 РЕЦЕПТИ ===================== -->
+      <!-- 📋 РЕЦЕПТИ -->
       <section class="page" id="page-recipes">
         <div class="panel">
           <div class="panel-title">📋 Рецепти корму</div>
@@ -175,9 +166,6 @@
     </main>
   </div>
 
-  <!-- =====================================
-       🚀 ТОЧКА ВХОДУ
-       ===================================== -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
