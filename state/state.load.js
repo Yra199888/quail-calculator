@@ -17,7 +17,7 @@ const STORAGE_KEY = "AppState";
 /**
  * 🔹 Завантажити стан з localStorage
  */
-export function loadAppState() {
+export function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
 
