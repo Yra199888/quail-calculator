@@ -4,13 +4,12 @@
  * ❌ без бізнес-логіки
  * ❌ без saveState
  * ❌ без Firebase
- * ❌ без мутації AppState
- *
- * ✅ ТІЛЬКИ UI
+ * ✅ тільки UI
  */
 
 import { AppState } from "../state/AppState.js";
 import { qs } from "../utils/dom.js";
+import { calcTrayStats } from "../utils/trays.calc.js";
 
 const STATUS_LABELS = {
   reserved: "🟡 Заброньовано",
@@ -35,33 +34,47 @@ export function renderOrders() {
     return;
   }
 
+  // 🧮 поточні лотки на складі
+  const trayStats = calcTrayStats(AppState);
+  let available = trayStats.availableTrays;
+
   orders.forEach(order => {
     const status = order.status ?? "reserved";
+    const trays = Number(order.trays || 0);
+
+    let note = order.details ?? "";
+    let shortage = 0;
+
+    // ❗ показуємо дефіцит ТІЛЬКИ для заброньованих
+    if (status === "reserved") {
+      if (available >= trays) {
+        available -= trays;
+      } else {
+        shortage = trays - available;
+        available = 0;
+      }
+    }
 
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
       <td>${order.date ?? "—"}</td>
       <td>${order.client ?? "—"}</td>
-      <td>${Number(order.trays || 0)}</td>
-      <td>${STATUS_LABELS[status] ?? status}</td>
-      <td>${order.details ?? ""}</td>
       <td>
-        ${
-          status === "reserved"
-            ? `
-              <button
-                data-order-done="${order.id}"
-                title="Позначити як виконано"
-              >✔</button>
-
-              <button
-                data-order-cancel="${order.id}"
-                title="Скасувати"
-              >✖</button>
-            `
-            : "—"
-        }
+        ${trays}
+        ${shortage > 0
+          ? `<div class="text-warning">❗ бракує ${shortage}</div>`
+          : ""}
+      </td>
+      <td>${STATUS_LABELS[status] ?? status}</td>
+      <td>${note}</td>
+      <td>
+        ${status === "reserved"
+          ? `
+            <button data-order-done="${order.id}">✔</button>
+            <button data-order-cancel="${order.id}">✖</button>
+          `
+          : "—"}
       </td>
     `;
 
