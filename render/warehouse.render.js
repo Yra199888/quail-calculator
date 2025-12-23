@@ -103,7 +103,7 @@ function bindFeedActions() {
 }
 
 // =======================================
-// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ
+// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ ( + Заброньовано )
 // =======================================
 function renderEggTraysBlock() {
   let box = qs("#eggTraysBlock");
@@ -132,13 +132,24 @@ function renderEggTraysBlock() {
   // захист
   const stats = calcTrayStats(AppState || {});
 
+  // ✅ якщо в calcTrayStats ще нема reservedTrays — не ламаємо UI
+  const reserved = Number(stats.reservedTrays || 0);
+
+  // ✅ доступно показуємо як: total - shipped - reserved
+  // (навіть якщо у stats.availableTrays поки старий розрахунок)
+  const computedAvailable = Math.max(
+    Number(stats.totalTrays || 0) - Number(stats.shippedTrays || 0) - reserved,
+    0
+  );
+
   content.innerHTML = `
     <div class="egg-trays-grid">
-      <div>🥚 Всього яєць: <b>${stats.totalGoodEggs}</b></div>
-      <div>📦 Повних лотків: <b>${stats.totalTrays}</b></div>
-      <div>✅ Доступно: <b>${stats.availableTrays}</b></div>
-      <div>🧺 Продано: <b>${stats.shippedTrays}</b></div>
-      <div>➕ Залишок яєць: <b>${stats.leftoverEggs}</b></div>
+      <div>🥚 Всього яєць: <b>${Number(stats.totalGoodEggs || 0)}</b></div>
+      <div>📦 Повних лотків: <b>${Number(stats.totalTrays || 0)}</b></div>
+      <div>🟡 Заброньовано: <b>${reserved}</b></div>
+      <div>🟢 Доступно: <b>${computedAvailable}</b></div>
+      <div>🧺 Продано: <b>${Number(stats.shippedTrays || 0)}</b></div>
+      <div>➕ Залишок яєць: <b>${Number(stats.leftoverEggs || 0)}</b></div>
     </div>
   `;
 }
