@@ -160,6 +160,44 @@ function initGlobalActions() {
       renderWarehouse();
       return;
     }
+    
+    // ➕ Додати замовлення
+const addOrderBtn = e.target.closest("#order-add-btn");
+if (addOrderBtn) {
+  const date = document.getElementById("order-date")?.value;
+  const client = document.getElementById("order-client")?.value;
+  const trays = Number(document.getElementById("order-trays")?.value || 0);
+  const details = document.getElementById("order-details")?.value || "";
+
+  if (!date || !client || trays <= 0) {
+    alert("❌ Заповни дату, клієнта і кількість лотків");
+    return;
+  }
+
+  const order = {
+    id: `order_${Date.now()}`,
+    date,
+    client,
+    trays,
+    details,
+    status: "reserved",        // 🟡 завжди стартує як бронь
+    createdAt: new Date().toISOString()
+  };
+
+  AppState.orders.list.push(order);
+
+  saveState();
+  renderOrders();
+  renderWarehouse();
+
+  // очистити форму
+  document.getElementById("order-date").value = "";
+  document.getElementById("order-client").value = "";
+  document.getElementById("order-trays").value = "";
+  document.getElementById("order-details").value = "";
+
+  return;
+}
 
     // ✖ Скасувати замовлення
     const cancelBtn = e.target.closest("[data-order-cancel]");
