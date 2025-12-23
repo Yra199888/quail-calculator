@@ -70,7 +70,7 @@ body {
   display: block;
 }
 
-/* NAV (не ламає, просто стабілізує вигляд) */
+/* NAV */
 .nav {
   display: flex;
   gap: 6px;
@@ -239,150 +239,41 @@ tr.disabled {
   margin-top: 12px;
 }
 
-.egg-day-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-color);
+/* =========================================
+   🆕 ГОТОВІ ЛОТКИ З ЯЄЦЬ (НОВЕ, БЕЗПЕЧНО)
+   ========================================= */
+.egg-trays {
   border-radius: var(--radius-md);
   padding: 10px 12px;
+  margin-top: 8px;
+  border: 1px solid var(--border-color);
 }
 
-.egg-day-date {
-  font-weight: 600;
-  margin-bottom: 6px;
+.egg-trays.ok {
+  background: rgba(76, 175, 80, 0.08);
+  border-color: rgba(76, 175, 80, 0.4);
 }
 
-.egg-stats {
+.egg-trays.danger {
+  background: rgba(229, 57, 53, 0.08);
+  border-color: rgba(229, 57, 53, 0.5);
+}
+
+.egg-trays-status {
+  font-size: 13px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.egg-trays-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 6px;
+  font-size: 13px;
 }
 
-.egg-stat {
-  background: var(--bg-panel-light);
-  border-radius: var(--radius-sm);
-  padding: 6px;
-  text-align: center;
-  font-size: 12px;
-}
-
-.egg-stat b {
-  display: block;
+.egg-trays-grid b {
   font-size: 14px;
-  margin-top: 2px;
-}
-
-.egg-total b {
-  color: var(--color-accent);
-}
-
-.egg-bad b {
-  color: var(--color-danger);
-}
-
-.egg-home b {
-  color: var(--color-warning);
-}
-
-/* ===============================
-   🥚 EGGS – ANIMATED COLLAPSE
-   (має бути поза @media, щоб не “ламало” дужки і працювало стабільно)
-   =============================== */
-.egg-old-wrap {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition:
-    max-height 0.35s ease,
-    opacity 0.25s ease;
-}
-
-.egg-old-wrap.open {
-  max-height: 2000px;
-  opacity: 1;
-}
-
-.egg-toggle-wrap {
-  margin: 8px 0;
-}
-
-.egg-toggle-btn {
-  background: transparent;
-  border: 1px dashed var(--border-color);
-  color: var(--color-muted);
-  font-size: 13px;
-  padding: 6px 10px;
-}
-
-.egg-toggle-btn:hover {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-/* ===============================
-   📱 COMPACT VIEW (MOBILE)
-   (вмикається через body.compact)
-   =============================== */
-body.compact {
-  font-size: 13px;
-}
-
-body.compact .panel {
-  padding: 8px;
-}
-
-body.compact .panel-title {
-  font-size: 14px;
-}
-
-body.compact .form-row {
-  gap: 6px;
-}
-
-body.compact input,
-body.compact button {
-  padding: 5px 6px;
-  font-size: 13px;
-}
-
-/* кнопки — на всю ширину */
-body.compact button {
-  width: 100%;
-}
-
-/* таблиці */
-body.compact table th,
-body.compact table td {
-  padding: 4px 6px;
-  font-size: 12px;
-}
-
-/* feed summary */
-body.compact .feed-summary p {
-  margin: 4px 0;
-  font-size: 12px;
-}
-
-.firebase-status {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  margin: 6px;
-  display: inline-block;
-}
-
-.firebase-status.online {
-  background: rgba(76, 175, 80, 0.15);
-  color: #4caf50;
-}
-
-.firebase-status.syncing {
-  background: rgba(251, 192, 45, 0.15);
-  color: #fbc02d;
-}
-
-.firebase-status.offline {
-  background: rgba(229, 57, 53, 0.15);
-  color: #e53935;
 }
 
 /* =========================================
@@ -397,7 +288,7 @@ body.compact .feed-summary p {
     padding: 8px;
   }
 
-  .egg-stats {
+  .egg-trays-grid {
     grid-template-columns: 1fr;
   }
 }
