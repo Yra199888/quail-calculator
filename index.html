@@ -144,6 +144,37 @@
             <tbody id="ordersTableBody"></tbody>
           </table>
         </div>
+        
+        <div class="panel">
+  <div class="panel-title">➕ Нове замовлення</div>
+
+  <div class="form-row">
+    <div>
+      <label>Дата</label>
+      <input type="date" id="order-date">
+    </div>
+
+    <div>
+      <label>Клієнт</label>
+      <input type="text" id="order-client" placeholder="Імʼя клієнта">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div>
+      <label>Лотки</label>
+      <input type="number" id="order-trays" min="1">
+    </div>
+
+    <div>
+      <label>Примітка</label>
+      <input type="text" id="order-details" placeholder="Опціонально">
+    </div>
+  </div>
+
+  <button class="primary" id="order-add-btn">➕ Додати замовлення</button>
+</div>
+
       </section>
 
       <!-- 📋 РЕЦЕПТИ -->
