@@ -4,10 +4,12 @@ console.log("🔥 app.js EXECUTED");
  * app.js
  * =======================================
  * 🚀 Головна точка входу додатку
+ * ❗ НІЧОГО НЕ ВИДАЛЕНО
+ * ❗ УСЕ, ЩО БУЛО — ЛИШИЛОСЬ
  */
 
 // =======================================
-// FIREBASE
+// 🔥 FIREBASE — ОБОВʼЯЗКОВО ПЕРШИМ
 // =======================================
 import { initFirebase } from "./firebase/firebase.js";
 
@@ -47,16 +49,21 @@ import { initWarnings } from "./ui/warnings.js";
 window.AppState = AppState;
 
 // =======================================
+// 🧲 DRAG STATE (ПОВЕРНУТО)
+// =======================================
+let draggedFeedId = null;
+
+// =======================================
 // START
 // =======================================
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     console.group("🚀 App start");
 
-    // 0️⃣ Firebase — ОБОВʼЯЗКОВО першим
+    // 0️⃣ Firebase
     initFirebase();
 
-    // 1️⃣ Load state
+    // 1️⃣ Load state (Firebase → localStorage)
     await loadState();
 
     // 2️⃣ Ensure structure
@@ -76,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 6️⃣ Global actions
     initGlobalActions();
 
-    // 7️⃣ Realtime Firebase updates
+    // 7️⃣ Realtime sync
     window.addEventListener("appstate:updated", renderAll);
 
     console.groupEnd();
@@ -87,9 +94,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // =======================================
-// CONTROLLERS INIT
+// CONTROLLERS
 // =======================================
 function initControllers() {
+  // 🥚 Eggs
   new EggsFormController({
     onSave: ({ date, good, bad, home }) => {
       AppState.eggs.records[date] = { good, bad, home };
@@ -99,6 +107,7 @@ function initControllers() {
     }
   });
 
+  // 🌾 Feed
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
       if ((type === "qty" || type === "price") && id) {
@@ -120,8 +129,10 @@ function initControllers() {
 
   feedForm.init();
 
+  // 📦 Orders controller (як був)
   new OrdersFormController({ AppState });
 
+  // 📘 Recipes
   new FeedRecipesController({
     AppState,
     saveState,
@@ -134,7 +145,7 @@ function initControllers() {
 }
 
 // =======================================
-// GLOBAL ACTIONS (ВСЯ ДЕЛЕГАЦІЯ ТУТ)
+// GLOBAL ACTIONS (УСЯ ДЕЛЕГАЦІЯ)
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
@@ -143,11 +154,44 @@ function initGlobalActions() {
     // 🧾 ORDERS
     // =========================
 
-    // ✔ Виконати замовлення
+    // ➕ ДОДАТИ ЗАМОВЛЕННЯ (БРОНЬ)
+    const addOrderBtn = e.target.closest("#order-add-btn");
+    if (addOrderBtn) {
+      const date = document.getElementById("order-date")?.value;
+      const client = document.getElementById("order-client")?.value;
+      const trays = Number(document.getElementById("order-trays")?.value || 0);
+      const details = document.getElementById("order-details")?.value || "";
+
+      if (!date || !client || trays <= 0) {
+        alert("❌ Заповни дату, клієнта і кількість лотків");
+        return;
+      }
+
+      AppState.orders.list.push({
+        id: `order_${Date.now()}`,
+        date,
+        client,
+        trays,
+        details,
+        status: "reserved", // 🟡 бронь
+        createdAt: new Date().toISOString()
+      });
+
+      saveState();
+      renderOrders();
+      renderWarehouse();
+
+      document.getElementById("order-date").value = "";
+      document.getElementById("order-client").value = "";
+      document.getElementById("order-trays").value = "";
+      document.getElementById("order-details").value = "";
+      return;
+    }
+
+    // ✔ ВИКОНАТИ ЗАМОВЛЕННЯ (СПИСАННЯ ЛОТКІВ)
     const doneBtn = e.target.closest("[data-order-done]");
     if (doneBtn) {
-      const id = doneBtn.dataset.orderDone;
-      const order = AppState.orders.list.find(o => o.id === id);
+      const order = AppState.orders.list.find(o => o.id === doneBtn.dataset.orderDone);
       if (!order || order.status !== "reserved") return;
 
       if (!confirm(`Виконати замовлення для "${order.client}" (${order.trays} лотків)?`)) return;
@@ -155,55 +199,20 @@ function initGlobalActions() {
       order.status = "done";
       order.completedAt = new Date().toISOString();
 
+      // 🔴 ФІКСУЄМО ВІДВАНТАЖЕНІ ЛОТКИ
+      AppState.warehouse.traysShipped ||= 0;
+      AppState.warehouse.traysShipped += order.trays;
+
       saveState();
       renderOrders();
       renderWarehouse();
       return;
     }
-    
-    // ➕ Додати замовлення
-const addOrderBtn = e.target.closest("#order-add-btn");
-if (addOrderBtn) {
-  const date = document.getElementById("order-date")?.value;
-  const client = document.getElementById("order-client")?.value;
-  const trays = Number(document.getElementById("order-trays")?.value || 0);
-  const details = document.getElementById("order-details")?.value || "";
 
-  if (!date || !client || trays <= 0) {
-    alert("❌ Заповни дату, клієнта і кількість лотків");
-    return;
-  }
-
-  const order = {
-    id: `order_${Date.now()}`,
-    date,
-    client,
-    trays,
-    details,
-    status: "reserved",        // 🟡 завжди стартує як бронь
-    createdAt: new Date().toISOString()
-  };
-
-  AppState.orders.list.push(order);
-
-  saveState();
-  renderOrders();
-  renderWarehouse();
-
-  // очистити форму
-  document.getElementById("order-date").value = "";
-  document.getElementById("order-client").value = "";
-  document.getElementById("order-trays").value = "";
-  document.getElementById("order-details").value = "";
-
-  return;
-}
-
-    // ✖ Скасувати замовлення
+    // ✖ СКАСУВАТИ ЗАМОВЛЕННЯ
     const cancelBtn = e.target.closest("[data-order-cancel]");
     if (cancelBtn) {
-      const id = cancelBtn.dataset.orderCancel;
-      const order = AppState.orders.list.find(o => o.id === id);
+      const order = AppState.orders.list.find(o => o.id === cancelBtn.dataset.orderCancel);
       if (!order || order.status !== "reserved") return;
 
       if (!confirm(`Скасувати замовлення для "${order.client}"?`)) return;
@@ -218,12 +227,77 @@ if (addOrderBtn) {
     }
 
     // =========================
-    // FEED / UI (як було)
+    // 🌾 FEED
     // =========================
     if (e.target.closest("#addFeedComponentBtn")) {
       addFeedComponent();
       return;
     }
+
+    const toggle = e.target.closest(".feed-enable");
+    if (toggle) {
+      const c = AppState.feedComponents.find(x => x.id === toggle.dataset.id);
+      if (!c) return;
+      c.enabled = toggle.checked;
+      saveState();
+      renderFeed();
+      renderWarehouse();
+      return;
+    }
+
+    const del = e.target.closest(".feed-delete");
+    if (del) {
+      const c = AppState.feedComponents.find(x => x.id === del.dataset.id);
+      if (!c) return;
+      if (!confirm(`Видалити "${c.name}"?`)) return;
+      c.deleted = true;
+      saveState();
+      renderFeed();
+      renderWarehouse();
+      return;
+    }
+
+    const name = e.target.closest(".feed-name");
+    if (name) startEditFeedName(name);
+
+    if (e.target.closest("#restoreFeedComponentsBtn")) restoreFeedComponents();
+  });
+
+  // ===============================
+  // 🧲 DRAG & DROP FEED (ПОВЕРНУТО)
+  // ===============================
+  document.addEventListener("dragstart", (e) => {
+    const row = e.target.closest("tr[data-id]");
+    if (!row) return;
+    draggedFeedId = row.dataset.id;
+    row.classList.add("dragging");
+  });
+
+  document.addEventListener("dragover", (e) => {
+    if (e.target.closest("tr[data-id]")) e.preventDefault();
+  });
+
+  document.addEventListener("drop", (e) => {
+    const targetRow = e.target.closest("tr[data-id]");
+    if (!targetRow || !draggedFeedId) return;
+
+    const list = AppState.feedComponents;
+    const from = list.findIndex(c => c.id === draggedFeedId);
+    const to = list.findIndex(c => c.id === targetRow.dataset.id);
+    if (from === -1 || to === -1) return;
+
+    const [moved] = list.splice(from, 1);
+    list.splice(to, 0, moved);
+
+    draggedFeedId = null;
+    saveState();
+    renderFeed();
+    renderWarehouse();
+  });
+
+  document.addEventListener("dragend", () => {
+    draggedFeedId = null;
+    document.querySelectorAll(".dragging").forEach(el => el.classList.remove("dragging"));
   });
 }
 
@@ -251,6 +325,45 @@ function addFeedComponent() {
   renderWarehouse();
 }
 
+function startEditFeedName(span) {
+  const c = AppState.feedComponents.find(x => x.id === span.dataset.id);
+  if (!c) return;
+
+  const input = document.createElement("input");
+  input.value = c.name || "";
+  input.className = "feed-name-input";
+
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const finish = (ok) => {
+    if (ok && input.value.trim()) {
+      c.name = input.value.trim();
+      saveState();
+    }
+    renderFeed();
+  };
+
+  input.addEventListener("blur", () => finish(true));
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") finish(true);
+    if (e.key === "Escape") finish(false);
+  });
+}
+
+function restoreFeedComponents() {
+  const deleted = AppState.feedComponents.filter(c => c.deleted);
+  if (!deleted.length) return alert("Немає видалених компонентів");
+  if (!confirm(`Відновити ${deleted.length}?`)) return;
+
+  deleted.forEach(c => c.deleted = false);
+  saveState();
+  renderFeed();
+  renderWarehouse();
+}
+
+// =======================================
 function renderAll() {
   renderEggs();
   renderFeed();
