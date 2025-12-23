@@ -4,7 +4,9 @@
  * ❌ без бізнес-логіки
  * ❌ без saveState
  * ❌ без Firebase
- * ✅ тільки UI
+ * ❌ без мутації AppState
+ *
+ * ✅ ТІЛЬКИ UI
  */
 
 import { AppState } from "../state/AppState.js";
@@ -41,14 +43,25 @@ export function renderOrders() {
     tr.innerHTML = `
       <td>${order.date ?? "—"}</td>
       <td>${order.client ?? "—"}</td>
-      <td>${order.trays ?? 0}</td>
+      <td>${Number(order.trays || 0)}</td>
       <td>${STATUS_LABELS[status] ?? status}</td>
       <td>${order.details ?? ""}</td>
       <td>
-        ${status === "reserved"
-          ? `<button data-order-done="${order.id}">✔</button>
-             <button data-order-cancel="${order.id}">✖</button>`
-          : "—"}
+        ${
+          status === "reserved"
+            ? `
+              <button
+                data-order-done="${order.id}"
+                title="Позначити як виконано"
+              >✔</button>
+
+              <button
+                data-order-cancel="${order.id}"
+                title="Скасувати"
+              >✖</button>
+            `
+            : "—"
+        }
       </td>
     `;
 
