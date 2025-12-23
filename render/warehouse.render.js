@@ -26,7 +26,7 @@ import { AppState } from "../state/AppState.js";
 // =======================================
 export function renderWarehouse() {
   renderFeedWarehouseTable();
-  renderEggTraysBlock();   // 🥚 готові лотки
+  renderEggTraysBlock();   // 🥚 готові лотки (+ бронь + підсвітка)
   renderTraysBlock();      // 🧺 порожні лотки
   renderWarehouseWarnings();
 }
@@ -103,7 +103,7 @@ function bindFeedActions() {
 }
 
 // =======================================
-// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ ( + Заброньовано )
+// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ (+ бронь + підсвітка)  ✅ КРОК 3
 // =======================================
 function renderEggTraysBlock() {
   let box = qs("#eggTraysBlock");
@@ -129,27 +129,55 @@ function renderEggTraysBlock() {
   const content = qs("#eggTraysContent");
   if (!content) return;
 
-  // захист
   const stats = calcTrayStats(AppState || {});
 
-  // ✅ якщо в calcTrayStats ще нема reservedTrays — не ламаємо UI
-  const reserved = Number(stats.reservedTrays || 0);
+  const totalGoodEggs = Number(stats.totalGoodEggs || 0);
+  const totalTrays = Number(stats.totalTrays || 0);
 
-  // ✅ доступно показуємо як: total - shipped - reserved
-  // (навіть якщо у stats.availableTrays поки старий розрахунок)
-  const computedAvailable = Math.max(
-    Number(stats.totalTrays || 0) - Number(stats.shippedTrays || 0) - reserved,
-    0
+  // shipped: або з stats, або 0
+  const shippedTrays = Number(stats.shippedTrays || 0);
+
+  // reserved: або з stats, або 0
+  const reservedTrays = Number(stats.reservedTrays || 0);
+
+  // базова доступність "після виконаних"
+  const availableBeforeReserve = Math.max(totalTrays - shippedTrays, 0);
+
+  // доступно з урахуванням броні
+  const computedAvailable = Math.max(availableBeforeReserve - reservedTrays, 0);
+
+  // дефіцит (якщо бронь > можливості)
+  // якщо calcTrayStats вже віддає deficitTrays — беремо його,
+  // інакше порахуємо безпечно тут
+  const deficitTrays = Number(
+    stats.deficitTrays != null
+      ? stats.deficitTrays
+      : Math.max(reservedTrays - availableBeforeReserve, 0)
   );
 
+  const leftoverEggs = Number(stats.leftoverEggs || 0);
+
+  // ✅ КРОК 3: підсвітка (ТІЛЬКИ UI)
+  // - якщо є дефіцит → warning/danger
+  // - якщо все ок → ok
+  const statusClass = deficitTrays > 0 ? "egg-trays danger" : "egg-trays ok";
+  const statusText =
+    deficitTrays > 0
+      ? `⚠️ Дефіцит: бракує <b>${deficitTrays}</b> лотків для броні`
+      : `✅ Все ок: бронь покривається складом`;
+
   content.innerHTML = `
-    <div class="egg-trays-grid">
-      <div>🥚 Всього яєць: <b>${Number(stats.totalGoodEggs || 0)}</b></div>
-      <div>📦 Повних лотків: <b>${Number(stats.totalTrays || 0)}</b></div>
-      <div>🟡 Заброньовано: <b>${reserved}</b></div>
-      <div>🟢 Доступно: <b>${computedAvailable}</b></div>
-      <div>🧺 Продано: <b>${Number(stats.shippedTrays || 0)}</b></div>
-      <div>➕ Залишок яєць: <b>${Number(stats.leftoverEggs || 0)}</b></div>
+    <div class="${statusClass}">
+      <div class="egg-trays-status">${statusText}</div>
+
+      <div class="egg-trays-grid">
+        <div>🥚 Всього яєць: <b>${totalGoodEggs}</b></div>
+        <div>📦 Повних лотків: <b>${totalTrays}</b></div>
+        <div>🧺 Виконано: <b>${shippedTrays}</b></div>
+        <div>🟡 Заброньовано: <b>${reservedTrays}</b></div>
+        <div>🟢 Доступно: <b>${computedAvailable}</b></div>
+        <div>➕ Залишок яєць: <b>${leftoverEggs}</b></div>
+      </div>
     </div>
   `;
 }
