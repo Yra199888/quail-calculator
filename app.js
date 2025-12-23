@@ -253,6 +253,56 @@ function restoreFeedComponents() {
   renderWarehouse();
 }
 
+// =======================================
+// 🧾 ORDERS ACTIONS
+// =======================================
+
+// ✔ Виконати замовлення
+const doneBtn = e.target.closest("[data-order-done]");
+if (doneBtn) {
+  const id = doneBtn.dataset.orderDone;
+  const order = AppState.orders.list.find(o => o.id === id);
+  if (!order) return;
+
+  if (order.status !== "reserved") return;
+
+  const ok = confirm(
+    `Виконати замовлення для "${order.client}" (${order.trays} лотків)?`
+  );
+  if (!ok) return;
+
+  order.status = "done";
+  order.completedAt = new Date().toISOString();
+
+  saveState();
+  renderOrders();
+  renderWarehouse();
+  return;
+}
+
+// ✖ Скасувати замовлення
+const cancelBtn = e.target.closest("[data-order-cancel]");
+if (cancelBtn) {
+  const id = cancelBtn.dataset.orderCancel;
+  const order = AppState.orders.list.find(o => o.id === id);
+  if (!order) return;
+
+  if (order.status !== "reserved") return;
+
+  const ok = confirm(
+    `Скасувати замовлення для "${order.client}"?`
+  );
+  if (!ok) return;
+
+  order.status = "canceled";
+  order.canceledAt = new Date().toISOString();
+
+  saveState();
+  renderOrders();
+  renderWarehouse();
+  return;
+}
+
 function renderAll() {
   renderEggs();
   renderFeed();
