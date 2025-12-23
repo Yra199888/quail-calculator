@@ -22,15 +22,28 @@ export function calcTrayStats(AppState) {
   // 📦 повні лотки з яєць
   const totalTrays = Math.floor(totalGoodEggs / TRAY_CAPACITY);
 
-  // 🟡 заброньовані (orders: reserved)
-  const reservedTrays = orders
-    .filter(o => o.status === "reserved")
-    .reduce((sum, o) => sum + Number(o.trays || 0), 0);
-
-  // 🧺 виконані (orders: done)
+  // 🧺 ВИКОНАНІ лотки
+  // якщо fulfilled є — використовуємо його
+  // якщо ні — fallback на trays (старі замовлення)
   const shippedTrays = orders
-    .filter(o => o.status === "done")
-    .reduce((sum, o) => sum + Number(o.trays || 0), 0);
+    .filter(o => o.status === "done" || o.status === "partial")
+    .reduce((sum, o) => {
+      const fulfilled =
+        typeof o.fulfilled === "number"
+          ? o.fulfilled
+          : (o.status === "done" ? Number(o.trays || 0) : 0);
+
+      return sum + fulfilled;
+    }, 0);
+
+  // 🟡 ЗАБРОНЬОВАНІ, але ще не видані
+  const reservedTrays = orders
+    .filter(o => o.status === "reserved" || o.status === "partial")
+    .reduce((sum, o) => {
+      const trays = Number(o.trays || 0);
+      const fulfilled = Number(o.fulfilled || 0);
+      return sum + Math.max(trays - fulfilled, 0);
+    }, 0);
 
   // 📦 доступні до відвантаження
   const availableBeforeReserve = totalTrays - shippedTrays;
@@ -52,11 +65,10 @@ export function calcTrayStats(AppState) {
     totalGoodEggs,
     totalTrays,
 
-    shippedTrays,   // 🧺 виконано
-    reservedTrays,  // 🟡 заброньовано
-    availableTrays, // 🟢 доступно
-
-    deficitTrays,   // 🆕 ДОДАНО (але ніщо не ламає)
+    shippedTrays,    // 🧺 фактично видано
+    reservedTrays,   // 🟡 ще потрібно видати
+    availableTrays,  // 🟢 реально доступно
+    deficitTrays,    // 🔴 дефіцит
 
     leftoverEggs: totalGoodEggs % TRAY_CAPACITY
   };
