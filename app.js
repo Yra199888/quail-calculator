@@ -225,6 +225,42 @@ function initGlobalActions() {
       renderWarehouse();
       return;
     }
+    
+    // ➕ Видати 1 лоток (часткове виконання)
+const shipOneBtn = e.target.closest("[data-order-ship-one]");
+if (shipOneBtn) {
+  const id = shipOneBtn.dataset.orderShipOne;
+  const order = AppState.orders.list.find(o => o.id === id);
+  if (!order) return;
+
+  // якщо скасовано або вже виконано — нічого не робимо
+  if (order.status === "canceled" || order.status === "done") return;
+
+  // захист для старих замовлень
+  if (typeof order.fulfilled !== "number") {
+    order.fulfilled = 0;
+  }
+
+  // якщо вже все видано — нічого не робимо
+  if (order.fulfilled >= order.trays) return;
+
+  // ➕ видаємо 1 лоток
+  order.fulfilled += 1;
+
+  // оновлюємо статус
+  if (order.fulfilled >= order.trays) {
+    order.status = "done";
+    order.completedAt = new Date().toISOString();
+  } else {
+    order.status = "partial";
+    order.updatedAt = new Date().toISOString();
+  }
+
+  saveState();
+  renderOrders();
+  renderWarehouse();
+  return;
+}
 
     // =========================
     // 🌾 FEED
