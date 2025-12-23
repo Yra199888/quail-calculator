@@ -1,21 +1,21 @@
 /**
  * orders.render.js
  * ---------------------------------------
- * Відповідає ТІЛЬКИ за відображення замовлень:
- *  - список замовлень
- *  - базова інформація (дата, клієнт, лотки, примітка)
- *
- * ❌ БЕЗ бізнес-логіки
- * ❌ БЕЗ localStorage
- * ❌ БЕЗ мутації AppState
+ * ❌ без бізнес-логіки
+ * ❌ без saveState
+ * ❌ без Firebase
+ * ✅ тільки UI
  */
 
 import { AppState } from "../state/AppState.js";
 import { qs } from "../utils/dom.js";
 
-// =======================================
-// ГОЛОВНИЙ RENDER
-// =======================================
+const STATUS_LABELS = {
+  reserved: "🟡 Заброньовано",
+  done: "🟢 Виконано",
+  canceled: "🔴 Скасовано"
+};
+
 export function renderOrders() {
   const tbody = qs("#ordersTableBody");
   if (!tbody) return;
@@ -27,20 +27,29 @@ export function renderOrders() {
   if (orders.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" class="muted">Немає замовлень</td>
+        <td colspan="6" class="muted">Немає замовлень</td>
       </tr>
     `;
     return;
   }
 
   orders.forEach(order => {
+    const status = order.status ?? "reserved";
+
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
       <td>${order.date ?? "—"}</td>
       <td>${order.client ?? "—"}</td>
       <td>${order.trays ?? 0}</td>
+      <td>${STATUS_LABELS[status] ?? status}</td>
       <td>${order.details ?? ""}</td>
+      <td>
+        ${status === "reserved"
+          ? `<button data-order-done="${order.id}">✔</button>
+             <button data-order-cancel="${order.id}">✖</button>`
+          : "—"}
+      </td>
     `;
 
     tbody.appendChild(tr);
