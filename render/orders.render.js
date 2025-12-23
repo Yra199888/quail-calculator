@@ -34,47 +34,57 @@ export function renderOrders() {
     return;
   }
 
-  // 🧮 поточні лотки на складі
+  // 🧮 Статистика по лотках
   const trayStats = calcTrayStats(AppState);
-  let available = trayStats.availableTrays;
+  let remainingAvailable = Number(trayStats.availableTrays || 0);
 
   orders.forEach(order => {
     const status = order.status ?? "reserved";
     const trays = Number(order.trays || 0);
 
-    let note = order.details ?? "";
-    let shortage = 0;
+    let deficit = 0;
 
-    // ❗ показуємо дефіцит ТІЛЬКИ для заброньованих
+    // ❗ дефіцит рахуємо ТІЛЬКИ для активних броней
     if (status === "reserved") {
-      if (available >= trays) {
-        available -= trays;
+      if (trays > remainingAvailable) {
+        deficit = trays - remainingAvailable;
+        remainingAvailable = 0;
       } else {
-        shortage = trays - available;
-        available = 0;
+        remainingAvailable -= trays;
       }
     }
 
     const tr = document.createElement("tr");
+
+    // 🟥 підсвітка якщо дефіцит
+    if (deficit > 0) {
+      tr.style.background = "rgba(229, 57, 53, 0.12)";
+    }
 
     tr.innerHTML = `
       <td>${order.date ?? "—"}</td>
       <td>${order.client ?? "—"}</td>
       <td>
         ${trays}
-        ${shortage > 0
-          ? `<div class="text-warning">❗ бракує ${shortage}</div>`
-          : ""}
+        ${
+          deficit > 0
+            ? `<div style="color:#e53935;font-size:12px">
+                 ⚠ Дефіцит ${deficit}
+               </div>`
+            : ""
+        }
       </td>
       <td>${STATUS_LABELS[status] ?? status}</td>
-      <td>${note}</td>
+      <td>${order.details ?? ""}</td>
       <td>
-        ${status === "reserved"
-          ? `
-            <button data-order-done="${order.id}">✔</button>
-            <button data-order-cancel="${order.id}">✖</button>
-          `
-          : "—"}
+        ${
+          status === "reserved"
+            ? `
+              <button data-order-done="${order.id}">✔</button>
+              <button data-order-cancel="${order.id}">✖</button>
+            `
+            : "—"
+        }
       </td>
     `;
 
