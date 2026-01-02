@@ -105,36 +105,59 @@
 </section>
 
       <!-- 📦 СКЛАД -->
-      <section class="page" id="page-warehouse">
-        <div class="panel">
-          <div class="panel-title">📦 Склад</div>
+<section class="page" id="page-warehouse">
 
-          <table class="feed-table">
-            <thead>
-              <tr>
-                <th>Компонент</th>
-                <th>Залишок</th>
-                <th>Додати</th>
-                <th>Списати</th>
-              </tr>
-            </thead>
-            <tbody id="warehouseFeedTableBody"></tbody>
-          </table>
-          
-          <div class="panel">
-            <div class="panel-title">🧾 Журнал складу</div>
-            <div id="warehouseLogs"></div>
-          </div>
+  <!-- ===== СКЛАД ===== -->
+  <div class="panel">
+    <div class="panel-title">📦 Склад</div>
 
-          <div class="warehouse-trays">
-            <p>Порожні лотки: <b id="emptyTraysValue">0</b></p>
-            <input type="number" id="addEmptyTraysInput" placeholder="+ лотки" />
-            <button id="addEmptyTraysBtn">➕</button>
-          </div>
+    <table class="feed-table">
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>Залишок</th>
+          <th>Додати</th>
+          <th>Списати</th>
+        </tr>
+      </thead>
+      <tbody id="warehouseFeedTableBody"></tbody>
+    </table>
 
-          <div id="warehouseWarnings"></div>
-        </div>
-      </section>
+    <div class="warehouse-trays">
+      <p>Порожні лотки: <b id="emptyTraysValue">0</b></p>
+      <input type="number" id="addEmptyTraysInput" placeholder="+ лотки" />
+      <button id="addEmptyTraysBtn">➕</button>
+    </div>
+
+    <div id="warehouseWarnings"></div>
+  </div>
+
+  <!-- ===== ЖУРНАЛ (ОКРЕМИЙ PANEL) ===== -->
+  <div class="panel" id="warehouseLogsPanel">
+    <div class="panel-title">🧾 Журнал складу</div>
+
+    <!-- 🔎 ФІЛЬТРИ -->
+  <div class="log-filters">
+    <select id="logFilterCategory">
+      <option value="">Усі категорії</option>
+      <option value="feed">Корм</option>
+      <option value="warehouse">Склад</option>
+      <option value="orders">Замовлення</option>
+    </select>
+
+    <select id="logFilterAction">
+      <option value="">Усі дії</option>
+      <option value="add">Додавання</option>
+      <option value="consume">Списання</option>
+      <option value="mix">Змішування</option>
+      <option value="reserve">Бронювання</option>
+    </select>
+  </div>
+
+    <div id="warehouseLogs"></div>
+  </div>
+
+</section>
 
       <!-- 📑 ЗАМОВЛЕННЯ -->
       <section class="page" id="page-orders">
