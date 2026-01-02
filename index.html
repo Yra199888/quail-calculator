@@ -65,40 +65,44 @@
         <div id="eggs-report"></div>
       </section>
 
-      <!-- 🌾 КОРМ -->
-      <section class="page" id="page-feed">
-        <div class="panel">
-          <div class="panel-title">🌾 Калькулятор корму</div>
+  <!-- 🌾 КОРМ -->
+<section class="page" id="page-feed">
+  <div class="panel">
+    <div class="panel-title">🌾 Калькулятор корму</div>
 
-          <table class="feed-table">
-            <thead>
-              <tr>
-                <th>Компонент</th>
-                <th>К-сть</th>
-                <th>Ціна</th>
-                <th>Сума</th>
-              </tr>
-            </thead>
-            <tbody id="feedTable"></tbody>
-          </table>
+    <table class="feed-table">
+      <thead>
+        <tr>
+          <th>Компонент</th>
+          <th>К-сть</th>
+          <th>Ціна</th>
+          <th>Сума</th>
+        </tr>
+      </thead>
+      <tbody id="feedTable"></tbody>
+    </table>
 
-          <div class="form-row">
-            <label>Обʼєм (кг)</label>
-            <input type="number" id="feedVolume" />
-          </div>
+    <div class="form-row">
+      <label>Обʼєм (кг)</label>
+      <input type="number" id="feedVolume" />
+    </div>
 
-          <div class="feed-summary">
-            <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
-            <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
-            <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
-          </div>
-        </div>
+    <div class="feed-summary">
+      <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
+      <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
+      <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
+    </div>
 
-        <div id="feedComponentsControls">
-          <button id="addFeedComponentBtn">➕ Додати компонент</button>
-          <button id="restoreFeedComponentsBtn">↩ Відновити видалені</button>
-        </div>
-      </section>
+    <!-- ✅ НОВИЙ КОНТЕЙНЕР (НІЧОГО НЕ ЛАМАЄ) -->
+    <div id="feedActions"></div>
+
+  </div>
+
+  <div id="feedComponentsControls">
+    <button id="addFeedComponentBtn">➕ Додати компонент</button>
+    <button id="restoreFeedComponentsBtn">↩ Відновити видалені</button>
+  </div>
+</section>
 
       <!-- 📦 СКЛАД -->
       <section class="page" id="page-warehouse">
