@@ -22,6 +22,14 @@ import { saveState } from "./state/state.save.js";
 import { ensureState } from "./state/state.ensure.js";
 
 // =======================================
+// SERVICES
+// =======================================
+import {
+  getFeedStock,
+  consumeFeedStock
+} from "./services/warehouse.service.js";
+
+// =======================================
 // CONTROLLERS
 // =======================================
 import { EggsFormController } from "./controllers/EggsFormController.js";
@@ -49,7 +57,7 @@ import { initWarnings } from "./ui/warnings.js";
 window.AppState = AppState;
 
 // =======================================
-// 🧲 DRAG STATE (ПОВЕРНУТО)
+// 🧲 DRAG STATE
 // =======================================
 let draggedFeedId = null;
 
@@ -60,30 +68,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     console.group("🚀 App start");
 
-    // 0️⃣ Firebase
     initFirebase();
-
-    // 1️⃣ Load state
     await loadState();
-
-    // 2️⃣ Ensure structure
     ensureState();
 
-    // 3️⃣ UI
+    // ✅ журнал гарантовано існує
+    if (!AppState.logs) {
+      AppState.logs = { list: [] };
+    }
+
     initNavigation();
     initToggles();
     initWarnings();
 
-    // 4️⃣ First render
     renderAll();
-
-    // 5️⃣ Controllers
     initControllers();
-
-    // 6️⃣ Global actions
     initGlobalActions();
 
-    // 7️⃣ Realtime sync
     window.addEventListener("appstate:updated", renderAll);
 
     console.groupEnd();
@@ -97,17 +98,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 // CONTROLLERS
 // =======================================
 function initControllers() {
-  // 🥚 Eggs
   new EggsFormController({
     onSave: ({ date, good, bad, home }) => {
       AppState.eggs.records[date] = { good, bad, home };
+
+      AppState.logs.list.push({
+        id: `log_${Date.now()}`,
+        type: "eggs",
+        message: `Запис яєць за ${date}: ${good} / ${bad} / ${home}`,
+        createdAt: new Date().toISOString()
+      });
+
       saveState();
       renderEggs();
       renderWarehouse();
     }
   });
 
-  // 🌾 Feed
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
       if ((type === "qty" || type === "price") && id) {
@@ -129,10 +136,8 @@ function initControllers() {
 
   feedForm.init();
 
-  // 📦 Orders
   new OrdersFormController({ AppState });
 
-  // 📘 Recipes
   new FeedRecipesController({
     AppState,
     saveState,
@@ -145,7 +150,7 @@ function initControllers() {
 }
 
 // =======================================
-// GLOBAL ACTIONS (УСЯ ДЕЛЕГАЦІЯ)
+// GLOBAL ACTIONS
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
@@ -153,7 +158,6 @@ function initGlobalActions() {
     // =========================
     // 🧾 ORDERS
     // =========================
-
     const addOrderBtn = e.target.closest("#order-add-btn");
     if (addOrderBtn) {
       const date = document.getElementById("order-date")?.value;
@@ -176,45 +180,12 @@ function initGlobalActions() {
         createdAt: new Date().toISOString()
       });
 
-      saveState();
-      renderOrders();
-      renderWarehouse();
-
-      document.getElementById("order-date").value = "";
-      document.getElementById("order-client").value = "";
-      document.getElementById("order-trays").value = "";
-      document.getElementById("order-details").value = "";
-      return;
-    }
-
-    const doneBtn = e.target.closest("[data-order-done]");
-    if (doneBtn) {
-      const order = AppState.orders.list.find(o => o.id === doneBtn.dataset.orderDone);
-      if (!order || order.status !== "reserved") return;
-
-      if (!confirm(`Виконати замовлення для "${order.client}" (${order.trays} лотків)?`)) return;
-
-      order.status = "done";
-      order.completedAt = new Date().toISOString();
-
-      AppState.warehouse.traysShipped ||= 0;
-      AppState.warehouse.traysShipped += order.trays;
-
-      saveState();
-      renderOrders();
-      renderWarehouse();
-      return;
-    }
-
-    const cancelBtn = e.target.closest("[data-order-cancel]");
-    if (cancelBtn) {
-      const order = AppState.orders.list.find(o => o.id === cancelBtn.dataset.orderCancel);
-      if (!order || order.status !== "reserved") return;
-
-      if (!confirm(`Скасувати замовлення для "${order.client}"?`)) return;
-
-      order.status = "canceled";
-      order.canceledAt = new Date().toISOString();
+      AppState.logs.list.push({
+        id: `log_${Date.now()}`,
+        type: "order",
+        message: `Нове замовлення: ${client}, ${trays} лотків`,
+        createdAt: new Date().toISOString()
+      });
 
       saveState();
       renderOrders();
@@ -223,107 +194,55 @@ function initGlobalActions() {
     }
 
     // =========================
-    // 🌾 MIX FEED (НОВЕ, БЕЗ ЛОМАННЯ)
+    // 🌾 MIX FEED
     // =========================
     const mixFeedBtn = e.target.closest("#mixFeedBtn");
-if (mixFeedBtn) {
-
-  const components = AppState.feedComponents.filter(
-    c => c.deleted !== true && c.enabled !== false
-  );
-
-  if (!components.length) {
-    alert("❌ Немає активних компонентів");
-    return;
-  }
-
-  const shortages = [];
-  const toConsume = [];
-
-  components.forEach(c => {
-    const qty =
-      typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
-        ? AppState.feedCalculator.qtyById[c.id]
-        : Number(c.kg || 0);
-
-    if (qty <= 0) return;
-
-    const stock = getFeedStock(c.id);
-
-    if (stock < qty) {
-      shortages.push(
-        `${c.name}: потрібно ${qty}, є ${stock}`
+    if (mixFeedBtn) {
+      const components = AppState.feedComponents.filter(
+        c => c.deleted !== true && c.enabled !== false
       );
-    } else {
-      toConsume.push({ id: c.id, name: c.name, qty });
-    }
-  });
 
-  if (shortages.length) {
-    alert(
-      "❌ Недостатньо корму:\n\n" +
-      shortages.join("\n")
-    );
-    return;
-  }
+      const toConsume = [];
 
-  if (!toConsume.length) {
-    alert("❌ Немає що змішувати");
-    return;
-  }
+      components.forEach(c => {
+        const qty = Number(AppState.feedCalculator.qtyById?.[c.id] || 0);
+        if (qty > 0) toConsume.push({ id: c.id, name: c.name, qty });
+      });
 
-  if (!confirm(
-    "Змішати корм та списати зі складу?\n\n" +
-    toConsume.map(x => `• ${x.name}: ${x.qty} кг`).join("\n")
-  )) return;
+      if (!toConsume.length) {
+        alert("❌ Немає що змішувати");
+        return;
+      }
 
-  // 🔴 СПИСАННЯ
-  toConsume.forEach(x => {
-    consumeFeedStock(x.id, x.qty);
-  });
+      if (!confirm("Змішати корм та списати зі складу?")) return;
 
-  saveState();
-  renderWarehouse();
+      toConsume.forEach(x => consumeFeedStock(x.id, x.qty));
 
-  alert("✅ Корм змішано та списано зі складу");
-  return;
-}
+      AppState.logs.list.push({
+        id: `log_${Date.now()}`,
+        type: "feed",
+        message: `Змішано корм: ${toConsume.map(x => `${x.name} ${x.qty}кг`).join(", ")}`,
+        createdAt: new Date().toISOString()
+      });
 
-    // =========================
-    // 🌾 FEED UI
-    // =========================
-    if (e.target.closest("#addFeedComponentBtn")) {
-      addFeedComponent();
-      return;
-    }
-
-    const toggle = e.target.closest(".feed-enable");
-    if (toggle) {
-      const c = AppState.feedComponents.find(x => x.id === toggle.dataset.id);
-      if (!c) return;
-      c.enabled = toggle.checked;
       saveState();
-      renderFeed();
       renderWarehouse();
       return;
     }
 
-    const del = e.target.closest(".feed-delete");
-    if (del) {
-      const c = AppState.feedComponents.find(x => x.id === del.dataset.id);
-      if (!c) return;
-      if (!confirm(`Видалити "${c.name}"?`)) return;
-      c.deleted = true;
+    // =========================
+    // ❌ DELETE LOG
+    // =========================
+    const delLogBtn = e.target.closest("[data-log-delete]");
+    if (delLogBtn) {
+      const id = delLogBtn.dataset.logDelete;
+      if (!confirm("Видалити запис журналу?")) return;
+
+      AppState.logs.list = AppState.logs.list.filter(l => l.id !== id);
       saveState();
-      renderFeed();
       renderWarehouse();
       return;
     }
-
-    const name = e.target.closest(".feed-name");
-    if (name) startEditFeedName(name);
-
-    if (e.target.closest("#restoreFeedComponentsBtn")) restoreFeedComponents();
   });
 
   // ===============================
@@ -362,68 +281,6 @@ if (mixFeedBtn) {
     draggedFeedId = null;
     document.querySelectorAll(".dragging").forEach(el => el.classList.remove("dragging"));
   });
-}
-
-// =======================================
-// HELPERS
-// =======================================
-function addFeedComponent() {
-  const c = {
-    id: `custom_${Date.now()}`,
-    name: "Новий компонент",
-    kg: 0,
-    price: 0,
-    enabled: true,
-    deleted: false
-  };
-
-  AppState.feedComponents.push(c);
-  AppState.feedCalculator.qtyById ||= {};
-  AppState.feedCalculator.priceById ||= {};
-  AppState.feedCalculator.qtyById[c.id] = 0;
-  AppState.feedCalculator.priceById[c.id] = 0;
-
-  saveState();
-  renderFeed();
-  renderWarehouse();
-}
-
-function startEditFeedName(span) {
-  const c = AppState.feedComponents.find(x => x.id === span.dataset.id);
-  if (!c) return;
-
-  const input = document.createElement("input");
-  input.value = c.name || "";
-  input.className = "feed-name-input";
-
-  span.replaceWith(input);
-  input.focus();
-  input.select();
-
-  const finish = (ok) => {
-    if (ok && input.value.trim()) {
-      c.name = input.value.trim();
-      saveState();
-    }
-    renderFeed();
-  };
-
-  input.addEventListener("blur", () => finish(true));
-  input.addEventListener("keydown", e => {
-    if (e.key === "Enter") finish(true);
-    if (e.key === "Escape") finish(false);
-  });
-}
-
-function restoreFeedComponents() {
-  const deleted = AppState.feedComponents.filter(c => c.deleted);
-  if (!deleted.length) return alert("Немає видалених компонентів");
-  if (!confirm(`Відновити ${deleted.length}?`)) return;
-
-  deleted.forEach(c => c.deleted = false);
-  saveState();
-  renderFeed();
-  renderWarehouse();
 }
 
 // =======================================
