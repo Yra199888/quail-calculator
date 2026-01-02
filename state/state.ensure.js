@@ -167,15 +167,15 @@ export function ensureState() {
   if (!("selectedId" in AppState.recipes)) AppState.recipes.selectedId = null;
 
   // =========================
-  // 🧾 LOGS — ЖУРНАЛ ДІЙ (🆕 ДОДАНО)
-  // =========================
-  if (!AppState.logs) {
-    AppState.logs = {
-      list: []
-    };
-  }
+// 🧾 ЖУРНАЛ ПОДІЙ
+// =========================
+if (!AppState.logs) {
+  AppState.logs = {
+    list: []
+  };
+}
 
-  if (!Array.isArray(AppState.logs.list)) {
-    AppState.logs.list = [];
-  }
+if (!Array.isArray(AppState.logs.list)) {
+  AppState.logs.list = [];
+}
 }
