@@ -226,43 +226,68 @@ function initGlobalActions() {
     // 🌾 MIX FEED (НОВЕ, БЕЗ ЛОМАННЯ)
     // =========================
     const mixFeedBtn = e.target.closest("#mixFeedBtn");
-    if (mixFeedBtn) {
+if (mixFeedBtn) {
 
-      if (!AppState.feedComponents || !AppState.feedCalculator) {
-        alert("❌ Корм не ініціалізований");
-        return;
-      }
+  const components = AppState.feedComponents.filter(
+    c => c.deleted !== true && c.enabled !== false
+  );
 
-      const components = AppState.feedComponents.filter(
-        c => c.deleted !== true && c.enabled !== false
+  if (!components.length) {
+    alert("❌ Немає активних компонентів");
+    return;
+  }
+
+  const shortages = [];
+  const toConsume = [];
+
+  components.forEach(c => {
+    const qty =
+      typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
+        ? AppState.feedCalculator.qtyById[c.id]
+        : Number(c.kg || 0);
+
+    if (qty <= 0) return;
+
+    const stock = getFeedStock(c.id);
+
+    if (stock < qty) {
+      shortages.push(
+        `${c.name}: потрібно ${qty}, є ${stock}`
       );
-
-      if (!components.length) {
-        alert("❌ Немає активних компонентів");
-        return;
-      }
-
-      const lines = [];
-
-      components.forEach(c => {
-        const qty =
-          typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
-            ? AppState.feedCalculator.qtyById[c.id]
-            : Number(c.kg || 0);
-
-        if (qty > 0) lines.push(`• ${c.name}: ${qty} кг`);
-      });
-
-      if (!lines.length) {
-        alert("❌ Кількості = 0");
-        return;
-      }
-
-      if (!confirm("Змішати корм?\n\n" + lines.join("\n"))) return;
-
-      alert("✅ Підтверджено (логіка списання буде підключена наступним кроком)");
-      return;
+    } else {
+      toConsume.push({ id: c.id, name: c.name, qty });
     }
+  });
+
+  if (shortages.length) {
+    alert(
+      "❌ Недостатньо корму:\n\n" +
+      shortages.join("\n")
+    );
+    return;
+  }
+
+  if (!toConsume.length) {
+    alert("❌ Немає що змішувати");
+    return;
+  }
+
+  if (!confirm(
+    "Змішати корм та списати зі складу?\n\n" +
+    toConsume.map(x => `• ${x.name}: ${x.qty} кг`).join("\n")
+  )) return;
+
+  // 🔴 СПИСАННЯ
+  toConsume.forEach(x => {
+    consumeFeedStock(x.id, x.qty);
+  });
+
+  saveState();
+  renderWarehouse();
+
+  alert("✅ Корм змішано та списано зі складу");
+  return;
+}
 
     // =========================
     // 🌾 FEED UI
