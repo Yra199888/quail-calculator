@@ -20,6 +20,7 @@ import { qs, qsa } from "../utils/dom.js";
 // 🧮 ЛОТКИ З ЯЄЦЬ
 import { calcTrayStats } from "../utils/trays.calc.js";
 import { AppState } from "../state/AppState.js";
+import { renderLogs } from "./logs.render.js";
 
 // =======================================
 // ГОЛОВНИЙ RENDER
@@ -30,6 +31,7 @@ export function renderWarehouse() {
   renderProductionForecast();  // 🔮 ПРОГНОЗ (НОВЕ, БЕЗПЕЧНО)
   renderTraysBlock();           // 🧺 порожні лотки
   renderWarehouseWarnings();
+  renderLogs(); // 🧾 ЖУРНАЛ
 }
 
 // =======================================
