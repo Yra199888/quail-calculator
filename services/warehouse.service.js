@@ -11,16 +11,23 @@
 import { AppState } from "../state/AppState.js";
 
 /* =========================
-   🧾 LOG HELPER
+   🧾 LOG HELPER (СТАБІЛЬНИЙ)
    ========================= */
-function addLog(entry) {
-  if (!AppState.logs) AppState.logs = { list: [] };
-  if (!Array.isArray(AppState.logs.list)) AppState.logs.list = [];
+function addLog({ type, message = "", payload = {} }) {
+  if (!AppState.logs) {
+    AppState.logs = { list: [] };
+  }
+
+  if (!Array.isArray(AppState.logs.list)) {
+    AppState.logs.list = [];
+  }
 
   AppState.logs.list.unshift({
     id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    at: new Date().toISOString(),
-    ...entry
+    type,
+    message,
+    payload,
+    createdAt: new Date().toISOString()
   });
 }
 
@@ -41,16 +48,15 @@ export function addFeedStock(id, amount) {
   if (!AppState.warehouse.feed) AppState.warehouse.feed = {};
   AppState.warehouse.feed[id] = getFeedStock(id) + add;
 
-  // 🧾 LOG
   addLog({
     type: "feed:add",
-    componentId: id,
-    amount: add
+    message: `Додано корм на склад`,
+    payload: { componentId: id, amount: add }
   });
 }
 
 /**
- * Перевірка: чи вистачає компонента на складі
+ * Перевірка: чи вистачає компонента
  */
 export function canConsumeFeed(id, amount) {
   const need = Number(amount || 0);
@@ -59,110 +65,92 @@ export function canConsumeFeed(id, amount) {
 }
 
 /**
- * Списати компонент зі складу (кг)
- * Повертає true/false
+ * Списати компонент зі складу
  */
 export function consumeFeedStock(id, amount) {
   const need = Number(amount || 0);
   if (need <= 0) return true;
-
   if (!canConsumeFeed(id, need)) return false;
 
   AppState.warehouse.feed[id] = Math.max(getFeedStock(id) - need, 0);
 
-  // 🧾 LOG
   addLog({
     type: "feed:consume",
-    componentId: id,
-    amount: need
+    message: `Списано корм зі складу`,
+    payload: { componentId: id, amount: need }
   });
 
   return true;
 }
 
 /**
- * Очистити всі кормові компоненти складу
+ * Очистити склад корму
  */
 export function clearFeedWarehouse() {
   AppState.warehouse.feed = {};
 
-  // 🧾 LOG
   addLog({
-    type: "feed:clear"
+    type: "feed:clear",
+    message: "Склад корму очищено"
   });
 }
 
 /**
  * ============================
- * ЛОТКИ / РЕЗЕРВ
+ * ЛОТКИ
  * ============================
  */
 
-/**
- * Порожні лотки (шт)
- */
 export function getEmptyTrays() {
   return Number(AppState.warehouse.trays || 0);
 }
 
-/**
- * Додати порожні лотки (шт)
- */
 export function addEmptyTrays(count) {
   const add = Number(count || 0);
   if (add <= 0) return;
 
   AppState.warehouse.trays = getEmptyTrays() + add;
 
-  // 🧾 LOG
   addLog({
     type: "trays:add",
-    amount: add
+    message: `Додано порожні лотки`,
+    payload: { amount: add }
   });
 }
 
-/**
- * Зарезервовано лотків (шт)
- */
 export function getReservedTrays() {
   return Number(AppState.warehouse.reserved || 0);
 }
 
-/**
- * Додати резерв (шт)
- */
 export function reserveTrays(count) {
   const add = Number(count || 0);
   if (add <= 0) return;
 
   AppState.warehouse.reserved = getReservedTrays() + add;
 
-  // 🧾 LOG
   addLog({
     type: "trays:reserve",
-    amount: add
+    message: `Зарезервовано лотки`,
+    payload: { amount: add }
   });
 }
 
-/**
- * Зняти резерв (шт)
- */
 export function releaseTrays(count) {
   const sub = Number(count || 0);
   if (sub <= 0) return;
 
   AppState.warehouse.reserved = Math.max(getReservedTrays() - sub, 0);
 
-  // 🧾 LOG
   addLog({
     type: "trays:release",
-    amount: sub
+    message: `Знято резерв лотків`,
+    payload: { amount: sub }
   });
 }
 
 /**
  * ============================
- * МІНІМАЛЬНІ ЗАЛИШКИ
+ * МІНІМУМИ
  * ============================
  */
 
@@ -173,16 +161,13 @@ export function getWarehouseMinimums() {
 export function setWarehouseMinimums(minimums) {
   AppState.warehouse.minimums = { ...(minimums || {}) };
 
-  // 🧾 LOG
   addLog({
     type: "warehouse:set-minimums",
-    minimums: { ...(minimums || {}) }
+    message: "Оновлено мінімальні залишки",
+    payload: { minimums }
   });
 }
 
-/**
- * Повертає список попереджень по мінімумам
- */
 export function getWarehouseWarnings(getComponentNameById) {
   const mins = getWarehouseMinimums();
   const warnings = [];
