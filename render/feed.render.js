@@ -19,6 +19,7 @@ export function renderFeed() {
   renderFeedTable();
   renderFeedTotals();
   renderFeedVolume();
+  renderFeedActions(); // 🆕 UI-кнопка
 }
 
 // =======================================
@@ -28,7 +29,6 @@ function renderFeedTable() {
   const tbody = document.getElementById("feedTable");
   if (!tbody) return;
 
-  // показуємо ТІЛЬКИ не видалені
   const components = (AppState.feedComponents || []).filter(
     (c) => c.deleted !== true
   );
@@ -50,13 +50,7 @@ function renderFeedTable() {
       const sum = enabled ? qty * price : 0;
 
       return `
-        <tr
-          data-id="${c.id}"
-          draggable="true"
-          class="${enabled ? "" : "disabled"}"
-        >
-
-          <!-- Назва + enable + delete -->
+        <tr data-id="${c.id}" draggable="true" class="${enabled ? "" : "disabled"}">
           <td>
             <input
               type="checkbox"
@@ -76,7 +70,6 @@ function renderFeedTable() {
             >🗑</button>
           </td>
 
-          <!-- Кількість -->
           <td>
             <input
               class="qty"
@@ -89,7 +82,6 @@ function renderFeedTable() {
             />
           </td>
 
-          <!-- Ціна -->
           <td>
             <input
               class="price"
@@ -102,7 +94,6 @@ function renderFeedTable() {
             />
           </td>
 
-          <!-- Сума -->
           <td>
             ${enabled ? sum.toFixed(2) : "—"}
           </td>
@@ -113,7 +104,7 @@ function renderFeedTable() {
 }
 
 // =======================================
-// 📊 ПІДСУМКИ (ТІЛЬКИ ENABLED + NOT DELETED)
+// 📊 ПІДСУМКИ
 // =======================================
 function renderFeedTotals() {
   const totalEl = document.getElementById("feedTotal");
@@ -153,11 +144,29 @@ function renderFeedTotals() {
 }
 
 // =======================================
-// ⚖️ ОБʼЄМ КОРМУ
+// ⚖️ ОБʼЄМ
 // =======================================
 function renderFeedVolume() {
   const volInput = document.getElementById("feedVolume");
   if (!volInput) return;
 
   volInput.value = AppState.feedCalculator.volume ?? 25;
+}
+
+// =======================================
+// 🔄 ДІЇ З КОРМОМ (ТІЛЬКИ UI)
+// =======================================
+function renderFeedActions() {
+  const box = document.getElementById("feedActions");
+  if (!box) return;
+
+  box.innerHTML = `
+    <button
+      id="mixFeedBtn"
+      class="primary"
+      title="Списати компоненти зі складу"
+    >
+      🔄 Змішати корм і списати зі складу
+    </button>
+  `;
 }
