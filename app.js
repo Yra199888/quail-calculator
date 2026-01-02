@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 0️⃣ Firebase
     initFirebase();
 
-    // 1️⃣ Load state (Firebase → localStorage)
+    // 1️⃣ Load state
     await loadState();
 
     // 2️⃣ Ensure structure
@@ -129,7 +129,7 @@ function initControllers() {
 
   feedForm.init();
 
-  // 📦 Orders controller (як був)
+  // 📦 Orders
   new OrdersFormController({ AppState });
 
   // 📘 Recipes
@@ -154,7 +154,6 @@ function initGlobalActions() {
     // 🧾 ORDERS
     // =========================
 
-    // ➕ ДОДАТИ ЗАМОВЛЕННЯ (БРОНЬ)
     const addOrderBtn = e.target.closest("#order-add-btn");
     if (addOrderBtn) {
       const date = document.getElementById("order-date")?.value;
@@ -173,7 +172,7 @@ function initGlobalActions() {
         client,
         trays,
         details,
-        status: "reserved", // 🟡 бронь
+        status: "reserved",
         createdAt: new Date().toISOString()
       });
 
@@ -188,7 +187,6 @@ function initGlobalActions() {
       return;
     }
 
-    // ✔ ВИКОНАТИ ЗАМОВЛЕННЯ (СПИСАННЯ ЛОТКІВ)
     const doneBtn = e.target.closest("[data-order-done]");
     if (doneBtn) {
       const order = AppState.orders.list.find(o => o.id === doneBtn.dataset.orderDone);
@@ -199,7 +197,6 @@ function initGlobalActions() {
       order.status = "done";
       order.completedAt = new Date().toISOString();
 
-      // 🔴 ФІКСУЄМО ВІДВАНТАЖЕНІ ЛОТКИ
       AppState.warehouse.traysShipped ||= 0;
       AppState.warehouse.traysShipped += order.trays;
 
@@ -209,7 +206,6 @@ function initGlobalActions() {
       return;
     }
 
-    // ✖ СКАСУВАТИ ЗАМОВЛЕННЯ
     const cancelBtn = e.target.closest("[data-order-cancel]");
     if (cancelBtn) {
       const order = AppState.orders.list.find(o => o.id === cancelBtn.dataset.orderCancel);
@@ -225,45 +221,51 @@ function initGlobalActions() {
       renderWarehouse();
       return;
     }
-    
-    // ➕ Видати 1 лоток (часткове виконання)
-const shipOneBtn = e.target.closest("[data-order-ship-one]");
-if (shipOneBtn) {
-  const id = shipOneBtn.dataset.orderShipOne;
-  const order = AppState.orders.list.find(o => o.id === id);
-  if (!order) return;
-
-  // якщо скасовано або вже виконано — нічого не робимо
-  if (order.status === "canceled" || order.status === "done") return;
-
-  // захист для старих замовлень
-  if (typeof order.fulfilled !== "number") {
-    order.fulfilled = 0;
-  }
-
-  // якщо вже все видано — нічого не робимо
-  if (order.fulfilled >= order.trays) return;
-
-  // ➕ видаємо 1 лоток
-  order.fulfilled += 1;
-
-  // оновлюємо статус
-  if (order.fulfilled >= order.trays) {
-    order.status = "done";
-    order.completedAt = new Date().toISOString();
-  } else {
-    order.status = "partial";
-    order.updatedAt = new Date().toISOString();
-  }
-
-  saveState();
-  renderOrders();
-  renderWarehouse();
-  return;
-}
 
     // =========================
-    // 🌾 FEED
+    // 🌾 MIX FEED (НОВЕ, БЕЗ ЛОМАННЯ)
+    // =========================
+    const mixFeedBtn = e.target.closest("#mixFeedBtn");
+    if (mixFeedBtn) {
+
+      if (!AppState.feedComponents || !AppState.feedCalculator) {
+        alert("❌ Корм не ініціалізований");
+        return;
+      }
+
+      const components = AppState.feedComponents.filter(
+        c => c.deleted !== true && c.enabled !== false
+      );
+
+      if (!components.length) {
+        alert("❌ Немає активних компонентів");
+        return;
+      }
+
+      const lines = [];
+
+      components.forEach(c => {
+        const qty =
+          typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
+            ? AppState.feedCalculator.qtyById[c.id]
+            : Number(c.kg || 0);
+
+        if (qty > 0) lines.push(`• ${c.name}: ${qty} кг`);
+      });
+
+      if (!lines.length) {
+        alert("❌ Кількості = 0");
+        return;
+      }
+
+      if (!confirm("Змішати корм?\n\n" + lines.join("\n"))) return;
+
+      alert("✅ Підтверджено (логіка списання буде підключена наступним кроком)");
+      return;
+    }
+
+    // =========================
+    // 🌾 FEED UI
     // =========================
     if (e.target.closest("#addFeedComponentBtn")) {
       addFeedComponent();
@@ -300,7 +302,7 @@ if (shipOneBtn) {
   });
 
   // ===============================
-  // 🧲 DRAG & DROP FEED (ПОВЕРНУТО)
+  // 🧲 DRAG & DROP FEED
   // ===============================
   document.addEventListener("dragstart", (e) => {
     const row = e.target.closest("tr[data-id]");
