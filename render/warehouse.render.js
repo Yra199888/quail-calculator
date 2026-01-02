@@ -26,8 +26,9 @@ import { AppState } from "../state/AppState.js";
 // =======================================
 export function renderWarehouse() {
   renderFeedWarehouseTable();
-  renderEggTraysBlock();   // 🥚 готові лотки (+ бронь + підсвітка)
-  renderTraysBlock();      // 🧺 порожні лотки
+  renderEggTraysBlock();        // 🥚 готові лотки (+ бронь + підсвітка)
+  renderProductionForecast();  // 🔮 ПРОГНОЗ (НОВЕ, БЕЗПЕЧНО)
+  renderTraysBlock();           // 🧺 порожні лотки
   renderWarehouseWarnings();
 }
 
@@ -103,12 +104,11 @@ function bindFeedActions() {
 }
 
 // =======================================
-// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ (+ бронь + підсвітка)  ✅ КРОК 3
+// 🥚 ГОТОВІ ЛОТКИ З ЯЄЦЬ (+ бронь + підсвітка)
 // =======================================
 function renderEggTraysBlock() {
   let box = qs("#eggTraysBlock");
 
-  // створюємо блок ОДИН РАЗ
   if (!box) {
     const panel = qs("#page-warehouse .panel");
     if (!panel) return;
@@ -133,22 +133,12 @@ function renderEggTraysBlock() {
 
   const totalGoodEggs = Number(stats.totalGoodEggs || 0);
   const totalTrays = Number(stats.totalTrays || 0);
-
-  // shipped: або з stats, або 0
   const shippedTrays = Number(stats.shippedTrays || 0);
-
-  // reserved: або з stats, або 0
   const reservedTrays = Number(stats.reservedTrays || 0);
 
-  // базова доступність "після виконаних"
   const availableBeforeReserve = Math.max(totalTrays - shippedTrays, 0);
-
-  // доступно з урахуванням броні
   const computedAvailable = Math.max(availableBeforeReserve - reservedTrays, 0);
 
-  // дефіцит (якщо бронь > можливості)
-  // якщо calcTrayStats вже віддає deficitTrays — беремо його,
-  // інакше порахуємо безпечно тут
   const deficitTrays = Number(
     stats.deficitTrays != null
       ? stats.deficitTrays
@@ -157,9 +147,6 @@ function renderEggTraysBlock() {
 
   const leftoverEggs = Number(stats.leftoverEggs || 0);
 
-  // ✅ КРОК 3: підсвітка (ТІЛЬКИ UI)
-  // - якщо є дефіцит → warning/danger
-  // - якщо все ок → ok
   const statusClass = deficitTrays > 0 ? "egg-trays danger" : "egg-trays ok";
   const statusText =
     deficitTrays > 0
@@ -177,6 +164,72 @@ function renderEggTraysBlock() {
         <div>🟡 Заброньовано: <b>${reservedTrays}</b></div>
         <div>🟢 Доступно: <b>${computedAvailable}</b></div>
         <div>➕ Залишок яєць: <b>${leftoverEggs}</b></div>
+      </div>
+    </div>
+  `;
+}
+
+// =======================================
+// 🔮 ПРОГНОЗ ПОКРИТТЯ ЗАМОВЛЕНЬ (НОВЕ)
+// ❗ ТІЛЬКИ UI, БЕЗ МУТАЦІЙ
+// =======================================
+function renderProductionForecast() {
+  let box = qs("#productionForecastBlock");
+
+  if (!box) {
+    const panel = qs("#page-warehouse .panel");
+    if (!panel) return;
+
+    panel.insertAdjacentHTML(
+      "beforeend",
+      `
+      <div id="productionForecastBlock" style="margin-top:12px">
+        <div class="panel-title">🔮 Прогноз покриття замовлень</div>
+        <div id="productionForecastContent"></div>
+      </div>
+      `
+    );
+
+    box = qs("#productionForecastBlock");
+  }
+
+  const content = qs("#productionForecastContent");
+  if (!content) return;
+
+  const stats = calcTrayStats(AppState || {});
+  const records = AppState.eggs?.records || {};
+
+  const days = Object.keys(records).sort().slice(-7);
+
+  let eggsSum = 0;
+  days.forEach(d => {
+    eggsSum += Number(records[d]?.good || 0);
+  });
+
+  const avgPerDay = days.length ? Math.round(eggsSum / days.length) : 0;
+
+  const deficitTrays = Number(stats.deficitTrays || 0);
+  const eggsPerTray = Number(stats.trayCapacity || 20);
+  const deficitEggs = deficitTrays * eggsPerTray;
+
+  const daysToCover =
+    avgPerDay > 0 ? Math.ceil(deficitEggs / avgPerDay) : null;
+
+  content.innerHTML = `
+    <div class="egg-trays-grid">
+      <div>📈 Середня несучість: <b>${avgPerDay}</b> яєць/день</div>
+      <div>⚠️ Дефіцит броні: <b>${deficitTrays}</b> лотків</div>
+      <div>
+        ⏳ Покриття дефіциту:
+        <b>
+          ${
+            deficitTrays === 0
+              ? "не потрібне"
+              : avgPerDay === 0
+                ? "неможливо оцінити"
+                : `~ ${daysToCover} дн.`
+          }
+        </b>
       </div>
     </div>
   `;
