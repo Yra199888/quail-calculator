@@ -80,17 +80,11 @@ export function ensureState() {
   // =========================
   // FEED CALCULATOR — МІГРАЦІЯ НА qtyById / priceById
   // =========================
-  if (
-    !AppState.feedCalculator.qtyById ||
-    typeof AppState.feedCalculator.qtyById !== "object"
-  ) {
+  if (!AppState.feedCalculator.qtyById || typeof AppState.feedCalculator.qtyById !== "object") {
     AppState.feedCalculator.qtyById = {};
   }
 
-  if (
-    !AppState.feedCalculator.priceById ||
-    typeof AppState.feedCalculator.priceById !== "object"
-  ) {
+  if (!AppState.feedCalculator.priceById || typeof AppState.feedCalculator.priceById !== "object") {
     AppState.feedCalculator.priceById = {};
   }
 
@@ -120,7 +114,6 @@ export function ensureState() {
       if (!Number.isNaN(p)) AppState.feedCalculator.priceById[c.id] = p;
     });
 
-    // старі масиви більше не використовуються
     AppState.feedCalculator.qty = [];
     AppState.feedCalculator.price = [];
   }
@@ -132,7 +125,6 @@ export function ensureState() {
     AppState.feedComponents = [];
   }
 
-  // ініціалізуємо дефолтні ТІЛЬКИ якщо масив порожній
   if (AppState.feedComponents.length === 0) {
     AppState.feedComponents = structuredClone(DEFAULT_FEED_COMPONENTS);
   }
@@ -173,4 +165,17 @@ export function ensureState() {
 
   if (!AppState.recipes.list) AppState.recipes.list = {};
   if (!("selectedId" in AppState.recipes)) AppState.recipes.selectedId = null;
+
+  // =========================
+  // 🧾 LOGS — ЖУРНАЛ ДІЙ (🆕 ДОДАНО)
+  // =========================
+  if (!AppState.logs) {
+    AppState.logs = {
+      list: []
+    };
+  }
+
+  if (!Array.isArray(AppState.logs.list)) {
+    AppState.logs.list = [];
+  }
 }
