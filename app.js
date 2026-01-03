@@ -22,7 +22,13 @@ import { saveState } from "./state/state.save.js";
 import { ensureState } from "./state/state.ensure.js";
 
 // ✅ потрібно для mixFeedBtn (інакше буде ReferenceError)
-import { getFeedStock, consumeFeedStock } from "./services/warehouse.service.js";
+// ✅ + для “один лог змішування” (setLogSilent + addMixLog)
+import {
+  getFeedStock,
+  consumeFeedStock,
+  setLogSilent,
+  addMixLog
+} from "./services/warehouse.service.js";
 
 // =======================================
 // CONTROLLERS
@@ -152,7 +158,6 @@ function initControllers() {
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
-
     // =========================
     // 🧾 LOGS UI (ФІЛЬТР / ВИДАЛЕННЯ)
     // =========================
@@ -179,7 +184,7 @@ function initGlobalActions() {
       if (!AppState.logs) AppState.logs = { list: [] };
       if (!Array.isArray(AppState.logs.list)) AppState.logs.list = [];
 
-      AppState.logs.list = AppState.logs.list.filter(l => l.id !== id);
+      AppState.logs.list = AppState.logs.list.filter((l) => l.id !== id);
 
       saveState();
       renderWarehouse();
@@ -225,10 +230,17 @@ function initGlobalActions() {
 
     const doneBtn = e.target.closest("[data-order-done]");
     if (doneBtn) {
-      const order = AppState.orders.list.find(o => o.id === doneBtn.dataset.orderDone);
+      const order = AppState.orders.list.find(
+        (o) => o.id === doneBtn.dataset.orderDone
+      );
       if (!order || order.status !== "reserved") return;
 
-      if (!confirm(`Виконати замовлення для "${order.client}" (${order.trays} лотків)?`)) return;
+      if (
+        !confirm(
+          `Виконати замовлення для "${order.client}" (${order.trays} лотків)?`
+        )
+      )
+        return;
 
       order.status = "done";
       order.completedAt = new Date().toISOString();
@@ -244,7 +256,9 @@ function initGlobalActions() {
 
     const cancelBtn = e.target.closest("[data-order-cancel]");
     if (cancelBtn) {
-      const order = AppState.orders.list.find(o => o.id === cancelBtn.dataset.orderCancel);
+      const order = AppState.orders.list.find(
+        (o) => o.id === cancelBtn.dataset.orderCancel
+      );
       if (!order || order.status !== "reserved") return;
 
       if (!confirm(`Скасувати замовлення для "${order.client}"?`)) return;
@@ -259,12 +273,12 @@ function initGlobalActions() {
     }
 
     // =========================
-    // 🌾 MIX FEED (НОВЕ, БЕЗ ЛОМАННЯ)
+    // 🌾 MIX FEED (ВИПРАВЛЕНО: 1 LOG "feed:mix")
     // =========================
     const mixFeedBtn = e.target.closest("#mixFeedBtn");
     if (mixFeedBtn) {
       const components = (AppState.feedComponents || []).filter(
-        c => c.deleted !== true && c.enabled !== false
+        (c) => c.deleted !== true && c.enabled !== false
       );
 
       if (!components.length) {
@@ -275,7 +289,7 @@ function initGlobalActions() {
       const shortages = [];
       const toConsume = [];
 
-      components.forEach(c => {
+      components.forEach((c) => {
         const qty =
           typeof AppState.feedCalculator.qtyById?.[c.id] === "number"
             ? AppState.feedCalculator.qtyById[c.id]
@@ -302,12 +316,32 @@ function initGlobalActions() {
         return;
       }
 
-      if (!confirm(
-        "Змішати корм та списати зі складу?\n\n" +
-        toConsume.map(x => `• ${x.name}: ${x.qty} кг`).join("\n")
-      )) return;
+      if (
+        !confirm(
+          "Змішати корм та списати зі складу?\n\n" +
+            toConsume.map((x) => `• ${x.name}: ${x.qty} кг`).join("\n")
+        )
+      )
+        return;
 
-      toConsume.forEach(x => consumeFeedStock(x.id, x.qty));
+      // ✅ 1) глушимо дрібні логи feed:consume
+      // ✅ 2) списуємо
+      // ✅ 3) вмикаємо логи назад
+      // ✅ 4) додаємо ОДИН лог feed:mix
+      try {
+        setLogSilent(true);
+        toConsume.forEach((x) => consumeFeedStock(x.id, x.qty));
+      } finally {
+        setLogSilent(false);
+      }
+
+      addMixLog(
+        toConsume.map((x) => ({
+          componentId: x.id,
+          name: x.name,
+          amount: x.qty
+        }))
+      );
 
       saveState();
       renderWarehouse();
@@ -325,7 +359,7 @@ function initGlobalActions() {
 
     const toggle = e.target.closest(".feed-enable");
     if (toggle) {
-      const c = AppState.feedComponents.find(x => x.id === toggle.dataset.id);
+      const c = AppState.feedComponents.find((x) => x.id === toggle.dataset.id);
       if (!c) return;
       c.enabled = toggle.checked;
       saveState();
@@ -336,7 +370,7 @@ function initGlobalActions() {
 
     const del = e.target.closest(".feed-delete");
     if (del) {
-      const c = AppState.feedComponents.find(x => x.id === del.dataset.id);
+      const c = AppState.feedComponents.find((x) => x.id === del.dataset.id);
       if (!c) return;
       if (!confirm(`Видалити "${c.name}"?`)) return;
       c.deleted = true;
@@ -371,8 +405,8 @@ function initGlobalActions() {
     if (!targetRow || !draggedFeedId) return;
 
     const list = AppState.feedComponents;
-    const from = list.findIndex(c => c.id === draggedFeedId);
-    const to = list.findIndex(c => c.id === targetRow.dataset.id);
+    const from = list.findIndex((c) => c.id === draggedFeedId);
+    const to = list.findIndex((c) => c.id === targetRow.dataset.id);
     if (from === -1 || to === -1) return;
 
     const [moved] = list.splice(from, 1);
@@ -386,7 +420,9 @@ function initGlobalActions() {
 
   document.addEventListener("dragend", () => {
     draggedFeedId = null;
-    document.querySelectorAll(".dragging").forEach(el => el.classList.remove("dragging"));
+    document
+      .querySelectorAll(".dragging")
+      .forEach((el) => el.classList.remove("dragging"));
   });
 }
 
@@ -415,7 +451,7 @@ function addFeedComponent() {
 }
 
 function startEditFeedName(span) {
-  const c = AppState.feedComponents.find(x => x.id === span.dataset.id);
+  const c = AppState.feedComponents.find((x) => x.id === span.dataset.id);
   if (!c) return;
 
   const input = document.createElement("input");
@@ -435,18 +471,18 @@ function startEditFeedName(span) {
   };
 
   input.addEventListener("blur", () => finish(true));
-  input.addEventListener("keydown", e => {
+  input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") finish(true);
     if (e.key === "Escape") finish(false);
   });
 }
 
 function restoreFeedComponents() {
-  const deleted = AppState.feedComponents.filter(c => c.deleted);
+  const deleted = AppState.feedComponents.filter((c) => c.deleted);
   if (!deleted.length) return alert("Немає видалених компонентів");
   if (!confirm(`Відновити ${deleted.length}?`)) return;
 
-  deleted.forEach(c => c.deleted = false);
+  deleted.forEach((c) => (c.deleted = false));
   saveState();
   renderFeed();
   renderWarehouse();
