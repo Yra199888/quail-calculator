@@ -12,12 +12,29 @@ import { qs } from "../utils/dom.js";
 
 const FILTERS = [
   { id: "all", label: "Всі", test: () => true },
-  { id: "feed", label: "Корм", test: t => String(t || "").startsWith("feed:") },
-  { id: "trays", label: "Лотки", test: t => String(t || "").startsWith("trays:") },
-  { id: "warehouse", label: "Склад", test: t => String(t || "").startsWith("warehouse:") },
+  { id: "feed", label: "Корм", test: (t) => String(t || "").startsWith("feed:") },
+  { id: "trays", label: "Лотки", test: (t) => String(t || "").startsWith("trays:") },
+  { id: "warehouse", label: "Склад", test: (t) => String(t || "").startsWith("warehouse:") },
 ];
 
-function formatDateTime(iso) {
+function safeIsoFromLog(entry) {
+  // ✅ Новий формат (твій актуальний)
+  if (typeof entry?.createdAt === "string" && entry.createdAt) return entry.createdAt;
+
+  // ✅ Старий формат (може залишитись у старих записах)
+  if (typeof entry?.at === "string" && entry.at) return entry.at;
+
+  // ✅ якщо хтось раптом зберіг timestamp числом
+  if (typeof entry?.createdAt === "number") return new Date(entry.createdAt).toISOString();
+  if (typeof entry?.at === "number") return new Date(entry.at).toISOString();
+
+  return null;
+}
+
+function formatDateTimeFromLog(entry) {
+  const iso = safeIsoFromLog(entry);
+  if (!iso) return "—";
+
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "—";
@@ -39,66 +56,64 @@ function getComponentNameById(id) {
   return c?.name || id || "—";
 }
 
-/**
- * 🧠 Людський текст логу
- */
 function humanizeLog(entry) {
   const type = entry?.type || "unknown";
-  const p = entry?.payload || {};
 
-  // =========================
-  // 🌾 КОРМ
-  // =========================
+  // ✅ новий формат: entry.payload
+  const p = entry?.payload && typeof entry.payload === "object" ? entry.payload : {};
+
+  // ✅ старий формат: entry.componentId / entry.amount (про всяк випадок)
+  const componentId = p.componentId ?? entry?.componentId;
+  const amount = p.amount ?? entry?.amount;
+
   if (type === "feed:add") {
-    return `➕ Додано на склад: <b>${getComponentNameById(p.componentId)}</b> — ${Number(p.amount || 0)} кг`;
+    return `➕ Додано на склад: <b>${getComponentNameById(componentId)}</b> — ${Number(amount || 0)} кг`;
   }
 
   if (type === "feed:consume") {
-    return `➖ Списано зі складу: <b>${getComponentNameById(p.componentId)}</b> — ${Number(p.amount || 0)} кг`;
+    return `➖ Списано зі складу: <b>${getComponentNameById(componentId)}</b> — ${Number(amount || 0)} кг`;
+  }
+
+  if (type === "feed:clear") {
+    return `🧹 Очищено склад корму`;
   }
 
   if (type === "feed:mix") {
     const items = Array.isArray(p.items) ? p.items : [];
-    if (!items.length) return "🌾 Змішано корм";
+    if (!items.length) return `🌾 Змішано корм`;
 
     return `
       🌾 <b>Змішано корм</b>:
-      <ul class="log-mix-list">
+      <ul class="log-mix-list" style="margin:6px 0 0 18px">
         ${items.map(i => `
-          <li>${getComponentNameById(i.componentId)} — ${i.amount} кг</li>
+          <li>${getComponentNameById(i.componentId)} — ${Number(i.amount || 0)} кг</li>
         `).join("")}
       </ul>
     `;
   }
 
-  if (type === "feed:clear") {
-    return "🧹 Очищено склад кормів";
-  }
-
-  // =========================
-  // 🧺 ЛОТКИ
-  // =========================
   if (type === "trays:add") {
-    return `🧺 Додано порожніх лотків: <b>${Number(p.amount || 0)}</b> шт`;
+    return `🧺 Додано порожніх лотків: <b>${Number(amount || 0)}</b> шт`;
   }
 
   if (type === "trays:reserve") {
-    return `🟡 Зарезервовано лотків: <b>+${Number(p.amount || 0)}</b> шт`;
+    return `🟡 Зарезервовано лотків: <b>+${Number(amount || 0)}</b> шт`;
   }
 
   if (type === "trays:release") {
-    return `↩ Знято резерв: <b>-${Number(p.amount || 0)}</b> шт`;
+    return `↩ Знято резерв: <b>-${Number(amount || 0)}</b> шт`;
   }
 
-  // =========================
-  // ⚙️ СКЛАД
-  // =========================
   if (type === "warehouse:set-minimums") {
-    return "⚙️ Оновлено мінімальні залишки складу";
+    return `⚙️ Оновлено мінімальні залишки складу`;
   }
 
-  // fallback
-  return entry?.message || `🧾 ${type}`;
+  // fallback: якщо є message — показуємо його
+  if (typeof entry?.message === "string" && entry.message.trim()) {
+    return entry.message.trim();
+  }
+
+  return `🧾 ${type}`;
 }
 
 function typeToBadge(type) {
@@ -116,9 +131,8 @@ export function renderLogs() {
   const logs = Array.isArray(AppState.logs?.list) ? AppState.logs.list : [];
   const selected = AppState.ui?.logsFilter || "all";
 
-  const filter =
-    FILTERS.find(f => f.id === selected) ||
-    FILTERS[0];
+  const currentFilter = FILTERS.find(f => f.id === selected) ? selected : "all";
+  const filter = FILTERS.find(f => f.id === currentFilter) || FILTERS[0];
 
   const filtered = logs.filter(l => filter.test(l?.type));
 
@@ -126,7 +140,7 @@ export function renderLogs() {
     <div class="logs-toolbar">
       ${FILTERS.map(f => `
         <button
-          class="logs-filter ${f.id === filter.id ? "active" : ""}"
+          class="logs-filter ${f.id === currentFilter ? "active" : ""}"
           data-log-filter="${f.id}"
           type="button"
         >${f.label}</button>
@@ -144,21 +158,27 @@ export function renderLogs() {
 
   const listHtml = `
     <div class="logs-list">
-      ${filtered.slice(0, 200).map(l => `
-        <div class="log-item">
-          <div class="log-head">
-            <span class="${typeToBadge(l.type)}">${l.type}</span>
-            <span class="log-time">${formatDateTime(l.createdAt || l.at)}</span>
-            <button
-              class="log-del"
-              title="Видалити запис"
-              data-log-delete="${l.id}"
-              type="button"
-            >🗑</button>
+      ${filtered.slice(0, 200).map(l => {
+        const time = formatDateTimeFromLog(l);
+        const msg = humanizeLog(l);
+        const badgeClass = typeToBadge(l.type);
+
+        return `
+          <div class="log-item">
+            <div class="log-head">
+              <span class="${badgeClass}">${String(l.type || "log")}</span>
+              <span class="log-time">${time}</span>
+              <button
+                class="log-del"
+                title="Видалити запис"
+                data-log-delete="${l.id}"
+                type="button"
+              >🗑</button>
+            </div>
+            <div class="log-msg">${msg}</div>
           </div>
-          <div class="log-msg">${humanizeLog(l)}</div>
-        </div>
-      `).join("")}
+        `;
+      }).join("")}
     </div>
   `;
 
