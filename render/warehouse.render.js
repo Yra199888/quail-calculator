@@ -19,6 +19,7 @@ import { qs, qsa } from "../utils/dom.js";
 
 import { calcTrayStats } from "../utils/trays.calc.js";
 import { AppState } from "../state/AppState.js";
+import { renderLogs } from "./logs.render.js"; // ✅ ВАЖЛИВО
 
 // =======================================
 // ГОЛОВНИЙ RENDER
@@ -29,7 +30,7 @@ export function renderWarehouse() {
   renderProductionForecast();
   renderTraysBlock();
   renderWarehouseWarnings();
-  renderWarehouseLogs(); // ✅ ЖУРНАЛ ТУТ
+  renderLogs(); // ✅ журнал тут
 }
 
 // =======================================
@@ -151,8 +152,6 @@ function renderEggTraysBlock() {
 }
 
 // =======================================
-// 🔮 ПРОГНОЗ
-// =======================================
 function renderProductionForecast() {
   const box = qs("#productionForecastBlock");
   if (!box) return;
@@ -193,29 +192,4 @@ function renderWarehouseWarnings() {
   box.innerHTML = warnings.length
     ? warnings.map(w => `⚠️ ${w.name}: ${w.stock} / мін ${w.min}`).join("<br>")
     : "✅ Склад у нормі";
-}
-
-// =======================================
-// 🧾 ЖУРНАЛ СКЛАДУ (UI)
-// =======================================
-function renderWarehouseLogs() {
-  const box = qs("#warehouseLogs");
-  if (!box) return;
-
-  const logs = AppState.logs?.list || [];
-
-  if (!logs.length) {
-    box.innerHTML = `<div class="muted">Немає записів</div>`;
-    return;
-  }
-
-  box.innerHTML = logs.slice(0, 50).map(l => `
-    <div class="warehouse-log">
-      <div>
-        <b>${l.type}</b><br>
-        <small>${new Date(l.at).toLocaleString()}</small>
-      </div>
-      <button data-log-delete="${l.id}">❌</button>
-    </div>
-  `).join("");
 }
