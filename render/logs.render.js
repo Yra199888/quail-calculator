@@ -11,10 +11,10 @@ import { AppState } from "../state/AppState.js";
 import { qs } from "../utils/dom.js";
 
 const FILTERS = [
-  { id: "all",  label: "Всі",        test: () => true },
-  { id: "feed", label: "Корм",       test: (t) => String(t || "").startsWith("feed:") },
-  { id: "trays", label: "Лотки",     test: (t) => String(t || "").startsWith("trays:") },
-  { id: "warehouse", label: "Склад", test: (t) => String(t || "").startsWith("warehouse:") },
+  { id: "all", label: "Всі", test: () => true },
+  { id: "feed", label: "Корм", test: t => String(t || "").startsWith("feed:") },
+  { id: "trays", label: "Лотки", test: t => String(t || "").startsWith("trays:") },
+  { id: "warehouse", label: "Склад", test: t => String(t || "").startsWith("warehouse:") },
 ];
 
 function formatDateTime(iso) {
@@ -39,49 +39,66 @@ function getComponentNameById(id) {
   return c?.name || id || "—";
 }
 
+/**
+ * 🧠 Людський текст логу
+ */
 function humanizeLog(entry) {
   const type = entry?.type || "unknown";
+  const p = entry?.payload || {};
 
-  // корм
+  // =========================
+  // 🌾 КОРМ
+  // =========================
   if (type === "feed:add") {
-    const name = getComponentNameById(entry.componentId);
-    const amount = Number(entry.amount || 0);
-    return `➕ Додано на склад: <b>${name}</b> — ${amount} кг`;
+    return `➕ Додано на склад: <b>${getComponentNameById(p.componentId)}</b> — ${Number(p.amount || 0)} кг`;
   }
 
   if (type === "feed:consume") {
-    const name = getComponentNameById(entry.componentId);
-    const amount = Number(entry.amount || 0);
-    return `➖ Списано зі складу: <b>${name}</b> — ${amount} кг`;
+    return `➖ Списано зі складу: <b>${getComponentNameById(p.componentId)}</b> — ${Number(p.amount || 0)} кг`;
+  }
+
+  if (type === "feed:mix") {
+    const items = Array.isArray(p.items) ? p.items : [];
+    if (!items.length) return "🌾 Змішано корм";
+
+    return `
+      🌾 <b>Змішано корм</b>:
+      <ul class="log-mix-list">
+        ${items.map(i => `
+          <li>${getComponentNameById(i.componentId)} — ${i.amount} кг</li>
+        `).join("")}
+      </ul>
+    `;
   }
 
   if (type === "feed:clear") {
-    return `🧹 Очищено склад кормів`;
+    return "🧹 Очищено склад кормів";
   }
 
-  // лотки
+  // =========================
+  // 🧺 ЛОТКИ
+  // =========================
   if (type === "trays:add") {
-    const amount = Number(entry.amount || 0);
-    return `🧺 Додано порожніх лотків: <b>${amount}</b> шт`;
+    return `🧺 Додано порожніх лотків: <b>${Number(p.amount || 0)}</b> шт`;
   }
 
   if (type === "trays:reserve") {
-    const amount = Number(entry.amount || 0);
-    return `🟡 Резерв лотків: <b>+${amount}</b> шт`;
+    return `🟡 Зарезервовано лотків: <b>+${Number(p.amount || 0)}</b> шт`;
   }
 
   if (type === "trays:release") {
-    const amount = Number(entry.amount || 0);
-    return `↩ Знято резерв: <b>-${amount}</b> шт`;
+    return `↩ Знято резерв: <b>-${Number(p.amount || 0)}</b> шт`;
   }
 
-  // мінімальні залишки
+  // =========================
+  // ⚙️ СКЛАД
+  // =========================
   if (type === "warehouse:set-minimums") {
-    return `⚙️ Оновлено мінімальні залишки складу`;
+    return "⚙️ Оновлено мінімальні залишки складу";
   }
 
-  // невідомий тип — показуємо безпечно
-  return `🧾 ${type}`;
+  // fallback
+  return entry?.message || `🧾 ${type}`;
 }
 
 function typeToBadge(type) {
@@ -96,21 +113,20 @@ export function renderLogs() {
   const box = qs("#warehouseLogs");
   if (!box) return;
 
-  // захист структури (тільки читання/рендер)
   const logs = Array.isArray(AppState.logs?.list) ? AppState.logs.list : [];
   const selected = AppState.ui?.logsFilter || "all";
 
-  const currentFilter = FILTERS.find(f => f.id === selected) ? selected : "all";
-  const filter = FILTERS.find(f => f.id === currentFilter) || FILTERS[0];
+  const filter =
+    FILTERS.find(f => f.id === selected) ||
+    FILTERS[0];
 
   const filtered = logs.filter(l => filter.test(l?.type));
 
-  // UI фільтрів
   const filtersHtml = `
     <div class="logs-toolbar">
       ${FILTERS.map(f => `
         <button
-          class="logs-filter ${f.id === currentFilter ? "active" : ""}"
+          class="logs-filter ${f.id === filter.id ? "active" : ""}"
           data-log-filter="${f.id}"
           type="button"
         >${f.label}</button>
@@ -126,30 +142,23 @@ export function renderLogs() {
     return;
   }
 
-  // записи
   const listHtml = `
     <div class="logs-list">
-      ${filtered.slice(0, 200).map(l => {
-        const at = formatDateTime(l.at);
-        const msg = humanizeLog(l);
-        const badgeClass = typeToBadge(l.type);
-        return `
-          <div class="log-item">
-            <div class="log-head">
-              <span class="${badgeClass}">${String(l.type || "log")}</span>
-              <span class="log-time">${at}</span>
-
-              <button
-                class="log-del"
-                title="Видалити запис"
-                data-log-delete="${l.id}"
-                type="button"
-              >🗑</button>
-            </div>
-            <div class="log-msg">${msg}</div>
+      ${filtered.slice(0, 200).map(l => `
+        <div class="log-item">
+          <div class="log-head">
+            <span class="${typeToBadge(l.type)}">${l.type}</span>
+            <span class="log-time">${formatDateTime(l.createdAt || l.at)}</span>
+            <button
+              class="log-del"
+              title="Видалити запис"
+              data-log-delete="${l.id}"
+              type="button"
+            >🗑</button>
           </div>
-        `;
-      }).join("")}
+          <div class="log-msg">${humanizeLog(l)}</div>
+        </div>
+      `).join("")}
     </div>
   `;
 
