@@ -1,11 +1,7 @@
 /**
  * warehouse.service.js
  * ---------------------------------------
- * Бізнес-логіка складу (БЕЗ DOM / БЕЗ HTML):
- *  - залишки кормових компонентів
- *  - порожні лотки
- *  - резерв лотків
- *  - мінімальні залишки
+ * Бізнес-логіка складу (БЕЗ DOM / БЕЗ HTML)
  */
 
 import { AppState } from "../state/AppState.js";
@@ -13,7 +9,12 @@ import { AppState } from "../state/AppState.js";
 /* =========================
    🧾 LOG HELPER (СТАБІЛЬНИЙ)
    ========================= */
+
+let LOG_SILENT = false; // 👈 ДОДАНО
+
 function addLog({ type, message = "", payload = {} }) {
+  if (LOG_SILENT) return;
+
   if (!AppState.logs) {
     AppState.logs = { list: [] };
   }
@@ -31,16 +32,30 @@ function addLog({ type, message = "", payload = {} }) {
   });
 }
 
-/**
- * Отримати залишок компонента на складі (кг)
- */
+// 👇 керування логами (ДОДАНО)
+export function setLogSilent(value) {
+  LOG_SILENT = Boolean(value);
+}
+
+// 👇 ОКРЕМИЙ лог змішування (ДОДАНО)
+export function addMixLog(items) {
+  addLog({
+    type: "feed:mix",
+    message: "Змішування корму",
+    payload: {
+      items: structuredClone(items)
+    }
+  });
+}
+
+/* =========================
+   FEED
+   ========================= */
+
 export function getFeedStock(id) {
   return Number(AppState.warehouse.feed?.[id] || 0);
 }
 
-/**
- * Додати компонент на склад (кг)
- */
 export function addFeedStock(id, amount) {
   const add = Number(amount || 0);
   if (add <= 0) return;
@@ -50,23 +65,17 @@ export function addFeedStock(id, amount) {
 
   addLog({
     type: "feed:add",
-    message: `Додано корм на склад`,
+    message: "Додано корм на склад",
     payload: { componentId: id, amount: add }
   });
 }
 
-/**
- * Перевірка: чи вистачає компонента
- */
 export function canConsumeFeed(id, amount) {
   const need = Number(amount || 0);
   if (need <= 0) return true;
   return getFeedStock(id) >= need;
 }
 
-/**
- * Списати компонент зі складу
- */
 export function consumeFeedStock(id, amount) {
   const need = Number(amount || 0);
   if (need <= 0) return true;
@@ -76,16 +85,13 @@ export function consumeFeedStock(id, amount) {
 
   addLog({
     type: "feed:consume",
-    message: `Списано корм зі складу`,
+    message: "Списано корм зі складу",
     payload: { componentId: id, amount: need }
   });
 
   return true;
 }
 
-/**
- * Очистити склад корму
- */
 export function clearFeedWarehouse() {
   AppState.warehouse.feed = {};
 
@@ -95,11 +101,9 @@ export function clearFeedWarehouse() {
   });
 }
 
-/**
- * ============================
- * ЛОТКИ
- * ============================
- */
+/* =========================
+   TRAYS
+   ========================= */
 
 export function getEmptyTrays() {
   return Number(AppState.warehouse.trays || 0);
@@ -113,7 +117,7 @@ export function addEmptyTrays(count) {
 
   addLog({
     type: "trays:add",
-    message: `Додано порожні лотки`,
+    message: "Додано порожні лотки",
     payload: { amount: add }
   });
 }
@@ -130,7 +134,7 @@ export function reserveTrays(count) {
 
   addLog({
     type: "trays:reserve",
-    message: `Зарезервовано лотки`,
+    message: "Зарезервовано лотки",
     payload: { amount: add }
   });
 }
@@ -143,16 +147,14 @@ export function releaseTrays(count) {
 
   addLog({
     type: "trays:release",
-    message: `Знято резерв лотків`,
+    message: "Знято резерв лотків",
     payload: { amount: sub }
   });
 }
 
-/**
- * ============================
- * МІНІМУМИ
- * ============================
- */
+/* =========================
+   МІНІМУМИ
+   ========================= */
 
 export function getWarehouseMinimums() {
   return AppState.warehouse.minimums || {};
