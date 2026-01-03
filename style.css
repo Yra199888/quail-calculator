@@ -276,6 +276,72 @@ tr.disabled {
   font-size: 14px;
 }
 
+.logs-toolbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.logs-filter {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel-light);
+}
+
+.logs-filter.active {
+  border-color: var(--color-accent);
+}
+
+.logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-item {
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel-light);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.log-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-time {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.log-del {
+  border: 1px solid var(--border-color);
+  background: transparent;
+  padding: 4px 8px;
+}
+
+.log-msg {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  color: var(--color-muted);
+}
+
+.badge.feed { border-color: rgba(76,175,80,.35); color: #4caf50; }
+.badge.trays { border-color: rgba(251,192,45,.35); color: #fbc02d; }
+.badge.warehouse { border-color: rgba(100,181,246,.35); color: #64b5f6; }
+
 /* =========================================
    📱 МОБІЛЬНА АДАПТАЦІЯ
    ========================================= */
