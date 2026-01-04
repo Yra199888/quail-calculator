@@ -11,7 +11,7 @@ import { AppState } from "../state/AppState.js";
    ========================= */
 
 const TG_TOKEN = "8587753988:AAED18mOkUVo3TniDRnU0pCLNT-5UzR7cdQ";
-const TG_CHAT_ID = "ТВІЙ_CHAT_ID";
+const TG_CHAT_ID = "6182525216";
 
 function sendTelegram(text) {
   fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
