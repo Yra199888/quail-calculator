@@ -7,7 +7,7 @@
 import { AppState } from "../state/AppState.js";
 
 /* =========================
-   📲 TELEGRAM PUSH (ДОДАНО)
+   📲 TELEGRAM PUSH
    ========================= */
 
 const TG_TOKEN = "8587753988:AAED18mOkUVo3TniDRnU0pCLNT-5UzR7cdQ";
@@ -26,7 +26,7 @@ function sendTelegram(text) {
 }
 
 /* =========================
-   🧾 LOG HELPER (СТАБІЛЬНИЙ)
+   🧾 LOG HELPER
    ========================= */
 
 let LOG_SILENT = false;
@@ -46,8 +46,8 @@ function addLog({ type, message = "", payload = {} }) {
   });
 }
 
-export function setLogSilent(value) {
-  LOG_SILENT = Boolean(value);
+export function setLogSilent(v) {
+  LOG_SILENT = Boolean(v);
 }
 
 /* =========================
@@ -55,13 +55,15 @@ export function setLogSilent(value) {
    ========================= */
 
 export function getFeedStock(id) {
-  return Number(AppState.warehouse.feed?.[id] || 0);
+  if (!AppState.warehouse.feed) AppState.warehouse.feed = {};
+  return Number(AppState.warehouse.feed[id] || 0);
 }
 
 export function addFeedStock(id, amount) {
   const add = Number(amount || 0);
   if (add <= 0) return;
 
+  if (!AppState.warehouse.feed) AppState.warehouse.feed = {};
   AppState.warehouse.feed[id] = getFeedStock(id) + add;
 
   addLog({
@@ -134,7 +136,7 @@ export function addEmptyTrays(count) {
 }
 
 /* =========================
-   ⚠️ МІНІМУМИ
+   ⚠️ MINIMUMS + WARNINGS
    ========================= */
 
 export function getWarehouseMinimums() {
@@ -142,7 +144,7 @@ export function getWarehouseMinimums() {
 }
 
 export function setWarehouseMinimums(minimums) {
-  AppState.warehouse.minimums = { ...minimums };
+  AppState.warehouse.minimums = { ...(minimums || {}) };
 
   addLog({
     type: "warehouse:set-minimums",
@@ -151,4 +153,43 @@ export function setWarehouseMinimums(minimums) {
   });
 
   sendTelegram(`⚙️ <b>Оновлено мінімальні залишки складу</b>`);
+}
+
+/* 🔴 ОСЬ ЧОГО НЕ ВИСТАЧАЛО 🔴 */
+export function getWarehouseWarnings() {
+  const mins = getWarehouseMinimums();
+  const warnings = [];
+
+  const comps = AppState.feedComponents || [];
+  comps.forEach(c => {
+    const min = Number(mins[c.id] || 0);
+    if (min <= 0) return;
+
+    const stock = getFeedStock(c.id);
+    if (stock < min) {
+      warnings.push({
+        type: "feed",
+        id: c.id,
+        name: c.name,
+        stock,
+        min
+      });
+    }
+  });
+
+  const trayMin = Number(mins.empty_trays || 0);
+  if (trayMin > 0) {
+    const stock = getEmptyTrays();
+    if (stock < trayMin) {
+      warnings.push({
+        type: "trays",
+        id: "empty_trays",
+        name: "Порожні лотки",
+        stock,
+        min: trayMin
+      });
+    }
+  }
+
+  return warnings;
 }
