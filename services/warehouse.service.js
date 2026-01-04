@@ -7,21 +7,35 @@
 import { AppState } from "../state/AppState.js";
 
 /* =========================
+   📲 TELEGRAM PUSH (ДОДАНО)
+   ========================= */
+
+const TG_TOKEN = "8587753988:AAED18mOkUVo3TniDRnU0pCLNT-5UzR7cdQ";
+const TG_CHAT_ID = "6182525216";
+
+function sendTelegram(text) {
+  fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: TG_CHAT_ID,
+      text,
+      parse_mode: "HTML"
+    })
+  }).catch(() => {});
+}
+
+/* =========================
    🧾 LOG HELPER (СТАБІЛЬНИЙ)
    ========================= */
 
-let LOG_SILENT = false; // 👈 ДОДАНО
+let LOG_SILENT = false;
 
 function addLog({ type, message = "", payload = {} }) {
   if (LOG_SILENT) return;
 
-  if (!AppState.logs) {
-    AppState.logs = { list: [] };
-  }
-
-  if (!Array.isArray(AppState.logs.list)) {
-    AppState.logs.list = [];
-  }
+  if (!AppState.logs) AppState.logs = { list: [] };
+  if (!Array.isArray(AppState.logs.list)) AppState.logs.list = [];
 
   AppState.logs.list.unshift({
     id: `log_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -32,24 +46,12 @@ function addLog({ type, message = "", payload = {} }) {
   });
 }
 
-// 👇 керування логами (ДОДАНО)
 export function setLogSilent(value) {
   LOG_SILENT = Boolean(value);
 }
 
-// 👇 ОКРЕМИЙ лог змішування (ДОДАНО)
-export function addMixLog(items) {
-  addLog({
-    type: "feed:mix",
-    message: "Змішування корму",
-    payload: {
-      items: structuredClone(items)
-    }
-  });
-}
-
 /* =========================
-   FEED
+   🌾 FEED
    ========================= */
 
 export function getFeedStock(id) {
@@ -60,7 +62,6 @@ export function addFeedStock(id, amount) {
   const add = Number(amount || 0);
   if (add <= 0) return;
 
-  if (!AppState.warehouse.feed) AppState.warehouse.feed = {};
   AppState.warehouse.feed[id] = getFeedStock(id) + add;
 
   addLog({
@@ -68,17 +69,16 @@ export function addFeedStock(id, amount) {
     message: "Додано корм на склад",
     payload: { componentId: id, amount: add }
   });
+
+  sendTelegram(`➕ <b>Корм додано</b>\n${id} — ${add} кг`);
 }
 
 export function canConsumeFeed(id, amount) {
-  const need = Number(amount || 0);
-  if (need <= 0) return true;
-  return getFeedStock(id) >= need;
+  return getFeedStock(id) >= Number(amount || 0);
 }
 
 export function consumeFeedStock(id, amount) {
   const need = Number(amount || 0);
-  if (need <= 0) return true;
   if (!canConsumeFeed(id, need)) return false;
 
   AppState.warehouse.feed[id] = Math.max(getFeedStock(id) - need, 0);
@@ -89,20 +89,29 @@ export function consumeFeedStock(id, amount) {
     payload: { componentId: id, amount: need }
   });
 
+  sendTelegram(`➖ <b>Списано корм</b>\n${id} — ${need} кг`);
   return true;
 }
 
-export function clearFeedWarehouse() {
-  AppState.warehouse.feed = {};
+/* =========================
+   🌾 MIX FEED
+   ========================= */
 
+export function addMixLog(items) {
   addLog({
-    type: "feed:clear",
-    message: "Склад корму очищено"
+    type: "feed:mix",
+    message: "Змішування корму",
+    payload: { items }
   });
+
+  sendTelegram(
+    `🌾 <b>Змішано корм</b>\n` +
+    items.map(i => `• ${i.componentId}: ${i.amount} кг`).join("\n")
+  );
 }
 
 /* =========================
-   TRAYS
+   🧺 TRAYS
    ========================= */
 
 export function getEmptyTrays() {
@@ -120,40 +129,12 @@ export function addEmptyTrays(count) {
     message: "Додано порожні лотки",
     payload: { amount: add }
   });
-}
 
-export function getReservedTrays() {
-  return Number(AppState.warehouse.reserved || 0);
-}
-
-export function reserveTrays(count) {
-  const add = Number(count || 0);
-  if (add <= 0) return;
-
-  AppState.warehouse.reserved = getReservedTrays() + add;
-
-  addLog({
-    type: "trays:reserve",
-    message: "Зарезервовано лотки",
-    payload: { amount: add }
-  });
-}
-
-export function releaseTrays(count) {
-  const sub = Number(count || 0);
-  if (sub <= 0) return;
-
-  AppState.warehouse.reserved = Math.max(getReservedTrays() - sub, 0);
-
-  addLog({
-    type: "trays:release",
-    message: "Знято резерв лотків",
-    payload: { amount: sub }
-  });
+  sendTelegram(`🧺 <b>Лотки додано</b>\n+${add} шт`);
 }
 
 /* =========================
-   МІНІМУМИ
+   ⚠️ МІНІМУМИ
    ========================= */
 
 export function getWarehouseMinimums() {
@@ -161,51 +142,13 @@ export function getWarehouseMinimums() {
 }
 
 export function setWarehouseMinimums(minimums) {
-  AppState.warehouse.minimums = { ...(minimums || {}) };
+  AppState.warehouse.minimums = { ...minimums };
 
   addLog({
     type: "warehouse:set-minimums",
     message: "Оновлено мінімальні залишки",
     payload: { minimums }
   });
-}
 
-export function getWarehouseWarnings(getComponentNameById) {
-  const mins = getWarehouseMinimums();
-  const warnings = [];
-
-  const comps = AppState.feedComponents || [];
-  comps.forEach(c => {
-    const min = Number(mins[c.id] || 0);
-    if (min <= 0) return;
-
-    const stock = getFeedStock(c.id);
-    if (stock < min) {
-      warnings.push({
-        type: "feed",
-        id: c.id,
-        name: typeof getComponentNameById === "function"
-          ? getComponentNameById(c.id)
-          : c.name,
-        stock,
-        min
-      });
-    }
-  });
-
-  const trayMin = Number(mins.empty_trays || 0);
-  if (trayMin > 0) {
-    const trayStock = getEmptyTrays();
-    if (trayStock < trayMin) {
-      warnings.push({
-        type: "trays",
-        id: "empty_trays",
-        name: "Порожні лотки",
-        stock: trayStock,
-        min: trayMin
-      });
-    }
-  }
-
-  return warnings;
+  sendTelegram(`⚙️ <b>Оновлено мінімальні залишки складу</b>`);
 }
