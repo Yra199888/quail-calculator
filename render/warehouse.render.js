@@ -2,6 +2,9 @@
  * warehouse.render.js
  * ---------------------------------------
  * Відповідає ТІЛЬКИ за відображення складу
+ * ПІДТРИМУЄ:
+ *  - стару таблицю (fallback)
+ *  - нові warehouse cards (якщо контейнер існує)
  */
 
 import {
@@ -16,35 +19,42 @@ import {
 import { getFeedComponents } from "../services/feed.service.js";
 import { saveState } from "../state/state.save.js";
 import { qs, qsa } from "../utils/dom.js";
-
 import { calcTrayStats } from "../utils/trays.calc.js";
 import { AppState } from "../state/AppState.js";
-import { renderLogs } from "./logs.render.js"; // ✅ ВАЖЛИВО
+import { renderLogs } from "./logs.render.js";
 
-// =======================================
-// ГОЛОВНИЙ RENDER
-// =======================================
+/* =======================================
+   MAIN RENDER
+======================================= */
 export function renderWarehouse() {
-  renderFeedWarehouseTable();
+  renderFeedWarehouse();
   renderEggTraysBlock();
-  renderProductionForecast();
   renderTraysBlock();
   renderWarehouseWarnings();
-  renderLogs(); // ✅ журнал тут
+  renderLogs();
 }
 
-// =======================================
-// 🌾 КОРМОВІ КОМПОНЕНТИ
-// =======================================
-function renderFeedWarehouseTable() {
-  const tbody = qs("#warehouseFeedTableBody");
-  if (!tbody) return;
+/* =======================================
+   🌾 FEED (AUTO MODE)
+======================================= */
+function renderFeedWarehouse() {
+  const cardsBox = qs("#warehouseFeedCards");
+  const tableBody = qs("#warehouseFeedTableBody");
 
+  if (cardsBox) {
+    renderFeedCards(cardsBox);
+  } else if (tableBody) {
+    renderFeedTable(tableBody);
+  }
+}
+
+/* =======================================
+   📋 OLD TABLE (100% SAFE)
+======================================= */
+function renderFeedTable(tbody) {
   tbody.innerHTML = "";
 
-  const components = getFeedComponents();
-
-  components.forEach(c => {
+  getFeedComponents().forEach(c => {
     const stock = getFeedStock(c.id);
 
     tbody.insertAdjacentHTML(
@@ -62,20 +72,18 @@ function renderFeedWarehouseTable() {
           <button data-use-btn="${c.id}">➖</button>
         </td>
       </tr>
-    `
+      `
     );
   });
 
-  bindFeedActions();
+  bindTableActions();
 }
 
-// =======================================
-function bindFeedActions() {
+function bindTableActions() {
   qsa("[data-add-btn]").forEach(btn => {
     btn.onclick = () => {
       const id = btn.dataset.addBtn;
-      const input = qs(`[data-add="${id}"]`);
-      const val = Number(input?.value || 0);
+      const val = Number(qs(`[data-add="${id}"]`)?.value || 0);
       if (val <= 0) return;
 
       addFeedStock(id, val);
@@ -87,8 +95,7 @@ function bindFeedActions() {
   qsa("[data-use-btn]").forEach(btn => {
     btn.onclick = () => {
       const id = btn.dataset.useBtn;
-      const input = qs(`[data-use="${id}"]`);
-      const val = Number(input?.value || 0);
+      const val = Number(qs(`[data-use="${id}"]`)?.value || 0);
       if (val <= 0) return;
 
       if (!consumeFeedStock(id, val)) {
@@ -102,48 +109,83 @@ function bindFeedActions() {
   });
 }
 
-// =======================================
-// 🥚 ЛОТКИ
-// =======================================
-function renderEggTraysBlock() {
-  let box = qs("#eggTraysBlock");
+/* =======================================
+   🧱 NEW CARDS (OPTIONAL)
+======================================= */
+function renderFeedCards(box) {
+  box.innerHTML = "";
 
-  if (!box) {
-    const panel = qs("#page-warehouse .panel");
-    if (!panel) return;
+  getFeedComponents().forEach(c => {
+    const stock = getFeedStock(c.id);
 
-    panel.insertAdjacentHTML(
+    box.insertAdjacentHTML(
       "beforeend",
       `
-      <div id="eggTraysBlock" style="margin-top:12px">
-        <div class="panel-title">🥚 Готові лотки з яєць</div>
-        <div id="eggTraysContent"></div>
+      <div class="warehouse-card">
+        <div class="row">
+          <div class="name">${c.name}</div>
+          <div class="stock">${stock.toFixed(2)} кг</div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" data-add="${c.id}">➕</button>
+          <button class="btn" data-use="${c.id}">➖</button>
+        </div>
       </div>
       `
     );
+  });
 
-    box = qs("#eggTraysBlock");
-  }
+  bindCardActions();
+}
 
-  const content = qs("#eggTraysContent");
-  if (!content) return;
+function bindCardActions() {
+  qsa("[data-add]").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.add;
+      const val = Number(prompt("Скільки додати (кг)?", "1"));
+      if (!val || val <= 0) return;
+
+      addFeedStock(id, val);
+      saveState();
+      renderWarehouse();
+    };
+  });
+
+  qsa("[data-use]").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.use;
+      const val = Number(prompt("Скільки списати (кг)?", "1"));
+      if (!val || val <= 0) return;
+
+      if (!consumeFeedStock(id, val)) {
+        alert("❌ Недостатньо компонента");
+        return;
+      }
+
+      saveState();
+      renderWarehouse();
+    };
+  });
+}
+
+/* =======================================
+   🥚 EGG TRAYS
+======================================= */
+function renderEggTraysBlock() {
+  const box = qs("#eggTraysContent");
+  if (!box) return;
 
   const stats = calcTrayStats(AppState || {});
-
-  const availableBeforeReserve = Math.max(
-    (stats.totalTrays || 0) - (stats.shippedTrays || 0),
+  const deficit = Math.max(
+    (stats.reservedTrays || 0) - (stats.availableTrays || 0),
     0
   );
 
-  const deficit =
-    stats.deficitTrays ??
-    Math.max((stats.reservedTrays || 0) - availableBeforeReserve, 0);
-
-  content.innerHTML = `
-    <div class="${deficit > 0 ? "egg-trays danger" : "egg-trays ok"}">
+  box.innerHTML = `
+    <div class="egg-trays ${deficit > 0 ? "danger" : "ok"}">
       <div class="egg-trays-grid">
-        <div>📦 Повних лотків: <b>${stats.totalTrays}</b></div>
-        <div>🟡 Заброньовано: <b>${stats.reservedTrays}</b></div>
+        <div>📦 Повних: <b>${stats.totalTrays}</b></div>
+        <div>🟡 Резерв: <b>${stats.reservedTrays}</b></div>
         <div>🟢 Доступно: <b>${stats.availableTrays}</b></div>
         <div>⚠️ Дефіцит: <b>${deficit}</b></div>
       </div>
@@ -151,39 +193,31 @@ function renderEggTraysBlock() {
   `;
 }
 
-// =======================================
-function renderProductionForecast() {
-  const box = qs("#productionForecastBlock");
-  if (!box) return;
-}
-
-// =======================================
-// 🧺 ПОРОЖНІ ЛОТКИ
-// =======================================
+/* =======================================
+   🧺 EMPTY TRAYS
+======================================= */
 function renderTraysBlock() {
   const valueEl = qs("#emptyTraysValue");
-  if (!valueEl) return;
-
-  valueEl.textContent = getEmptyTrays();
-
   const btn = qs("#addEmptyTraysBtn");
   const input = qs("#addEmptyTraysInput");
 
-  if (btn && input) {
-    btn.onclick = () => {
-      const val = Number(input.value || 0);
-      if (val <= 0) return;
+  if (!valueEl || !btn || !input) return;
 
-      addEmptyTrays(val);
-      saveState();
-      renderWarehouse();
-    };
-  }
+  valueEl.textContent = getEmptyTrays();
+
+  btn.onclick = () => {
+    const val = Number(input.value || 0);
+    if (val <= 0) return;
+
+    addEmptyTrays(val);
+    saveState();
+    renderWarehouse();
+  };
 }
 
-// =======================================
-// ⚠️ ПОПЕРЕДЖЕННЯ
-// =======================================
+/* =======================================
+   ⚠️ WARNINGS
+======================================= */
 function renderWarehouseWarnings() {
   const box = qs("#warehouseWarnings");
   if (!box) return;
