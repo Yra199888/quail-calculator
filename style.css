@@ -60,7 +60,7 @@ body {
 }
 
 /* =========================================
-   📑 ВКЛАДКИ / СЕКЦІЇ
+   📑 СЕКЦІЇ
    ========================================= */
 .page {
   display: none;
@@ -189,58 +189,7 @@ th {
 }
 
 /* =========================================
-   ✏️ FEED INLINE EDIT / ENABLE
-   ========================================= */
-.feed-name {
-  cursor: pointer;
-  margin-left: 6px;
-}
-
-.feed-name:hover {
-  color: var(--color-accent);
-}
-
-.feed-name-input {
-  background: var(--bg-panel-light);
-  border: 1px solid var(--color-accent);
-  color: var(--color-text);
-  padding: 4px 6px;
-  border-radius: var(--radius-sm);
-  width: 100%;
-}
-
-tr.disabled {
-  opacity: 0.45;
-}
-
-/* =========================================
-   🧲 DRAG & DROP FEED
-   ========================================= */
-#feedTable tr {
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-#feedTable tr.dragging {
-  opacity: 0.5;
-  transform: scale(0.98);
-}
-
-#feedTable tr.drag-over {
-  background: rgba(76, 175, 80, 0.15);
-}
-
-/* =========================================
-   🥚 ОБЛІК ЯЄЦЬ – КАРТКИ
-   ========================================= */
-#eggs-report {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-/* =========================================
-   🆕 ГОТОВІ ЛОТКИ З ЯЄЦЬ (НОВЕ, БЕЗПЕЧНО)
+   🥚 ГОТОВІ ЛОТКИ
    ========================================= */
 .egg-trays {
   border-radius: var(--radius-md);
@@ -251,31 +200,15 @@ tr.disabled {
 
 .egg-trays.ok {
   background: rgba(76, 175, 80, 0.08);
-  border-color: rgba(76, 175, 80, 0.4);
 }
 
 .egg-trays.danger {
   background: rgba(229, 57, 53, 0.08);
-  border-color: rgba(229, 57, 53, 0.5);
 }
 
-.egg-trays-status {
-  font-size: 13px;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.egg-trays-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 6px;
-  font-size: 13px;
-}
-
-.egg-trays-grid b {
-  font-size: 14px;
-}
-
+/* =========================================
+   🧾 LOGS
+   ========================================= */
 .logs-toolbar {
   display: flex;
   gap: 6px;
@@ -319,42 +252,147 @@ tr.disabled {
   color: var(--color-muted);
 }
 
-.log-del {
-  border: 1px solid var(--border-color);
-  background: transparent;
-  padding: 4px 8px;
-}
-
 .log-msg {
   margin-top: 6px;
   font-size: 13px;
 }
 
-.badge {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 999px;
+/* =========================================
+   📦 WAREHOUSE CARDS (ДОДАНО)
+   ========================================= */
+.warehouse-cards {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.warehouse-card {
   border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--bg-panel-light);
+}
+
+.warehouse-card .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.warehouse-card .name {
+  font-weight: 700;
+}
+
+.warehouse-card .stock {
+  font-size: 14px;
   color: var(--color-muted);
 }
 
-.badge.feed { border-color: rgba(76,175,80,.35); color: #4caf50; }
-.badge.trays { border-color: rgba(251,192,45,.35); color: #fbc02d; }
-.badge.warehouse { border-color: rgba(100,181,246,.35); color: #64b5f6; }
+.warehouse-card .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.warehouse-card .btn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 1;
+  color: var(--color-text);
+}
+
+.warehouse-card .btn.primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #000;
+}
+
+.warehouse-card .btn.small {
+  flex: 0 0 auto;
+  width: 44px;
+  text-align: center;
+}
 
 /* =========================================
-   📱 МОБІЛЬНА АДАПТАЦІЯ
+   🪟 MODAL (ДОДАНО)
+   ========================================= */
+.modal.hidden { display: none; }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+
+.modal-card {
+  position: relative;
+  width: min(520px, calc(100% - 24px));
+  margin: 12vh auto 0;
+  background: var(--bg-panel);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title { font-weight: 800; }
+
+.modal-x {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.modal-body {
+  padding: 14px;
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.modal-tabs .tab {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel-light);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.modal-tabs .tab.active {
+  background: var(--color-accent);
+  color: #000;
+  border-color: var(--color-accent);
+}
+
+/* =========================================
+   📱 MOBILE
    ========================================= */
 @media (max-width: 600px) {
-  .form-row {
-    flex-direction: column;
-  }
-
-  .app-content {
-    padding: 8px;
-  }
-
-  .egg-trays-grid {
-    grid-template-columns: 1fr;
-  }
+  .form-row { flex-direction: column; }
+  .app-content { padding: 8px; }
 }
