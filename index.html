@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>🐣 Фермерський трекер</title>
-
-  <!-- СТИЛІ -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -16,9 +13,7 @@
     <!-- 🧭 НАВІГАЦІЯ -->
     <header class="app-header">
       <nav class="nav">
-        <div id="firebase-status" class="firebase-status offline">
-          🔴 Offline
-        </div>
+        <div id="firebase-status" class="firebase-status offline">🔴 Offline</div>
         <button class="nav-btn active" data-page="eggs">🥚 Яйця</button>
         <button class="nav-btn" data-page="feed">🌾 Корм</button>
         <button class="nav-btn" data-page="warehouse">📦 Склад</button>
@@ -61,109 +56,102 @@
           </form>
         </div>
 
-        <!-- ⬇️ СЮДИ renderEggs() буде вставляти КАРТКИ -->
         <div id="eggs-report"></div>
       </section>
 
-  <!-- 🌾 КОРМ -->
-<section class="page" id="page-feed">
-  <div class="panel">
-    <div class="panel-title">🌾 Калькулятор корму</div>
+      <!-- 🌾 КОРМ -->
+      <section class="page" id="page-feed">
+        <div class="panel">
+          <div class="panel-title">🌾 Калькулятор корму</div>
 
-    <table class="feed-table">
-      <thead>
-        <tr>
-          <th>Компонент</th>
-          <th>К-сть</th>
-          <th>Ціна</th>
-          <th>Сума</th>
-        </tr>
-      </thead>
-      <tbody id="feedTable"></tbody>
-    </table>
+          <table class="feed-table">
+            <thead>
+              <tr>
+                <th>Компонент</th>
+                <th>К-сть</th>
+                <th>Ціна</th>
+                <th>Сума</th>
+              </tr>
+            </thead>
+            <tbody id="feedTable"></tbody>
+          </table>
 
-    <div class="form-row">
-      <label>Обʼєм (кг)</label>
-      <input type="number" id="feedVolume" />
-    </div>
+          <div class="form-row">
+            <label>Обʼєм (кг)</label>
+            <input type="number" id="feedVolume" />
+          </div>
 
-    <div class="feed-summary">
-      <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
-      <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
-      <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
-    </div>
+          <div class="feed-summary">
+            <p>Загальна сума: <b id="feedTotal">0</b> грн</p>
+            <p>Ціна за кг: <b id="feedPerKg">0</b> грн</p>
+            <p>Сума за обʼєм: <b id="feedVolumeTotal">0</b> грн</p>
+          </div>
 
-    <!-- ✅ НОВИЙ КОНТЕЙНЕР (НІЧОГО НЕ ЛАМАЄ) -->
-    <div id="feedActions"></div>
+          <div id="feedActions"></div>
+        </div>
 
-  </div>
-
-  <div id="feedComponentsControls">
-    <button id="addFeedComponentBtn">➕ Додати компонент</button>
-    <button id="restoreFeedComponentsBtn">↩ Відновити видалені</button>
-  </div>
-</section>
+        <div id="feedComponentsControls">
+          <button id="addFeedComponentBtn">➕ Додати компонент</button>
+          <button id="restoreFeedComponentsBtn">↩ Відновити видалені</button>
+        </div>
+      </section>
 
       <!-- 📦 СКЛАД -->
-<section class="page" id="page-warehouse">
+      <section class="page" id="page-warehouse">
+        <div class="panel">
+          <div class="panel-title">📦 Склад</div>
 
-  <!-- ===== СКЛАД ===== -->
-  <div class="panel">
-    <div class="panel-title">📦 Склад</div>
+          <!-- ✅ ДОДАНО (безпечний контейнер) -->
+          <div id="warehouseFeedCards"></div>
 
-    <table class="feed-table">
-      <thead>
-        <tr>
-          <th>Компонент</th>
-          <th>Залишок</th>
-          <th>Додати</th>
-          <th>Списати</th>
-        </tr>
-      </thead>
-      <tbody id="warehouseFeedTableBody"></tbody>
-    </table>
+          <table class="feed-table">
+            <thead>
+              <tr>
+                <th>Компонент</th>
+                <th>Залишок</th>
+                <th>Додати</th>
+                <th>Списати</th>
+              </tr>
+            </thead>
+            <tbody id="warehouseFeedTableBody"></tbody>
+          </table>
 
-    <div class="warehouse-trays">
-      <p>Порожні лотки: <b id="emptyTraysValue">0</b></p>
-      <input type="number" id="addEmptyTraysInput" placeholder="+ лотки" />
-      <button id="addEmptyTraysBtn">➕</button>
-    </div>
+          <div class="warehouse-trays">
+            <p>Порожні лотки: <b id="emptyTraysValue">0</b></p>
+            <input type="number" id="addEmptyTraysInput" placeholder="+ лотки" />
+            <button id="addEmptyTraysBtn">➕</button>
+          </div>
 
-    <div id="warehouseWarnings"></div>
-  </div>
+          <div id="warehouseWarnings"></div>
+        </div>
 
-  <!-- ===== ЖУРНАЛ (ОКРЕМИЙ PANEL) ===== -->
-  <div class="panel" id="warehouseLogsPanel">
-    <div class="panel-title">🧾 Журнал складу</div>
+        <div class="panel" id="warehouseLogsPanel">
+          <div class="panel-title">🧾 Журнал складу</div>
+          <div class="log-filters">
+            <select id="logFilterCategory">
+              <option value="">Усі категорії</option>
+              <option value="feed">Корм</option>
+              <option value="warehouse">Склад</option>
+              <option value="orders">Замовлення</option>
+            </select>
 
-    <!-- 🔎 ФІЛЬТРИ -->
-  <div class="log-filters">
-    <select id="logFilterCategory">
-      <option value="">Усі категорії</option>
-      <option value="feed">Корм</option>
-      <option value="warehouse">Склад</option>
-      <option value="orders">Замовлення</option>
-    </select>
+            <select id="logFilterAction">
+              <option value="">Усі дії</option>
+              <option value="add">Додавання</option>
+              <option value="consume">Списання</option>
+              <option value="mix">Змішування</option>
+              <option value="reserve">Бронювання</option>
+            </select>
+          </div>
 
-    <select id="logFilterAction">
-      <option value="">Усі дії</option>
-      <option value="add">Додавання</option>
-      <option value="consume">Списання</option>
-      <option value="mix">Змішування</option>
-      <option value="reserve">Бронювання</option>
-    </select>
-  </div>
-
-    <div id="warehouseLogs"></div>
-  </div>
-
-</section>
+          <div id="warehouseLogs"></div>
+        </div>
+      </section>
 
       <!-- 📑 ЗАМОВЛЕННЯ -->
       <section class="page" id="page-orders">
         <div class="panel">
           <div class="panel-title">📑 Замовлення</div>
-
           <table class="feed-table">
             <thead>
               <tr>
@@ -176,37 +164,33 @@
             <tbody id="ordersTableBody"></tbody>
           </table>
         </div>
-        
+
         <div class="panel">
-  <div class="panel-title">➕ Нове замовлення</div>
+          <div class="panel-title">➕ Нове замовлення</div>
+          <div class="form-row">
+            <div>
+              <label>Дата</label>
+              <input type="date" id="order-date">
+            </div>
+            <div>
+              <label>Клієнт</label>
+              <input type="text" id="order-client">
+            </div>
+          </div>
 
-  <div class="form-row">
-    <div>
-      <label>Дата</label>
-      <input type="date" id="order-date">
-    </div>
+          <div class="form-row">
+            <div>
+              <label>Лотки</label>
+              <input type="number" id="order-trays" min="1">
+            </div>
+            <div>
+              <label>Примітка</label>
+              <input type="text" id="order-details">
+            </div>
+          </div>
 
-    <div>
-      <label>Клієнт</label>
-      <input type="text" id="order-client" placeholder="Імʼя клієнта">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div>
-      <label>Лотки</label>
-      <input type="number" id="order-trays" min="1">
-    </div>
-
-    <div>
-      <label>Примітка</label>
-      <input type="text" id="order-details" placeholder="Опціонально">
-    </div>
-  </div>
-
-  <button class="primary" id="order-add-btn">➕ Додати замовлення</button>
-</div>
-
+          <button class="primary" id="order-add-btn">➕ Додати замовлення</button>
+        </div>
       </section>
 
       <!-- 📋 РЕЦЕПТИ -->
@@ -231,6 +215,9 @@
 
     </main>
   </div>
+
+  <!-- ✅ ДОДАНО: МОДАЛКА (інертна, якщо не використовується) -->
+  <div id="qtyModal" class="hidden"></div>
 
   <script type="module" src="./app.js"></script>
 </body>
