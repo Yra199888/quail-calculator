@@ -2,11 +2,21 @@
  * cages.render.js
  * ---------------------------------------
  * Рендер UI для вкладки "Клітки"
- * КРОК 1 + КРОК 2 + КРОК 3
+ * КРОК 1 + КРОК 2 + КРОК 3 + КРОК 4
+ * НОРМА: 1 когут = 3 курки
  */
 
 import { AppState } from "../state/AppState.js";
 import { qs, qsa } from "../utils/dom.js";
+
+/* =========================
+   NORMS (КРОК 4)
+========================= */
+const NORMS = {
+  MAX_QUAILS_PER_TIER: 40,
+  IDEAL_FEMALES_PER_MALE: 3, // 🟢 норма
+  MAX_FEMALES_PER_MALE: 4    // 🟡 допустима межа
+};
 
 /* =========================
    HELPERS
@@ -24,26 +34,66 @@ function sumCage(cage) {
   );
 }
 
+/* =========================
+   VALIDATION (1 когут : 3 курки)
+========================= */
 function validateTier(tier) {
   const quails = Number(tier.quails || 0);
   const males = Number(tier.males || 0);
   const females = Number(tier.females || 0);
 
+  // 🔴 перенаселення
+  if (quails > NORMS.MAX_QUAILS_PER_TIER) {
+    return {
+      status: "error",
+      text: `🔴 Перенаселення: ${quails}/${NORMS.MAX_QUAILS_PER_TIER}`
+    };
+  }
+
+  // 🔴 логічна помилка
   if (males + females > quails) {
-    return { status: "error", text: "🔴 Когутів і курок більше ніж перепілок" };
+    return {
+      status: "error",
+      text: "🔴 Когутів і курок більше, ніж перепілок"
+    };
   }
 
-  if (males > females) {
-    return { status: "warning", text: "🟡 Когутів більше ніж курок" };
-  }
-
+  // 🟡 курки є, когутів немає
   if (males === 0 && females > 0) {
-    return { status: "warning", text: "🟡 Немає когутів" };
+    return {
+      status: "warning",
+      text: "🟡 У ярусі немає когутів"
+    };
   }
 
-  return { status: "ok", text: "🟢 Співвідношення нормальне" };
+  // 🟡 / 🔴 співвідношення
+  if (males > 0) {
+    const ratio = females / males;
+
+    if (ratio > NORMS.MAX_FEMALES_PER_MALE) {
+      return {
+        status: "error",
+        text: `🔴 Забагато курок: ~${ratio.toFixed(1)} на 1 когут`
+      };
+    }
+
+    if (ratio > NORMS.IDEAL_FEMALES_PER_MALE) {
+      return {
+        status: "warning",
+        text: `🟡 Допустимо, але краще ≤ ${NORMS.IDEAL_FEMALES_PER_MALE} курки на 1 когут`
+      };
+    }
+  }
+
+  return {
+    status: "ok",
+    text: "🟢 Ярус у нормі (1 когут ≈ 3 курки)"
+  };
 }
 
+/* =========================
+   CREATE CAGE
+========================= */
 function createNewCage() {
   return {
     id: `cage_${Date.now().toString(36)}`,
@@ -58,7 +108,7 @@ function createNewCage() {
 }
 
 /* =========================
-   🧮 FARM STATS (КРОК 3)
+   FARM STATS
 ========================= */
 function calcFarmStats(cages) {
   return cages.reduce(
@@ -67,17 +117,12 @@ function calcFarmStats(cages) {
       acc.tiers += cage.tiers.length;
 
       cage.tiers.forEach(t => {
-        const q = Number(t.quails || 0);
-        const m = Number(t.males || 0);
-        const f = Number(t.females || 0);
+        acc.quails += Number(t.quails || 0);
+        acc.males += Number(t.males || 0);
+        acc.females += Number(t.females || 0);
 
-        acc.quails += q;
-        acc.males += m;
-        acc.females += f;
-
-        if (m + f > q || m > f || (m === 0 && f > 0)) {
-          acc.problemTiers += 1;
-        }
+        const check = validateTier(t);
+        if (check.status !== "ok") acc.problemTiers += 1;
       });
 
       return acc;
@@ -103,9 +148,7 @@ export function renderCages() {
   const cages = AppState.cages.list;
   const selectedId = AppState.ui.cages.selectedId || cages[0]?.id || null;
 
-  /* =========================
-     🧮 FARM STATS (UI)
-  ========================= */
+  /* ===== FARM STATS UI ===== */
   const stats = calcFarmStats(cages);
 
   listBox.innerHTML = `
@@ -150,9 +193,7 @@ export function renderCages() {
     }
   `;
 
-  /* =========================
-     ОБРОБНИКИ
-  ========================= */
+  /* ===== HANDLERS ===== */
   qs("#addCageBtn").onclick = () => {
     const cage = createNewCage();
     cages.push(cage);
