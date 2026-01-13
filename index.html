@@ -14,9 +14,14 @@
     <header class="app-header">
       <nav class="nav">
         <div id="firebase-status" class="firebase-status offline">🔴 Offline</div>
+
         <button class="nav-btn active" data-page="eggs">🥚 Яйця</button>
         <button class="nav-btn" data-page="feed">🌾 Корм</button>
         <button class="nav-btn" data-page="warehouse">📦 Склад</button>
+
+        <!-- ✅ ДОДАНО: НОВА ВКЛАДКА -->
+        <button class="nav-btn" data-page="cages">🐦 Клітки</button>
+
         <button class="nav-btn" data-page="orders">📑 Замовлення</button>
         <button class="nav-btn" data-page="recipes">📋 Рецепти</button>
       </nav>
@@ -147,6 +152,28 @@
         </div>
       </section>
 
+      <!-- ✅ КЛІТКИ -->
+      <section class="page" id="page-cages">
+        <div class="panel">
+          <div class="panel-title">🐦 Клітки</div>
+
+          <div class="form-row">
+            <button class="primary" id="cage-add-btn">➕ Додати клітку</button>
+          </div>
+
+          <!-- тут буде список кліток -->
+          <div id="cagesList" class="muted">
+            Поки що немає кліток. Натисни “➕ Додати клітку”.
+          </div>
+        </div>
+
+        <!-- деталі вибраної клітки (пізніше) -->
+        <div class="panel" id="cageDetailsPanel" style="display:none;">
+          <div class="panel-title" id="cageDetailsTitle">Клітка</div>
+          <div id="cageDetails"></div>
+        </div>
+      </section>
+
       <!-- 📑 ЗАМОВЛЕННЯ -->
       <section class="page" id="page-orders">
         <div class="panel">
@@ -218,7 +245,7 @@
   <!-- =========================
        📦 MODAL: ADD / CONSUME FEED
        ========================= -->
-  <div id="qtyModal" class="modal hidden">
+  <div id="warehouseModal" class="modal hidden">
     <div class="modal-backdrop"></div>
 
     <div class="modal-card">
