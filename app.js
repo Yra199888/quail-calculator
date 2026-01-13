@@ -54,6 +54,12 @@ import { initNavigation } from "./ui/navigation.js";
 import { initToggles } from "./ui/toggles.js";
 import { initWarnings } from "./ui/warnings.js";
 
+// =======================================
+// CAGES
+// =======================================
+import { renderCages } from "./render/cages.render.js";
+import { CagesController } from "./controllers/CagesController.js";
+
 // DEBUG
 window.AppState = AppState;
 
@@ -149,6 +155,15 @@ function initControllers() {
       saveState();
       renderRecipes();
       renderFeed();
+    }
+  });
+  
+  // 🐦 Cages
+  new CagesController({
+    saveState,
+    onChange: () => {
+      saveState();
+      renderCages();
     }
   });
 }
@@ -495,4 +510,5 @@ function renderAll() {
   renderWarehouse();
   renderOrders();
   renderRecipes();
+  renderCages();
 }
