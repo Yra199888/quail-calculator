@@ -2,14 +2,11 @@
  * cages.render.js
  * ---------------------------------------
  * Рендер UI для вкладки "Клітки"
- * КРОК 1:
- *  - перевірка ярусів
- *  - статуси (ok / warning / error)
- *  - повідомлення під кожним ярусом
+ * КРОК 1 + КРОК 2
  */
 
 import { AppState } from "../state/AppState.js";
-import { qs } from "../utils/dom.js";
+import { qs, qsa } from "../utils/dom.js";
 
 /* =========================
    HELPERS
@@ -59,6 +56,19 @@ function validateTier(tier) {
   };
 }
 
+function createNewCage() {
+  return {
+    id: `cage_${Date.now().toString(36)}`,
+    name: "Нова клітка",
+    tiers: [1, 2, 3, 4].map(i => ({
+      index: i,
+      quails: 0,
+      males: 0,
+      females: 0
+    }))
+  };
+}
+
 /* =========================
    MAIN RENDER
 ========================= */
@@ -76,114 +86,128 @@ export function renderCages() {
   AppState.ui.cages ||= {};
 
   const cages = AppState.cages.list;
-  const selectedId = AppState.ui.cages.selectedId || (cages[0]?.id ?? null);
+  const selectedId =
+    AppState.ui.cages.selectedId || cages[0]?.id || null;
 
   /* =========================
-     СПИСОК КЛІТОК
+     СПИСОК КЛІТОК + КНОПКА
   ========================= */
-  if (!cages.length) {
-    listBox.innerHTML = `
-      <div class="muted">
-        Поки що немає кліток. Натисни “➕ Додати клітку”.
-      </div>
-    `;
-  } else {
-    listBox.innerHTML = `
-      <div class="cages-grid">
-        ${cages.map(c => {
-          const totals = sumCage(c);
-          const active = c.id === selectedId ? "active" : "";
-          return `
-            <button class="cage-card ${active}" type="button" data-cage-open="${c.id}">
-              <div class="cage-card__title">${c.name || "Клітка"}</div>
-              <div class="cage-card__meta">
-                <span>Ярусів: <b>${c.tiers?.length || 0}</b></span>
-                <span>Перепілок: <b>${totals.quails}</b></span>
-              </div>
-              <div class="cage-card__meta">
-                <span>Когутів: <b>${totals.males}</b></span>
-                <span>Курок: <b>${totals.females}</b></span>
-              </div>
-            </button>
-          `;
-        }).join("")}
-      </div>
-    `;
-  }
+  listBox.innerHTML = `
+    <div class="cages-toolbar">
+      <button class="primary" id="addCageBtn">➕ Додати клітку</button>
+    </div>
+
+    ${
+      !cages.length
+        ? `<div class="muted">Поки що немає кліток.</div>`
+        : `<div class="cages-grid">
+            ${cages
+              .map(c => {
+                const totals = sumCage(c);
+                const active = c.id === selectedId ? "active" : "";
+                return `
+                  <button class="cage-card ${active}" data-cage-open="${c.id}">
+                    <div class="cage-card__title">${c.name}</div>
+                    <div class="cage-card__meta">
+                      <span>Ярусів: <b>${c.tiers.length}</b></span>
+                      <span>Перепілок: <b>${totals.quails}</b></span>
+                    </div>
+                    <div class="cage-card__meta">
+                      <span>Когутів: <b>${totals.males}</b></span>
+                      <span>Курок: <b>${totals.females}</b></span>
+                    </div>
+                  </button>
+                `;
+              })
+              .join("")}
+          </div>`
+    }
+  `;
+
+  /* =========================
+     КНОПКА ДОДАВАННЯ
+  ========================= */
+  const addBtn = qs("#addCageBtn");
+  addBtn.onclick = () => {
+    const cage = createNewCage();
+    cages.push(cage);
+    AppState.ui.cages.selectedId = cage.id;
+    renderCages();
+  };
+
+  qsa("[data-cage-open]").forEach(btn => {
+    btn.onclick = () => {
+      AppState.ui.cages.selectedId = btn.dataset.cageOpen;
+      renderCages();
+    };
+  });
 
   /* =========================
      ДЕТАЛІ КЛІТКИ
   ========================= */
   const selected = cages.find(c => c.id === selectedId);
-
-  if (!detailsPanel || !detailsTitle || !detailsBox) return;
-
-  if (!selected) {
+  if (!selected || !detailsPanel) {
     detailsPanel.style.display = "none";
     return;
   }
 
   detailsPanel.style.display = "block";
-  detailsTitle.textContent = `🐦 ${selected.name || "Клітка"}`;
-
-  const tiers = Array.isArray(selected.tiers) ? selected.tiers : [];
+  detailsTitle.textContent = `🐦 ${selected.name}`;
 
   detailsBox.innerHTML = `
     <div class="cage-actions">
-      <input
-        class="cage-name-input"
-        type="text"
-        value="${(selected.name || "").replaceAll('"', "&quot;")}"
-        data-cage-name="${selected.id}"
-      />
-      <button class="danger" type="button" data-cage-delete="${selected.id}">
-        🗑 Видалити клітку
-      </button>
+      <input class="cage-name-input" value="${selected.name}" data-cage-name />
+      <button class="danger" data-cage-delete>🗑 Видалити клітку</button>
     </div>
 
     <div class="tiers-grid">
-      ${tiers.map(t => {
-        const check = validateTier(t);
-        return `
-          <div class="tier-card tier-${check.status}">
-            <div class="tier-title">Ярус ${t.index}</div>
+      ${selected.tiers
+        .map(t => {
+          const check = validateTier(t);
+          return `
+            <div class="tier-card tier-${check.status}">
+              <div class="tier-title">Ярус ${t.index}</div>
 
-            <div class="tier-row">
-              <label>Перепілок</label>
-              <input type="number" min="0" step="1"
-                value="${Number(t.quails || 0)}"
-                data-tier-field="quails"
-                data-cage-id="${selected.id}"
-                data-tier-index="${t.index}"
-              />
-            </div>
+              ${["quails", "males", "females"]
+                .map(
+                  f => `
+                  <div class="tier-row">
+                    <label>${f === "quails" ? "Перепілок" : f === "males" ? "Когутів" : "Курок"}</label>
+                    <input type="number" min="0" value="${t[f]}"
+                      data-tier="${t.index}" data-field="${f}">
+                  </div>`
+                )
+                .join("")}
 
-            <div class="tier-row">
-              <label>Когутів</label>
-              <input type="number" min="0" step="1"
-                value="${Number(t.males || 0)}"
-                data-tier-field="males"
-                data-cage-id="${selected.id}"
-                data-tier-index="${t.index}"
-              />
+              <div class="tier-status tier-status-${check.status}">
+                ${check.text}
+              </div>
             </div>
-
-            <div class="tier-row">
-              <label>Курок</label>
-              <input type="number" min="0" step="1"
-                value="${Number(t.females || 0)}"
-                data-tier-field="females"
-                data-cage-id="${selected.id}"
-                data-tier-index="${t.index}"
-              />
-            </div>
-
-            <div class="tier-status tier-status-${check.status}">
-              ${check.text}
-            </div>
-          </div>
-        `;
-      }).join("")}
+          `;
+        })
+        .join("")}
     </div>
   `;
+
+  /* =========================
+     ОБРОБНИКИ
+  ========================= */
+  qs("[data-cage-name]").oninput = e => {
+    selected.name = e.target.value;
+    renderCages();
+  };
+
+  qs("[data-cage-delete]").onclick = () => {
+    AppState.cages.list = cages.filter(c => c.id !== selected.id);
+    AppState.ui.cages.selectedId = null;
+    renderCages();
+  };
+
+  qsa("[data-tier]").forEach(inp => {
+    inp.oninput = () => {
+      const tier = selected.tiers.find(t => t.index == inp.dataset.tier);
+      tier[inp.dataset.field] = Number(inp.value || 0);
+      renderCages();
+    };
+  });
 }
