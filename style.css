@@ -390,6 +390,97 @@ th {
 }
 
 /* =========================================
+   🐦 CAGES (КЛІТКИ)
+   ========================================= */
+
+.cages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cage-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border .15s ease, background .15s ease;
+}
+
+.cage-card:hover {
+  border-color: var(--color-accent);
+}
+
+.cage-card.active {
+  border-color: var(--color-accent);
+  background: rgba(76,175,80,.08);
+}
+
+.cage-card__title {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.cage-card__meta {
+  font-size: 13px;
+  color: var(--color-muted);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ===== DETAILS ===== */
+
+.cage-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cage-name-input {
+  flex: 1;
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+/* ===== TIERS ===== */
+
+.tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.tier-card {
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.tier-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tier-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.tier-row input {
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+/* =========================================
    📱 MOBILE
    ========================================= */
 @media (max-width: 600px) {
