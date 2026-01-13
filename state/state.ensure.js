@@ -165,6 +165,13 @@ export function ensureState() {
 
   if (!AppState.recipes.list) AppState.recipes.list = {};
   if (!("selectedId" in AppState.recipes)) AppState.recipes.selectedId = null;
+  
+  // ✅ cages
+AppState.cages ||= { list: [] };
+if (!Array.isArray(AppState.cages.list)) AppState.cages.list = [];
+
+AppState.ui ||= {};
+AppState.ui.cages ||= {};
 
   // =========================
 // 🧾 ЖУРНАЛ ПОДІЙ
