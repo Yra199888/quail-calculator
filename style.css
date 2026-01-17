@@ -346,6 +346,47 @@ button.warning {
 }
 
 /* =========================================
+   🧾 BANK STYLE LOGS
+   ========================================= */
+
+.bank-log {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bank-log-item {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border-color);
+}
+
+.bank-log-item.add {
+  border-left: 4px solid var(--color-accent);
+}
+
+.bank-log-item.consume {
+  border-left: 4px solid var(--color-danger);
+}
+
+.bank-log-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.bank-log-message {
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.bank-log-time {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* =========================================
    📱 MOBILE
    ========================================= */
 @media (max-width: 600px) {
