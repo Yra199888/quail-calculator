@@ -17,17 +17,16 @@ export class CagesController {
     this.saveState = saveState;
     this.onChange = onChange;
 
-    this.ensureUI();
     this.bind();
   }
 
   /* =========================
-     ІНІЦІАЛІЗАЦІЯ UI-СТАНУ
+     БЕЗПЕЧНА ІНІЦІАЛІЗАЦІЯ UI
   ========================= */
 
   ensureUI() {
-    AppState.ui ||= {};
-    AppState.ui.cages ||= {};
+    if (!AppState.ui) AppState.ui = {};
+    if (!AppState.ui.cages) AppState.ui.cages = {};
   }
 
   /* =========================
@@ -36,6 +35,8 @@ export class CagesController {
 
   bind() {
     document.addEventListener("click", (e) => {
+      this.ensureUI();
+
       /* ===== ДОДАТИ КЛІТКУ ===== */
       const addBtn = e.target.closest("#cage-add-btn");
       if (addBtn) {
@@ -76,6 +77,8 @@ export class CagesController {
     });
 
     document.addEventListener("input", (e) => {
+      this.ensureUI();
+
       /* ===== НАЗВА КЛІТКИ ===== */
       const nameInput = e.target.closest("[data-cage-name]");
       if (nameInput) {
@@ -83,7 +86,6 @@ export class CagesController {
           nameInput.dataset.cageName,
           nameInput.value
         );
-
         this.commit();
         return;
       }
@@ -99,7 +101,6 @@ export class CagesController {
               Number(tierInput.value || 0)
           }
         );
-
         this.commit();
       }
     });
