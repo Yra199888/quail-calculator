@@ -6,11 +6,13 @@
  * Відповідає ТІЛЬКИ за:
  * - зчитування input (кількість, ціна, обʼєм)
  * - реакцію на зміну значень
+ * - реакцію на кнопку "Змішати корм"
  * - передачу змін через callback
  *
  * ❌ НЕ рахує собівартість
- * ❌ НЕ працює з AppState напряму
- * ❌ НЕ лізе у склад або рецепти
+ * ❌ НЕ працює зі складом напряму
+ * ❌ НЕ мутує AppState
+ * ❌ НЕ містить бізнес-логіки
  */
 
 export class FeedFormController {
@@ -24,25 +26,35 @@ export class FeedFormController {
     // DOM
     this.table = null;
     this.volumeInput = null;
+    this.mixBtn = null;
   }
 
   /**
    * Ініціалізація контролера
-   * викликається ОДИН РАЗ після рендера таблиці
+   * викликається ОДИН РАЗ після renderFeed()
    */
   init() {
     this.table = document.getElementById("feedTable");
     this.volumeInput = document.getElementById("feedVolume");
+    this.mixBtn = document.getElementById("mixFeedBtn");
 
-    if (!this.table) return;
+    if (this.table) {
+      this.bindTableInputs();
+    }
 
-    this.bindTableInputs();
-    this.bindVolumeInput();
+    if (this.volumeInput) {
+      this.bindVolumeInput();
+    }
+
+    if (this.mixBtn) {
+      this.bindMixButton();
+    }
   }
 
-  /**
-   * Підвʼязка input у таблиці (кількість + ціна)
-   */
+  /* =======================================
+     INPUTS TABLE
+  ======================================= */
+
   bindTableInputs() {
     this.table.addEventListener("input", (e) => {
       const target = e.target;
@@ -58,12 +70,11 @@ export class FeedFormController {
     });
   }
 
-  /**
-   * Підвʼязка input обʼєму замісу
-   */
-  bindVolumeInput() {
-    if (!this.volumeInput) return;
+  /* =======================================
+     VOLUME
+  ======================================= */
 
+  bindVolumeInput() {
     this.volumeInput.addEventListener("input", () => {
       const value = Number(this.volumeInput.value || 0);
 
@@ -74,12 +85,22 @@ export class FeedFormController {
     });
   }
 
-  /**
-   * Обробка зміни кількості компонента
-   * Підтримує:
-   * - data-id (новий варіант)
-   * - data-i  (старий варіант, fallback)
-   */
+  /* =======================================
+     MIX BUTTON
+  ======================================= */
+
+  bindMixButton() {
+    this.mixBtn.addEventListener("click", () => {
+      this.onChange({
+        type: "mix"
+      });
+    });
+  }
+
+  /* =======================================
+     QTY
+  ======================================= */
+
   handleQtyChange(input) {
     const value = Number(input.value || 0);
 
@@ -102,12 +123,10 @@ export class FeedFormController {
     }
   }
 
-  /**
-   * Обробка зміни ціни компонента
-   * Підтримує:
-   * - data-id (новий варіант)
-   * - data-i  (старий варіант, fallback)
-   */
+  /* =======================================
+     PRICE
+  ======================================= */
+
   handlePriceChange(input) {
     const value = Number(input.value || 0);
 
