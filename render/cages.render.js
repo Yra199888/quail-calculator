@@ -7,7 +7,10 @@
 
 import { AppState } from "../state/AppState.js";
 import { qs } from "../utils/dom.js";
-import { evaluateTier, getTierRecommendation } from "../services/cages.service.js";
+import {
+  evaluateTier,
+  getTierRecommendation
+} from "../services/cages.service.js";
 
 /* =========================
    HELPERS
@@ -23,6 +26,10 @@ function sumCage(cage) {
     },
     { quails: 0, males: 0, females: 0 }
   );
+}
+
+function isCageEmpty(cage) {
+  return !cage.tiers.some(t => Number(t.quails) > 0);
 }
 
 /* =========================
@@ -45,30 +52,34 @@ export function renderCages() {
 
   listBox.innerHTML = `
     <div class="cages-toolbar">
-      <button class="primary" id="cage-add-btn">➕ Додати клітку</button>
+      <button class="primary" id="cage-add-btn">
+        ➕ Додати клітку
+      </button>
     </div>
 
     <div class="cages-grid">
-      ${cages.map(c => {
-        const total = sumCage(c);
-        const isActive = c.id === selectedId;
+      ${cages
+        .map(c => {
+          const total = sumCage(c);
+          const isActive = c.id === selectedId;
 
-        return `
-          <button
-            class="cage-card ${isActive ? "active" : ""}"
-            data-cage-open="${c.id}"
-          >
-            <div class="cage-card__title">${c.name}</div>
-            <div class="cage-card__summary">
-              🐦 ${total.quails}
-              &nbsp;|&nbsp;
-              🐓 ${total.males}
-              &nbsp;|&nbsp;
-              🐔 ${total.females}
-            </div>
-          </button>
-        `;
-      }).join("")}
+          return `
+            <button
+              class="cage-card ${isActive ? "active" : ""}"
+              data-cage-open="${c.id}"
+            >
+              <div class="cage-card__title">${c.name}</div>
+              <div class="cage-card__summary">
+                🐦 ${total.quails}
+                &nbsp;|&nbsp;
+                🐓 ${total.males}
+                &nbsp;|&nbsp;
+                🐔 ${total.females}
+              </div>
+            </button>
+          `;
+        })
+        .join("")}
     </div>
   `;
 
@@ -81,51 +92,89 @@ export function renderCages() {
   }
 
   detailsPanel.style.display = "block";
-  detailsTitle.textContent = cage.name;
+
+  const empty = isCageEmpty(cage);
+
+  /* ===== TITLE + ACTIONS ===== */
+
+  detailsTitle.innerHTML = `
+    <div class="cage-actions">
+      <span>${cage.name}</span>
+
+      <button
+        class="cage-delete-btn"
+        data-cage-delete="${cage.id}"
+        ${empty ? "" : "disabled"}
+        title="${
+          empty
+            ? "Видалити клітку"
+            : "Неможливо видалити клітку з перепілками"
+        }"
+      >
+        🗑
+      </button>
+    </div>
+  `;
+
+  /* ===== TIERS ===== */
 
   detailsBox.innerHTML = `
     <div class="tiers-grid">
-      ${cage.tiers.map(t => {
-        const result = evaluateTier(t);
-        const recommendation = getTierRecommendation(t);
+      ${cage.tiers
+        .map(t => {
+          const result = evaluateTier(t);
+          const recommendation = getTierRecommendation(t);
 
-        return `
-          <div class="tier-card tier-${result.level}">
-            <div class="tier-title">Ярус ${t.index}</div>
+          return `
+            <div class="tier-card tier-${result.level}">
+              <div class="tier-title">Ярус ${t.index}</div>
 
-            ${["quails", "males", "females"].map(field => `
-              <div class="tier-row">
-                <label>${field}</label>
-                <input
-                  type="number"
-                  min="0"
-                  value="${t[field] ?? 0}"
-                  data-tier-field="${field}"
-                  data-cage-id="${cage.id}"
-                  data-tier-index="${t.index}"
-                />
+              ${["quails", "males", "females"]
+                .map(
+                  field => `
+                <div class="tier-row">
+                  <label>${field}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value="${t[field] ?? 0}"
+                    data-tier-field="${field}"
+                    data-cage-id="${cage.id}"
+                    data-tier-index="${t.index}"
+                  />
+                </div>
+              `
+                )
+                .join("")}
+
+              <div class="tier-status">
+                ${
+                  result.issues.length
+                    ? result.issues
+                        .map(
+                          i => `
+                    <div class="tier-issue tier-issue-${i.level}">
+                      ${i.level === "error" ? "🔴" : "🟡"} ${i.message}
+                      ${
+                        i.details
+                          ? `<span class="muted">(${i.details})</span>`
+                          : ""
+                      }
+                    </div>
+                  `
+                        )
+                        .join("")
+                    : `<div class="tier-ok">🟢 Ярус у нормі</div>`
+                }
               </div>
-            `).join("")}
 
-            <div class="tier-status">
-              ${
-                result.issues.length
-                  ? result.issues.map(i => `
-                      <div class="tier-issue tier-issue-${i.level}">
-                        ${i.level === "error" ? "🔴" : "🟡"} ${i.message}
-                        ${i.details ? `<span class="muted">(${i.details})</span>` : ""}
-                      </div>
-                    `).join("")
-                  : `<div class="tier-ok">🟢 Ярус у нормі</div>`
-              }
+              <div class="tier-recommendation">
+                💡 ${recommendation}
+              </div>
             </div>
-
-            <div class="tier-recommendation">
-              💡 ${recommendation}
-            </div>
-          </div>
-        `;
-      }).join("")}
+          `;
+        })
+        .join("")}
     </div>
   `;
 }
