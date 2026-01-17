@@ -2,10 +2,11 @@
  * warehouse.render.js
  * ---------------------------------------
  * Відповідає ТІЛЬКИ за відображення складу
- * ПІДТРИМУЄ:
- *  - стару таблицю (fallback)
- *  - нові warehouse cards
- *  - МОДАЛКУ замість prompt()
+ * SAFE-версія:
+ *  - не ламає стару таблицю
+ *  - не ламає модалку
+ *  - додає індикатори
+ *  - додає нижній блок дій
  */
 
 import {
@@ -56,7 +57,7 @@ function renderFeedWarehouse() {
 }
 
 /* =======================================
-   OLD TABLE (SAFE)
+   OLD TABLE (SAFE FALLBACK)
 ======================================= */
 function renderFeedTable(tbody) {
   tbody.innerHTML = "";
@@ -91,13 +92,19 @@ function bindTableActions() {
 }
 
 /* =======================================
-   CARDS MODE
+   CARDS MODE (ПОКРАЩЕНИЙ)
 ======================================= */
 function renderFeedCards(box) {
   box.innerHTML = "";
 
-  getFeedComponents().forEach(c => {
+  const components = getFeedComponents();
+  let totalStock = 0;
+
+  components.forEach(c => {
     const stock = getFeedStock(c.id);
+    totalStock += stock;
+
+    const percent = Math.min(100, (stock / 10) * 100); // без ризику, просто індикатор
 
     box.insertAdjacentHTML(
       "beforeend",
@@ -107,18 +114,49 @@ function renderFeedCards(box) {
           <div class="name">${c.name}</div>
           <div class="stock">${stock.toFixed(2)} кг</div>
         </div>
+
+        <div class="warehouse-bar">
+          <div class="warehouse-bar__fill" style="width:${percent}%"></div>
+        </div>
+
         <div class="actions">
-          <button class="btn primary" data-add="${c.id}">➕</button>
-          <button class="btn" data-use="${c.id}">➖</button>
+          <button class="btn small" data-add="${c.id}" title="Додати">➕</button>
+          <button class="btn small" data-use="${c.id}" title="Списати">➖</button>
         </div>
       </div>
       `
     );
   });
 
+  /* ===== НИЖНІЙ БЛОК ===== */
+  box.insertAdjacentHTML(
+    "beforeend",
+    `
+    <div class="warehouse-footer">
+      <div class="warehouse-footer__info">
+        <div class="warehouse-footer__title">Залишок корму</div>
+        <div class="warehouse-footer__value">
+          <b>${totalStock.toFixed(2)}</b> кг
+        </div>
+        <div class="muted" style="font-size:12px">
+          Розрахунок за рецептом буде підключено пізніше
+        </div>
+      </div>
+
+      <div class="warehouse-footer__actions">
+        <button class="btn primary" id="mixFeedBtn">🌾 Замішати корм</button>
+        <button class="btn" id="consumeFeedBtn">➖ Списати корм</button>
+      </div>
+    </div>
+    `
+  );
+
   bindCardActions();
 }
 
+/* =======================================
+   CARD ACTIONS
+======================================= */
 function bindCardActions() {
   qsa("[data-add]").forEach(btn => {
     btn.onclick = () => openQtyModal(btn.dataset.add, "add");
@@ -127,10 +165,24 @@ function bindCardActions() {
   qsa("[data-use]").forEach(btn => {
     btn.onclick = () => openQtyModal(btn.dataset.use, "consume");
   });
+
+  const mixBtn = qs("#mixFeedBtn");
+  if (mixBtn) {
+    mixBtn.onclick = () => {
+      alert("🌾 Замішування корму буде реалізовано пізніше");
+    };
+  }
+
+  const consumeBtn = qs("#consumeFeedBtn");
+  if (consumeBtn) {
+    consumeBtn.onclick = () => {
+      alert("➖ Списання корму (заглушка)");
+    };
+  }
 }
 
 /* =======================================
-   MODAL LOGIC
+   MODAL LOGIC (НЕ ЧІПАЛИ)
 ======================================= */
 function openQtyModal(componentId, action) {
   const component = getFeedComponents().find(c => c.id === componentId);
@@ -172,7 +224,6 @@ function openQtyModal(componentId, action) {
 
   qs("#qtyModalClose").onclick = closeQtyModal;
   qs("#qtyModalCancel").onclick = closeQtyModal;
-
   qs("#qtyModalConfirm").onclick = confirmQtyModal;
 }
 
@@ -201,7 +252,7 @@ function confirmQtyModal() {
 }
 
 /* =======================================
-   EGG TRAYS
+   EGG TRAYS / WARNINGS (БЕЗ ЗМІН)
 ======================================= */
 function renderEggTraysBlock() {
   const box = qs("#eggTraysContent");
@@ -225,9 +276,6 @@ function renderEggTraysBlock() {
   `;
 }
 
-/* =======================================
-   EMPTY TRAYS
-======================================= */
 function renderTraysBlock() {
   const valueEl = qs("#emptyTraysValue");
   const btn = qs("#addEmptyTraysBtn");
@@ -247,9 +295,6 @@ function renderTraysBlock() {
   };
 }
 
-/* =======================================
-   WARNINGS
-======================================= */
 function renderWarehouseWarnings() {
   const box = qs("#warehouseWarnings");
   if (!box) return;
