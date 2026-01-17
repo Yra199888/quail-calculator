@@ -168,7 +168,70 @@ button.warning {
 }
 
 /* =========================================
-   🐦 CAGES (КЛІТКИ) — ДОПРАЦЬОВАНО
+   📦 WAREHOUSE (СКЛАД) — ВІДНОВЛЕНО
+   ========================================= */
+
+.warehouse-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.warehouse-card {
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.warehouse-card .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.warehouse-card .name {
+  font-weight: 700;
+}
+
+.warehouse-card .stock {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.warehouse-card .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.warehouse-card .btn {
+  border: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 1;
+  color: var(--color-text);
+}
+
+.warehouse-card .btn.primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #000;
+}
+
+.warehouse-card .btn.small {
+  flex: 0 0 auto;
+  width: 44px;
+  text-align: center;
+}
+
+/* =========================================
+   🐦 CAGES (КЛІТКИ)
    ========================================= */
 
 .cages-grid {
