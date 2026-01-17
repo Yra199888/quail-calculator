@@ -168,7 +168,7 @@ button.warning {
 }
 
 /* =========================================
-   🧾 WAREHOUSE LOGS — ОНОВЛЕНИЙ ВИГЛЯД
+   🧾 WAREHOUSE LOGS — ФІНАЛЬНИЙ ВИГЛЯД
    ========================================= */
 
 #warehouseLogs {
@@ -181,14 +181,10 @@ button.warning {
 .log-item {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
-  padding: 12px;
+  gap: 12px;
+  padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(
-    180deg,
-    rgba(255,255,255,0.03),
-    rgba(0,0,0,0.05)
-  );
+  background: var(--bg-panel-light);
   border: 1px solid var(--border-color);
 }
 
@@ -206,21 +202,9 @@ button.warning {
   gap: 4px;
 }
 
-.log-action {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.log-action.add {
-  color: var(--color-accent);
-}
-
-.log-action.consume {
-  color: var(--color-danger);
-}
-
 .log-message {
   font-size: 15px;
+  line-height: 1.35;
 }
 
 .log-message b {
@@ -239,7 +223,7 @@ button.warning {
   color: var(--color-muted);
   font-size: 18px;
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
 .log-delete:hover {
