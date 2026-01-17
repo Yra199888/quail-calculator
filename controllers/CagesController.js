@@ -5,47 +5,60 @@
  */
 
 import { AppState } from "../state/AppState.js";
-import { qs } from "../utils/dom.js";
-import { createCage, deleteCage, updateCageName, updateTier } from "../services/cages.service.js";
+import {
+  createCage,
+  deleteCage,
+  updateCageName,
+  updateTier
+} from "../services/cages.service.js";
 
 export class CagesController {
   constructor({ saveState, onChange }) {
     this.saveState = saveState;
     this.onChange = onChange;
 
+    this.ensureUI();
     this.bind();
   }
 
+  /* =========================
+     ІНІЦІАЛІЗАЦІЯ UI-СТАНУ
+  ========================= */
+
+  ensureUI() {
+    AppState.ui ||= {};
+    AppState.ui.cages ||= {};
+  }
+
+  /* =========================
+     ПРИВʼЯЗКА ПОДІЙ
+  ========================= */
+
   bind() {
     document.addEventListener("click", (e) => {
-      // add cage
+      /* ===== ДОДАТИ КЛІТКУ ===== */
       const addBtn = e.target.closest("#cage-add-btn");
       if (addBtn) {
         const cage = createCage({ name: "Клітка", tiers: 4 });
-
-        AppState.ui ||= {};
-        AppState.ui.cages ||= {};
         AppState.ui.cages.selectedId = cage.id;
 
-        this.saveState?.();
-        this.onChange?.();
+        this.commit();
         return;
       }
 
-      // open cage
+      /* ===== ВІДКРИТИ КЛІТКУ ===== */
       const openBtn = e.target.closest("[data-cage-open]");
       if (openBtn) {
         const id = openBtn.dataset.cageOpen;
-        AppState.ui ||= {};
-        AppState.ui.cages ||= {};
-        AppState.ui.cages.selectedId = id;
 
-        this.saveState?.();
-        this.onChange?.();
+        if (AppState.ui.cages.selectedId !== id) {
+          AppState.ui.cages.selectedId = id;
+          this.commit();
+        }
         return;
       }
 
-      // delete cage
+      /* ===== ВИДАЛИТИ КЛІТКУ ===== */
       const delBtn = e.target.closest("[data-cage-delete]");
       if (delBtn) {
         const id = delBtn.dataset.cageDelete;
@@ -54,44 +67,50 @@ export class CagesController {
 
         deleteCage(id);
 
-        // якщо видалили обрану — вибираємо першу
-        const first = AppState.cages?.list?.[0]?.id ?? null;
-        AppState.ui ||= {};
-        AppState.ui.cages ||= {};
-        AppState.ui.cages.selectedId = first;
+        AppState.ui.cages.selectedId =
+          AppState.cages?.list?.[0]?.id ?? null;
 
-        this.saveState?.();
-        this.onChange?.();
+        this.commit();
         return;
       }
     });
 
     document.addEventListener("input", (e) => {
-      // cage name
+      /* ===== НАЗВА КЛІТКИ ===== */
       const nameInput = e.target.closest("[data-cage-name]");
       if (nameInput) {
-        const id = nameInput.dataset.cageName;
-        updateCageName(id, nameInput.value);
+        updateCageName(
+          nameInput.dataset.cageName,
+          nameInput.value
+        );
 
-        this.saveState?.();
-        this.onChange?.();
+        this.commit();
         return;
       }
 
-      // tier fields
+      /* ===== ПОЛЯ ЯРУСУ ===== */
       const tierInput = e.target.closest("[data-tier-field]");
       if (tierInput) {
-        const cageId = tierInput.dataset.cageId;
-        const tierIndex = Number(tierInput.dataset.tierIndex);
-        const field = tierInput.dataset.tierField;
-        const value = Number(tierInput.value || 0);
+        updateTier(
+          tierInput.dataset.cageId,
+          Number(tierInput.dataset.tierIndex),
+          {
+            [tierInput.dataset.tierField]:
+              Number(tierInput.value || 0)
+          }
+        );
 
-        updateTier(cageId, tierIndex, { [field]: value });
-
-        this.saveState?.();
-        this.onChange?.();
-        return;
+        this.commit();
       }
     });
+  }
+
+  /* =========================
+     ФІКСАЦІЯ ЗМІН
+  ========================= */
+
+  commit() {
+    this.saveState?.();
+    this.onChange?.();
   }
 }
