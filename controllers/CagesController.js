@@ -2,6 +2,9 @@
  * CagesController.js
  * ---------------------------------------
  * Делегація подій для вкладки "Клітки"
+ * + видалення клітки
+ * + заборона видалення, якщо клітка не порожня
+ * + підтвердження дії
  */
 
 import { AppState } from "../state/AppState.js";
@@ -62,12 +65,26 @@ export class CagesController {
       /* ===== ВИДАЛИТИ КЛІТКУ ===== */
       const delBtn = e.target.closest("[data-cage-delete]");
       if (delBtn) {
-        const id = delBtn.dataset.cageDelete;
-        if (!id) return;
-        if (!confirm("Видалити цю клітку?")) return;
+        const cageId = delBtn.dataset.cageDelete;
+        if (!cageId) return;
 
-        deleteCage(id);
+        const cage = AppState.cages?.list?.find(c => c.id === cageId);
+        if (!cage) return;
 
+        // ❌ Заборона видалення, якщо є перепілки
+        const hasQuails = cage.tiers?.some(t => Number(t.quails) > 0);
+        if (hasQuails) {
+          alert("Не можна видалити клітку, в якій є перепілки.");
+          return;
+        }
+
+        // ✅ Підтвердження
+        const ok = confirm("Ви дійсно хочете видалити цю клітку?");
+        if (!ok) return;
+
+        deleteCage(cageId);
+
+        // якщо видалили обрану — вибираємо першу клітку
         AppState.ui.cages.selectedId =
           AppState.cages?.list?.[0]?.id ?? null;
 
@@ -86,6 +103,7 @@ export class CagesController {
           nameInput.dataset.cageName,
           nameInput.value
         );
+
         this.commit();
         return;
       }
@@ -101,6 +119,7 @@ export class CagesController {
               Number(tierInput.value || 0)
           }
         );
+
         this.commit();
       }
     });
