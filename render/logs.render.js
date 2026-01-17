@@ -2,9 +2,8 @@
  * logs.render.js
  * ---------------------------------------
  * ✅ ТІЛЬКИ UI
- * - показує журнал складу
- * - фільтри
- * - видалення помилкових записів
+ * Людський журнал складу (банківський стиль)
+ * Без ламання існуючої логіки
  */
 
 import { AppState } from "../state/AppState.js";
@@ -19,7 +18,7 @@ const FILTERS = [
 
 /* =========================
    ⏱ SAFE DATE
-   ========================= */
+========================= */
 function getIso(entry) {
   if (typeof entry?.createdAt === "string") return entry.createdAt;
   if (typeof entry?.at === "string") return entry.at;
@@ -36,9 +35,9 @@ function formatDate(entry) {
   if (Number.isNaN(d.getTime())) return "—";
 
   return d.toLocaleString("uk-UA", {
-    year: "numeric",
-    month: "2-digit",
     day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit"
   });
@@ -46,72 +45,50 @@ function formatDate(entry) {
 
 /* =========================
    HELPERS
-   ========================= */
+========================= */
 function getComponentNameById(id) {
   const c = (AppState.feedComponents || []).find(x => x.id === id);
   return c?.name || id || "—";
 }
 
-function humanizeLog(entry) {
-  const type = entry?.type || "unknown";
+function getHumanTitle(entry) {
+  if (entry.type === "feed:add") return "➕ Додавання";
+  if (entry.type === "feed:consume") return "➖ Списання";
+  if (entry.type === "feed:mix") return "🌾 Змішування корму";
+  if (entry.type === "trays:add") return "➕ Лотки";
+  if (entry.type === "trays:reserve") return "🟡 Резерв лотків";
+  if (entry.type === "trays:release") return "↩ Зняття резерву";
+  return "ℹ️ Подія";
+}
+
+function getHumanMessage(entry) {
   const payload = entry?.payload || {};
   const componentId = payload.componentId ?? entry?.componentId;
   const amount = payload.amount ?? entry?.amount;
 
-  switch (type) {
-    case "feed:add":
-      return `➕ Додано на склад: <b>${getComponentNameById(componentId)}</b> — ${Number(amount || 0)} кг`;
-
-    case "feed:consume":
-      return `➖ Списано зі складу: <b>${getComponentNameById(componentId)}</b> — ${Number(amount || 0)} кг`;
-
-    case "feed:clear":
-      return "🧹 Очищено склад корму";
-
-    case "feed:mix":
-      if (Array.isArray(payload.items) && payload.items.length) {
-        return `
-          🌾 <b>Змішано корм</b>:
-          <ul style="margin:6px 0 0 18px">
-            ${payload.items.map(i =>
-              `<li>${getComponentNameById(i.componentId)} — ${Number(i.amount || 0)} кг</li>`
-            ).join("")}
-          </ul>
-        `;
-      }
-      return "🌾 Змішано корм";
-
-    case "trays:add":
-      return `🧺 Додано порожніх лотків: <b>${Number(amount || 0)}</b> шт`;
-
-    case "trays:reserve":
-      return `🟡 Зарезервовано лотків: <b>+${Number(amount || 0)}</b> шт`;
-
-    case "trays:release":
-      return `↩ Знято резерв: <b>-${Number(amount || 0)}</b> шт`;
-
-    case "warehouse:set-minimums":
-      return "⚙️ Оновлено мінімальні залишки складу";
+  if (entry.type?.startsWith("feed:")) {
+    if (entry.type === "feed:mix" && Array.isArray(payload.items)) {
+      return payload.items
+        .map(i => `${getComponentNameById(i.componentId)} — ${Number(i.amount || 0)} кг`)
+        .join(", ");
+    }
+    return `${getComponentNameById(componentId)} — ${Number(amount || 0)} кг`;
   }
 
-  // ✅ ГАРАНТОВАНИЙ FALLBACK
-  if (typeof entry?.message === "string" && entry.message.trim()) {
+  if (entry.type?.startsWith("trays:")) {
+    return `Лотки — ${Number(amount || 0)} шт`;
+  }
+
+  if (typeof entry.message === "string" && entry.message.trim()) {
     return entry.message.trim();
   }
 
-  return `🧾 ${type}`;
-}
-
-function badgeClass(type) {
-  if (String(type).startsWith("feed:")) return "badge feed";
-  if (String(type).startsWith("trays:")) return "badge trays";
-  if (String(type).startsWith("warehouse:")) return "badge warehouse";
-  return "badge";
+  return "—";
 }
 
 /* =========================
    RENDER
-   ========================= */
+========================= */
 export function renderLogs() {
   const box = qs("#warehouseLogs");
   if (!box) return;
@@ -141,15 +118,25 @@ export function renderLogs() {
 
   box.innerHTML = `
     ${filtersHtml}
-    <div class="logs-list">
+    <div class="bank-log">
       ${filtered.slice(0, 200).map(l => `
-        <div class="log-item">
-          <div class="log-head">
-            <span class="${badgeClass(l.type)}">${l.type}</span>
-            <span class="log-time">${formatDate(l)}</span>
-            <button class="log-del" data-log-delete="${l.id}" title="Видалити">🗑</button>
+        <div class="bank-log-item ${l.type?.includes("consume") ? "consume" : "add"}">
+          <div class="bank-log-title">
+            ${getHumanTitle(l)}
           </div>
-          <div class="log-msg">${humanizeLog(l)}</div>
+
+          <div class="bank-log-message">
+            ${getHumanMessage(l)}
+          </div>
+
+          <div class="bank-log-footer">
+            <span class="bank-log-time">${formatDate(l)}</span>
+            <button
+              class="log-del"
+              data-log-delete="${l.id}"
+              title="Видалити"
+            >🗑</button>
+          </div>
         </div>
       `).join("")}
     </div>
