@@ -387,6 +387,84 @@ button.warning {
 }
 
 /* =========================================
+   📦 WAREHOUSE UI — ІНДИКАТОР + НИЖНІ ДІЇ
+   ========================================= */
+
+.warehouse-bar {
+  margin-top: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.warehouse-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.warehouse-bar-ok .warehouse-bar__fill {
+  background: var(--color-accent);
+}
+
+.warehouse-bar-warn .warehouse-bar__fill {
+  background: var(--color-warning);
+}
+
+.warehouse-bar-danger .warehouse-bar__fill {
+  background: var(--color-danger);
+}
+
+/* Маленькі кнопки дій у картці */
+.warehouse-card .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.warehouse-card .btn.small {
+  width: 44px;
+  padding: 10px 0;
+  text-align: center;
+}
+
+/* Нижній блок */
+.warehouse-footer {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: var(--bg-panel);
+}
+
+.warehouse-footer__title {
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.warehouse-footer__value {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.warehouse-footer__hint {
+  font-size: 12px;
+}
+
+.warehouse-footer__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+@media (max-width: 600px) {
+  .warehouse-footer__actions {
+    flex-direction: column;
+  }
+}
+
+/* =========================================
    📱 MOBILE
    ========================================= */
 @media (max-width: 600px) {
