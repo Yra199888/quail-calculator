@@ -5,9 +5,9 @@
  *
  * БЕЗПЕЧНА ВЕРСІЯ:
  *  - не ламає стару таблицю
- *  - не ламає модалку
- *  - кнопки ➕ / ➖ працюють через делегацію
- *  - всі заголовки українською
+ *  - використовує існуючу модалку #warehouseModal (з index.html)
+ *  - кнопки ➕ / ➖ працюють стабільно (iOS-safe делегація подій)
+ *  - кнопки мають кольорову семантику
  */
 
 import {
@@ -31,16 +31,76 @@ import { renderLogs } from "./logs.render.js";
 ======================================= */
 let modalComponentId = null;
 let modalAction = "add";
+let eventsBound = false;
 
 /* =======================================
-   ГОЛОВНИЙ РЕНДЕР СКЛАДУ
+   ГОЛОВНИЙ РЕНДЕР
 ======================================= */
 export function renderWarehouse() {
+  bindWarehouseEventsOnce();
+
   renderFeedWarehouse();
   renderEggTraysBlock();
   renderTraysBlock();
   renderWarehouseWarnings();
   renderLogs();
+}
+
+/* =======================================
+   ПОДІЇ — 1 РАЗ (iOS-safe)
+======================================= */
+function bindWarehouseEventsOnce() {
+  if (eventsBound) return;
+  eventsBound = true;
+
+  const root = qs("#page-warehouse") || document;
+
+  // 1) ДЕЛЕГАЦІЯ ДЛЯ ➕ / ➖ (і для карток, і для таблиці)
+  const handler = (e) => {
+    const addBtn = e.target.closest("[data-add], [data-add-btn]");
+    if (addBtn) {
+      const id = addBtn.dataset.add || addBtn.dataset.addBtn;
+      if (id) openQtyModal(id, "add");
+      return;
+    }
+
+    const useBtn = e.target.closest("[data-use], [data-use-btn]");
+    if (useBtn) {
+      const id = useBtn.dataset.use || useBtn.dataset.useBtn;
+      if (id) openQtyModal(id, "consume");
+      return;
+    }
+  };
+
+  // iOS: інколи click може не приходити як очікується
+  root.addEventListener("click", handler, true);
+  root.addEventListener("pointerup", handler, true);
+  root.addEventListener("touchend", handler, true);
+
+  // 2) МОДАЛКА: закриття/підтвердження/таби
+  const closeBtn = qs("#modalCloseBtn");
+  const cancelBtn = qs("#modalCancelBtn");
+  const confirmBtn = qs("#modalConfirmBtn");
+  const backdrop = qs("#warehouseModal .modal-backdrop");
+
+  if (closeBtn) closeBtn.addEventListener("click", closeQtyModal);
+  if (cancelBtn) cancelBtn.addEventListener("click", closeQtyModal);
+  if (backdrop) backdrop.addEventListener("click", closeQtyModal);
+  if (confirmBtn) confirmBtn.addEventListener("click", confirmQtyModal);
+
+  root.addEventListener(
+    "click",
+    (e) => {
+      const tab = e.target.closest("#warehouseModal .modal-tabs .tab");
+      if (!tab) return;
+
+      const action = tab.dataset.action;
+      if (action !== "add" && action !== "consume") return;
+
+      setModalAction(action);
+    },
+    true
+  );
 }
 
 /* =======================================
@@ -60,7 +120,7 @@ function renderFeedWarehouse() {
 function renderFeedTable(tbody) {
   tbody.innerHTML = "";
 
-  getFeedComponents().forEach(c => {
+  getFeedComponents().forEach((c) => {
     const stock = getFeedStock(c.id);
 
     tbody.insertAdjacentHTML(
@@ -69,8 +129,8 @@ function renderFeedTable(tbody) {
       <tr>
         <td>${c.name}</td>
         <td>${stock.toFixed(2)}</td>
-        <td><button class="primary" data-add="${c.id}">➕</button></td>
-        <td><button class="danger" data-use="${c.id}">➖</button></td>
+        <td><button class="primary" type="button" data-add-btn="${c.id}">➕</button></td>
+        <td><button class="danger" type="button" data-use-btn="${c.id}">➖</button></td>
       </tr>
       `
     );
@@ -86,9 +146,11 @@ function renderFeedCards(box) {
   const components = getFeedComponents();
   let totalStock = 0;
 
-  components.forEach(c => {
+  components.forEach((c) => {
     const stock = getFeedStock(c.id);
     totalStock += stock;
+
+    const percent = Math.min(100, (stock / 10) * 100);
 
     box.insertAdjacentHTML(
       "beforeend",
@@ -99,9 +161,13 @@ function renderFeedCards(box) {
           <div class="stock">${stock.toFixed(2)} кг</div>
         </div>
 
+        <div class="warehouse-bar">
+          <div class="warehouse-bar__fill" style="width:${percent}%"></div>
+        </div>
+
         <div class="actions">
-          <button class="btn small primary" data-add="${c.id}">➕</button>
-          <button class="btn small danger" data-use="${c.id}">➖</button>
+          <button class="btn small primary" type="button" data-add="${c.id}" title="Додати">➕</button>
+          <button class="btn small danger" type="button" data-use="${c.id}" title="Списати">➖</button>
         </div>
       </div>
       `
@@ -112,89 +178,84 @@ function renderFeedCards(box) {
     "beforeend",
     `
     <div class="warehouse-footer">
-      <div>
-        <b>Загальний залишок корму:</b> ${totalStock.toFixed(2)} кг
+      <div class="warehouse-footer__info">
+        <div class="warehouse-footer__title">Загальний залишок корму</div>
+        <div class="warehouse-footer__value"><b>${totalStock.toFixed(2)}</b> кг</div>
+        <div class="muted" style="font-size:12px">
+          Списання за рецептом виконується через кнопку «Замішати корм»
+        </div>
       </div>
-      <button class="btn primary" id="mixFeedBtn">🌾 Замішати корм</button>
+
+      <div class="warehouse-footer__actions">
+        <button class="btn primary" type="button" id="mixFeedBtn">🌾 Замішати корм</button>
+        <button class="btn danger" type="button" id="consumeFeedBtn" disabled title="Тимчасово недоступно">
+          ➖ Списати корм
+        </button>
+      </div>
     </div>
     `
   );
 }
 
 /* =======================================
-   ДЕЛЕГАЦІЯ ПОДІЙ (КЛЮЧОВИЙ ФІКС)
-======================================= */
-document.addEventListener("click", (e) => {
-  const addBtn = e.target.closest("[data-add]");
-  if (addBtn) {
-    openQtyModal(addBtn.dataset.add, "add");
-    return;
-  }
-
-  const useBtn = e.target.closest("[data-use]");
-  if (useBtn) {
-    openQtyModal(useBtn.dataset.use, "consume");
-    return;
-  }
-});
-
-/* =======================================
-   МОДАЛЬНЕ ВІКНО
+   МОДАЛЬНЕ ВІКНО (#warehouseModal)
 ======================================= */
 function openQtyModal(componentId, action) {
-  const component = getFeedComponents().find(c => c.id === componentId);
+  const component = getFeedComponents().find((c) => c.id === componentId);
   if (!component) return;
 
-  let modal = qs("#qtyModal");
-  if (!modal) {
-    modal = document.createElement("div");
-    modal.id = "qtyModal";
-    document.body.appendChild(modal);
+  const modal = qs("#warehouseModal");
+  const titleEl = qs("#modalTitle");
+  const stockEl = qs("#modalStock");
+  const amountEl = qs("#modalAmount");
+
+  if (!modal || !titleEl || !stockEl || !amountEl) {
+    alert("❌ Не знайдено модальне вікно складу. Перевір #warehouseModal у index.html.");
+    return;
   }
 
   modalComponentId = componentId;
-  modalAction = action;
 
-  modal.className = "";
-  modal.innerHTML = `
-    <div class="modal-backdrop"></div>
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title">${component.name}</div>
-        <button id="qtyModalClose">✕</button>
-      </div>
-      <div class="modal-body">
-        <label>${action === "add" ? "Скільки додати (кг)" : "Скільки списати (кг)"}</label>
-        <input id="qtyModalInput" type="number" value="1" min="0.1" step="0.1">
-      </div>
-      <div class="modal-actions">
-        <button id="qtyModalCancel">Скасувати</button>
-        <button id="qtyModalConfirm">OK</button>
-      </div>
-    </div>
-  `;
+  titleEl.textContent = component.name;
+  stockEl.textContent = `Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг`;
+  amountEl.value = "1";
 
-  qs("#qtyModalClose").onclick = closeQtyModal;
-  qs("#qtyModalCancel").onclick = closeQtyModal;
-  qs("#qtyModalConfirm").onclick = confirmQtyModal;
+  setModalAction(action);
+
+  modal.classList.remove("hidden");
 }
 
 function closeQtyModal() {
-  const modal = qs("#qtyModal");
+  const modal = qs("#warehouseModal");
   if (!modal) return;
-  modal.innerHTML = "";
-  modal.className = "hidden";
+  modal.classList.add("hidden");
   modalComponentId = null;
 }
 
-function confirmQtyModal() {
-  const val = Number(qs("#qtyModalInput")?.value || 0);
-  if (val <= 0 || !modalComponentId) return;
+function setModalAction(action) {
+  modalAction = action;
 
-  if (modalAction === "add") addFeedStock(modalComponentId, val);
-  else if (!consumeFeedStock(modalComponentId, val)) {
-    alert("❌ Недостатньо корму на складі");
-    return;
+  const modal = qs("#warehouseModal");
+  if (!modal) return;
+
+  const tabs = modal.querySelectorAll(".modal-tabs .tab");
+  tabs.forEach((t) => t.classList.toggle("active", t.dataset.action === action));
+}
+
+function confirmQtyModal() {
+  const amountEl = qs("#modalAmount");
+  if (!amountEl || !modalComponentId) return;
+
+  const val = Number(amountEl.value || 0);
+  if (val <= 0) return;
+
+  if (modalAction === "add") {
+    addFeedStock(modalComponentId, val);
+  } else {
+    if (!consumeFeedStock(modalComponentId, val)) {
+      alert("❌ Недостатньо компонента на складі");
+      return;
+    }
   }
 
   saveState();
@@ -210,7 +271,18 @@ function renderEggTraysBlock() {
   if (!box) return;
 
   const stats = calcTrayStats(AppState || {});
-  box.innerHTML = `📦 Повних: ${stats.totalTrays}`;
+  const deficit = Math.max((stats.reservedTrays || 0) - (stats.availableTrays || 0), 0);
+
+  box.innerHTML = `
+    <div class="egg-trays ${deficit > 0 ? "danger" : "ok"}">
+      <div class="egg-trays-grid">
+        <div>📦 Повних: <b>${stats.totalTrays}</b></div>
+        <div>🟡 Резерв: <b>${stats.reservedTrays}</b></div>
+        <div>🟢 Доступно: <b>${stats.availableTrays}</b></div>
+        <div>⚠️ Дефіцит: <b>${deficit}</b></div>
+      </div>
+    </div>
+  `;
 }
 
 function renderTraysBlock() {
@@ -220,13 +292,14 @@ function renderTraysBlock() {
   if (!valueEl || !btn || !input) return;
 
   valueEl.textContent = getEmptyTrays();
+
   btn.onclick = () => {
-    const v = Number(input.value || 0);
-    if (v > 0) {
-      addEmptyTrays(v);
-      saveState();
-      renderWarehouse();
-    }
+    const val = Number(input.value || 0);
+    if (val <= 0) return;
+
+    addEmptyTrays(val);
+    saveState();
+    renderWarehouse();
   };
 }
 
@@ -236,6 +309,6 @@ function renderWarehouseWarnings() {
 
   const warnings = getWarehouseWarnings();
   box.innerHTML = warnings.length
-    ? warnings.map(w => `⚠️ ${w.name}`).join("<br>")
+    ? warnings.map((w) => `⚠️ ${w.name}: ${w.stock} / мін ${w.min}`).join("<br>")
     : "✅ Склад у нормі";
 }
