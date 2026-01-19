@@ -5,9 +5,10 @@
  *
  * БЕЗПЕЧНА ВЕРСІЯ:
  *  - не ламає стару таблицю
- *  - використовує існуючу модалку #warehouseModal (з index.html)
- *  - кнопки ➕ / ➖ працюють стабільно (iOS-safe делегація подій)
+ *  - працює з існуючою модалкою #warehouseModal
+ *  - кнопки ➕ / ➖ стабільно працюють (делегація подій)
  *  - кнопки мають кольорову семантику
+ *  - без бізнес-логіки рецептів (поки що)
  */
 
 import {
@@ -27,80 +28,24 @@ import { AppState } from "../state/AppState.js";
 import { renderLogs } from "./logs.render.js";
 
 /* =======================================
-   СТАН МОДАЛЬНОГО ВІКНА
+   ВНУТРІШНІ ПРАПОРЦІ (ЩОБ НЕ ДУБЛЮВАТИ ОБРОБНИКИ)
 ======================================= */
-let modalComponentId = null;
-let modalAction = "add";
-let eventsBound = false;
+let isWarehouseDelegationBound = false;
+let isWarehouseModalBound = false;
 
 /* =======================================
-   ГОЛОВНИЙ РЕНДЕР
+   ГОЛОВНИЙ РЕНДЕР СКЛАДУ
 ======================================= */
 export function renderWarehouse() {
-  bindWarehouseEventsOnce();
-
   renderFeedWarehouse();
   renderEggTraysBlock();
   renderTraysBlock();
   renderWarehouseWarnings();
   renderLogs();
-}
 
-/* =======================================
-   ПОДІЇ — 1 РАЗ (iOS-safe)
-======================================= */
-function bindWarehouseEventsOnce() {
-  if (eventsBound) return;
-  eventsBound = true;
-
-  const root = qs("#page-warehouse") || document;
-
-  // 1) ДЕЛЕГАЦІЯ ДЛЯ ➕ / ➖ (і для карток, і для таблиці)
-  const handler = (e) => {
-    const addBtn = e.target.closest("[data-add], [data-add-btn]");
-    if (addBtn) {
-      const id = addBtn.dataset.add || addBtn.dataset.addBtn;
-      if (id) openQtyModal(id, "add");
-      return;
-    }
-
-    const useBtn = e.target.closest("[data-use], [data-use-btn]");
-    if (useBtn) {
-      const id = useBtn.dataset.use || useBtn.dataset.useBtn;
-      if (id) openQtyModal(id, "consume");
-      return;
-    }
-  };
-
-  // iOS: інколи click може не приходити як очікується
-  root.addEventListener("click", handler, true);
-  root.addEventListener("pointerup", handler, true);
-  root.addEventListener("touchend", handler, true);
-
-  // 2) МОДАЛКА: закриття/підтвердження/таби
-  const closeBtn = qs("#modalCloseBtn");
-  const cancelBtn = qs("#modalCancelBtn");
-  const confirmBtn = qs("#modalConfirmBtn");
-  const backdrop = qs("#warehouseModal .modal-backdrop");
-
-  if (closeBtn) closeBtn.addEventListener("click", closeQtyModal);
-  if (cancelBtn) cancelBtn.addEventListener("click", closeQtyModal);
-  if (backdrop) backdrop.addEventListener("click", closeQtyModal);
-  if (confirmBtn) confirmBtn.addEventListener("click", confirmQtyModal);
-
-  root.addEventListener(
-    "click",
-    (e) => {
-      const tab = e.target.closest("#warehouseModal .modal-tabs .tab");
-      if (!tab) return;
-
-      const action = tab.dataset.action;
-      if (action !== "add" && action !== "consume") return;
-
-      setModalAction(action);
-    },
-    true
-  );
+  // ✅ 1 раз в житті прив’язуємо делегацію
+  bindWarehouseDelegationOnce();
+  bindWarehouseModalOnce();
 }
 
 /* =======================================
@@ -110,17 +55,20 @@ function renderFeedWarehouse() {
   const cardsBox = qs("#warehouseFeedCards");
   const tableBody = qs("#warehouseFeedTableBody");
 
-  if (cardsBox) renderFeedCards(cardsBox);
-  else if (tableBody) renderFeedTable(tableBody);
+  if (cardsBox) {
+    renderFeedCards(cardsBox);
+  } else if (tableBody) {
+    renderFeedTable(tableBody);
+  }
 }
 
 /* =======================================
-   СТАРА ТАБЛИЦЯ (РЕЗЕРВ)
+   СТАРА ТАБЛИЦЯ (РЕЗЕРВНИЙ ВАРІАНТ)
 ======================================= */
 function renderFeedTable(tbody) {
   tbody.innerHTML = "";
 
-  getFeedComponents().forEach((c) => {
+  getFeedComponents().forEach(c => {
     const stock = getFeedStock(c.id);
 
     tbody.insertAdjacentHTML(
@@ -129,8 +77,8 @@ function renderFeedTable(tbody) {
       <tr>
         <td>${c.name}</td>
         <td>${stock.toFixed(2)}</td>
-        <td><button class="primary" type="button" data-add-btn="${c.id}">➕</button></td>
-        <td><button class="danger" type="button" data-use-btn="${c.id}">➖</button></td>
+        <td><button class="primary" data-add-btn="${c.id}" type="button">➕</button></td>
+        <td><button class="danger" data-use-btn="${c.id}" type="button">➖</button></td>
       </tr>
       `
     );
@@ -138,7 +86,7 @@ function renderFeedTable(tbody) {
 }
 
 /* =======================================
-   КАРТКИ КОМПОНЕНТІВ
+   КАРТКИ КОМПОНЕНТІВ СКЛАДУ
 ======================================= */
 function renderFeedCards(box) {
   box.innerHTML = "";
@@ -146,10 +94,11 @@ function renderFeedCards(box) {
   const components = getFeedComponents();
   let totalStock = 0;
 
-  components.forEach((c) => {
+  components.forEach(c => {
     const stock = getFeedStock(c.id);
     totalStock += stock;
 
+    // просто візуальний індикатор (не бізнес-логіка)
     const percent = Math.min(100, (stock / 10) * 100);
 
     box.insertAdjacentHTML(
@@ -161,36 +110,37 @@ function renderFeedCards(box) {
           <div class="stock">${stock.toFixed(2)} кг</div>
         </div>
 
-        <div class="warehouse-bar">
-          <div class="warehouse-bar__fill" style="width:${percent}%"></div>
+        <div class="warehouse-bar" style="margin-top:10px; border:1px solid var(--border-color); border-radius:10px; overflow:hidden;">
+          <div class="warehouse-bar__fill" style="height:8px; width:${percent}%; background: rgba(76,175,80,0.65);"></div>
         </div>
 
-        <div class="actions">
-          <button class="btn small primary" type="button" data-add="${c.id}" title="Додати">➕</button>
-          <button class="btn small danger" type="button" data-use="${c.id}" title="Списати">➖</button>
+        <div class="actions" style="margin-top:10px; display:flex; gap:8px;">
+          <button class="btn small primary" data-add="${c.id}" title="Додати" type="button">➕</button>
+          <button class="btn small danger" data-use="${c.id}" title="Списати" type="button">➖</button>
         </div>
       </div>
       `
     );
   });
 
+  // нижній блок
   box.insertAdjacentHTML(
     "beforeend",
     `
-    <div class="warehouse-footer">
+    <div class="warehouse-footer" style="margin-top:12px; border:1px solid var(--border-color); border-radius:14px; padding:12px; background: var(--bg-panel); display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
       <div class="warehouse-footer__info">
-        <div class="warehouse-footer__title">Загальний залишок корму</div>
-        <div class="warehouse-footer__value"><b>${totalStock.toFixed(2)}</b> кг</div>
-        <div class="muted" style="font-size:12px">
+        <div class="warehouse-footer__title" style="font-weight:800;">Загальний залишок корму</div>
+        <div class="warehouse-footer__value" style="margin-top:4px;">
+          <b style="font-size:18px;">${totalStock.toFixed(2)}</b> кг
+        </div>
+        <div class="muted" style="font-size:12px; margin-top:4px;">
           Списання за рецептом виконується через кнопку «Замішати корм»
         </div>
       </div>
 
-      <div class="warehouse-footer__actions">
-        <button class="btn primary" type="button" id="mixFeedBtn">🌾 Замішати корм</button>
-        <button class="btn danger" type="button" id="consumeFeedBtn" disabled title="Тимчасово недоступно">
-          ➖ Списати корм
-        </button>
+      <div class="warehouse-footer__actions" style="display:flex; gap:8px;">
+        <button class="btn primary" id="mixFeedBtn" type="button">🌾 Замішати корм</button>
+        <button class="btn danger" id="consumeFeedBtn" type="button" disabled title="Тимчасово недоступно">➖ Списати корм</button>
       </div>
     </div>
     `
@@ -198,69 +148,149 @@ function renderFeedCards(box) {
 }
 
 /* =======================================
-   МОДАЛЬНЕ ВІКНО (#warehouseModal)
+   ДЕЛЕГАЦІЯ КЛІКІВ ДЛЯ СКЛАДУ (1 РАЗ)
+   - працює і для таблиці, і для карток
 ======================================= */
-function openQtyModal(componentId, action) {
-  const component = getFeedComponents().find((c) => c.id === componentId);
-  if (!component) return;
+function bindWarehouseDelegationOnce() {
+  if (isWarehouseDelegationBound) return;
+  isWarehouseDelegationBound = true;
 
-  const modal = qs("#warehouseModal");
-  const titleEl = qs("#modalTitle");
-  const stockEl = qs("#modalStock");
-  const amountEl = qs("#modalAmount");
+  document.addEventListener("click", (e) => {
+    const addBtn = e.target.closest("[data-add],[data-add-btn]");
+    const useBtn = e.target.closest("[data-use],[data-use-btn]");
+
+    if (!addBtn && !useBtn) return;
+
+    const componentId =
+      (addBtn?.dataset.add || addBtn?.dataset.addBtn) ??
+      (useBtn?.dataset.use || useBtn?.dataset.useBtn);
+
+    if (!componentId) return;
+
+    const action = addBtn ? "add" : "consume";
+    openWarehouseModal(componentId, action);
+  });
+}
+
+/* =======================================
+   МОДАЛКА СКЛАДУ (ПРИВ’ЯЗКА 1 РАЗ)
+======================================= */
+function bindWarehouseModalOnce() {
+  if (isWarehouseModalBound) return;
+  isWarehouseModalBound = true;
+
+  // закриття
+  document.addEventListener("click", (e) => {
+    const close =
+      e.target.closest("#modalCloseBtn") ||
+      e.target.closest("#modalCancelBtn") ||
+      e.target.closest("#warehouseModal .modal-backdrop");
+
+    if (!close) return;
+
+    const modal = document.getElementById("warehouseModal");
+    if (modal) modal.classList.add("hidden");
+  });
+
+  // перемикання вкладок (➕ / ➖)
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest("#warehouseModal .modal-tabs .tab");
+    if (!tab) return;
+
+    const action = tab.dataset.action;
+    if (action !== "add" && action !== "consume") return;
+
+    AppState.ui ||= {};
+    AppState.ui.warehouseModal ||= {};
+    AppState.ui.warehouseModal.action = action;
+
+    const modal = document.getElementById("warehouseModal");
+    if (!modal) return;
+
+    modal.querySelectorAll(".modal-tabs .tab").forEach((t) => {
+      t.classList.toggle("active", t.dataset.action === action);
+    });
+
+    // оновимо текст "Поточний залишок"
+    const stockEl = document.getElementById("modalStock");
+    const componentId = AppState.ui?.warehouseModal?.componentId;
+    if (stockEl && componentId) {
+      stockEl.textContent = `Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг`;
+    }
+  });
+
+  // підтвердження
+  document.addEventListener("click", (e) => {
+    const okBtn = e.target.closest("#modalConfirmBtn");
+    if (!okBtn) return;
+
+    const modal = document.getElementById("warehouseModal");
+    const amountEl = document.getElementById("modalAmount");
+    const ui = AppState.ui?.warehouseModal;
+
+    if (!modal || !amountEl || !ui?.componentId) {
+      alert("❌ Не вдалося виконати дію складу (немає даних модалки).");
+      return;
+    }
+
+    const val = Number(amountEl.value || 0);
+    if (!(val > 0)) return;
+
+    const action = ui.action || "add";
+
+    if (action === "add") {
+      addFeedStock(ui.componentId, val);
+    } else {
+      const ok = consumeFeedStock(ui.componentId, val);
+      if (!ok) {
+        alert("❌ Недостатньо компонента на складі");
+        return;
+      }
+    }
+
+    saveState();
+    modal.classList.add("hidden");
+    renderWarehouse();
+  });
+}
+
+/* =======================================
+   ВІДКРИТТЯ МОДАЛКИ СКЛАДУ
+======================================= */
+function openWarehouseModal(componentId, action) {
+  const modal = document.getElementById("warehouseModal");
+  const titleEl = document.getElementById("modalTitle");
+  const stockEl = document.getElementById("modalStock");
+  const amountEl = document.getElementById("modalAmount");
 
   if (!modal || !titleEl || !stockEl || !amountEl) {
-    alert("❌ Не знайдено модальне вікно складу. Перевір #warehouseModal у index.html.");
+    alert("❌ Модальне вікно складу не знайдено (#warehouseModal).");
     return;
   }
 
-  modalComponentId = componentId;
+  const component = (getFeedComponents() || []).find((c) => c.id === componentId);
+  if (!component) {
+    alert("❌ Компонент не знайдено.");
+    return;
+  }
 
+  // збереження стану модалки
+  AppState.ui ||= {};
+  AppState.ui.warehouseModal ||= {};
+  AppState.ui.warehouseModal.componentId = componentId;
+  AppState.ui.warehouseModal.action = action;
+
+  // наповнення
   titleEl.textContent = component.name;
   stockEl.textContent = `Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг`;
   amountEl.value = "1";
 
-  setModalAction(action);
+  // активна вкладка
+  modal.querySelectorAll(".modal-tabs .tab").forEach((t) => {
+    t.classList.toggle("active", t.dataset.action === action);
+  });
 
   modal.classList.remove("hidden");
-}
-
-function closeQtyModal() {
-  const modal = qs("#warehouseModal");
-  if (!modal) return;
-  modal.classList.add("hidden");
-  modalComponentId = null;
-}
-
-function setModalAction(action) {
-  modalAction = action;
-
-  const modal = qs("#warehouseModal");
-  if (!modal) return;
-
-  const tabs = modal.querySelectorAll(".modal-tabs .tab");
-  tabs.forEach((t) => t.classList.toggle("active", t.dataset.action === action));
-}
-
-function confirmQtyModal() {
-  const amountEl = qs("#modalAmount");
-  if (!amountEl || !modalComponentId) return;
-
-  const val = Number(amountEl.value || 0);
-  if (val <= 0) return;
-
-  if (modalAction === "add") {
-    addFeedStock(modalComponentId, val);
-  } else {
-    if (!consumeFeedStock(modalComponentId, val)) {
-      alert("❌ Недостатньо компонента на складі");
-      return;
-    }
-  }
-
-  saveState();
-  closeQtyModal();
-  renderWarehouse();
 }
 
 /* =======================================
@@ -271,7 +301,10 @@ function renderEggTraysBlock() {
   if (!box) return;
 
   const stats = calcTrayStats(AppState || {});
-  const deficit = Math.max((stats.reservedTrays || 0) - (stats.availableTrays || 0), 0);
+  const deficit = Math.max(
+    (stats.reservedTrays || 0) - (stats.availableTrays || 0),
+    0
+  );
 
   box.innerHTML = `
     <div class="egg-trays ${deficit > 0 ? "danger" : "ok"}">
@@ -289,6 +322,7 @@ function renderTraysBlock() {
   const valueEl = qs("#emptyTraysValue");
   const btn = qs("#addEmptyTraysBtn");
   const input = qs("#addEmptyTraysInput");
+
   if (!valueEl || !btn || !input) return;
 
   valueEl.textContent = getEmptyTrays();
@@ -309,6 +343,6 @@ function renderWarehouseWarnings() {
 
   const warnings = getWarehouseWarnings();
   box.innerHTML = warnings.length
-    ? warnings.map((w) => `⚠️ ${w.name}: ${w.stock} / мін ${w.min}`).join("<br>")
+    ? warnings.map(w => `⚠️ ${w.name}: ${w.stock} / мін ${w.min}`).join("<br>")
     : "✅ Склад у нормі";
 }
