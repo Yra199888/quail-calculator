@@ -14,24 +14,26 @@ console.log("🔥 app.js EXECUTED");
 import { initFirebase } from "./firebase/firebase.js";
 
 // =======================================
-// STATE
+// СТАН
 // =======================================
 import { AppState } from "./state/AppState.js";
 import { loadState } from "./state/state.load.js";
 import { saveState } from "./state/state.save.js";
 import { ensureState } from "./state/state.ensure.js";
 
-// ✅ потрібно для mixFeedBtn (інакше буде ReferenceError)
+// ✅ потрібно для mixFeedBtn
 // ✅ + для “один лог змішування” (setLogSilent + addMixLog)
+// ✅ + для кнопок ➕ (addFeedStock) у складі
 import {
   getFeedStock,
+  addFeedStock, // ✅ ДОДАНО
   consumeFeedStock,
   setLogSilent,
   addMixLog
 } from "./services/warehouse.service.js";
 
 // =======================================
-// CONTROLLERS
+// КОНТРОЛЕРИ
 // =======================================
 import { EggsFormController } from "./controllers/EggsFormController.js";
 import { FeedFormController } from "./controllers/FeedFormController.js";
@@ -39,7 +41,7 @@ import { OrdersFormController } from "./controllers/OrdersFormController.js";
 import { FeedRecipesController } from "./controllers/FeedRecipesController.js";
 
 // =======================================
-// RENDER
+// РЕНДЕР
 // =======================================
 import { renderEggs } from "./render/eggs.render.js";
 import { renderFeed } from "./render/feed.render.js";
@@ -48,28 +50,28 @@ import { renderOrders } from "./render/orders.render.js";
 import { renderRecipes } from "./render/recipes.render.js";
 
 // =======================================
-// UI
+// ІНТЕРФЕЙС
 // =======================================
 import { initNavigation } from "./ui/navigation.js";
 import { initToggles } from "./ui/toggles.js";
 import { initWarnings } from "./ui/warnings.js";
 
 // =======================================
-// CAGES
+// КЛІТКИ
 // =======================================
 import { renderCages } from "./render/cages.render.js";
 import { CagesController } from "./controllers/CagesController.js";
 
-// DEBUG
+// НАЛАГОДЖЕННЯ
 window.AppState = AppState;
 
 // =======================================
-// 🧲 DRAG STATE
+// 🧲 СТАН ПЕРЕТЯГУВАННЯ КОМПОНЕНТІВ КОРМУ
 // =======================================
 let draggedFeedId = null;
 
 // =======================================
-// START
+// СТАРТ
 // =======================================
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -78,27 +80,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 0️⃣ Firebase
     initFirebase();
 
-    // 1️⃣ Load state
+    // 1️⃣ Завантаження стану
     await loadState();
 
-    // 2️⃣ Ensure structure
+    // 2️⃣ Забезпечення структури
     ensureState();
 
-    // 3️⃣ UI
+    // 3️⃣ Ініціалізація інтерфейсу
     initNavigation();
     initToggles();
     initWarnings();
 
-    // 4️⃣ First render
+    // 4️⃣ Перший рендер
     renderAll();
 
-    // 5️⃣ Controllers
+    // 5️⃣ Контролери
     initControllers();
 
-    // 6️⃣ Global actions
+    // 6️⃣ Глобальні дії
     initGlobalActions();
 
-    // 7️⃣ Realtime sync
+    // 7️⃣ Реакція на оновлення стану
     window.addEventListener("appstate:updated", renderAll);
 
     console.groupEnd();
@@ -109,10 +111,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // =======================================
-// CONTROLLERS
+// КОНТРОЛЕРИ
 // =======================================
 function initControllers() {
-  // 🥚 Eggs
+  // 🥚 Яйця
   new EggsFormController({
     onSave: ({ date, good, bad, home }) => {
       AppState.eggs.records[date] = { good, bad, home };
@@ -122,7 +124,7 @@ function initControllers() {
     }
   });
 
-  // 🌾 Feed
+  // 🌾 Корм
   const feedForm = new FeedFormController({
     onChange: ({ type, id, value }) => {
       if ((type === "qty" || type === "price") && id) {
@@ -144,10 +146,10 @@ function initControllers() {
 
   feedForm.init();
 
-  // 📦 Orders
+  // 📦 Замовлення
   new OrdersFormController({ AppState });
 
-  // 📘 Recipes
+  // 📘 Рецепти
   new FeedRecipesController({
     AppState,
     saveState,
@@ -157,8 +159,8 @@ function initControllers() {
       renderFeed();
     }
   });
-  
-  // 🐦 Cages
+
+  // 🐦 Клітки
   new CagesController({
     saveState,
     onChange: () => {
@@ -169,12 +171,125 @@ function initControllers() {
 }
 
 // =======================================
-// GLOBAL ACTIONS (УСЯ ДЕЛЕГАЦІЯ)
+// ГЛОБАЛЬНІ ДІЇ (УСЯ ДЕЛЕГАЦІЯ)
 // =======================================
 function initGlobalActions() {
   document.addEventListener("click", (e) => {
+    // =========================================================
+    // 📦 СКЛАД: КНОПКИ ➕ / ➖ (ДЕЛЕГАЦІЯ ДЛЯ ТАБЛИЦІ І КАРТОК)
+    // =========================================================
+    const addBtn = e.target.closest("[data-add],[data-add-btn]");
+    const useBtn = e.target.closest("[data-use],[data-use-btn]");
+
+    if (addBtn || useBtn) {
+      const componentId =
+        (addBtn?.dataset.add || addBtn?.dataset.addBtn) ??
+        (useBtn?.dataset.use || useBtn?.dataset.useBtn);
+
+      const action = addBtn ? "add" : "consume";
+
+      const modal = document.getElementById("warehouseModal");
+      const titleEl = document.getElementById("modalTitle");
+      const stockEl = document.getElementById("modalStock");
+      const amountEl = document.getElementById("modalAmount");
+
+      if (!modal || !titleEl || !stockEl || !amountEl) {
+        alert("❌ Модальне вікно складу не знайдено (#warehouseModal).");
+        return;
+      }
+
+      const component = (AppState.feedComponents || []).find((c) => c.id === componentId);
+      if (!component) {
+        alert("❌ Компонент не знайдено.");
+        return;
+      }
+
+      // збереження стану модалки
+      AppState.ui ||= {};
+      AppState.ui.warehouseModal ||= {};
+      AppState.ui.warehouseModal.componentId = componentId;
+      AppState.ui.warehouseModal.action = action;
+
+      // наповнення модалки
+      titleEl.textContent = component.name;
+      stockEl.textContent = `Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг`;
+      amountEl.value = "1";
+
+      // активна вкладка в модалці
+      const tabs = modal.querySelectorAll(".modal-tabs .tab");
+      tabs.forEach((t) => t.classList.toggle("active", t.dataset.action === action));
+
+      modal.classList.remove("hidden");
+      return;
+    }
+
+    // =========================================================
+    // 📦 СКЛАД: ПЕРЕМИКАННЯ ВКЛАДОК МОДАЛКИ (➕ / ➖)
+    // =========================================================
+    const tab = e.target.closest("#warehouseModal .modal-tabs .tab");
+    if (tab) {
+      const action = tab.dataset.action;
+      if (action !== "add" && action !== "consume") return;
+
+      AppState.ui ||= {};
+      AppState.ui.warehouseModal ||= {};
+      AppState.ui.warehouseModal.action = action;
+
+      const modal = document.getElementById("warehouseModal");
+      if (!modal) return;
+
+      const tabs = modal.querySelectorAll(".modal-tabs .tab");
+      tabs.forEach((t) => t.classList.toggle("active", t.dataset.action === action));
+      return;
+    }
+
+    // =========================================================
+    // 📦 СКЛАД: ПІДТВЕРДЖЕННЯ В МОДАЛЦІ
+    // =========================================================
+    const modalConfirm = e.target.closest("#modalConfirmBtn");
+    if (modalConfirm) {
+      const modal = document.getElementById("warehouseModal");
+      const amountEl = document.getElementById("modalAmount");
+      const ui = AppState.ui?.warehouseModal;
+
+      if (!modal || !amountEl || !ui?.componentId || !ui?.action) return;
+
+      const val = Number(amountEl.value || 0);
+      if (val <= 0) return;
+
+      if (ui.action === "add") {
+        addFeedStock(ui.componentId, val);
+      } else {
+        const ok = consumeFeedStock(ui.componentId, val);
+        if (!ok) {
+          alert("❌ Недостатньо компонента на складі");
+          return;
+        }
+      }
+
+      saveState();
+      modal.classList.add("hidden");
+      renderWarehouse();
+      return;
+    }
+
+    // =========================================================
+    // 📦 СКЛАД: ЗАКРИТТЯ МОДАЛКИ
+    // =========================================================
+    const modalClose =
+      e.target.closest("#modalCloseBtn") ||
+      e.target.closest("#modalCancelBtn") ||
+      e.target.closest("#warehouseModal .modal-backdrop");
+
+    if (modalClose) {
+      const modal = document.getElementById("warehouseModal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      return;
+    }
+
     // =========================
-    // 🧾 LOGS UI (ФІЛЬТР / ВИДАЛЕННЯ)
+    // 🧾 ЖУРНАЛ (ФІЛЬТР / ВИДАЛЕННЯ)
     // =========================
 
     // фільтр журналу
@@ -207,7 +322,7 @@ function initGlobalActions() {
     }
 
     // =========================
-    // 🧾 ORDERS
+    // 📑 ЗАМОВЛЕННЯ
     // =========================
 
     const addOrderBtn = e.target.closest("#order-add-btn");
@@ -288,7 +403,7 @@ function initGlobalActions() {
     }
 
     // =========================
-    // 🌾 MIX FEED (ВИПРАВЛЕНО: 1 LOG "feed:mix")
+    // 🌾 ЗМІШАТИ КОРМ (1 ЗАПИС У ЖУРНАЛІ feed:mix)
     // =========================
     const mixFeedBtn = e.target.closest("#mixFeedBtn");
     if (mixFeedBtn) {
@@ -339,10 +454,6 @@ function initGlobalActions() {
       )
         return;
 
-      // ✅ 1) глушимо дрібні логи feed:consume
-      // ✅ 2) списуємо
-      // ✅ 3) вмикаємо логи назад
-      // ✅ 4) додаємо ОДИН лог feed:mix
       try {
         setLogSilent(true);
         toConsume.forEach((x) => consumeFeedStock(x.id, x.qty));
@@ -365,7 +476,7 @@ function initGlobalActions() {
     }
 
     // =========================
-    // 🌾 FEED UI
+    // 🌾 КОРМ (ІНТЕРФЕЙС)
     // =========================
     if (e.target.closest("#addFeedComponentBtn")) {
       addFeedComponent();
@@ -402,7 +513,7 @@ function initGlobalActions() {
   });
 
   // ===============================
-  // 🧲 DRAG & DROP FEED
+  // 🧲 ПЕРЕТЯГУВАННЯ КОМПОНЕНТІВ КОРМУ
   // ===============================
   document.addEventListener("dragstart", (e) => {
     const row = e.target.closest("tr[data-id]");
@@ -442,7 +553,7 @@ function initGlobalActions() {
 }
 
 // =======================================
-// HELPERS
+// ДОПОМІЖНІ ФУНКЦІЇ
 // =======================================
 function addFeedComponent() {
   const c = {
