@@ -18,10 +18,7 @@
         <button class="nav-btn active" data-page="eggs">🥚 Яйця</button>
         <button class="nav-btn" data-page="feed">🌾 Корм</button>
         <button class="nav-btn" data-page="warehouse">📦 Склад</button>
-
-        <!-- ✅ ДОДАНО: НОВА ВКЛАДКА -->
         <button class="nav-btn" data-page="cages">🐦 Клітки</button>
-
         <button class="nav-btn" data-page="orders">📑 Замовлення</button>
         <button class="nav-btn" data-page="recipes">📋 Рецепти</button>
       </nav>
@@ -34,33 +31,16 @@
       <section class="page active" id="page-eggs">
         <div class="panel">
           <div class="panel-title">🥚 Облік яєць</div>
-
           <form id="eggs-form">
             <div class="form-row">
-              <div>
-                <label>Дата</label>
-                <input type="date" id="eggs-date" />
-              </div>
-              <div>
-                <label>Хороші</label>
-                <input type="number" id="eggs-good" />
-              </div>
-              <div>
-                <label>Брак</label>
-                <input type="number" id="eggs-bad" />
-              </div>
-              <div>
-                <label>Домашні</label>
-                <input type="number" id="eggs-home" />
-              </div>
+              <div><label>Дата</label><input type="date" id="eggs-date" /></div>
+              <div><label>Хороші</label><input type="number" id="eggs-good" /></div>
+              <div><label>Брак</label><input type="number" id="eggs-bad" /></div>
+              <div><label>Домашні</label><input type="number" id="eggs-home" /></div>
             </div>
-
-            <button type="button" class="primary" id="eggs-save-btn">
-              💾 Зберегти
-            </button>
+            <button type="button" class="primary" id="eggs-save-btn">💾 Зберегти</button>
           </form>
         </div>
-
         <div id="eggs-report"></div>
       </section>
 
@@ -68,7 +48,6 @@
       <section class="page" id="page-feed">
         <div class="panel">
           <div class="panel-title">🌾 Калькулятор корму</div>
-
           <table class="feed-table">
             <thead>
               <tr>
@@ -105,7 +84,6 @@
       <section class="page" id="page-warehouse">
         <div class="panel">
           <div class="panel-title">📦 Склад</div>
-
           <div id="warehouseFeedCards"></div>
 
           <table class="feed-table">
@@ -131,123 +109,16 @@
 
         <div class="panel" id="warehouseLogsPanel">
           <div class="panel-title">🧾 Журнал складу</div>
-          <div class="log-filters">
-            <select id="logFilterCategory">
-              <option value="">Усі категорії</option>
-              <option value="feed">Корм</option>
-              <option value="warehouse">Склад</option>
-              <option value="orders">Замовлення</option>
-            </select>
-
-            <select id="logFilterAction">
-              <option value="">Усі дії</option>
-              <option value="add">Додавання</option>
-              <option value="consume">Списання</option>
-              <option value="mix">Змішування</option>
-              <option value="reserve">Бронювання</option>
-            </select>
-          </div>
-
           <div id="warehouseLogs"></div>
         </div>
-      </section>
-
-      <!-- ✅ КЛІТКИ -->
-      <section class="page" id="page-cages">
-        <div class="panel">
-          <div class="panel-title">🐦 Клітки</div>
-
-          <div class="form-row">
-            <button class="primary" id="cage-add-btn">➕ Додати клітку</button>
-          </div>
-
-          <!-- тут буде список кліток -->
-          <div id="cagesList" class="muted">
-            Поки що немає кліток. Натисни “➕ Додати клітку”.
-          </div>
-        </div>
-
-        <!-- деталі вибраної клітки (пізніше) -->
-        <div class="panel" id="cageDetailsPanel" style="display:none;">
-          <div class="panel-title" id="cageDetailsTitle">Клітка</div>
-          <div id="cageDetails"></div>
-        </div>
-      </section>
-
-      <!-- 📑 ЗАМОВЛЕННЯ -->
-      <section class="page" id="page-orders">
-        <div class="panel">
-          <div class="panel-title">📑 Замовлення</div>
-          <table class="feed-table">
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Клієнт</th>
-                <th>Лотки</th>
-                <th>Примітка</th>
-              </tr>
-            </thead>
-            <tbody id="ordersTableBody"></tbody>
-          </table>
-        </div>
-
-        <div class="panel">
-          <div class="panel-title">➕ Нове замовлення</div>
-          <div class="form-row">
-            <div>
-              <label>Дата</label>
-              <input type="date" id="order-date">
-            </div>
-            <div>
-              <label>Клієнт</label>
-              <input type="text" id="order-client">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div>
-              <label>Лотки</label>
-              <input type="number" id="order-trays" min="1">
-            </div>
-            <div>
-              <label>Примітка</label>
-              <input type="text" id="order-details">
-            </div>
-          </div>
-
-          <button class="primary" id="order-add-btn">➕ Додати замовлення</button>
-        </div>
-      </section>
-
-      <!-- 📋 РЕЦЕПТИ -->
-      <section class="page" id="page-recipes">
-        <div class="panel">
-          <div class="panel-title">📋 Рецепти корму</div>
-
-          <div class="form-row">
-            <input id="recipe-name" placeholder="Назва рецепту" />
-            <button class="primary" id="recipe-save-btn">💾 Зберегти</button>
-          </div>
-
-          <div class="form-row">
-            <select id="recipe-select"></select>
-            <button id="recipe-load-btn">📂 Завантажити</button>
-            <button class="danger" id="recipe-delete-btn">🗑 Видалити</button>
-          </div>
-        </div>
-
-        <div id="recipes-content"></div>
       </section>
 
     </main>
   </div>
 
-  <!-- =========================
-       📦 MODAL: ADD / CONSUME FEED
-       ========================= -->
+  <!-- 📦 МОДАЛЬНЕ ВІКНО СКЛАДУ (ЄДИНЕ І ПРАВИЛЬНЕ) -->
   <div id="warehouseModal" class="modal hidden">
     <div class="modal-backdrop"></div>
-
     <div class="modal-card">
       <div class="modal-head">
         <div class="modal-title" id="modalTitle">Компонент</div>
@@ -255,23 +126,14 @@
       </div>
 
       <div class="modal-body">
-        <div class="modal-subtitle" id="modalStock">
-          Поточний залишок: 0 кг
-        </div>
-
+        <div class="modal-subtitle" id="modalStock">Поточний залишок: 0 кг</div>
         <div class="modal-tabs">
           <button class="tab active" data-action="add">➕ Додати</button>
           <button class="tab" data-action="consume">➖ Списати</button>
         </div>
 
         <label class="modal-label">Кількість (кг)</label>
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          class="modal-input"
-          id="modalAmount"
-        />
+        <input type="number" step="0.1" min="0" class="modal-input" id="modalAmount" />
       </div>
 
       <div class="modal-actions">
@@ -280,9 +142,6 @@
       </div>
     </div>
   </div>
-  
-  <!-- 🧾 Модальне вікно складу -->
-<div id="qtyModal" class="hidden"></div>
 
   <script type="module" src="./app.js"></script>
 </body>
