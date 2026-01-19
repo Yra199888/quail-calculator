@@ -8,6 +8,23 @@ console.log("🔥 app.js EXECUTED");
  * ❗ УСЕ, ЩО БУЛО — ЛИШИЛОСЬ
  */
 
+// === ДІАГНОСТИКА ERUDA (тимчасово) ===
+(() => {
+  const orig = console.log;
+  console.log = function (...args) {
+    try {
+      const msg = args.map(String).join(" ");
+      if (msg.includes("Eruda") || msg.includes("eruda")) {
+        throw new Error("Піймали повідомлення про Eruda");
+      }
+    } catch (e) {
+      console.error(e);
+      console.error("ARGS:", args);
+    }
+    return orig.apply(console, args);
+  };
+})();
+
 // =======================================
 // 🔥 FIREBASE — ОБОВʼЯЗКОВО ПЕРШИМ
 // =======================================
