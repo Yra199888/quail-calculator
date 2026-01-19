@@ -2,11 +2,13 @@
  * warehouse.render.js
  * ---------------------------------------
  * Відповідає ТІЛЬКИ за відображення складу
- * SAFE-версія:
+ *
+ * БЕЗПЕЧНА ВЕРСІЯ:
  *  - не ламає стару таблицю
  *  - не ламає модалку
- *  - додає індикатори
- *  - додає нижній блок дій
+ *  - кнопки ➕ / ➖ стабільно працюють
+ *  - кнопки мають кольорову семантику
+ *  - без бізнес-логіки
  */
 
 import {
@@ -26,13 +28,13 @@ import { AppState } from "../state/AppState.js";
 import { renderLogs } from "./logs.render.js";
 
 /* =======================================
-   MODAL STATE
+   СТАН МОДАЛЬНОГО ВІКНА
 ======================================= */
 let modalComponentId = null;
 let modalAction = "add";
 
 /* =======================================
-   MAIN RENDER
+   ГОЛОВНИЙ РЕНДЕР СКЛАДУ
 ======================================= */
 export function renderWarehouse() {
   renderFeedWarehouse();
@@ -43,7 +45,7 @@ export function renderWarehouse() {
 }
 
 /* =======================================
-   FEED AUTO MODE
+   ВИБІР РЕЖИМУ ВІДОБРАЖЕННЯ
 ======================================= */
 function renderFeedWarehouse() {
   const cardsBox = qs("#warehouseFeedCards");
@@ -57,7 +59,7 @@ function renderFeedWarehouse() {
 }
 
 /* =======================================
-   OLD TABLE (SAFE FALLBACK)
+   СТАРА ТАБЛИЦЯ (РЕЗЕРВНИЙ ВАРІАНТ)
 ======================================= */
 function renderFeedTable(tbody) {
   tbody.innerHTML = "";
@@ -71,8 +73,8 @@ function renderFeedTable(tbody) {
       <tr>
         <td>${c.name}</td>
         <td>${stock.toFixed(2)}</td>
-        <td><button data-add-btn="${c.id}">➕</button></td>
-        <td><button data-use-btn="${c.id}">➖</button></td>
+        <td><button class="primary" data-add-btn="${c.id}">➕</button></td>
+        <td><button class="danger" data-use-btn="${c.id}">➖</button></td>
       </tr>
       `
     );
@@ -92,7 +94,7 @@ function bindTableActions() {
 }
 
 /* =======================================
-   CARDS MODE (ПОКРАЩЕНИЙ)
+   КАРТКИ КОМПОНЕНТІВ СКЛАДУ
 ======================================= */
 function renderFeedCards(box) {
   box.innerHTML = "";
@@ -104,7 +106,7 @@ function renderFeedCards(box) {
     const stock = getFeedStock(c.id);
     totalStock += stock;
 
-    const percent = Math.min(100, (stock / 10) * 100); // без ризику, просто індикатор
+    const percent = Math.min(100, (stock / 10) * 100);
 
     box.insertAdjacentHTML(
       "beforeend",
@@ -120,32 +122,33 @@ function renderFeedCards(box) {
         </div>
 
         <div class="actions">
-          <button class="btn small" data-add="${c.id}" title="Додати">➕</button>
-          <button class="btn small" data-use="${c.id}" title="Списати">➖</button>
+          <button class="btn small primary" data-add="${c.id}" title="Додати">➕</button>
+          <button class="btn small danger" data-use="${c.id}" title="Списати">➖</button>
         </div>
       </div>
       `
     );
   });
 
-  /* ===== НИЖНІЙ БЛОК ===== */
   box.insertAdjacentHTML(
     "beforeend",
     `
     <div class="warehouse-footer">
       <div class="warehouse-footer__info">
-        <div class="warehouse-footer__title">Залишок корму</div>
+        <div class="warehouse-footer__title">Загальний залишок корму</div>
         <div class="warehouse-footer__value">
           <b>${totalStock.toFixed(2)}</b> кг
         </div>
         <div class="muted" style="font-size:12px">
-          Розрахунок за рецептом буде підключено пізніше
+          Списання за рецептом виконується через кнопку «Замішати корм»
         </div>
       </div>
 
       <div class="warehouse-footer__actions">
         <button class="btn primary" id="mixFeedBtn">🌾 Замішати корм</button>
-        <button class="btn" id="consumeFeedBtn">➖ Списати корм</button>
+        <button class="btn danger" id="consumeFeedBtn" disabled title="Тимчасово недоступно">
+          ➖ Списати корм
+        </button>
       </div>
     </div>
     `
@@ -155,7 +158,7 @@ function renderFeedCards(box) {
 }
 
 /* =======================================
-   CARD ACTIONS
+   ДІЇ НА КАРТКАХ КОМПОНЕНТІВ
 ======================================= */
 function bindCardActions() {
   qsa("[data-add]").forEach(btn => {
@@ -165,24 +168,10 @@ function bindCardActions() {
   qsa("[data-use]").forEach(btn => {
     btn.onclick = () => openQtyModal(btn.dataset.use, "consume");
   });
-
-  const mixBtn = qs("#mixFeedBtn");
-  if (mixBtn) {
-    mixBtn.onclick = () => {
-      alert("🌾 Замішування корму буде реалізовано пізніше");
-    };
-  }
-
-  const consumeBtn = qs("#consumeFeedBtn");
-  if (consumeBtn) {
-    consumeBtn.onclick = () => {
-      alert("➖ Списання корму (заглушка)");
-    };
-  }
 }
 
 /* =======================================
-   MODAL LOGIC (НЕ ЧІПАЛИ)
+   ЛОГІКА МОДАЛЬНОГО ВІКНА
 ======================================= */
 function openQtyModal(componentId, action) {
   const component = getFeedComponents().find(c => c.id === componentId);
@@ -205,13 +194,20 @@ function openQtyModal(componentId, action) {
 
         <div class="modal-body">
           <div class="modal-subtitle">
-            Залишок: ${getFeedStock(componentId).toFixed(2)} кг
+            Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг
           </div>
 
           <label class="modal-label">
             ${action === "add" ? "Скільки додати (кг)" : "Скільки списати (кг)"}
           </label>
-          <input type="number" id="qtyModalInput" class="modal-input" value="1" min="0.1" step="0.1">
+          <input
+            type="number"
+            id="qtyModalInput"
+            class="modal-input"
+            value="1"
+            min="0.1"
+            step="0.1"
+          >
         </div>
 
         <div class="modal-actions">
@@ -241,7 +237,7 @@ function confirmQtyModal() {
     addFeedStock(modalComponentId, val);
   } else {
     if (!consumeFeedStock(modalComponentId, val)) {
-      alert("❌ Недостатньо компонента");
+      alert("❌ Недостатньо компонента на складі");
       return;
     }
   }
@@ -252,7 +248,7 @@ function confirmQtyModal() {
 }
 
 /* =======================================
-   EGG TRAYS / WARNINGS (БЕЗ ЗМІН)
+   ЛОТКИ ТА ПОПЕРЕДЖЕННЯ
 ======================================= */
 function renderEggTraysBlock() {
   const box = qs("#eggTraysContent");
