@@ -55,11 +55,8 @@ function renderFeedWarehouse() {
   const cardsBox = qs("#warehouseFeedCards");
   const tableBody = qs("#warehouseFeedTableBody");
 
-  if (cardsBox) {
-    renderFeedCards(cardsBox);
-  } else if (tableBody) {
-    renderFeedTable(tableBody);
-  }
+  if (cardsBox) renderFeedCards(cardsBox);
+  if (tableBody) renderFeedTable(tableBody);
 }
 
 /* =======================================
