@@ -230,41 +230,6 @@
     </main>
   </div>
 
-  <!-- МОДАЛЬНЕ ВІКНО СКЛАДУ (ЄДИНЕ) -->
-  <div id="warehouseModal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="modal-title" id="modalTitle">Компонент</div>
-        <button class="modal-x" id="modalCloseBtn" type="button">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <div class="modal-subtitle" id="modalStock">Поточний залишок: 0 кг</div>
-
-        <div class="modal-tabs">
-          <button class="tab active" data-action="add" type="button">➕ Додати</button>
-          <button class="tab" data-action="consume" type="button">➖ Списати</button>
-        </div>
-
-        <label class="modal-label">Кількість (кг)</label>
-        <input
-          type="number"
-          step="0.1"
-          min="0"
-          class="modal-input"
-          id="modalAmount"
-        />
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn ghost" id="modalCancelBtn" type="button">Скасувати</button>
-        <button class="btn primary" id="modalConfirmBtn" type="button">OK</button>
-      </div>
-    </div>
-  </div>
-
   <script type="module" src="./app.js"></script>
 </body>
 </html>
