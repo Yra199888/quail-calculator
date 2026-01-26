@@ -10,44 +10,62 @@
 <body>
   <div class="app">
 
-    <!-- 🧭 НАВІГАЦІЯ -->
+    <!-- НАВІГАЦІЯ -->
     <header class="app-header">
       <nav class="nav">
         <div id="firebase-status" class="firebase-status offline">🔴 Offline</div>
 
-        <button class="nav-btn active" data-page="eggs">🥚 Яйця</button>
-        <button class="nav-btn" data-page="feed">🌾 Корм</button>
-        <button class="nav-btn" data-page="warehouse">📦 Склад</button>
-        <button class="nav-btn" data-page="cages">🐦 Клітки</button>
-        <button class="nav-btn" data-page="orders">📑 Замовлення</button>
-        <button class="nav-btn" data-page="recipes">📋 Рецепти</button>
+        <button class="nav-btn active" data-page="eggs" type="button">🥚 Яйця</button>
+        <button class="nav-btn" data-page="feed" type="button">🌾 Корм</button>
+        <button class="nav-btn" data-page="warehouse" type="button">📦 Склад</button>
+        <button class="nav-btn" data-page="cages" type="button">🐦 Клітки</button>
+        <button class="nav-btn" data-page="orders" type="button">📑 Замовлення</button>
+        <button class="nav-btn" data-page="recipes" type="button">📋 Рецепти</button>
       </nav>
     </header>
 
-    <!-- 📦 ОСНОВНИЙ КОНТЕНТ -->
+    <!-- ОСНОВНИЙ КОНТЕНТ -->
     <main class="app-content">
 
-      <!-- 🥚 ЯЙЦЯ -->
+      <!-- ЯЙЦЯ -->
       <section class="page active" id="page-eggs">
         <div class="panel">
           <div class="panel-title">🥚 Облік яєць</div>
+
           <form id="eggs-form">
             <div class="form-row">
-              <div><label>Дата</label><input type="date" id="eggs-date" /></div>
-              <div><label>Хороші</label><input type="number" id="eggs-good" /></div>
-              <div><label>Брак</label><input type="number" id="eggs-bad" /></div>
-              <div><label>Домашні</label><input type="number" id="eggs-home" /></div>
+              <div>
+                <label>Дата</label>
+                <input type="date" id="eggs-date" />
+              </div>
+              <div>
+                <label>Хороші</label>
+                <input type="number" id="eggs-good" />
+              </div>
+              <div>
+                <label>Брак</label>
+                <input type="number" id="eggs-bad" />
+              </div>
+              <div>
+                <label>Домашні</label>
+                <input type="number" id="eggs-home" />
+              </div>
             </div>
-            <button type="button" class="primary" id="eggs-save-btn">💾 Зберегти</button>
+
+            <button type="button" class="primary" id="eggs-save-btn">
+              💾 Зберегти
+            </button>
           </form>
         </div>
+
         <div id="eggs-report"></div>
       </section>
 
-      <!-- 🌾 КОРМ -->
+      <!-- КОРМ -->
       <section class="page" id="page-feed">
         <div class="panel">
           <div class="panel-title">🌾 Калькулятор корму</div>
+
           <table class="feed-table">
             <thead>
               <tr>
@@ -75,17 +93,20 @@
         </div>
 
         <div id="feedComponentsControls">
-          <button id="addFeedComponentBtn">➕ Додати компонент</button>
-          <button id="restoreFeedComponentsBtn">↩ Відновити видалені</button>
+          <button id="addFeedComponentBtn" type="button">➕ Додати компонент</button>
+          <button id="restoreFeedComponentsBtn" type="button">↩ Відновити видалені</button>
         </div>
       </section>
 
-      <!-- 📦 СКЛАД -->
+      <!-- СКЛАД -->
       <section class="page" id="page-warehouse">
         <div class="panel">
           <div class="panel-title">📦 Склад</div>
+
+          <!-- КАРТКИ (ОСНОВНИЙ ВИГЛЯД) -->
           <div id="warehouseFeedCards"></div>
 
+          <!-- ТАБЛИЦЯ (РЕЗЕРВ/СТАРИЙ ВАРІАНТ). Якщо не хочеш бачити дубль — сховай через CSS -->
           <table class="feed-table">
             <thead>
               <tr>
@@ -101,44 +122,158 @@
           <div class="warehouse-trays">
             <p>Порожні лотки: <b id="emptyTraysValue">0</b></p>
             <input type="number" id="addEmptyTraysInput" placeholder="+ лотки" />
-            <button id="addEmptyTraysBtn">➕</button>
+            <button id="addEmptyTraysBtn" type="button">➕</button>
           </div>
 
           <div id="warehouseWarnings"></div>
         </div>
 
+        <!-- ЖУРНАЛ СКЛАДУ -->
         <div class="panel" id="warehouseLogsPanel">
           <div class="panel-title">🧾 Журнал складу</div>
+
+          <!-- ФІЛЬТРИ (щоб logs.render.js нічого не ламав) -->
+          <div class="log-filters">
+            <select id="logFilterCategory">
+              <option value="">Усі категорії</option>
+              <option value="feed">Корм</option>
+              <option value="warehouse">Склад</option>
+              <option value="orders">Замовлення</option>
+            </select>
+
+            <select id="logFilterAction">
+              <option value="">Усі дії</option>
+              <option value="add">Додавання</option>
+              <option value="consume">Списання</option>
+              <option value="mix">Змішування</option>
+              <option value="reserve">Бронювання</option>
+            </select>
+          </div>
+
           <div id="warehouseLogs"></div>
         </div>
+      </section>
+
+      <!-- КЛІТКИ -->
+      <section class="page" id="page-cages">
+        <div class="panel">
+          <div class="panel-title">🐦 Клітки</div>
+
+          <div class="form-row">
+            <button class="primary" id="cage-add-btn" type="button">➕ Додати клітку</button>
+          </div>
+
+          <div id="cagesList" class="muted">
+            Поки що немає кліток. Натисни “➕ Додати клітку”.
+          </div>
+        </div>
+
+        <div class="panel" id="cageDetailsPanel" style="display:none;">
+          <div class="panel-title" id="cageDetailsTitle">Клітка</div>
+          <div id="cageDetails"></div>
+        </div>
+      </section>
+
+      <!-- ЗАМОВЛЕННЯ -->
+      <section class="page" id="page-orders">
+        <div class="panel">
+          <div class="panel-title">📑 Замовлення</div>
+          <table class="feed-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Клієнт</th>
+                <th>Лотки</th>
+                <th>Примітка</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">➕ Нове замовлення</div>
+
+          <div class="form-row">
+            <div>
+              <label>Дата</label>
+              <input type="date" id="order-date" />
+            </div>
+            <div>
+              <label>Клієнт</label>
+              <input type="text" id="order-client" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label>Лотки</label>
+              <input type="number" id="order-trays" min="1" />
+            </div>
+            <div>
+              <label>Примітка</label>
+              <input type="text" id="order-details" />
+            </div>
+          </div>
+
+          <button class="primary" id="order-add-btn" type="button">➕ Додати замовлення</button>
+        </div>
+      </section>
+
+      <!-- РЕЦЕПТИ -->
+      <section class="page" id="page-recipes">
+        <div class="panel">
+          <div class="panel-title">📋 Рецепти корму</div>
+
+          <div class="form-row">
+            <input id="recipe-name" placeholder="Назва рецепту" />
+            <button class="primary" id="recipe-save-btn" type="button">💾 Зберегти</button>
+          </div>
+
+          <div class="form-row">
+            <select id="recipe-select"></select>
+            <button id="recipe-load-btn" type="button">📂 Завантажити</button>
+            <button class="danger" id="recipe-delete-btn" type="button">🗑 Видалити</button>
+          </div>
+        </div>
+
+        <div id="recipes-content"></div>
       </section>
 
     </main>
   </div>
 
-  <!-- 📦 МОДАЛЬНЕ ВІКНО СКЛАДУ (ЄДИНЕ І ПРАВИЛЬНЕ) -->
+  <!-- МОДАЛЬНЕ ВІКНО СКЛАДУ (ЄДИНЕ) -->
   <div id="warehouseModal" class="modal hidden">
     <div class="modal-backdrop"></div>
+
     <div class="modal-card">
       <div class="modal-head">
         <div class="modal-title" id="modalTitle">Компонент</div>
-        <button class="modal-x" id="modalCloseBtn">✕</button>
+        <button class="modal-x" id="modalCloseBtn" type="button">✕</button>
       </div>
 
       <div class="modal-body">
         <div class="modal-subtitle" id="modalStock">Поточний залишок: 0 кг</div>
+
         <div class="modal-tabs">
-          <button class="tab active" data-action="add">➕ Додати</button>
-          <button class="tab" data-action="consume">➖ Списати</button>
+          <button class="tab active" data-action="add" type="button">➕ Додати</button>
+          <button class="tab" data-action="consume" type="button">➖ Списати</button>
         </div>
 
         <label class="modal-label">Кількість (кг)</label>
-        <input type="number" step="0.1" min="0" class="modal-input" id="modalAmount" />
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          class="modal-input"
+          id="modalAmount"
+        />
       </div>
 
       <div class="modal-actions">
-        <button class="btn ghost" id="modalCancelBtn">Скасувати</button>
-        <button class="btn primary" id="modalConfirmBtn">OK</button>
+        <button class="btn ghost" id="modalCancelBtn" type="button">Скасувати</button>
+        <button class="btn primary" id="modalConfirmBtn" type="button">OK</button>
       </div>
     </div>
   </div>
