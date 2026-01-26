@@ -7,7 +7,7 @@
  *  - не ламає стару таблицю
  *  - працює з існуючою модалкою #warehouseModal
  *  - кнопки ➕ / ➖ стабільно працюють (делегація подій)
- *  - кнопки мають кольорову семантику
+ *  - прибирає дублювання (картки vs таблиця)
  *  - без бізнес-логіки рецептів (поки що)
  */
 
@@ -43,20 +43,40 @@ export function renderWarehouse() {
   renderWarehouseWarnings();
   renderLogs();
 
-  // ✅ 1 раз в житті прив’язуємо делегацію
   bindWarehouseDelegationOnce();
   bindWarehouseModalOnce();
 }
 
 /* =======================================
    ВИБІР РЕЖИМУ ВІДОБРАЖЕННЯ
+   - якщо є картки: показуємо картки, ховаємо таблицю
+   - якщо карток немає: показуємо таблицю
 ======================================= */
 function renderFeedWarehouse() {
   const cardsBox = qs("#warehouseFeedCards");
   const tableBody = qs("#warehouseFeedTableBody");
+  const tableEl = tableBody ? tableBody.closest("table") : null;
 
-  if (cardsBox) renderFeedCards(cardsBox);
-  if (tableBody) renderFeedTable(tableBody);
+  const hasCards = !!cardsBox;
+  const hasTable = !!tableBody;
+
+  if (hasCards) {
+    // показати картки
+    cardsBox.style.display = "";
+
+    // сховати таблицю, щоб не було дубля
+    if (tableEl) tableEl.style.display = "none";
+    if (tableBody) tableBody.innerHTML = "";
+
+    renderFeedCards(cardsBox);
+    return;
+  }
+
+  // якщо карток немає — таблиця
+  if (hasTable) {
+    if (tableEl) tableEl.style.display = "";
+    renderFeedTable(tableBody);
+  }
 }
 
 /* =======================================
@@ -65,7 +85,7 @@ function renderFeedWarehouse() {
 function renderFeedTable(tbody) {
   tbody.innerHTML = "";
 
-  getFeedComponents().forEach(c => {
+  getFeedComponents().forEach((c) => {
     const stock = getFeedStock(c.id);
 
     tbody.insertAdjacentHTML(
@@ -91,11 +111,10 @@ function renderFeedCards(box) {
   const components = getFeedComponents();
   let totalStock = 0;
 
-  components.forEach(c => {
+  components.forEach((c) => {
     const stock = getFeedStock(c.id);
     totalStock += stock;
 
-    // просто візуальний індикатор (не бізнес-логіка)
     const percent = Math.min(100, (stock / 10) * 100);
 
     box.insertAdjacentHTML(
@@ -120,7 +139,6 @@ function renderFeedCards(box) {
     );
   });
 
-  // нижній блок
   box.insertAdjacentHTML(
     "beforeend",
     `
@@ -146,7 +164,6 @@ function renderFeedCards(box) {
 
 /* =======================================
    ДЕЛЕГАЦІЯ КЛІКІВ ДЛЯ СКЛАДУ (1 РАЗ)
-   - працює і для таблиці, і для карток
 ======================================= */
 function bindWarehouseDelegationOnce() {
   if (isWarehouseDelegationBound) return;
@@ -189,7 +206,7 @@ function bindWarehouseModalOnce() {
     if (modal) modal.classList.add("hidden");
   });
 
-  // перемикання вкладок (➕ / ➖)
+  // перемикання вкладок
   document.addEventListener("click", (e) => {
     const tab = e.target.closest("#warehouseModal .modal-tabs .tab");
     if (!tab) return;
@@ -208,7 +225,6 @@ function bindWarehouseModalOnce() {
       t.classList.toggle("active", t.dataset.action === action);
     });
 
-    // оновимо текст "Поточний залишок"
     const stockEl = document.getElementById("modalStock");
     const componentId = AppState.ui?.warehouseModal?.componentId;
     if (stockEl && componentId) {
@@ -271,18 +287,15 @@ function openWarehouseModal(componentId, action) {
     return;
   }
 
-  // збереження стану модалки
   AppState.ui ||= {};
   AppState.ui.warehouseModal ||= {};
   AppState.ui.warehouseModal.componentId = componentId;
   AppState.ui.warehouseModal.action = action;
 
-  // наповнення
   titleEl.textContent = component.name;
   stockEl.textContent = `Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг`;
   amountEl.value = "1";
 
-  // активна вкладка
   modal.querySelectorAll(".modal-tabs .tab").forEach((t) => {
     t.classList.toggle("active", t.dataset.action === action);
   });
@@ -340,6 +353,6 @@ function renderWarehouseWarnings() {
 
   const warnings = getWarehouseWarnings();
   box.innerHTML = warnings.length
-    ? warnings.map(w => `⚠️ ${w.name}: ${w.stock} / мін ${w.min}`).join("<br>")
+    ? warnings.map((w) => `⚠️ ${w.name}: ${w.stock} / мін ${w.min}`).join("<br>")
     : "✅ Склад у нормі";
 }
