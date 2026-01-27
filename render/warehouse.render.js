@@ -3,18 +3,17 @@
  * ---------------------------------------
  * Відповідає ТІЛЬКИ за відображення складу
  *
- * БЕЗПЕЧНА ВЕРСІЯ:
+ * БЕЗПЕЧНА ВЕРСІЯ (FIX):
  *  - не ламає стару таблицю
- *  - працює з існуючою модалкою #warehouseModal
- *  - кнопки ➕ / ➖ стабільно працюють (делегація подій)
  *  - прибирає дублювання (картки vs таблиця)
+ *  - ❌ ПОВНІСТЮ ПРИБИРАЄ МОДАЛКУ СКЛАДУ (нижню)
+ *  - ✅ прибирає помилку "#warehouseModal"
+ *  - ✅ кнопки ➕ / ➖ не ламають додаток (без відкриття модалки)
  *  - без бізнес-логіки рецептів (поки що)
  */
 
 import {
   getFeedStock,
-  addFeedStock,
-  consumeFeedStock,
   getEmptyTrays,
   addEmptyTrays,
   getWarehouseWarnings
@@ -31,7 +30,6 @@ import { renderLogs } from "./logs.render.js";
    ВНУТРІШНІ ПРАПОРЦІ (ЩОБ НЕ ДУБЛЮВАТИ ОБРОБНИКИ)
 ======================================= */
 let isWarehouseDelegationBound = false;
-let isWarehouseModalBound = false;
 
 /* =======================================
    ГОЛОВНИЙ РЕНДЕР СКЛАДУ
@@ -44,7 +42,6 @@ export function renderWarehouse() {
   renderLogs();
 
   bindWarehouseDelegationOnce();
-  bindWarehouseModalOnce();
 }
 
 /* =======================================
@@ -61,7 +58,6 @@ function renderFeedWarehouse() {
   const hasTable = !!tableBody;
 
   if (hasCards) {
-    // показати картки
     cardsBox.style.display = "";
 
     // сховати таблицю, щоб не було дубля
@@ -164,6 +160,7 @@ function renderFeedCards(box) {
 
 /* =======================================
    ДЕЛЕГАЦІЯ КЛІКІВ ДЛЯ СКЛАДУ (1 РАЗ)
+   ✅ FIX: не відкриваємо модалку, щоб не було нижнього вікна
 ======================================= */
 function bindWarehouseDelegationOnce() {
   if (isWarehouseDelegationBound) return;
@@ -175,132 +172,12 @@ function bindWarehouseDelegationOnce() {
 
     if (!addBtn && !useBtn) return;
 
-    const componentId =
-      (addBtn?.dataset.add || addBtn?.dataset.addBtn) ??
-      (useBtn?.dataset.use || useBtn?.dataset.useBtn);
+    // Щоб не було випадкових submit/фокусів
+    e.preventDefault();
 
-    if (!componentId) return;
-
-    const action = addBtn ? "add" : "consume";
-    openWarehouseModal(componentId, action);
+    // Модалку прибрали — даємо зрозуміле повідомлення
+    alert("ℹ️ Додавання/списання через ці кнопки зараз вимкнено (модалку прибрано). Використай «🌾 Замішати корм» або скажи — зроблю inline-ввід без модалки.");
   });
-}
-
-/* =======================================
-   МОДАЛКА СКЛАДУ (ПРИВ’ЯЗКА 1 РАЗ)
-======================================= */
-function bindWarehouseModalOnce() {
-  if (isWarehouseModalBound) return;
-  isWarehouseModalBound = true;
-
-  // закриття
-  document.addEventListener("click", (e) => {
-    const close =
-      e.target.closest("#modalCloseBtn") ||
-      e.target.closest("#modalCancelBtn") ||
-      e.target.closest("#warehouseModal .modal-backdrop");
-
-    if (!close) return;
-
-    const modal = document.getElementById("warehouseModal");
-    if (modal) modal.classList.add("hidden");
-  });
-
-  // перемикання вкладок
-  document.addEventListener("click", (e) => {
-    const tab = e.target.closest("#warehouseModal .modal-tabs .tab");
-    if (!tab) return;
-
-    const action = tab.dataset.action;
-    if (action !== "add" && action !== "consume") return;
-
-    AppState.ui ||= {};
-    AppState.ui.warehouseModal ||= {};
-    AppState.ui.warehouseModal.action = action;
-
-    const modal = document.getElementById("warehouseModal");
-    if (!modal) return;
-
-    modal.querySelectorAll(".modal-tabs .tab").forEach((t) => {
-      t.classList.toggle("active", t.dataset.action === action);
-    });
-
-    const stockEl = document.getElementById("modalStock");
-    const componentId = AppState.ui?.warehouseModal?.componentId;
-    if (stockEl && componentId) {
-      stockEl.textContent = `Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг`;
-    }
-  });
-
-  // підтвердження
-  document.addEventListener("click", (e) => {
-    const okBtn = e.target.closest("#modalConfirmBtn");
-    if (!okBtn) return;
-
-    const modal = document.getElementById("warehouseModal");
-    const amountEl = document.getElementById("modalAmount");
-    const ui = AppState.ui?.warehouseModal;
-
-    if (!modal || !amountEl || !ui?.componentId) {
-      alert("❌ Не вдалося виконати дію складу (немає даних модалки).");
-      return;
-    }
-
-    const val = Number(amountEl.value || 0);
-    if (!(val > 0)) return;
-
-    const action = ui.action || "add";
-
-    if (action === "add") {
-      addFeedStock(ui.componentId, val);
-    } else {
-      const ok = consumeFeedStock(ui.componentId, val);
-      if (!ok) {
-        alert("❌ Недостатньо компонента на складі");
-        return;
-      }
-    }
-
-    saveState();
-    modal.classList.add("hidden");
-    renderWarehouse();
-  });
-}
-
-/* =======================================
-   ВІДКРИТТЯ МОДАЛКИ СКЛАДУ
-======================================= */
-function openWarehouseModal(componentId, action) {
-  const modal = document.getElementById("warehouseModal");
-  const titleEl = document.getElementById("modalTitle");
-  const stockEl = document.getElementById("modalStock");
-  const amountEl = document.getElementById("modalAmount");
-
-  if (!modal || !titleEl || !stockEl || !amountEl) {
-    alert("❌ Модальне вікно складу не знайдено (#warehouseModal).");
-    return;
-  }
-
-  const component = (getFeedComponents() || []).find((c) => c.id === componentId);
-  if (!component) {
-    alert("❌ Компонент не знайдено.");
-    return;
-  }
-
-  AppState.ui ||= {};
-  AppState.ui.warehouseModal ||= {};
-  AppState.ui.warehouseModal.componentId = componentId;
-  AppState.ui.warehouseModal.action = action;
-
-  titleEl.textContent = component.name;
-  stockEl.textContent = `Поточний залишок: ${getFeedStock(componentId).toFixed(2)} кг`;
-  amountEl.value = "1";
-
-  modal.querySelectorAll(".modal-tabs .tab").forEach((t) => {
-    t.classList.toggle("active", t.dataset.action === action);
-  });
-
-  modal.classList.remove("hidden");
 }
 
 /* =======================================
