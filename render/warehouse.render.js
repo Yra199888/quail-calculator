@@ -1,13 +1,12 @@
 /**
  * warehouse.render.js
  * ---------------------------------------
- * Відповідає ТІЛЬКИ за відображення складу
+ * ВІДПОВІДАЄ ТІЛЬКИ ЗА ВІДОБРАЖЕННЯ СКЛАДУ
  *
- * INLINE-ВЕРСІЯ (БЕЗ МОДАЛКИ):
- *  - кнопки ➕ / ➖ відкривають inline-ввід
- *  - один обробник подій (делегація)
- *  - без дублювання (картки / таблиця)
- *  - не впливає на інші вкладки
+ * INLINE-ВВІД (АКУРАТНИЙ UI):
+ *  - одночасно відкритий ТІЛЬКИ ОДИН компонент
+ *  - компактна верстка, ок для мобільних
+ *  - без впливу на інші вкладки
  */
 
 import {
@@ -29,10 +28,10 @@ import { renderLogs } from "./logs.render.js";
 /* =======================================
    ВНУТРІШНІ ПРАПОРЦІ
 ======================================= */
-let isWarehouseDelegationBound = false;
+let isDelegationBound = false;
 
 /* =======================================
-   ГОЛОВНИЙ РЕНДЕР СКЛАДУ
+   ГОЛОВНИЙ РЕНДЕР
 ======================================= */
 export function renderWarehouse() {
   renderFeedWarehouse();
@@ -41,261 +40,219 @@ export function renderWarehouse() {
   renderWarehouseWarnings();
   renderLogs();
 
-  bindWarehouseDelegationOnce();
+  bindDelegationOnce();
 }
 
 /* =======================================
-   СТАН INLINE-ВВОДУ
+   INLINE UI STATE (ТІЛЬКИ 1 ВІДКРИТИЙ)
 ======================================= */
-function getInlineState() {
+function getInline() {
   return AppState.ui?.warehouseInline || null;
 }
 
-function setInlineState(next) {
+function openInline(componentId, action = "add") {
   AppState.ui ||= {};
-  AppState.ui.warehouseInline = next || null;
+  AppState.ui.warehouseInline = {
+    componentId,
+    action,
+    value: "1"
+  };
 }
 
-function isInlineOpenFor(componentId) {
-  const ui = getInlineState();
-  return !!ui && ui.componentId === componentId;
+function closeInline() {
+  if (AppState.ui) AppState.ui.warehouseInline = null;
+}
+
+function isInline(componentId) {
+  return getInline()?.componentId === componentId;
 }
 
 /* =======================================
-   ВИБІР ВІДОБРАЖЕННЯ (КАРТКИ / ТАБЛИЦЯ)
+   ВИБІР РЕЖИМУ ВІДОБРАЖЕННЯ
 ======================================= */
 function renderFeedWarehouse() {
   const cardsBox = qs("#warehouseFeedCards");
   const tableBody = qs("#warehouseFeedTableBody");
-  const tableEl = tableBody ? tableBody.closest("table") : null;
 
   if (cardsBox) {
     cardsBox.style.display = "";
-    if (tableEl) tableEl.style.display = "none";
     if (tableBody) tableBody.innerHTML = "";
-    renderFeedCards(cardsBox);
+    renderCards(cardsBox);
     return;
   }
 
-  if (tableBody) {
-    if (tableEl) tableEl.style.display = "";
-    renderFeedTable(tableBody);
-  }
+  if (tableBody) renderTable(tableBody);
 }
 
 /* =======================================
-   ТАБЛИЦЯ (РЕЗЕРВНИЙ ВАРІАНТ)
+   КАРТКИ СКЛАДУ (INLINE АКУРАТНИЙ)
 ======================================= */
-function renderFeedTable(tbody) {
-  tbody.innerHTML = "";
-
-  getFeedComponents().forEach((c) => {
-    const stock = getFeedStock(c.id);
-
-    tbody.insertAdjacentHTML(
-      "beforeend",
-      `
-      <tr>
-        <td>${c.name}</td>
-        <td>${stock.toFixed(2)}</td>
-        <td><button data-add-btn="${c.id}">➕</button></td>
-        <td><button data-use-btn="${c.id}">➖</button></td>
-      </tr>
-      `
-    );
-  });
-}
-
-/* =======================================
-   КАРТКИ КОМПОНЕНТІВ СКЛАДУ
-======================================= */
-function renderFeedCards(box) {
+function renderCards(box) {
   box.innerHTML = "";
 
-  const components = getFeedComponents();
-
-  components.forEach((c) => {
+  getFeedComponents().forEach(c => {
     const stock = getFeedStock(c.id);
-    const percent = Math.min(100, (stock / 10) * 100);
-    const isOpen = isInlineOpenFor(c.id);
-    const ui = getInlineState();
-    const action = isOpen ? (ui?.action || "add") : "add";
-    const defaultVal = isOpen ? String(ui?.value ?? "1") : "1";
+    const inline = isInline(c.id);
+    const ui = getInline();
 
-    box.insertAdjacentHTML(
-      "beforeend",
-      `
+    box.insertAdjacentHTML("beforeend", `
       <div class="warehouse-card">
         <div class="row">
           <div class="name">${c.name}</div>
           <div class="stock">${stock.toFixed(2)} кг</div>
         </div>
 
-        <div class="warehouse-bar">
-          <div class="warehouse-bar__fill" style="width:${percent}%"></div>
-        </div>
-
         <div class="actions">
-          <button data-add="${c.id}">➕</button>
-          <button data-use="${c.id}">➖</button>
-
-          ${
-            isOpen
-              ? `
-              <input type="number" step="0.1"
-                value="${escapeHtml(defaultVal)}"
-                data-inline-input="${c.id}" />
-              <button data-inline-cancel>Скасувати</button>
-              <button data-inline-ok="${c.id}">OK</button>
-              `
-              : ""
-          }
+          <button class="btn small primary" data-add="${c.id}">➕</button>
+          <button class="btn small danger" data-use="${c.id}">➖</button>
         </div>
+
+        ${inline ? renderInline(c.id, ui.action, ui.value) : ""}
       </div>
-      `
-    );
+    `);
   });
 
-  /* === ВАЖЛИВО: ТІЛЬКИ ЗАМІШАНИЙ КОРМ === */
-  const mixedFeedKg = Number(AppState.warehouse?.mixedFeedKg || 0);
-
-  box.insertAdjacentHTML(
-    "beforeend",
-    `
-    <div class="warehouse-footer">
-      <div>
-        <b>Загальний залишок корму</b><br>
-        <span style="font-size:18px">${mixedFeedKg.toFixed(2)} кг</span>
-        <div class="muted">
-          Показується лише замішаний корм
-        </div>
-      </div>
-
-      <div>
-        <button id="mixFeedBtn">🌾 Замішати корм</button>
-        <button disabled>➖ Списати корм</button>
-      </div>
-    </div>
-    `
-  );
+  renderFooter(box);
 }
 
-/* =======================================
-   ДЕЛЕГАЦІЯ INLINE-ДІЙ
-======================================= */
-function bindWarehouseDelegationOnce() {
-  if (isWarehouseDelegationBound) return;
-  isWarehouseDelegationBound = true;
+function renderInline(id, action, value) {
+  return `
+    <div class="warehouse-inline">
+      <span class="inline-label">
+        ${action === "add" ? "➕ Додати" : "➖ Списати"}
+      </span>
 
-  document.addEventListener("click", (e) => {
-    const addBtn = e.target.closest("[data-add],[data-add-btn]");
-    const useBtn = e.target.closest("[data-use],[data-use-btn]");
+      <input
+        type="number"
+        step="0.1"
+        min="0"
+        value="${escapeHtml(value)}"
+        data-inline-input="${id}"
+      />
 
-    if (addBtn || useBtn) {
-      const componentId =
-        addBtn?.dataset.add || addBtn?.dataset.addBtn ||
-        useBtn?.dataset.use || useBtn?.dataset.useBtn;
-
-      const action = addBtn ? "add" : "consume";
-      setInlineState({ componentId, action, value: "1" });
-      saveState();
-      renderWarehouse();
-      return;
-    }
-
-    if (e.target.closest("[data-inline-cancel]")) {
-      setInlineState(null);
-      saveState();
-      renderWarehouse();
-      return;
-    }
-
-    const okBtn = e.target.closest("[data-inline-ok]");
-    if (okBtn) {
-      const componentId = okBtn.dataset.inlineOk;
-      const input = document.querySelector(`[data-inline-input="${componentId}"]`);
-      const val = Number(input?.value || 0);
-      if (!(val > 0)) return;
-
-      const ui = getInlineState();
-      if (ui?.action === "add") {
-        addFeedStock(componentId, val);
-      } else {
-        if (!consumeFeedStock(componentId, val)) {
-          alert("❌ Недостатньо компонента на складі");
-          return;
-        }
-      }
-
-      setInlineState(null);
-      saveState();
-      renderWarehouse();
-    }
-  });
-}
-
-/* =======================================
-   ЛОТКИ
-======================================= */
-function renderEggTraysBlock() {
-  const box = qs("#eggTraysContent");
-  if (!box) return;
-
-  const stats = calcTrayStats(AppState || {});
-  const deficit = Math.max(
-    (stats.reservedTrays || 0) - (stats.availableTrays || 0),
-    0
-  );
-
-  box.innerHTML = `
-    <div class="${deficit > 0 ? "danger" : "ok"}">
-      Повних: ${stats.totalTrays} |
-      Резерв: ${stats.reservedTrays} |
-      Доступно: ${stats.availableTrays}
+      <button class="btn ghost" data-inline-cancel>Скасувати</button>
+      <button class="btn primary" data-inline-ok="${id}">OK</button>
     </div>
   `;
 }
 
 /* =======================================
-   ПОРОЖНІ ЛОТКИ
+   НИЖНІЙ БЛОК
 ======================================= */
-function renderTraysBlock() {
-  const valueEl = qs("#emptyTraysValue");
-  const btn = qs("#addEmptyTraysBtn");
-  const input = qs("#addEmptyTraysInput");
+function renderFooter(box) {
+  box.insertAdjacentHTML("beforeend", `
+    <div class="warehouse-footer">
+      <div>
+        <div class="title">Загальний залишок корму</div>
+        <div class="value">
+          ${getFeedComponents()
+            .reduce((s,c)=>s+getFeedStock(c.id),0)
+            .toFixed(2)} кг
+        </div>
+        <div class="hint">
+          Списання за рецептом — через «Замішати корм»
+        </div>
+      </div>
 
-  if (!valueEl || !btn || !input) return;
-
-  valueEl.textContent = getEmptyTrays();
-
-  btn.onclick = () => {
-    const val = Number(input.value || 0);
-    if (val <= 0) return;
-    addEmptyTrays(val);
-    saveState();
-    renderWarehouse();
-  };
+      <button class="btn primary" id="mixFeedBtn">🌾 Замішати корм</button>
+    </div>
+  `);
 }
 
 /* =======================================
-   ПОПЕРЕДЖЕННЯ СКЛАДУ
+   ДЕЛЕГАЦІЯ (1 РАЗ)
 ======================================= */
+function bindDelegationOnce() {
+  if (isDelegationBound) return;
+  isDelegationBound = true;
+
+  document.addEventListener("click", e => {
+    // ➕ / ➖
+    const add = e.target.closest("[data-add]");
+    const use = e.target.closest("[data-use]");
+    if (add || use) {
+      const id = add?.dataset.add || use?.dataset.use;
+      openInline(id, add ? "add" : "consume");
+      saveState();
+      renderWarehouse();
+      return;
+    }
+
+    // Скасувати
+    if (e.target.closest("[data-inline-cancel]")) {
+      closeInline();
+      saveState();
+      renderWarehouse();
+      return;
+    }
+
+    // OK
+    const ok = e.target.closest("[data-inline-ok]");
+    if (ok) {
+      const id = ok.dataset.inlineOk;
+      const input = document.querySelector(`[data-inline-input="${cssEscape(id)}"]`);
+      const val = Number(input?.value || 0);
+      if (val <= 0) return;
+
+      const action = getInline()?.action;
+      if (action === "add") addFeedStock(id, val);
+      else if (!consumeFeedStock(id, val)) {
+        alert("❌ Недостатньо компонента");
+        return;
+      }
+
+      closeInline();
+      saveState();
+      renderWarehouse();
+    }
+  });
+}
+
+/* =======================================
+   ЛОТКИ + ПОПЕРЕДЖЕННЯ
+======================================= */
+function renderEggTraysBlock() {
+  const box = qs("#eggTraysContent");
+  if (!box) return;
+
+  const s = calcTrayStats(AppState || {});
+  const deficit = Math.max(s.reservedTrays - s.availableTrays, 0);
+
+  box.innerHTML = `
+    <div class="egg-trays ${deficit ? "danger":"ok"}">
+      📦 ${s.totalTrays} | 🟡 ${s.reservedTrays} | 🟢 ${s.availableTrays}
+    </div>
+  `;
+}
+
+function renderTraysBlock() {
+  const v = qs("#emptyTraysValue");
+  const b = qs("#addEmptyTraysBtn");
+  const i = qs("#addEmptyTraysInput");
+  if (!v||!b||!i) return;
+
+  v.textContent = getEmptyTrays();
+  b.onclick = () => {
+    const n = Number(i.value||0);
+    if (n>0) {
+      addEmptyTrays(n);
+      saveState();
+      renderWarehouse();
+    }
+  };
+}
+
 function renderWarehouseWarnings() {
   const box = qs("#warehouseWarnings");
   if (!box) return;
-
-  const warnings = getWarehouseWarnings();
-  box.innerHTML = warnings.length
-    ? warnings.map(w => `⚠️ ${w.name}: ${w.stock} / мін ${w.min}`).join("<br>")
+  const w = getWarehouseWarnings();
+  box.innerHTML = w.length
+    ? w.map(x=>`⚠️ ${x.name}: ${x.stock}/${x.min}`).join("<br>")
     : "✅ Склад у нормі";
 }
 
 /* =======================================
-   ДОПОМІЖНІ ФУНКЦІЇ
+   HELPERS
 ======================================= */
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-}
+function escapeHtml(v){return String(v).replaceAll('"',"&quot;")}
+function cssEscape(v){return String(v).replaceAll('"','\\"')}
